@@ -1,0 +1,1160 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>종합소득세 간편 계산기</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%AE%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Nanum+Myeongjo:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E8ECEE; --sheet:#FAFBFC; --field:#FFFFFF; --ink:#1E2A30; --muted:#566670;
+  --rule:#C4CED3; --rule-soft:#DCE2E5; --accent:#3D5F70; --accent-soft:#DDE7EC; --on-accent:#FFFFFF;
+  --stamp:#A5352A; --note-bg:#F3EBD9; --note-ink:#5E4412;
+  --sans:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --serif:"Nanum Myeongjo","AppleMyungjo","Batang",serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#121719; --sheet:#192024; --field:#20292E; --ink:#E3E9EC; --muted:#98A7AE;
+    --rule:#33424A; --rule-soft:#28343A; --accent:#8FB3C4; --accent-soft:#22323A; --on-accent:#10181C;
+    --stamp:#E58374; --note-bg:#2D2819; --note-ink:#E6D3A6; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#121719; --sheet:#192024; --field:#20292E; --ink:#E3E9EC; --muted:#98A7AE;
+  --rule:#33424A; --rule-soft:#28343A; --accent:#8FB3C4; --accent-soft:#22323A; --on-accent:#10181C;
+  --stamp:#E58374; --note-bg:#2D2819; --note-ink:#E6D3A6; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+.wrap{max-width:1120px;margin:0 auto;padding:40px 20px 56px;}
+header{margin-bottom:28px;max-width:720px;}
+h1{font-family:var(--serif);font-weight:800;font-size:clamp(30px,5vw,44px);line-height:1.2;margin:0 0 10px;letter-spacing:-0.01em;}
+.lede{margin:0;color:var(--muted);font-size:16px;}
+.advise{margin:0 0 12px;padding:10px 14px;border-left:4px solid var(--stamp);background:var(--sheet);color:var(--ink);font-weight:700;font-size:16px;line-height:1.6;border-radius:3px;}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,440px);gap:28px;align-items:start;}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr);}}
+
+.panel{background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:24px;}
+.panel h2{font-size:17px;font-weight:700;margin:0 0 4px;}
+.panel .hint{font-size:14px;color:var(--muted);margin:0 0 16px;}
+.section + .section{margin-top:28px;padding-top:24px;border-top:1px solid var(--rule-soft);}
+
+.seg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--accent);border:1px solid var(--accent);border-radius:4px;overflow:hidden;}
+.seg.five{grid-template-columns:repeat(5,minmax(0,1fr));}
+.seg input{position:absolute;opacity:0;pointer-events:none;}
+.seg label{display:block;text-align:center;padding:11px 6px;font-weight:600;font-size:15px;cursor:pointer;color:var(--accent);background:var(--field);user-select:none;}
+.seg input:checked + label{background:var(--accent);color:var(--on-accent);}
+.seg input:focus-visible + label{outline:3px solid var(--ink);outline-offset:-3px;}
+@media (max-width:520px){.seg{grid-template-columns:repeat(2,minmax(0,1fr));}.seg.five{grid-template-columns:repeat(3,minmax(0,1fr));}}
+
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 18px;}
+.fields .full{grid-column:1 / -1;}
+@media (max-width:560px){.fields{grid-template-columns:minmax(0,1fr);}}
+.field label.lab{display:block;font-weight:600;font-size:15px;margin-bottom:6px;}
+.money{position:relative;}
+.money input[type=text]{padding-right:44px;text-align:right;}
+.money::after{content:"원";position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;pointer-events:none;}
+input[type=text],input[type=date],input[type=number],select{
+  width:100%;font:inherit;font-size:17px;color:var(--ink);background:var(--field);
+  border:1px solid var(--rule);border-radius:3px;padding:10px 12px;font-variant-numeric:tabular-nums;min-height:46px;
+}
+.money input[type=text]{padding-right:44px;}
+input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:1px;border-color:var(--accent);}
+.helper{font-size:13px;color:var(--muted);margin-top:4px;min-height:1.2em;text-align:right;font-variant-numeric:tabular-nums;}
+.helper.left{text-align:left;}
+.helper.bad{color:var(--stamp);}
+input[aria-invalid="true"]{border-color:var(--stamp);}
+
+.radios{display:flex;flex-wrap:wrap;gap:8px;}
+.chip input{position:absolute;opacity:0;pointer-events:none;}
+.chip span{display:inline-block;padding:8px 14px;border:1px solid var(--rule);border-radius:999px;background:var(--field);cursor:pointer;font-size:15px;font-weight:500;}
+.chip input:checked + span{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:700;}
+.chip input:focus-visible + span{outline:3px solid var(--accent);outline-offset:2px;}
+.check{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:15px;}
+.check input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--accent);flex:none;}
+.check small{display:block;color:var(--muted);font-size:13px;}
+
+/* Statement */
+.statement{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);background:var(--sheet);border:1px solid var(--rule);border-radius:6px;overflow:hidden;}
+@media (max-width:900px){.statement{position:static;}}
+.st-head{padding:18px 22px 14px;border-bottom:3px double var(--ink);}
+.st-head h2{font-family:var(--serif);font-size:21px;font-weight:800;margin:0;}
+.st-meta{font-size:14px;color:var(--muted);margin-top:2px;}
+.st-body{padding:6px 22px 4px;}
+.row{display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:4px 8px;padding:9px 0;border-bottom:1px solid var(--rule-soft);align-items:baseline;}
+.row .no{color:var(--muted);font-size:15px;}
+.row .lb{font-size:15px;}
+.row .lb small{display:block;color:var(--muted);font-size:12.5px;line-height:1.45;}
+.row .v{font-variant-numeric:tabular-nums;text-align:right;font-size:15.5px;white-space:nowrap;}
+.row.minus .v::before{content:"− ";color:var(--muted);}
+.row.key .lb,.row.key .v{font-weight:700;}
+.total{padding:18px 22px 20px;border-top:3px double var(--ink);display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;}
+.total .tl{font-weight:700;font-size:15px;}
+.total .tl small{display:block;font-weight:400;color:var(--muted);font-size:13px;}
+.total .tv{font-family:var(--serif);font-weight:800;color:var(--stamp);font-size:clamp(28px,4.5vw,36px);line-height:1.1;font-variant-numeric:tabular-nums;}
+.notes{margin:0;padding:14px 22px 18px;list-style:none;background:var(--note-bg);color:var(--note-ink);font-size:14px;}
+.notes li{padding-left:14px;position:relative;margin:4px 0;}
+.notes li::before{content:"";position:absolute;left:0;top:.7em;width:5px;height:5px;border-radius:50%;background:currentColor;}
+.empty{padding:28px 22px;color:var(--muted);font-size:15px;}
+.deadline{padding:0 22px 16px;font-size:14px;color:var(--muted);}
+
+footer{margin-top:36px;max-width:760px;color:var(--muted);font-size:13.5px;}
+footer p{margin:0 0 8px;}
+.btn-reset{font:inherit;font-size:14px;background:none;border:1px solid var(--rule);color:var(--muted);border-radius:3px;padding:7px 12px;cursor:pointer;margin-top:20px;}
+.btn-reset:hover{color:var(--ink);border-color:var(--ink);}
+.btn-reset:focus-visible{outline:3px solid var(--accent);outline-offset:2px;}
+.tabs{display:flex;gap:28px;border-bottom:1px solid var(--rule);margin:0 0 24px;}
+.tabs button{font:inherit;font-family:var(--serif);font-weight:800;font-size:20px;color:var(--muted);background:none;border:0;padding:6px 0 12px;margin-bottom:-1px;border-bottom:3px solid transparent;cursor:pointer;}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);}
+.tabs button:focus-visible{outline:3px solid var(--accent);outline-offset:4px;}
+.row .v.free{color:var(--accent);font-weight:600;}
+.brand{display:inline-block;margin:0 0 20px;line-height:0;border-radius:4px;}
+.brand img{height:34px;width:auto;display:block;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brand{background:#F4F6F7;padding:8px 12px;}}
+:root[data-theme="dark"] .brand{background:#F4F6F7;padding:8px 12px;}
+.disclaimer{margin:0 0 28px;padding:14px 16px;border:1px solid var(--accent);border-left-width:4px;border-radius:4px;background:var(--sheet);font-size:14.5px;line-height:1.65;max-width:820px;}
+.disclaimer strong{display:block;margin-bottom:2px;}
+.disclaimer p{margin:0;}
+.disclaimer p + p{margin-top:6px;}
+.brand a{display:block;border-radius:4px;}
+.brand a:focus-visible{outline:3px solid var(--accent);outline-offset:3px;}
+.laws{margin:0 0 28px;padding-top:22px;border-top:3px double var(--ink);color:var(--ink);}
+.laws h2{font-family:var(--serif);font-weight:800;font-size:19px;margin:0 0 4px;}
+.laws .sub{margin:0 0 12px;color:var(--muted);font-size:13.5px;}
+.laws ul{list-style:none;margin:0;padding:0;}
+.laws li{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:4px 18px;padding:9px 0;border-bottom:1px solid var(--rule-soft);font-size:14px;line-height:1.55;}
+.laws a{color:var(--accent);font-weight:600;text-underline-offset:3px;}
+.laws a:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:2px;}
+.laws .sum{color:var(--muted);}
+.laws .all{font:inherit;font-size:13.5px;background:none;border:0;padding:8px 0 0;color:var(--accent);cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
+@media (max-width:640px){.laws li{grid-template-columns:minmax(0,1fr);}}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;}
+.sec-total{font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;font-size:16px;}
+.exp-sum{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-top:18px;padding:12px 14px;border:1px solid var(--accent);border-radius:4px;background:var(--accent-soft);}
+.exp-sum .es-l{font-weight:700;font-size:15px;}
+.exp-sum small{display:block;font-weight:400;color:var(--muted);font-size:12.5px;line-height:1.45;}
+.exp-sum .es-v{text-align:right;font-weight:700;font-size:19px;color:var(--accent);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.exp-sum .es-v small{text-align:right;}
+.statement{max-height:calc(100vh - 32px - env(safe-area-inset-top,0px));overflow-y:auto;}
+@media (max-width:900px){.statement{max-height:none;overflow:visible;}}
+.save-box{padding:16px 22px 20px;border-top:1px solid var(--rule);}
+.save-box .lab{display:block;font-weight:600;font-size:15px;margin-bottom:6px;}
+textarea{width:100%;font:inherit;font-size:15px;color:var(--ink);background:var(--field);border:1px solid var(--rule);border-radius:3px;padding:10px 12px;resize:vertical;line-height:1.5;}
+textarea:focus-visible{outline:3px solid var(--accent);outline-offset:1px;border-color:var(--accent);}
+.save-actions{display:flex;gap:8px;margin-top:12px;}
+.btn-save{display:block;flex:1;font:inherit;font-weight:700;font-size:16px;padding:12px;border:0;border-radius:4px;background:var(--accent);color:var(--on-accent);cursor:pointer;}
+.btn-save:hover{filter:brightness(1.08);}
+.btn-save:disabled{opacity:.6;cursor:progress;}
+.btn-save:focus-visible{outline:3px solid var(--ink);outline-offset:2px;}
+.btn-print{font:inherit;font-weight:700;font-size:16px;padding:12px 18px;border:1px solid var(--accent);border-radius:4px;background:var(--field);color:var(--accent);cursor:pointer;}
+.btn-print:focus-visible{outline:3px solid var(--ink);outline-offset:2px;}
+.img-modal{position:fixed;inset:0;z-index:1000;background:rgba(10,16,20,.6);display:flex;align-items:center;justify-content:center;
+  padding:calc(env(safe-area-inset-top,0px) + 16px) 16px calc(env(safe-area-inset-bottom,0px) + 16px);}
+.im-box{background:var(--sheet);color:var(--ink);border-radius:6px;width:100%;max-width:720px;max-height:100%;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--rule);}
+.im-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--rule);}
+.im-head h2{font-family:var(--serif);font-weight:800;font-size:19px;margin:0;}
+.im-close{font:inherit;font-weight:600;font-size:15px;padding:7px 14px;border:1px solid var(--rule);border-radius:4px;background:var(--field);color:var(--ink);cursor:pointer;}
+.im-close:focus-visible{outline:3px solid var(--accent);outline-offset:2px;}
+.im-help{margin:0;padding:10px 18px;font-size:14px;color:var(--muted);background:var(--accent-soft);}
+.im-scroll{overflow:auto;padding:16px;background:var(--paper);}
+.im-scroll img{display:block;width:100%;height:auto;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.18);}
+.save-msg{margin:8px 0 0;font-size:13.5px;color:var(--muted);min-height:1.2em;}
+/* 출력용 계산서 */
+.rpt{--paper:#fff;--sheet:#fff;--field:#fff;--ink:#1E2A30;--muted:#566670;--rule:#C4CED3;--rule-soft:#DCE2E5;--accent:#3D5F70;--accent-soft:#DDE7EC;--stamp:#A5352A;--note-bg:#F3EFE4;--note-ink:#4F4632;
+  width:794px;min-height:1123px;padding:44px 52px 34px;background:#fff;color:var(--ink);font-family:var(--sans);font-size:13px;line-height:1.55;display:flex;flex-direction:column;box-sizing:border-box;}
+.rpt *{box-sizing:border-box;}
+.rpt-top{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center;padding-bottom:14px;border-bottom:3px double var(--ink);}
+.rpt-top img{height:28px;width:auto;display:block;}
+.rpt-top .d{color:var(--muted);font-size:12px;text-align:right;line-height:1.45;}
+.rpt-top .who{color:var(--ink);font-weight:700;font-size:14px;}
+.rpt-top .tel{color:var(--ink);font-size:13px;font-variant-numeric:tabular-nums;}
+.rpt-top .dt{text-align:center;color:var(--muted);font-size:12.5px;}
+.rpt-top .d{justify-self:end;}
+.rpt h1{font-family:var(--serif);font-weight:800;font-size:26px;margin:18px 0 2px;}
+.rpt .m{color:var(--muted);margin:0 0 6px;font-size:13px;}
+.rpt h3{font-size:13px;font-weight:700;margin:16px 0 6px;color:var(--accent);}
+.rpt .conds{display:grid;grid-template-columns:1fr 1fr;gap:4px 20px;padding:10px 12px;border:1px solid var(--rule);border-radius:4px;}
+.rpt .conds div{display:flex;gap:10px;}
+.rpt .conds .wide{grid-column:1 / -1;}
+.rpt .conds b{font-weight:600;min-width:86px;color:var(--muted);flex:none;}
+.rpt .st-body{padding:0;}
+.rpt .row{padding:6px 0;}
+.rpt .row .lb,.rpt .row .v{font-size:13px;}
+.rpt .row .lb small{font-size:11px;}
+.rpt .total{padding:12px 0;border-top:3px double var(--ink);border-bottom:1px solid var(--rule);}
+.rpt .total .tv{font-size:26px;}
+.rpt .notes{padding:10px 14px;margin-top:10px;border-radius:4px;font-size:12px;}
+.rpt .deadline{padding:8px 0 0 !important;font-size:12px;}
+.rpt .memo{flex:1 1 auto;min-height:130px;border:1px solid var(--rule);border-radius:4px;padding:2px 12px 8px;white-space:pre-wrap;word-break:break-all;line-height:26px;font-size:13px;
+  background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 25px,var(--rule-soft) 25px,var(--rule-soft) 26px);background-position:0 2px;}
+.rpt .foot{margin-top:14px;font-size:10.5px;color:var(--muted);line-height:1.5;}
+.unit{position:relative;}
+.unit input[type=text]{padding-right:72px;text-align:right;}
+.unit::after{content:attr(data-unit);position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;pointer-events:none;}
+[hidden]{display:none !important;}
+
+/* ---------- 종합소득세 계산기 추가 ---------- */
+.seg.two{grid-template-columns:repeat(2,minmax(0,1fr));}
+@media (max-width:520px){.seg.two{grid-template-columns:repeat(2,minmax(0,1fr));}}
+.sublab{display:block;font-weight:600;font-size:15px;margin-bottom:8px;}
+.btn-mini{font:inherit;font-size:13.5px;font-weight:600;background:var(--field);border:1px solid var(--accent);color:var(--accent);border-radius:3px;padding:5px 10px;cursor:pointer;margin-top:6px;}
+.btn-mini:focus-visible{outline:3px solid var(--accent);outline-offset:2px;}
+.subgroup{margin-top:18px;}
+.total .tv.refund{color:var(--accent);}
+.send-box{padding:18px 22px 22px;border-top:3px double var(--ink);}
+.send-box h3{font-family:var(--serif);font-weight:800;font-size:18px;margin:0 0 4px;}
+.send-box .s-hint{font-size:13.5px;color:var(--muted);margin:0 0 14px;line-height:1.55;}
+.send-box .fields{gap:12px 14px;}
+.send-box .check small{line-height:1.5;}
+.consent-free{margin:8px 0 0;font-size:13px;color:var(--muted);}
+.btn-post{display:block;width:100%;margin-top:14px;font:inherit;font-weight:700;font-size:17px;padding:14px;border:0;border-radius:4px;background:var(--stamp);color:#fff;cursor:pointer;}
+.btn-post:hover{filter:brightness(1.08);}
+.btn-post:disabled{background:var(--rule);color:var(--muted);cursor:not-allowed;filter:none;}
+.btn-post:focus-visible{outline:3px solid var(--ink);outline-offset:2px;}
+.send-msg{margin:8px 0 0;font-size:13.5px;color:var(--muted);min-height:1.2em;}
+.send-msg.bad{color:var(--stamp);}
+.send-msg.good{color:var(--ink);font-weight:600;}
+.contact{margin:14px 0 0;font-size:14px;}
+.contact a{color:var(--accent);font-weight:700;text-decoration:none;font-variant-numeric:tabular-nums;}
+.hub-back{display:inline-flex;align-items:center;gap:6px;margin:0 0 14px;font-size:14.5px;font-weight:600;color:var(--accent);text-decoration:none;padding:6px 0;}
+.hub-back:hover{text-decoration:underline;text-underline-offset:3px;}
+.hub-back:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:2px;}
+@media print{.hub-back{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div><a class="hub-back" href="../">← 전체 계산기 보기</a></div>
+  <div class="brand"><a href="https://blog.naver.com/francepigeon" target="_blank" rel="noopener noreferrer" title="동감 세무회계 블로그로 이동"><img src="data:image/png;base64,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" alt="동감 세무회계 블로그" width="1010" height="151"></a></div>
+  <div class="disclaimer" role="note"><strong>이용 전 확인해 주세요</strong><p>이 계산기는 동감 세무회계가 AI의 도움을 받아 제작한 것으로, 계산 결과에 오류가 있을 수 있습니다. 실제 신고 전에는 반드시 세무사의 검토를 받으시기 바랍니다.</p><p>이 계산기의 이용으로 발생하는 어떠한 문제에 대해서도 동감 세무회계는 책임지지 않음을 알려드립니다.</p></div>
+  <header>
+    <h1>종합소득세 간편 계산기</h1>
+    <p class="advise">종합소득세는 세무사의 역량에 따라 세금이 크게 달라집니다. 반드시 능숙한 세무사를 통해 신고하시는 것을 강력히 추천 드립니다.</p>
+    <p class="lede">개인사업자와 프리랜서의 2026년 귀속 종합소득세(2027년 5월 신고)를 계산합니다. 수입과 경비, 공제 항목을 넣으면 지방소득세까지 포함한 납부·환급액이 바로 나옵니다.</p>
+  </header>
+
+  <div class="grid">
+    <form class="panel" id="form" autocomplete="off" onsubmit="return false">
+      <div class="section">
+        <h2>어떤 소득인가요?</h2>
+        <p class="hint">사업소득만 있는 경우를 계산합니다. 근로·연금·금융소득 등 다른 종합소득이 함께 있으면 결과가 달라집니다.</p>
+        <div class="seg two" role="radiogroup" aria-label="소득 구분">
+          <input type="radio" name="kind" id="k-biz" value="biz" checked><label for="k-biz">개인사업자</label>
+          <input type="radio" name="kind" id="k-free" value="free"><label for="k-free">프리랜서 (3.3%)</label>
+        </div>
+        <div class="fields" style="margin-top:18px">
+          <div class="field">
+            <label class="lab" for="code">업종코드</label>
+            <input type="text" inputmode="numeric" id="code" maxlength="6" placeholder="940909">
+          </div>
+          <div class="field" id="grp-wrap" hidden>
+            <label class="lab" for="grp">업종 구분</label>
+            <select id="grp">
+              <option value="a">농업·도소매업 등</option>
+              <option value="b" selected>제조·음식·건설·인적용역 등</option>
+              <option value="c">부동산임대·전문·교육·서비스 등</option>
+            </select>
+          </div>
+          <div class="field full">
+            <div class="helper left" id="code-hint"></div>
+          </div>
+          <div class="field full">
+            <span class="sublab">장부 구분</span>
+            <div class="radios" role="radiogroup" aria-label="장부 구분">
+              <label class="chip"><input type="radio" name="duty" value="simple" checked><span>간편장부대상자</span></label>
+              <label class="chip"><input type="radio" name="duty" value="double"><span>복식부기의무자</span></label>
+            </div>
+            <div class="helper left" id="duty-hint"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>수입금액</h2>
+        <p class="hint">2026년 1월 1일부터 12월 31일까지 사업으로 벌어들인 총수입금액입니다. 부가세 과세사업자는 부가세를 뺀 공급가액을 넣으세요.</p>
+        <div class="fields">
+          <div class="field full">
+            <label class="lab" for="rev">총수입금액</label>
+            <div class="money"><input type="text" inputmode="numeric" id="rev" data-money placeholder="0"></div>
+            <div class="helper" data-for="rev"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="sec-head"><h2>필요경비</h2><span class="sec-total" id="exp-total" aria-hidden="true">0원</span></div>
+        <p class="hint">장부를 썼으면 실제 경비로, 장부가 없으면 국세청 경비율로 계산합니다.</p>
+        <div class="radios" role="radiogroup" aria-label="필요경비 계산 방법">
+          <label class="chip"><input type="radio" name="method" value="book" checked><span>장부 (실제 경비)</span></label>
+          <label class="chip"><input type="radio" name="method" value="simple"><span>단순경비율</span></label>
+          <label class="chip"><input type="radio" name="method" value="std"><span>기준경비율</span></label>
+        </div>
+
+        <div class="fields subgroup" data-method="book">
+          <div class="field full">
+            <label class="lab" for="exp">필요경비 합계</label>
+            <div class="money"><input type="text" inputmode="numeric" id="exp" data-money placeholder="0"></div>
+            <div class="helper" data-for="exp"></div>
+            <div class="helper left">매입, 인건비, 임차료, 감가상각비, 지역가입자 건강보험료 등 장부에 적은 경비 합계입니다.</div>
+          </div>
+          <div class="field full" id="bookcredit-wrap">
+            <label class="check"><input type="checkbox" id="bookcredit"><span>복식부기로 장부를 써서 신고함<small>간편장부대상자가 복식부기로 신고하면 산출세액의 20%(100만 원 한도)를 기장세액공제로 빼 줍니다.</small></span></label>
+          </div>
+        </div>
+
+        <div class="fields subgroup" data-method="simple" hidden>
+          <div class="field">
+            <label class="lab" for="r-simple">단순경비율</label>
+            <div class="unit" data-unit="%"><input type="text" inputmode="decimal" id="r-simple" data-rate maxlength="5" placeholder="0.0"></div>
+          </div>
+          <div class="field full">
+            <div class="helper left" data-ratehint></div>
+          </div>
+        </div>
+
+        <div class="fields subgroup" data-method="std" hidden>
+          <div class="field full">
+            <label class="lab" for="main-exp">주요경비</label>
+            <div class="money"><input type="text" inputmode="numeric" id="main-exp" data-money placeholder="0"></div>
+            <div class="helper" data-for="main-exp"></div>
+            <div class="helper left">증빙이 있는 매입비용, 사업용 자산 임차료, 인건비의 합계입니다.</div>
+          </div>
+          <div class="field">
+            <label class="lab" for="r-std">기준경비율</label>
+            <div class="unit" data-unit="%"><input type="text" inputmode="decimal" id="r-std" data-rate maxlength="5" placeholder="0.0"></div>
+          </div>
+          <div class="field">
+            <label class="lab" for="r-simple2">단순경비율 <span style="font-weight:400;color:var(--muted)">(한도 비교용)</span></label>
+            <div class="unit" data-unit="%"><input type="text" inputmode="decimal" id="r-simple2" data-rate maxlength="5" placeholder="0.0"></div>
+          </div>
+          <div class="field full">
+            <div class="helper left" data-ratehint></div>
+            <div class="helper left" id="std-hint"></div>
+          </div>
+        </div>
+
+        <div class="field subgroup" id="nobook-wrap" hidden>
+          <label class="check"><input type="checkbox" id="nobook"><span>소규모사업자가 아님 (무기장가산세 적용)<small>신규 사업자, 직전 연도 수입금액 4,800만 원 미만 사업자는 소규모사업자여서 장부 없이 신고해도 가산세가 없습니다. 그 밖의 사업자는 산출세액의 20%를 무기장가산세로 냅니다.</small></span></label>
+        </div>
+
+        <div class="exp-sum" aria-live="polite"><span class="es-l">사업소득금액<small id="inc-sum-sub">수입금액 − 필요경비</small></span><span class="es-v"><span id="inc-sum">0원</span><small id="inc-sum-kr"></small></span></div>
+      </div>
+
+      <div class="section">
+        <h2>인적공제</h2>
+        <p class="hint">본인 150만 원은 자동으로 들어갑니다. 부양가족은 연간 소득금액 100만 원 이하(근로소득만 있으면 총급여 500만 원 이하)여야 합니다.</p>
+        <div class="fields">
+          <div class="field full">
+            <label class="check"><input type="checkbox" id="spouse"><span>배우자 공제<small>배우자의 연간 소득금액이 100만 원 이하인 경우</small></span></label>
+          </div>
+          <div class="field">
+            <label class="lab" for="deps">부양가족 수</label>
+            <div class="unit" data-unit="명"><input type="text" inputmode="numeric" id="deps" data-count maxlength="2" placeholder="0"></div>
+            <div class="helper left">본인·배우자 제외. 60세 이상 부모, 20세 이하 자녀 등</div>
+          </div>
+          <div class="field">
+            <label class="lab" for="elder">70세 이상 (경로우대)</label>
+            <div class="unit" data-unit="명"><input type="text" inputmode="numeric" id="elder" data-count maxlength="2" placeholder="0"></div>
+            <div class="helper left">기본공제 대상자 중 1명당 100만 원 추가</div>
+          </div>
+          <div class="field">
+            <label class="lab" for="disabled">장애인</label>
+            <div class="unit" data-unit="명"><input type="text" inputmode="numeric" id="disabled" data-count maxlength="2" placeholder="0"></div>
+            <div class="helper left">본인 포함 기본공제 대상자 중 1명당 200만 원 추가</div>
+          </div>
+          <div class="field full">
+            <label class="check"><input type="checkbox" id="woman"><span>부녀자 공제<small>종합소득금액 3,000만 원 이하 여성으로 배우자가 있거나, 배우자 없이 부양가족이 있는 세대주인 경우 50만 원</small></span></label>
+          </div>
+          <div class="field full">
+            <label class="check"><input type="checkbox" id="single"><span>한부모 공제<small>배우자 없이 기본공제 대상인 직계비속이나 입양자가 있는 경우 100만 원. 부녀자 공제와 겹치면 한부모 공제만 적용합니다.</small></span></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>연금·노란우산·자녀</h2>
+        <p class="hint">2026년에 실제로 낸 금액을 넣으세요.</p>
+        <div class="fields">
+          <div class="field">
+            <label class="lab" for="nps">국민연금 보험료</label>
+            <div class="money"><input type="text" inputmode="numeric" id="nps" data-money placeholder="0"></div>
+            <div class="helper" data-for="nps"></div>
+          </div>
+          <div class="field">
+            <label class="lab" for="yellow">노란우산공제 납입액</label>
+            <div class="money"><input type="text" inputmode="numeric" id="yellow" data-money placeholder="0"></div>
+            <div class="helper" data-for="yellow"></div>
+          </div>
+          <div class="field">
+            <label class="lab" for="psave">연금저축 납입액</label>
+            <div class="money"><input type="text" inputmode="numeric" id="psave" data-money placeholder="0"></div>
+            <div class="helper" data-for="psave"></div>
+          </div>
+          <div class="field">
+            <label class="lab" for="irp">IRP(퇴직연금) 납입액</label>
+            <div class="money"><input type="text" inputmode="numeric" id="irp" data-money placeholder="0"></div>
+            <div class="helper" data-for="irp"></div>
+          </div>
+          <div class="field full">
+            <div class="helper left">연금저축은 600만 원, 연금저축과 IRP를 합쳐 900만 원까지 세액공제됩니다.</div>
+          </div>
+          <div class="field">
+            <label class="lab" for="kids">8세 이상 자녀 수</label>
+            <div class="unit" data-unit="명"><input type="text" inputmode="numeric" id="kids" data-count maxlength="2" placeholder="0"></div>
+            <div class="helper left">기본공제 대상인 자녀·손자녀</div>
+          </div>
+          <div class="field full">
+            <span class="sublab">2026년 출산·입양</span>
+            <div class="radios" role="radiogroup" aria-label="2026년 출산·입양">
+              <label class="chip"><input type="radio" name="birth" value="0" checked><span>없음</span></label>
+              <label class="chip"><input type="radio" name="birth" value="1"><span>첫째</span></label>
+              <label class="chip"><input type="radio" name="birth" value="2"><span>둘째</span></label>
+              <label class="chip"><input type="radio" name="birth" value="3"><span>셋째 이상</span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>이미 낸 세금</h2>
+        <p class="hint" id="prepaid-hint">원천징수세액과 11월에 낸 중간예납세액은 확정신고 때 빼 줍니다.</p>
+        <div class="fields">
+          <div class="field">
+            <label class="lab" for="wht">원천징수 소득세 (3%)</label>
+            <div class="money"><input type="text" inputmode="numeric" id="wht" data-money placeholder="0"></div>
+            <div class="helper" data-for="wht"></div>
+            <button type="button" class="btn-mini" id="fill-wht" hidden>수입금액의 3%로 채우기</button>
+          </div>
+          <div class="field">
+            <label class="lab" for="prepay">중간예납세액</label>
+            <div class="money"><input type="text" inputmode="numeric" id="prepay" data-money placeholder="0"></div>
+            <div class="helper" data-for="prepay"></div>
+          </div>
+          <div class="field full">
+            <div class="helper left">3.3% 가운데 3%가 소득세, 0.3%가 지방소득세입니다. 지방소득세 0.3%분은 자동으로 계산해 뺍니다.</div>
+          </div>
+        </div>
+        <button type="button" class="btn-reset" id="reset">입력 지우기</button>
+      </div>
+    </form>
+
+    <aside class="statement">
+      <div class="st-head">
+        <h2>종합소득세 계산서</h2>
+        <div class="st-meta" id="meta">2026년 귀속</div>
+      </div>
+      <div id="out"></div>
+      <div class="save-box" data-save hidden>
+        <label class="lab" for="memo-inc">메모</label>
+        <textarea id="memo-inc" rows="3" maxlength="500" placeholder="고객명, 상담 내용 등 계산서에 함께 남길 메모 (비워 두면 손으로 쓸 수 있는 빈 칸으로 저장됩니다)"></textarea>
+        <div class="save-actions"><button type="button" class="btn-save" id="savebtn">계산서 PDF로 저장</button><button type="button" class="btn-print" id="imgbtn">이미지로 보기</button></div>
+        <p class="save-msg" id="save-msg" role="status"></p>
+      </div>
+      <div class="send-box" data-save hidden>
+        <h3>세무사에게 보내 상담받기</h3>
+        <p class="s-hint">이 계산 자료를 세무사에게 보내 상담받으시려면 이름과 연락처를 적고 개인정보 수집·이용에 동의한 뒤 [상담 신청하기]를 눌러 주세요. 계산 자료가 세무사에게 바로 전달되고, 확인 후 연락드립니다.</p>
+        <div class="fields">
+          <div class="field">
+            <label class="lab" for="s-name">이름</label>
+            <input type="text" id="s-name" autocomplete="name" maxlength="30" placeholder="홍길동">
+          </div>
+          <div class="field">
+            <label class="lab" for="s-phone">연락처</label>
+            <input type="text" id="s-phone" inputmode="tel" autocomplete="tel" maxlength="13" placeholder="010-0000-0000">
+          </div>
+        </div>
+        <label class="check" style="margin-top:14px"><input type="checkbox" id="s-agree"><span>개인정보 수집·이용에 동의합니다<small>수집 항목: 이름, 연락처, 계산기에 입력하신 수입·경비·공제 등 자료<br>이용 목적: 종합소득세 계산 결과에 대한 세무 상담<br>보유 기간: 상담 완료 후 지체 없이 파기<br>동의하지 않으면 세무사에게 자료를 보낼 수 없습니다.</small></span></label>
+        <p class="consent-free">동의하지 않으셔도 계산기는 그대로 이용하실 수 있습니다.</p>
+        <button type="button" class="btn-post" id="postbtn" disabled>상담 신청하기</button>
+        <p class="send-msg" id="post-msg" role="status"></p>
+        <p class="contact">상담문의: 이동희 세무사 (<a href="tel:010-8278-1382">010-8278-1382</a>)</p>
+      </div>
+    </aside>
+  </div>
+
+  <footer>
+    <section class="laws" aria-labelledby="laws-h">
+      <h2 id="laws-h">적용 법령</h2>
+      <p class="sub">현재 선택한 조건의 계산에 쓰인 조문입니다. 조문을 누르면 국가법령정보센터에서 원문이 새 창으로 열립니다.</p>
+      <ul id="laws"></ul>
+      <button type="button" class="all" id="lawsall">모든 조문 보기</button>
+    </section>
+    <p>이 계산기는 신고 전 규모를 가늠하기 위한 참고용입니다. 사업소득 외 다른 종합소득, 기부금·의료비 등 그 밖의 공제, 중소기업특별세액감면 등 조세특례제한법상 감면, 성실신고확인비용 세액공제, 결손금·이월결손금, 복식부기의무자의 무신고가산세는 반영하지 않으니 실제 신고 전에는 국세청 홈택스나 세무 전문가를 통해 확인하세요.</p>
+    <p>경비율은 국세청 「2025년 귀속 기준경비율 및 단순경비율」(국세청 고시 제2026-14호)의 일반율을 적용합니다. 2026년 귀속 경비율은 2027년 4월 이후 공개되므로 그 전까지는 직전 연도 고시율로 가늠하는 값입니다. 자가사업자의 자가율(기준경비율 +0.4, 단순경비율 −0.3)은 반영하지 않았습니다.</p>
+    <p>세율과 공제액은 2026년 9월 현재 시행 중인 소득세법과 조세특례제한법을 기준으로 합니다. 지방소득세는 소득세 결정세액(가산세 포함)의 10%로 계산했습니다.</p>
+  </footer>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const form = $('form');
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  /* ---------- 숫자 입력 ---------- */
+  const num = el => Number((el.value || '').replace(/[^0-9]/g, '')) || 0;
+  const rateOf = el => { const v = parseFloat(el.value); return isFinite(v) ? Math.min(v, 100) / 100 : null; };
+  const won = n => Math.round(n).toLocaleString('ko-KR') + '원';
+  const man = n => n % 1e4 === 0 ? (n / 1e4).toLocaleString('ko-KR') + '만 원' : won(n);
+  function korUnit(n){
+    if(!n) return '';
+    const eok = Math.floor(n / 1e8), mn = Math.floor((n % 1e8) / 1e4), rest = n % 1e4;
+    const s = [];
+    if(eok) s.push(eok.toLocaleString('ko-KR') + '억');
+    if(mn) s.push(mn.toLocaleString('ko-KR') + '만');
+    if(rest) s.push(rest.toLocaleString('ko-KR'));
+    return s.join(' ') + ' 원';
+  }
+  function setMoney(el, n){
+    el.value = n ? Number(n).toLocaleString('ko-KR') : '';
+    const h = document.querySelector('.helper[data-for="' + el.id + '"]');
+    if(h) h.textContent = korUnit(num(el));
+  }
+  document.querySelectorAll('[data-money]').forEach(el => {
+    el.addEventListener('input', () => {
+      const pos = el.selectionStart || 0;
+      const digitsBefore = el.value.slice(0, pos).replace(/[^0-9]/g, '').length;
+      const digits = el.value.replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, '').slice(0, 15);
+      el.value = digits ? Number(digits).toLocaleString('ko-KR') : '';
+      let i = 0, c = 0;
+      while(i < el.value.length && c < digitsBefore){ if(/\d/.test(el.value[i])) c++; i++; }
+      try{ el.setSelectionRange(i, i); }catch(e){}
+      const h = document.querySelector('.helper[data-for="' + el.id + '"]');
+      if(h) h.textContent = korUnit(num(el));
+    });
+  });
+  document.querySelectorAll('[data-count]').forEach(el => el.addEventListener('input', () => {
+    el.value = el.value.replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, '').slice(0, 2);
+  }));
+  $('code').addEventListener('input', e => { e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6); });
+  document.querySelectorAll('[data-rate]').forEach(el => el.addEventListener('input', () => {
+    let v = el.value.replace(/[^0-9.]/g, '');
+    const p = v.indexOf('.');
+    if(p >= 0) v = v.slice(0, p + 1) + v.slice(p + 1).replace(/\./g, '').slice(0, 1);
+    if(parseFloat(v) > 100) v = '100';
+    el.value = v;
+  }));
+  const cnt = id => Number($(id).value) || 0;
+  const pick = name => (form.querySelector('input[name=' + name + ']:checked') || {}).value;
+  const chk = id => $(id).checked;
+
+  /* ---------- 기준 ---------- */
+  // 업종별 단순경비율 적용 기준(직전 연도 수입금액, 소득세법 시행령 제143조 제4항)과 복식부기의무 기준(제208조 제5항)
+  // 2025년 귀속 기준경비율·단순경비율 (국세청 고시 제2026-14호, 2026. 3. 30. 시행)
+  // 업종코드: [업종명, 업종 구분(a·b·c, 시행령 제143조 제4항 가·나·다목), 단순경비율 기본율, 초과율(인적용역 4천만 원 초과분), 기준경비율] — 일반율 기준
+  const RATES = {"011000":["곡물 및 기타 식량작물 재배업","a",null,null,null],"011001":["채소, 화훼작물 및 종묘재배업 · 채소작물 재배업","a",93.5,null,9.7],"011002":["채소, 화훼작물 및 종묘재배업 · 화훼작물 재배업","a",93.5,null,4.3],"011003":["채소, 화훼작물 및 종묘재배업 · 종자 및 묘목 생산업","a",93.5,null,5.9],"011004":["과실, 음료용 및 향신용 작물 재배업 · 과실작물 재배업","a",93.5,null,4.1],"011005":["과실, 음료용 및 향신용 작물 재배업 · 음료용 및 향신용 작물 재배업","a",93.5,null,9.0],"011006":["기타 작물 재배업","a",93.5,null,12.9],"011007":["시설작물 재배업 · 기타 시설 작물 재배업","a",93.5,null,4.4],"011008":["시설작물 재배업 · 채소, 화훼 및 과실작물 시설 재배업","a",93.5,null,14.4],"011009":["시설작물 재배업 · 기타 시설작물 재배업","a",93.5,null,9.4],"012101":["소 사육업 · 육우 사육업","a",97.2,null,7.8],"012102":["기타 축산업 · 말 및 양 사육업","a",91.8,null,8.0],"012103":["기타 축산업 · 그 외 기타 축산업(사슴, 토끼)","a",88.0,null,5.9],"012104":["소 사육업 · 젖소 사육업","a",97.2,null,8.5],"012105":["기타 축산업 · 그 외 기타 축산업(개)","a",88.0,null,5.9],"012201":["양돈업","a",96.5,null,8.6],"012202":["가금류 및 조류 사육업 · 양계업","a",95.9,null,7.8],"012203":["가금류 및 조류 사육업 · 기타 가금류 및 조류 사육업","a",94.2,null,8.4],"012204":["기타 축산업 · 그 외 기타 축산업","a",93.9,null,7.5],"014300":["축산 관련 서비스업","a",93.7,null,20.0],"014301":["작물재배 및 축산 복합농업","a",93.7,null,12.0],"014302":["작물재배 관련 서비스업 · 작물재배 지원 서비스업","a",93.7,null,29.9],"014303":["작물재배 관련 서비스업","a",93.7,null,17.8],"015000":["수렵 및 관련 서비스업","a",80.0,null,14.3],"020100":["영림업 · 임업용 종묘 생산업","a",91.3,null,7.3],"020101":["영림업 · 육림업","a",91.3,null,9.6],"051102":["해수면 어업 · 연근해 어업","a",96.8,null,20.0],"051104":["해수면 어업 · 원양 어업","a",96.4,null,18.8],"051200":["내수면 어업","a",93.5,null,8.1],"052101":["양식 어업 · 해수면 양식 어업","a",95.3,null,8.9],"052103":["양식 어업 · 내수면 양식 어업","a",92.7,null,7.2],"052104":["양식 어업 · 수산물 부화 및 수산 종자 생산업","a",95.5,null,9.0],"052200":["어업 관련 서비스업","a",95.3,null,8.2],"101000":["석탄 광업","a",96.9,null,18.9],"101001":["그 외 기타 비금속광물 광업","a",96.9,null,18.9],"131000":["철 광업","a",92.2,null,23.6],"131003":["비철금속 광업","a",92.2,null,23.6],"132002":["비철금속 광업","a",95.5,null,23.6],"132003":["비철금속 광업","a",96.6,null,21.2],"141001":["석재, 쇄석 및 모래, 자갈 채취업 · 건설용 석재 채굴 및 쇄석 생산업","a",91.9,null,26.7],"141002":["석회석 및 점토 광업","a",94.1,null,39.9],"141003":["석재, 쇄석 및 모래, 자갈 채취업 · 건설용 석재 채굴 및 쇄석 생산업","a",89.4,null,26.7],"141004":["석재, 쇄석 및 모래, 자갈 채취업 · 모래 및 자갈 채취업","a",88.3,null,39.9],"141006":["석재, 쇄석 및 모래, 자갈 채취업 · 모래 및 자갈 채취업","a",94.1,null,39.9],"142101":["그 외 기타 비금속광물 광업","a",93.5,null,23.3],"142102":["화학용 및 비료 원료용 광물 광업","a",94.2,null,23.3],"142104":["화학용 및 비료 원료용 광물 광업","a",93.5,null,23.3],"142200":["천일염 생산 및 암염 채취업","a",93.7,null,22.9],"142902":["그 외 기타 비금속광물 광업","a",94.3,null,21.4],"142909":["원유 및 천연가스 채굴업","a",94.3,null,18.9],"142910":["광업 지원 서비스업","a",94.3,null,18.9],"143103":["철 광업 · 철 광업(조광권자)","a",94.9,null,23.3],"143106":["석탄 광업 · 석탄 광업(조광권자)","a",97.5,null,23.3],"143107":["모래 및 자갈 채취업","a",94.9,null,23.3],"143200":["무형 재산권 임대업","c",88.0,null,18.4],"151101":["도축업 · 육류 도축업(가금류 제외)","b",91.1,null,13.6],"151102":["육류 가공 및 저장 처리업 · 가금류 가공 및 저장 처리업","b",90.2,null,5.7],"151103":["도축업 · 가금류 도축업","b",91.1,null,13.6],"151104":["육류 가공 및 저장 처리업","b",90.2,null,5.2],"151105":["육류 가공 및 저장 처리업","b",90.2,null,3.8],"151200":["수산동물 가공 및 저장 처리업 · 수산동물 건조 및 염장품 제조업","b",94.2,null,4.5],"151201":["수산동물 가공 및 저장 처리업","b",94.2,null,5.4],"151202":["수산동물 가공 및 저장 처리업 · 수산동물 냉동품 제조업","b",94.2,null,7.8],"151203":["수산동물 가공 및 저장 처리업 · 기타 수산동물 가공 및 저장 처리업","b",94.2,null,5.5],"151301":["과실, 채소 가공 및 저장 처리업 · 김치류 제조업","b",92.3,null,8.4],"151302":["과실, 채소 가공 및 저장 처리업 · 기타 과실․채소 가공 및 저장 처리업","b",92.3,null,8.7],"151304":["과실, 채소 가공 및 저장 처리업 · 과실 및 그 외 채소 절임식품 제조업","b",92.3,null,8.2],"151400":["동물성 및 식물성 유지 제조업 · 식물성 유지 제조업","b",92.6,null,2.9],"151401":["동물성 및 식물성 유지 제조업 · 동물성 유지 제조업","b",92.6,null,5.9],"151402":["동물성 및 식물성 유지 제조업 · 식용 정제유 및 가공유 제조업","b",92.6,null,4.1],"152001":["낙농제품 및 식용 빙과류 제조업","b",94.9,null,6.1],"152002":["낙농제품 및 식용 빙과류 제조업 · 액상 시유 및 기타 낙농제품 제조업","b",91.2,null,7.9],"152003":["낙농제품 및 식용 빙과류 제조업","b",91.2,null,6.1],"153101":["곡물 가공품 제조업 · 기타 곡물 가공품 제조업","b",90.2,null,10.8],"153102":["곡물 가공품 제조업 · 곡물 도정업","b",97.5,null,3.0],"153103":["곡물 가공품 제조업 · 곡물 제분업","b",92.6,null,6.0],"153104":["동물용 사료 및 조제식품 제조업","b",90.2,null,9.3],"153105":["전분제품 및 당류 제조업","b",92.2,null,7.8],"153106":["곡물 가공품 제조업 · 곡물 혼합 분말 및 반죽 제조업","b",90.2,null,8.8],"153107":["도시락 및 식사용 조리식품 제조업 · 도시락류 제조업","b",90.2,null,8.3],"153202":["전분제품 및 당류 제조업","b",89.8,null,7.1],"153300":["동물용 사료 및 조제식품 제조업","b",96.0,null,9.9],"153301":["동물용 사료 및 조제식품 제조업","b",96.2,null,11.7],"154101":["떡, 빵 및 과자류 제조업 · 떡류 제조업","b",91.9,null,11.5],"154102":["떡, 빵 및 과자류 제조업 · 과자류 및 코코아 제품 제조업","b",90.2,null,11.0],"154103":["도시락 및 식사용 조리식품 제조업","b",91.9,null,9.4],"154104":["떡, 빵 및 과자류 제조업 · 빵류 제조업","b",90.2,null,13.8],"154200":["설탕 제조업","b",91.4,null,11.5],"154400":["면류, 마카로니 및 유사 식품 제조업","b",94.2,null,10.0],"154501":["조미료 및 식품 첨가물 제조업 · 천연 및 혼합 조제 조미료 제조업","b",89.2,null,6.7],"154502":["조미료 및 식품 첨가물 제조업 · 장류 제조업","b",91.5,null,9.7],"154503":["조미료 및 식품 첨가물 제조업 · 식초, 발효 및 화학 조미료 제조업","b",89.2,null,8.3],"154509":["조미료 및 식품 첨가물 제조업 · 기타 식품 첨가물 제조업","b",93.7,null,9.3],"154801":["곡물 가공품 제조업 · 곡물 도정업","b",90.3,null,11.5],"154802":["곡물 가공품 제조업 · 곡물 제분업","b",92.7,null,10.4],"154803":["도축업","b",92.3,null,3.4],"154804":["수산동물 가공 및 저장 처리업 · 수산동물 냉동품 제조업","b",93.1,null,6.0],"154805":["동물성 유지 제조업","b",92.0,null,5.7],"154806":["곡물 가공품 제조업 · 곡물 제분업","b",91.2,null,6.8],"154901":["기타 식료품 제조업 · 커피 가공업","b",91.4,null,11.0],"154902":["기타 식료품 제조업 · 두부 및 유사 식품 제조업","b",94.1,null,8.8],"154903":["기타 식료품 제조업 · 건강 보조용 액화식품 제조업","b",89.3,null,11.9],"154904":["수산식물 가공 및 저장 처리업","b",94.4,null,3.1],"154905":["기타 식료품 제조업 · 차류 가공업","b",91.4,null,10.1],"154907":["기타 식료품 제조업 · 수프 및 균질화식품 제조업","b",94.1,null,6.9],"154908":["기타 식료품 제조업 · 건강 기능식품 제조업","b",89.3,null,14.3],"154909":["기타 식료품 제조업 · 그 외 기타 식료품 제조업","b",91.4,null,10.4],"155101":["증류주 및 합성주 제조업 · 주정 제조업","b",83.9,null,17.8],"155102":["증류주 및 합성주 제조업 · 소주 제조업","b",90.9,null,17.0],"155103":["증류주 및 합성주 제조업 · 기타 증류주 및 합성주 제조업","b",91.4,null,18.1],"155201":["발효주 제조업 · 탁주 및 약주 제조업","b",81.6,null,15.1],"155202":["발효주 제조업 · 탁주 및 약주 제조업","b",89.1,null,16.2],"155203":["발효주 제조업 · 기타 발효주 제조업","b",88.4,null,17.2],"155300":["발효주 제조업 · 맥아 및 맥주 제조업","b",85.3,null,18.1],"155401":["비알코올 음료 및 얼음 제조업 · 기타 비알코올 음료 제조업","b",85.7,null,14.4],"155402":["비알코올 음료 및 얼음 제조업 · 기타 비알코올 음료 제조업","b",89.2,null,10.0],"155403":["비알코올 음료 및 얼음 제조업 · 생수 생산업","b",85.7,null,14.4],"155404":["비알코올 음료 및 얼음 제조업 · 얼음 제조업","b",89.2,null,14.4],"160000":["담배 제조업 · 담배제품 제조업","b",94.3,null,16.1],"171101":["방적 및 가공사 제조업 · 화학섬유 방적업","b",95.2,null,13.1],"171102":["방적 및 가공사 제조업 · 면 방적업","b",91.1,null,17.6],"171104":["방적 및 가공사 제조업 · 모 방적업","b",93.0,null,9.8],"171105":["방적 및 가공사 제조업 · 연사 및 가공사 제조업","b",94.6,null,5.4],"171106":["방적 및 가공사 제조업 · 화학섬유 방적업","b",88.0,null,8.8],"171107":["방적 및 가공사 제조업 · 화학섬유 방적업","b",92.4,null,8.8],"171108":["방적 및 가공사 제조업 · 화학섬유 방적업","b",91.5,null,10.0],"171109":["직물 직조업 · 화학섬유직물 직조업","b",95.7,null,5.9],"171110":["방적 및 가공사 제조업 · 기타 방적업","b",95.2,null,13.1],"171112":["직물 직조업 · 모직물 직조업","b",94.3,null,12.1],"171114":["방적 및 가공사 제조업 · 기타 방적업","b",91.1,null,17.6],"171115":["직물 직조업 · 면직물 직조업","b",95.7,null,8.1],"171116":["직물 직조업 · 특수직물 및 기타 직물 직조업","b",95.7,null,8.1],"171200":["가공업 · 의복류 염색 가공업","b",94.6,null,9.4],"171201":["섬유제품 염색, 정리 및 마무리 가공업 · 솜 및 실 염색 가공업","b",94.6,null,11.0],"171202":["섬유제품 염색, 정리 및 마무리 가공업 · 날염 가공업","b",94.6,null,10.0],"171203":["섬유제품 염색, 정리 및 마무리 가공업 · 섬유제품 기타 정리 및 마무리 가공업","b",94.6,null,9.3],"172101":["직물제품 제조업 · 침구 및 관련제품 제조업","b",93.5,null,9.1],"172102":["직물제품 제조업 · 자수제품 및 자수용 재료 제조업","b",94.0,null,12.7],"172103":["직물제품 제조업 · 천막, 텐트 및 유사 제품 제조업","b",93.3,null,9.8],"172106":["직물제품 제조업 · 커튼 및 유사 제품 제조업","b",93.5,null,8.0],"172107":["직물제품 제조업 · 직물포대 제조업","b",93.5,null,9.8],"172200":["카펫, 마루덮개 및 유사 제품 제조업","b",91.8,null,9.8],"172300":["끈, 로프, 망 및 끈 가공품 제조업 · 어망 및 기타 끈 가공품 제조업","b",91.5,null,4.9],"172301":["끈, 로프, 망 및 끈 가공품 제조업 · 끈 및 로프 제조업","b",91.5,null,9.6],"172901":["그 외 기타 섬유제품 제조업 · 세폭직물 제조업","b",93.9,null,6.5],"172902":["그 외 기타 섬유제품 제조업 · 그 외 기타 분류 안된 섬유제품 제조업","b",94.3,null,8.6],"172903":["그 외 기타 섬유제품 제조업 · 부직포 및 펠트 제조업","b",93.2,null,13.9],"172904":["그 외 기타 섬유제품 제조업 · 특수사 및 코드직물 제조업","b",94.3,null,10.3],"172905":["그 외 기타 섬유제품 제조업 · 표면처리 및 적층 직물 제조업","b",94.3,null,10.3],"173004":["편조 의복 액세서리 제조업 · 스타킹 및 기타양말 제조업","b",94.6,null,7.7],"173006":["편조 의복 액세서리 제조업 · 기타 편조 의복 액세서리 제조업","b",94.3,null,3.9],"173009":["편조 의복 액세서리 제조업 · 기타 편조 의복 액세서리 제조업","b",93.2,null,10.3],"181101":["겉옷 제조업 · 남자용 겉옷 제조업","b",90.4,null,9.6],"181103":["한복 제조업","b",93.7,null,13.1],"181105":["겉옷 제조업 · 여자용 겉옷 제조업","b",90.4,null,7.1],"181109":["기타 봉제의복 제조업 · 셔츠 및 블라우스 제조업","b",91.5,null,9.6],"181110":["기타 봉제의복 제조업 · 근무복, 작업복 및 유사 의복 제조업","b",91.5,null,5.7],"181201":["기타 봉제의복 제조업 · 가죽의복 제조업","b",93.5,null,9.8],"181202":["기타 의복 액세서리 제조업 · 모자 제조업","b",94.0,null,9.9],"181203":["속옷 및 잠옷 제조업","b",94.4,null,11.1],"181204":["기타 의복 액세서리 제조업 · 그 외 기타 의복 액세서리 제조업","b",93.8,null,8.8],"181205":["겉옷 제조업 · 남자용 겉옷 제조업","b",93.5,null,8.1],"181206":["겉옷 제조업 · 여자용 겉옷 제조업","b",93.5,null,7.8],"181207":["기타 봉제의복 제조업 · 근무복, 작업복 및 유사 의복 제조업","b",93.5,null,7.4],"181208":["기타 봉제의복 제조업 · 유아용 의복 제조업","b",93.5,null,9.4],"181209":["한복 제조업","b",93.8,null,9.9],"181211":["기타 봉제의복 제조업 · 그 외 기타 봉제의복 제조업","b",93.8,null,11.7],"182001":["모피제품 제조업","b",89.2,null,9.1],"191100":["모피 및 가죽 제조업","b",92.2,null,8.1],"191200":["가방 및 기타 보호용 케이스 제조업","b",93.4,null,11.4],"191201":["기타 가죽제품 제조업","b",93.4,null,8.1],"191202":["핸드백 및 지갑 제조업","b",93.4,null,9.5],"192001":["신발 제조업 · 구두류 제조업","b",93.5,null,7.5],"192004":["신발 제조업 · 기타 신발 제조업","b",93.5,null,5.2],"192005":["신발 부분품 제조업","b",93.5,null,5.8],"193001":["방적 및 가공사 제조업 · 연사 및 가공사 제조업","b",93.8,null,12.6],"193009":["마무리 가공업 · 의복류 염색 가공업","b",91.1,null,12.2],"201001":["제재 및 목재 가공업 · 일반 제재업","b",92.0,null,7.4],"201002":["제재 및 목재 가공업","b",87.7,null,9.7],"201009":["제재 및 목재 가공업","b",90.4,null,10.2],"202101":["박판, 합판 및 강화 목제품 제조업 · 강화 및 재생 목재 제조업","b",89.5,null,10.5],"202102":["박판, 합판 및 강화 목제품 제조업 · 박판, 합판 및 유사 적층판 제조업","b",92.8,null,9.6],"202200":["건축용 나무제품 제조업 · 기타 건축용 나무제품 제조업","b",91.6,null,8.2],"202201":["목재 상자, 드럼 및 적재판 제조업","b",92.1,null,9.6],"202202":["건축용 나무제품 제조업 · 목재 문 및 관련제품 제조업","b",91.6,null,5.9],"202203":["목재 상자, 드럼 및 적재판 제조업 · 목재 깔판류 및 기타 적재판 제조업","b",92.1,null,11.9],"202901":["기타 나무제품 제조업 · 목재 도구 및 주방용 나무제품 제조업","b",92.4,null,9.4],"202902":["기타 나무제품 제조업 · 장식용 목제품 제조업","b",91.0,null,5.3],"202903":["코르크 및 조물 제품 제조업","b",94.5,null,10.8],"202906":["코르크 및 조물 제품 제조업","b",92.4,null,11.4],"202907":["코르크 및 조물 제품 제조업","b",91.0,null,10.5],"210101":["펄프, 종이 및 판지 제조업 · 신문용지 제조업","b",89.6,null,10.7],"210102":["기타 종이 및 판지 제품 제조업","b",91.3,null,9.6],"210104":["펄프, 종이 및 판지 제조업 · 기타 종이 및 판지 제조업","b",88.7,null,10.7],"210106":["펄프, 종이 및 판지 제조업 · 펄프 제조업","b",89.6,null,10.7],"210107":["펄프, 종이 및 판지 제조업 · 인쇄용 및 필기용 원지 제조업","b",89.6,null,10.7],"210108":["펄프, 종이 및 판지 제조업 · 위생용 원지 제조업","b",89.6,null,10.7],"210111":["펄프, 종이 및 판지 제조업","b",91.3,null,9.6],"210112":["펄프, 종이 및 판지 제조업 · 기타 종이 및 판지 제조업","b",91.3,null,9.6],"210200":["골판지 및 골판지 가공제품 제조업 · 골판지 제조업","b",93.0,null,5.0],"210201":["판지 상자 및 용기 제조업","b",93.6,null,6.5],"210202":["골판지 및 골판지 가공제품 제조업 · 골판지 상자 및 가공제품 제조업","b",93.0,null,10.2],"210203":["종이 포대 및 가방 제조업","b",93.6,null,8.2],"210204":["종이 용기 제조업 · 용기 제조업","b",93.6,null,10.2],"210205":["기타 종이 상자 및 용기 제조업","b",93.6,null,10.2],"210206":["기타 종이 및 판지 제품 제조업 · 그 외 기타 종이 및 판지 제품 제조업","b",93.6,null,10.2],"210901":["기타 종이 및 판지 제품 제조업 · 문구용 종이제품 제조업","b",94.0,null,10.4],"210902":["기타 종이 및 판지 제품 제조업 · 벽지 및 장판지 제조업","b",92.4,null,16.2],"210903":["기타 종이 및 판지 제품 제조업 · 위생용 종이제품 제조업","b",90.5,null,5.8],"210905":["기타 종이 및 판지 제품 제조업 · 그 외 기타 종이 및 판지 제품 제조업","b",90.5,null,7.1],"221100":["서적 출판업 · 일반 서적 출판업","b",95.6,null,15.8],"221103":["서적 출판업 · 교과서 및 학습 서적 출판업","b",94.7,null,18.1],"221104":["서적 출판업 · 만화 출판업","b",91.8,null,14.2],"221300":["오디오물 출판 및 원판 녹음업 · 음악 및 기타 오디오물 출판업","b",91.2,null,24.4],"221900":["기타 인쇄물 출판업","b",92.6,null,18.9],"222101":["인쇄업 · 경 인쇄업","b",93.3,null,9.7],"222102":["인쇄업 · 스크린 인쇄업","b",92.5,null,10.8],"222103":["인쇄업 · 경 인쇄업","b",92.5,null,10.5],"222104":["인쇄업 · 오프셋 인쇄업","b",92.5,null,9.2],"222105":["인쇄업 · 기타 인쇄업","b",92.5,null,10.0],"222201":["인쇄관련 산업 · 제책업","b",90.6,null,14.2],"222202":["인쇄관련 산업 · 기타 인쇄관련 산업","b",89.6,null,11.7],"222203":["인쇄관련 산업 · 제판 및 조판업","b",89.6,null,7.3],"223001":["기록매체 복제업","b",89.7,null,15.7],"231001":["코크스 및 연탄 제조업 · 코코스 및 연탄 제조업","b",95.3,null,21.7],"231002":["코크스 및 연탄 제조업 · 코코스 및 연탄 제조업","b",98.2,null,21.7],"232100":["원유 정제처리업","b",91.1,null,10.5],"232101":["기초 무기화학 물질 제조업 · 기타 기초 무기화학 물질 제조업","b",91.1,null,10.5],"232201":["석유 정제물 재처리업 · 기타 석유 정제물 재처리업","b",95.8,null,11.0],"241101":["기초 무기화학 물질 제조업","b",89.3,null,16.7],"241102":["기초 무기화학 물질 제조업 · 기타 기초 무기화학 물질 제조업","b",90.7,null,16.7],"241105":["기초 무기화학 물질 제조업 · 기타 기초 무기화학 물질 제조업","b",92.8,null,15.9],"241106":["기초 유기화학 물질 제조업 · 기타 기초 유기 화학물질 제조업","b",91.4,null,10.3],"241109":["기타 착색제 제조업 · 관련 제품 제조업","b",90.7,null,16.7],"241110":["기초 유기화학 물질 제조업 · 석유화학계 기초 화학 물질 제조업","b",91.4,null,10.3],"241114":["기초 유기화학 물질 제조업 · 바이오매스계 기초 화학물질 제조업","b",91.4,null,10.3],"241115":["기타 착색제 제조업","b",91.4,null,10.3],"241200":["비료 및 질소 화합물 제조업 · 복합비료 및 기타 화학비료 제조업","b",91.4,null,15.0],"241201":["비료 및 질소 화합물 제조업","b",91.4,null,16.7],"241202":["비료 및 질소 화합물 제조업 · 유기질 비료 및 상토 제조업","b",91.4,null,16.7],"241301":["합성고무 및 플라스틱 물질 제조업 · 합성고무 제조업","b",92.8,null,12.4],"241302":["합성고무 및 플라스틱 물질 제조업","b",89.6,null,5.4],"241303":["합성고무 및 플라스틱 물질 제조업","b",89.6,null,9.5],"242101":["살균ㆍ살충제 및 농약 제조업","b",85.1,null,9.4],"242102":["살균ㆍ살충제 및 농약 제조업","b",92.0,null,9.4],"242103":["살균ㆍ살충제 및 농약 제조업","b",85.1,null,9.4],"242104":["살균ㆍ살충제 및 농약 제조업","b",92.0,null,9.4],"242201":["인쇄 잉크 및 회화용 물감 제조업","b",89.2,null,10.4],"242202":["인쇄 잉크 및 회화용 물감 제조업","b",91.4,null,9.4],"242203":["일반용 도료 및 관련제품 제조업","b",92.8,null,9.4],"242204":["일반용 도료 및 관련제품 제조업","b",87.0,null,10.4],"242205":["요업용 도포제 및 관련제품 제조업","b",89.2,null,10.4],"242302":["한의약품 제조업","b",79.3,null,11.9],"242303":["기초 의약 물질 제조업","b",85.8,null,11.9],"242304":["동물용 의약품 제조업","b",85.8,null,11.9],"242305":["의료용품 및 기타 의약","b",85.8,null,11.9],"242309":["그 외 기타 의료용품 및 의약","b",88.8,null,11.9],"242401":["세제, 화장품 및 광택제 제조업 · 치약, 비누 및 기타 세제 제조업","b",92.4,null,10.2],"242402":["세제, 화장품 및 광택제 제조업 · 치약, 비누 및 기타 세제 제조업","b",89.6,null,10.8],"242403":["세제, 화장품 및 광택제 제조업 · 화장품 제조업","b",84.8,null,11.5],"242404":["세제, 화장품 및 광택제 제조업 · 계면활성제 제조업","b",89.6,null,11.2],"242405":["세제, 화장품 및 광택제 제조업 · 표면 광택제 및 실내 가향제 제조업","b",89.6,null,11.2],"242406":["세제, 화장품 및 광택제 제조업 · 표면 광택제 및 실내 가향제 제조업","b",85.1,null,5.9],"242901":["그 외 기타 화학제품 제조업 · 접착제 및 젤라틴 제조업","b",88.7,null,7.8],"242902":["마그네틱 및 광학 매체 제조업","b",89.0,null,8.6],"242903":["그 외 기타 화학제품 제조업","b",95.3,null,8.6],"242907":["그 외 기타 화학제품 제조업 · 그 외 기타 분류 안된 화학제품 제조업","b",88.7,null,6.8],"242908":["그 외 기타 화학제품 제조업 · 바이오 연료 및 혼합물 제조업","b",95.3,null,8.6],"243000":["화학섬유 제조업 · 합성섬유 제조업","b",90.6,null,12.1],"243001":["화학섬유 제조업 · 재생 섬유 제조업","b",90.6,null,12.1],"251101":["고무 타이어 및 튜브 생산업 · 고무 타이어 및 튜브 제조업","b",90.2,null,9.2],"251102":["고무 타이어 및 튜브 생산업 · 고무 타이어 및 튜브 제조업","b",94.2,null,10.0],"251901":["기타 고무제품 제조업 · 산업용 그 외 비경화 고무제품 제조업","b",92.0,null,5.9],"251902":["기타 고무제품 제조업 · 그 외 기타 고무제품 제조업","b",89.0,null,7.0],"251903":["기타 고무제품 제조업 · 고무 패킹류 제조업","b",92.0,null,8.1],"251904":["기타 고무제품 제조업","b",89.0,null,12.2],"252102":["1차 플라스틱제품 제조업 · 플라스틱 필름 제조업","b",94.2,null,11.1],"252103":["1차 플라스틱제품 제조업 · 플라스틱 합성피혁 제조업","b",92.8,null,5.6],"252105":["1차 플라스틱제품 제조업 · 플라스틱 필름 제조업","b",92.8,null,7.0],"252200":["플라스틱 발포 성형제품 제조업 · 폴리스티렌 발포 성형제품 제조업","b",93.3,null,6.1],"252201":["플라스틱 발포 성형제품 제조업 · 기타 플라스틱 발포 성형제품 제조업","b",93.3,null,10.6],"252301":["건축용 플라스틱제품 제조업 · 설치용 및 위생용 플라스틱제품 제조업","b",90.7,null,8.6],"252303":["건축용 플라스틱제품 제조업","b",90.7,null,10.7],"252400":["건축용 플라스틱제품 제조업 · 플라스틱 창호 제조업","b",92.6,null,9.0],"252401":["건축용 플라스틱제품 제조업 · 기타 건축용 플라스틱 조립제품 제조업","b",92.6,null,9.8],"252402":["포장용 플라스틱제품 제조업","b",92.6,null,8.9],"252403":["기타 플라스틱 제품 제조업 · 플라스틱 접착처리 제품 제조업","b",92.6,null,9.8],"252404":["기타 플라스틱 제품 제조업","b",92.6,null,9.8],"252901":["포장용 플라스틱제품 제조업 · 포장용 플라스틱 성형용기 제조업","b",92.3,null,11.4],"252902":["기타 플라스틱 제품 제조업 · 그 외 기타 플라스틱 제품 제조업","b",92.7,null,8.9],"252903":["기계장비 조립용 플라스틱제품 제조업 · 운송장비 조립용 플라스틱제품 제조업","b",92.3,null,5.9],"252904":["기계장비 조립용 플라스틱제품 제조업","b",92.3,null,13.0],"252909":["기타 플라스틱 제품 제조업 · 그 외 기타 플라스틱 제품 제조업","b",93.1,null,9.5],"261001":["판유리 및 판유리 가공품 제조업 · 판유리 제조업","b",86.4,null,11.3],"261002":["기타 유리제품 제조업 · 가정용 유리제품 제조업","b",89.5,null,10.1],"261004":["판유리 및 판유리 가공품 제조업 · 안전유리 제조업","b",89.5,null,10.9],"261005":["판유리 및 판유리 가공품 제조업 · 기타 판유리 가공품 제조업","b",89.5,null,10.9],"261006":["산업용 유리 제조업","b",89.5,null,10.9],"261007":["산업용 유리 제조업 · 디스플레이 장치용 유리 제조업","b",89.5,null,10.9],"261008":["산업용 유리 제조업 · 기타 산업용 유리제품 제조업","b",89.5,null,10.9],"261009":["기타 유리제품 제조업 · 포장용 유리용기 제조업","b",89.5,null,10.9],"261011":["기타 유리제품 제조업 · 그 외 기타 유리제품 제조업","b",89.5,null,10.9],"269100":["비내화 일반 도자기 제조업 · 가정용 및 장식용 도자기 제조업","b",88.6,null,12.3],"269101":["비내화 일반 도자기 제조업 · 위생용 및 산업용 도자기 제조업","b",88.6,null,11.1],"269102":["비내화 일반 도자기 제조업 · 기타 일반 도자기 제조업","b",88.6,null,4.5],"269200":["내화 요업제품 제조업 · 정형 내화 요업제품 제조업","b",91.9,null,17.4],"269201":["내화 요업제품 제조업 · 부정형 내화 요업제품 제조업","b",91.9,null,17.4],"269300":["건축용 비내화 요업제품 제조업 · 타일 및 유사 비내화 요업제품 제조업","b",91.5,null,11.4],"269301":["건축용 비내화 요업제품 제조업","b",91.5,null,12.4],"269302":["건축용 비내화 요업제품 제조업","b",91.5,null,12.4],"269402":["시멘트, 석회 및 플라스터 제조업 · 석회 및 플라스터 제조업","b",93.1,null,25.3],"269403":["시멘트, 석회 및 플라스터 제조업 · 석회 및 플라스터 제조업","b",95.3,null,25.3],"269501":["레미콘 제조업","b",91.9,null,18.8],"269502":["플라스터 혼합제품 제조업","b",93.9,null,18.8],"269503":["플라스터 제품 제조업 · 콘크리트제품 제조업","b",90.2,null,15.9],"269504":["블록 제조업","b",92.3,null,11.4],"269505":["비내화 모르타르 제조업","b",91.9,null,18.8],"269506":["플라스터 제품 제조업 · 제품 제조업","b",93.9,null,18.8],"269507":["플라스터 제품 제조업 · 블록 제조업","b",90.2,null,15.9],"269508":["콘크리트, 레미콘 및 기타 시멘트, · 콘크리트제품 제조업","b",92.3,null,14.3],"269509":["플라스터 제품 제조업 · 유사 제품 제조업","b",92.3,null,14.3],"269601":["석제품 제조업 · 건설용 석제품 제조업","b",93.3,null,9.8],"269603":["석제품 제조업 · 기타 석제품 제조업","b",93.3,null,7.5],"269901":["그 외 기타 비금속 광물제품 제조업 · 암면 및 유사 제품 제조업","b",89.6,null,12.1],"269902":["그 외 기타 비금속 광물제품 제조업 · 연마재 제조업","b",94.4,null,7.6],"269903":["그 외 기타 비금속 광물제품 제조업","b",95.6,null,14.2],"269904":["그 외 기타 비금속 광물제품 제조업 · 비금속광물 분쇄물 생산업","b",92.3,null,14.2],"269905":["그 외 기타 비금속 광물제품 제조업 · 탄소섬유 제조업","b",89.6,null,12.1],"269906":["그 외 기타 비금속 광물제품 제조업","b",89.6,null,12.1],"269907":["그 외 기타 비금속 광물제품 제조업 · 연마재 제조업","b",92.3,null,14.2],"269908":["그 외 기타 비금속 광물제품 제조업","b",92.3,null,14.2],"271101":["제철, 제강 및 합금철 제조업 · 제철업","b",92.4,null,13.3],"271102":["제철, 제강 및 합금철 제조업 · 제강업","b",88.8,null,16.2],"271103":["제철, 제강 및 합금철 제조업 · 합금철 제조업","b",88.8,null,16.2],"271104":["제철, 제강 및 합금철 제조업 · 기타 제철 및 제강업","b",88.8,null,16.2],"271201":["기타 1차 철강 제조업 · 그 외 기타 1차 철강 제조업","b",91.6,null,7.1],"271202":["철강관 제조업 · 주철관 제조업","b",91.0,null,15.1],"271204":["철강 압연, 압출 및 연신제품 제조업 · 열간 압연 및 압출제품 제조업","b",91.6,null,11.2],"271205":["철강 압연, 압출 및 연신제품 제조업 · 냉간 압연 및 압출 제품 제조업","b",91.6,null,11.2],"271206":["철강 압연, 압출 및 연신제품 제조업 · 철강선 제조업","b",91.6,null,11.2],"271207":["철강관 제조업 · 강관 제조업","b",91.6,null,11.2],"271208":["철강관 제조업 · 강관 가공품 및 관 연결구류 제조업","b",91.0,null,15.1],"271901":["기타 1차 철강 제조업","b",89.0,null,10.6],"271902":["기타 1차 철강 제조업 · 그 외 기타 1차 철강 제조업","b",88.2,null,7.0],"272100":["비철금속 제련, 정련 및 합금 제조업","b",86.6,null,12.4],"272101":["비철금속 제련, 정련 및 합금 제조업 · 동 제련, 정련 및 합금 제조업","b",86.6,null,12.4],"272102":["비철금속 제련, 정련 및 합금 제조업 · 알루미늄 제련, 정련 및 합금 제조업","b",86.6,null,12.4],"272103":["비철금속 제련, 정련 및 합금 제조업 · 연 및 아연 제련, 정련 및 합금 제조업","b",86.6,null,12.4],"272200":["비철금속 제련, 정련 및 합금 제조업","b",87.3,null,12.8],"272201":["비철금속 제련, 정련 및 합금 제조업 · 동 제련, 정련 및 합금 제조업","b",87.3,null,12.8],"272202":["비철금속 제련, 정련 및 합금 제조업","b",87.3,null,12.8],"272203":["비철금속 제련, 정련 및 합금 제조업","b",87.3,null,12.8],"272300":["연신제품 제조업","b",89.4,null,3.8],"272301":["동 압연, 압출 및 연신제품 제조업","b",89.4,null,8.3],"272302":["연신제품 제조업","b",89.4,null,8.3],"272900":["기타 1차 비철금속 제조업","b",88.8,null,13.5],"273101":["철강 주조업 · 선철 주물 주조업","b",90.1,null,17.3],"273102":["철강 주조업 · 강 주물 주조업","b",88.8,null,15.7],"281101":["그 외 기타 금속 가공제품 제조업","b",91.5,null,7.9],"281102":["탭, 밸브 및 유사 장치 제조업","b",91.5,null,8.5],"281103":["구조용 금속제품 제조업","b",91.5,null,11.4],"281104":["구조용 금속제품 제조업 · 육상 금속 골조 구조재 제조업","b",91.5,null,10.5],"281105":["구조용 금속제품 제조업 · 수상 금속 골조 구조재 제조업","b",91.5,null,12.3],"281106":["구조용 금속제품 제조업 · 기타 구조용 금속제품 제조업","b",91.5,null,9.4],"281201":["유사 용기 제조업 · 제조업","b",88.4,null,11.4],"281202":["산업용 난방보일러 및 방열기 제조업","b",90.5,null,8.1],"281204":["금속 탱크 및 저장 용기 제조업","b",90.5,null,13.3],"281205":["압축 및 액화 가스 용기 제조업","b",90.5,null,13.3],"281300":["핵반응기 및 증기보일러 제조업","b",91.0,null,15.7],"289101":["분말 야금제품 제조업","b",91.1,null,8.7],"289102":["금속 단조제품 제조업","b",89.6,null,9.2],"289103":["자동차용 금속 압형제품 제조업","b",91.1,null,5.6],"289104":["그 외 금속 압형제품 제조업","b",91.1,null,10.9],"289201":["금속 열처리, 도금 및 기타 금속 가공업 · 그 외 기타 금속 가공업","b",87.7,null,8.2],"289202":["금속 열처리, 도금 및 기타 금속 가공업 · 도장 및 기타 피막 처리업","b",91.5,null,10.6],"289205":["금속 열처리, 도금 및 기타 금속 가공업 · 절삭 가공 및 유사 처리업","b",87.7,null,9.4],"289206":["금속 열처리, 도금 및 기타 금속 가공업 · 금속 열처리업","b",91.5,null,10.8],"289207":["금속 열처리, 도금 및 기타 금속 가공업 · 도금업","b",91.5,null,13.0],"289208":["금속 열처리, 도금 및 기타 금속 가공업 · 그 외 기타 금속 가공업","b",91.5,null,7.6],"289301":["날붙이, 수공구 및 일반 철물 제조업 · 비동력식 수공구 제조업","b",94.5,null,3.8],"289302":["날붙이, 수공구 및 일반 철물 제조업 · 일반 철물 제조업","b",92.9,null,9.7],"289303":["날붙이, 수공구 및 일반 철물 제조업 · 톱 및 호환성 공구 제조업","b",91.6,null,7.9],"289304":["날붙이, 수공구 및 일반 철물 제조업 · 날붙이 제조업","b",91.6,null,6.8],"289305":["날붙이, 수공구 및 일반 철물 제조업 · 일반 철물 제조업","b",91.6,null,11.0],"289306":["날붙이, 수공구 및 일반 철물 제조업 · 비동력식 수공구 제조업","b",91.6,null,8.6],"289901":["금속선 가공제품 제조업","b",92.0,null,7.8],"289902":["그 외 기타 금속 가공제품 제조업 · 금속 캔 및 기타 포장용기 제조업","b",88.0,null,7.9],"289903":["그 외 기타 금속 가공제품 제조업","b",92.4,null,7.5],"289908":["볼트 및 너트류 제조업","b",92.0,null,6.8],"289910":["가공제품 제조업 · 제조업","b",92.0,null,12.3],"289913":["금속 스프링 제조업","b",92.0,null,12.3],"289915":["그 외 기타 금속 가공제품 제조업","b",92.0,null,12.3],"289916":["그 외 기타 금속 가공제품 제조업 · 금속 위생용품 제조업","b",88.0,null,10.9],"289917":["그 외 기타 금속 가공제품 제조업 · 금속 표시판 제조업","b",92.4,null,13.0],"289918":["그 외 기타 금속 가공제품 제조업","b",92.4,null,5.3],"291100":["내연기관 제조업","b",91.9,null,8.7],"291101":["기타 기관 및 터빈 제조업","b",91.9,null,14.7],"291200":["유압 기기 제조업","b",89.6,null,6.3],"291201":["액체 펌프 제조업","b",89.6,null,12.2],"291202":["기체 펌프 및 압축기 제조업","b",89.6,null,12.2],"291300":["베어링, 기어 및 동력 전달장치 제조업 · 기어 및 동력전달장치 제조업","b",90.7,null,8.1],"291301":["구름베어링 제조업","b",90.7,null,14.5],"291401":["제조업","b",88.6,null,16.8],"291501":["산업용 트럭 및 적재기 제조업","b",89.2,null,14.7],"291502":["기타 물품 취급장비 제조업","b",91.1,null,8.2],"291503":["승강기 제조업","b",91.1,null,10.9],"291504":["컨베이어 장치 제조업","b",91.1,null,7.7],"291902":["산업용 냉장 및 냉동장비 제조업","b",89.9,null,10.6],"291903":["제조업","b",89.9,null,5.9],"291904":["산업용 송풍기 및 배기장치 제조업","b",89.9,null,8.3],"291905":["기체 여과기 제조업","b",89.9,null,9.7],"291906":["액체 여과기 제조업","b",89.9,null,7.6],"291907":["가스 발생기 제조업","b",89.9,null,11.8],"291908":["기타 일반 목적용 기계 제조업 · 용기 세척, 포장 및 충전기 제조업","b",89.9,null,11.8],"291911":["기타 일반 목적용 기계 제조업 · 그 외 기타 일반 목적용 기계 제조업","b",89.9,null,7.7],"292100":["농업 및 임업용 기계 제조업","b",92.8,null,9.9],"292201":["기타 일반 목적용 기계 제조업 · 동력식 수지 공구 제조업","b",90.1,null,8.6],"292202":["가공 공작기계 제조업 · 금속 절삭기계 제조업","b",89.8,null,8.9],"292203":["가공 공작기계 제조업 · 전자 응용 절삭기계 제조업","b",91.9,null,8.4],"292204":["가공 공작기계 제조업 · 기타 가공 공작기계 제조업","b",89.8,null,9.4],"292205":["가공 공작기계 제조업 · 디지털 적층 성형기계 제조업","b",91.9,null,9.6],"292206":["가공 공작기계 제조업 · 금속 성형기계 제조업","b",91.9,null,7.7],"292300":["금속 주조 및 기타 야금용 기계 제조업","b",92.0,null,12.6],"292400":["건설 및 광업용 기계장비 제조업 · 건설 및 채광용 기계장비 제조업","b",90.1,null,7.7],"292401":["건설 및 광업용 기계장비 제조업 · 광물 처리 및 취급장비 제조업","b",90.1,null,13.5],"292500":["음․식료품 및 담배 가공기계 제조업","b",89.9,null,6.8],"292600":["섬유, 의복 및 가죽 가공기계 제조업","b",91.4,null,7.3],"292601":["섬유, 의복 및 가죽 가공기계 제조업","b",91.4,null,12.1],"292700":["무기 및 총포탄 제조업","b",89.6,null,10.5],"292901":["산업용 로봇 제조업","b",89.6,null,8.1],"292902":["기타 특수 목적용 기계 제조업 · 인쇄 및 제책용 기계 제조업","b",90.6,null,8.2],"292903":["기타 특수 목적용 기계 제조업 · 주형 및 금형 제조업","b",90.8,null,13.5],"292905":["기타 특수 목적용 기계 제조업 · 그 외 기타 특수목적용 기계 제조업","b",90.6,null,12.0],"292906":["기타 특수 목적용 기계 제조업","b",90.6,null,12.0],"292908":["반도체 제조용 기계 제조업","b",90.8,null,13.5],"292909":["디스플레이 제조용 기계 제조업","b",90.8,null,12.9],"293001":["가정용 전기 기기 제조업 · 주방용 전기 기기 제조업","b",89.7,null,7.0],"293004":["난방 기구 제조업","b",91.5,null,8.5],"300101":["기억 장치 및 주변 기기 제조업 · 기타 주변 기기 제조업","b",90.0,null,7.0],"300102":["기억 장치 및 주변 기기 제조업 · 기억 장치 제조업","b",90.0,null,12.4],"300103":["기억 장치 및 주변 기기 제조업 · 컴퓨터 모니터 제조업","b",90.0,null,12.4],"300104":["기억 장치 및 주변 기기 제조업 · 컴퓨터 프린터 제조업","b",90.0,null,12.4],"300201":["사무용 기계 및 장비 제조업","b",91.1,null,8.1],"300202":["사무용 기계 및 장비 제조업","b",90.2,null,11.0],"311001":["기타 전자 부품 제조업","b",91.5,null,7.9],"311002":["전동기, 발전기 및 전기 변환장치 제조업 · 전동기 및 발전기 제조업","b",89.6,null,10.0],"311003":["전동기, 발전기 및 전기 변환장치 제조업 · 변압기 제조업","b",89.6,null,11.2],"311004":["전동기, 발전기 및 전기 변환장치 제조업 · 기타 전기 변환장치 제조업","b",89.6,null,11.2],"311005":["전동기, 발전기 및 전기 변환장치 제조업 · 에너지 저장장치 제조업","b",89.6,null,11.2],"311006":["전동기, 발전기 및 전기 변환장치 제조업 · 기타 전기 변환장치 제조업","b",89.6,null,7.9],"312000":["전기 공급 및 제어장치 제조업 · 배전반 및 전기 자동제어반 제조업","b",90.2,null,11.2],"312001":["전기 공급 및 제어장치 제조업 · 전기회로 개폐, 보호 장치 제조업","b",90.2,null,12.0],"312002":["전기 공급 및 제어장치 제조업 · 전기회로 접속장치 제조업","b",90.2,null,9.4],"313001":["절연선 및 케이블 제조업 · 기타 절연선 및 케이블 제조업","b",89.3,null,8.3],"313002":["절연선 및 케이블 제조업 · 절연 코드세트 및 기타 도체 제조업","b",90.1,null,7.2],"313003":["절연선 및 케이블 제조업 · 광섬유 케이블 제조업","b",89.3,null,10.4],"314000":["일차전지 및 이차전지 제조업","b",90.7,null,14.6],"314001":["일차전지 및 이차전지 제조업 · 일차전지 제조업","b",90.7,null,14.6],"315001":["조명장치 제조업 · 일반용 전기 조명장치 제조업","b",91.4,null,7.1],"315002":["조명장치 제조업 · 전시 및 광고용 조명장치 제조업","b",88.2,null,11.5],"315003":["전구 및 램프 제조업","b",91.4,null,11.4],"315005":["조명장치 제조업 · 기타 조명장치 제조업","b",91.4,null,11.4],"319001":["조명장치 제조업 · 운송장비용 조명장치 제조업","b",90.0,null,7.5],"319002":["기타 전기장비 제조업 · 그 외 기타 전기장비 제조업","b",90.5,null,7.0],"319003":["기타 전기장비 제조업 · 전기 경보 및 신호장치 제조업","b",90.5,null,13.1],"319004":["기타 전기장비 제조업","b",90.5,null,13.1],"319005":["기타 전기장비 제조업 · 교통 신호장치 제조업","b",90.5,null,13.1],"321000":["기타 반도체 소자 제조업","b",90.7,null,10.2],"321001":["기타 전자 부품 제조업 · 그 외 기타 전자 부품 제조업","b",90.7,null,11.2],"321002":["전자집적회로 제조업 · 메모리용 전자집적회로 제조업","b",90.7,null,12.8],"321003":["전자집적회로 제조업","b",90.7,null,12.8],"321004":["발광 다이오드 제조업","b",90.7,null,12.8],"321005":["표시장치 제조업 · 액정 표시장치 제조업","b",90.7,null,12.4],"321006":["표시장치 제조업 · 유기 발광 표시장치 제조업","b",90.7,null,12.4],"321007":["표시장치 제조업 · 기타 표시장치 제조업","b",90.7,null,12.4],"321008":["인쇄회로기판용 적층판 제조업","b",90.7,null,7.8],"321009":["경성 인쇄회로기판 제조업","b",90.7,null,12.4],"321011":["연성 및 기타 인쇄회로기판 제조업","b",90.7,null,12.4],"321012":["전자 부품 실장기판 제조업","b",90.7,null,4.9],"321013":["기타 전자 부품 제조업 · 전자 축전기 제조업","b",90.7,null,12.4],"322002":["유선 통신장비 제조업","b",90.6,null,9.2],"322003":["방송 및 무선 통신장비 제조업 · 방송장비 제조업","b",90.6,null,11.3],"322004":["방송 및 무선 통신장비 제조업 · 이동 전화기 제조업","b",90.6,null,11.3],"322005":["방송 및 무선 통신장비 제조업 · 기타 무선 통신장비 제조업","b",90.6,null,8.4],"323001":["비디오 및 기타 영상 기기 제조업","b",91.2,null,9.7],"323005":["텔레비전 제조업","b",91.2,null,12.2],"323006":["라디오, 녹음 및 재생 기기 제조업","b",91.2,null,12.2],"323007":["기타 음향기기 제조업","b",91.2,null,5.6],"331100":["전기식 진단 및 요법 기기 제조업","b",89.6,null,14.1],"331101":["기타 의료용 기기 제조업","b",74.1,null,14.2],"331102":["기타 의료용 기기 제조업 · 그 외 기타 의료용 기기 제조업","b",89.6,null,12.7],"331103":["방사선 장치 제조업","b",89.6,null,14.1],"331104":["기타 의료용 기기 제조업 · 치과용 기기 제조업","b",89.6,null,14.1],"331105":["기타 의료용 기기 제조업","b",89.6,null,14.1],"331106":["기타 의료용 기기 제조업 · 의료용 가구 제조업","b",89.6,null,14.1],"331201":["물질 검사, 측정 및 분석 기구 제조업","b",90.5,null,7.3],"331203":["기타 정밀 기기 제조업 · 측량 기구 제조업","b",90.5,null,11.4],"331204":["기타 정밀 기기 제조업 · 분석 기구 제조업","b",90.5,null,8.3],"331205":["속도계 및 적산계기 제조업","b",90.5,null,11.4],"331206":["기타 정밀 기기 제조업 · 제조업","b",90.5,null,8.0],"331207":["기타 정밀 기기 제조업 · 정밀 기기 제조업","b",90.5,null,11.4],"331300":["산업 처리공정 제어장비 제조업","b",89.6,null,10.8],"332000":["기타 의료용 기기 제조업 · 안경 및 안경렌즈 제조업","b",90.5,null,9.4],"332001":["사진장비 및 광학기기 제조업 · 기타 광학기기 및 사진기 제조업","b",91.0,null,10.2],"332002":["기타 의료용 기기 제조업 · 안경 및 안경렌즈 제조업","b",91.0,null,12.8],"332003":["사진장비 및 광학기기 제조업 · 광학 렌즈 및 광학 요소 제조업","b",91.0,null,12.8],"332004":["사진장비 및 광학기기 제조업 · 기타 광학기기 및 사진기 제조업","b",91.0,null,12.8],"333000":["시계 및 시계 부품 제조업","b",91.3,null,11.9],"341001":["자동차 제조업","b",89.6,null,11.4],"341003":["자동차용 엔진 제조업","b",89.6,null,12.7],"341004":["자동차 제조업","b",89.6,null,12.7],"342000":["자동차 차체 및 트레일러 제조업 · 트레일러 및 세미 트레일러 제조업","b",89.6,null,8.6],"342001":["자동차 차체 및 트레일러 제조업 · 차체 및 특장차 제조업","b",89.6,null,10.0],"342002":["자동차 차체 및 트레일러 제조업 · 자동차 구조 및 장치 변경업","b",89.6,null,11.1],"343000":["자동차용 기타 신품 부품 제조업 · 그 외 자동차용 신품 부품 제조업","b",90.6,null,6.5],"343001":["자동차 엔진용 신품 부품 제조업","b",90.6,null,10.2],"343002":["자동차 차체용 신품 부품 제조업","b",90.6,null,10.9],"343003":["전기장치 제조업 · 제조업","b",90.6,null,10.2],"343004":["자동차용 신품 전기장치 제조업","b",90.6,null,10.2],"343005":["자동차용 기타 신품 부품 제조업","b",90.6,null,10.2],"343006":["자동차용 기타 신품 부품 제조업 · 자동차용 신품 제동장치 제조업","b",90.6,null,10.2],"343007":["자동차 재제조 부품 제조업","b",90.6,null,10.2],"351101":["선박 및 수상 부유 구조물 건조업 · 강선 건조업","b",94.5,null,11.0],"351102":["선박 및 수상 부유 구조물 건조업 · 기타 선박 건조업","b",95.4,null,5.4],"351103":["선박 및 수상 부유 구조물 건조업 · 선박 구성 부분품 제조업","b",94.1,null,10.3],"351104":["금속류 해체, 선별 및 원료 재생업 · 금속류 해체 및 선별업","b",93.5,null,15.0],"351105":["선박 및 수상 부유 구조물 건조업 · 기타 선박 건조업","b",94.5,null,12.8],"351106":["선박 및 수상 부유 구조물 건조업 · 합성수지선 건조업","b",94.1,null,12.8],"351107":["선박 및 수상 부유 구조물 건조업 · 기타 선박 건조업","b",94.1,null,12.8],"351200":["오락 및 스포츠용 보트 건조업","b",94.1,null,10.6],"352000":["철도장비 제조업","b",90.2,null,14.4],"352001":["철도장비 제조업 · 기관차 및 기타 철도 차량 제조업","b",90.2,null,14.4],"353000":["항공기용 엔진 및 부품 제조업 · 항공기용 부품 제조업","b",91.4,null,14.4],"353001":["항공기, 우주선 및 보조장치 제조업","b",91.4,null,14.4],"353002":["항공기, 우주선 및 보조장치 제조업 · 무인 항공기 및 무인 비행장치 제조업","b",90.5,null,11.0],"353003":["항공기용 엔진 및 부품 제조업 · 항공기용 엔진 제조업","b",91.4,null,14.4],"359100":["이동수단 제조업 · 개인용 전기식 이동수단 제조업","b",89.6,null,10.4],"359200":["그 외 기타 분류 안된 운송장비 제조업 · 자전거 및 환자용 차량 제조업","b",90.5,null,5.4],"359201":["전투용 차량 제조업","b",90.5,null,13.0],"359202":["제조업 · 운송장비 제조업","b",90.5,null,13.0],"361001":["기타 가구 제조업 · 금속 가구 제조업","b",91.9,null,10.0],"361002":["목재 가구 제조업 · 기타 목재 가구 제조업","b",90.3,null,10.3],"361003":["기타 가구 제조업 · 그 외 기타 가구 제조업","b",92.8,null,8.5],"361005":["침대 및 내장 가구 제조업 · 매트리스 및 침대 제조업","b",90.3,null,9.8],"361006":["침대 및 내장 가구 제조업 · 소파 및 기타 내장 가구 제조업","b",90.3,null,9.5],"361007":["목재 가구 제조업 · 주방용 및 음식점용 목재 가구 제조업","b",90.3,null,5.8],"369101":["귀금속 및 관련제품 제조업","b",91.0,null,5.8],"369200":["악기 제조업 · 기타 악기 및 전자 악기 제조업","b",90.2,null,6.3],"369201":["악기 제조업 · 건반 악기 제조업","b",90.2,null,10.3],"369202":["악기 제조업 · 기타 악기 및 전자 악기 제조업","b",90.2,null,10.3],"369301":["운동 및 경기용구 제조업 · 체조, 육상 및 체력 단련용 장비 제조업","b",91.0,null,9.4],"369302":["운동 및 경기용구 제조업 · 기타 운동 및 경기용구 제조업","b",89.1,null,9.1],"369305":["운동 및 경기용구 제조업 · 놀이터용 장비 제조업","b",91.0,null,12.8],"369306":["운동 및 경기용구 제조업 · 낚시 및 수렵용구 제조업","b",91.0,null,8.4],"369401":["인형, 장난감 및 오락용품 제조업 · 인형 및 장난감 제조업","b",93.2,null,15.5],"369402":["인형, 장난감 및 오락용품 제조업 · 인형 및 장난감 제조업","b",91.0,null,15.0],"369404":["인형, 장난감 및 오락용품 제조업 · 영상게임기 제조업","b",91.0,null,13.1],"369405":["인형, 장난감 및 오락용품 제조업 · 기타 오락용품 제조업","b",91.0,null,13.1],"369501":["제조업","b",90.4,null,11.7],"369502":["가발 및 유사 제품 제조업","b",90.9,null,13.4],"369503":["간판 및 광고물 제조업","b",86.3,null,10.5],"369504":["가발, 장식용품 및 전시용 모형 제조업 · 표구 처리업","b",87.6,null,6.1],"369505":["가발, 장식용품 및 전시용 모형 제조업 · 전시용 모형 제조업","b",90.4,null,14.6],"369902":["사무 및 회화용품 제조업","b",92.2,null,12.0],"369903":["그 외 기타 분류 안된 제품 제조업 · 비 및 솔 제조업","b",92.2,null,6.3],"369904":["그 외 기타 분류 안된 제품 제조업","b",92.8,null,7.2],"369905":["그 외 기타 분류 안된 제품 제조업 · 단추 및 유사 파스너 제조업","b",92.0,null,8.7],"369906":["그 외 기타 분류 안된 제품 제조업 · 라이터, 연소물 및 흡연용품 제조업","b",91.2,null,11.8],"369907":["그 외 기타 화학제품 제조업 · 화약 및 불꽃제품 제조업","b",91.2,null,12.4],"369908":["그 외 기타 분류 안된 제품 제조업","b",91.2,null,9.9],"371000":["금속류 해체, 선별 및 원료 재생업 · 금속류 원료 재생업","b",91.6,null,14.0],"371001":["금속류 해체, 선별 및 원료 재생업 · 금속류 해체 및 선별업","b",91.6,null,14.0],"372000":["비금속류 해체, 선별 및 원료 재생업 · 비금속류 원료 재생업","b",92.3,null,12.0],"381000":["금속 열처리, 도금 및 기타 금속가공업 · 절삭가공 및 유사처리업","b",90.6,null,10.3],"381003":["금속 열처리, 도금 및 기타 금속가공업 · 그 외 기타 금속가공업","b",90.6,null,12.9],"381005":["그 외 기타 분류안된 제품 제조업","b",90.6,null,10.8],"381007":["기타 소사장제","b",90.6,null,11.3],"401000":["발전업 · 태양력 발전업","b",94.6,null,23.8],"401001":["발전업 · 원자력 발전업","b",94.6,null,20.2],"401002":["발전업 · 수력 발전업","b",95.1,null,20.2],"401003":["발전업 · 화력 발전업","b",95.1,null,20.2],"401004":["발전업","b",94.6,null,27.8],"401005":["송전 및 배전업","b",94.6,null,32.8],"401006":["전기 판매업","b",95.1,null,21.5],"402001":["연료용 가스 제조 및 배관공급업","b",89.8,null,25.4],"403000":["증기, 냉․온수 및 공기 조절 공급업","b",87.0,null,27.1],"410000":["생활용수 공급업","b",84.1,null,28.5],"410001":["산업용수 공급업","b",84.1,null,28.5],"451101":["주거용 건물 건설업 · 아파트 건설업","b",91.6,null,11.3],"451102":["주거용 건물 건설업","b",91.0,null,20.2],"451103":["주거용 건물 건설업","b",87.6,null,17.4],"451104":["비주거용 건물 건설업 · 기타 비주거용 건물 건설업","a",91.2,null,12.9],"451105":["주거용 건물 건설업 · 아파트 건설업","b",91.6,null,14.5],"451106":["주거용 건물 건설업 · 단독 주택 건설업","b",91.6,null,11.3],"451107":["주거용 건물 건설업 · 기타 공동 주택 건설업","b",91.6,null,13.9],"451109":["비주거용 건물 건설업 · 제조업 및 유사 산업용 건물 건설업","a",91.2,null,22.4],"451200":["토목 시설물 건설업 · 기타 토목 시설물 건설업","b",89.6,null,20.3],"451204":["지반조성 건설업","b",89.6,null,16.9],"451205":["토목 시설물 건설업 · 도로 건설업","b",89.6,null,22.8],"451206":["토목 시설물 건설업 · 교량, 터널 및 철도 건설업","b",89.6,null,13.4],"451207":["토목 시설물 건설업 · 항만, 수로, 댐 및 유사 구조물 건설업","b",89.6,null,13.4],"451208":["토목 시설물 건설업 · 환경설비 건설업","b",89.6,null,16.8],"451300":["토목 시설물 건설업 · 산업 생산시설 종합 건설업","b",87.7,null,18.2],"451400":["토목 시설물 건설업 · 조경 건설업","b",91.0,null,15.5],"452101":["기타 건축 마무리 공사업 · 미장, 타일 및 방수 공사업","b",92.8,null,15.2],"452102":["유리 및 창호 공사업","b",92.5,null,13.1],"452103":["기반조성 관련 전문공사업 · 보링, 그라우팅 및 관정 공사업","b",91.1,null,17.0],"452104":["건물설비 설치 공사업 · 배관 및 냉․난방 공사업","b",91.2,null,17.4],"452105":["기타 시설물 축조 관련 전문공사업 · 도배, 실내 장식 및 내장 목공사업","b",88.7,null,15.9],"452106":["도장, 도배 및 내장 공사업 · 도배, 실내 장식 및 내장 목공사업","b",88.2,null,13.8],"452107":["도장, 도배 및 내장 공사업 · 도배, 실내 장식 및 내장 목공사업","b",91.2,null,15.2],"452108":["기타 시설물 축조 관련 전문 공사업 · 포장 공사업","b",91.4,null,20.2],"452109":["기타 시설물 축조 관련 전문 공사업 · 수중 공사업","b",92.2,null,16.1],"452110":["기반조성 관련 전문공사업 · 토공사업","b",92.8,null,21.6],"452111":["시설물 유지관리 공사업","b",90.7,null,15.1],"452112":["기반조성 관련 전문공사업 · 보링, 그라우팅 및 관정 공사업","b",92.8,null,18.3],"452113":["기반조성 관련 전문공사업 · 파일공사 및 축조관련 기초 공사업","b",92.8,null,22.7],"452114":["기타 시설물 축조 관련 전문공사업 · 조적 및 석 공사업","b",92.8,null,16.1],"452115":["건물설비 설치 공사업 · 방음, 방진 및 내화 공사업","b",92.8,null,16.4],"452116":["건물설비 설치 공사업 · 소방시설 공사업","b",92.8,null,14.7],"452117":["건물 및 구축물 해체 공사업","b",92.5,null,19.0],"452118":["철골, 철근 및 콘크리트 공사업 · 철골 및 관련 구조물 공사업","b",92.5,null,17.9],"452119":["철골, 철근 및 콘크리트 공사업 · 콘크리트 및 철근 공사업","b",92.5,null,14.8],"452120":["기타 시설물 축조 관련 전문공사업 · 비계 및 형틀 공사업","b",92.5,null,21.4],"452121":["기타 건축 마무리 공사업 · 건물용 금속 공작물 설치 공사업","b",92.5,null,16.5],"452122":["기타 시설물 축조 관련 전문공사업 · 철도 궤도 전문공사업","b",91.1,null,16.9],"452123":["기타 시설물 축조 관련 전문공사업 · 지붕, 내․외벽 축조 관련 전문공사업","b",91.1,null,18.8],"452124":["건물설비 설치 공사업","b",91.2,null,18.7],"452125":["전기 공사업 · 일반 전기 공사업","b",91.2,null,14.6],"452126":["전기 공사업 · 내부 전기배선 공사업","b",91.2,null,14.8],"452127":["통신 공사업 · 일반 통신 공사업","b",91.2,null,18.7],"452128":["통신 공사업 · 내부 통신배선 공사업","b",91.2,null,18.0],"452129":["도장, 도배 및 내장 공사업 · 도장 공사업","b",88.7,null,18.1],"452131":["기타 시설물 축조 관련 전문공사업 · 기타 옥외 시설물 축조관련 전문공사업","b",90.7,null,15.9],"452132":["건물설비 설치 공사업 · 배관 및 냉․난방 공사업","b",90.7,null,18.6],"452200":["기타 건축 마무리 공사업 · 그 외 기타 건축 마무리 공사업","b",93.4,null,19.3],"452201":["건물설비 설치 공사업 · 기타 건물 관련설비 설치 공사업","b",93.4,null,18.1],"453000":["건설장비 운영업","b",89.7,null,22.8],"501101":["자동차 신품 판매업","a",91.3,null,8.6],"501103":["중고 자동차 판매업","a",91.3,null,2.8],"501201":["자동차 신품 판매업","a",92.2,null,3.8],"501202":["중고 자동차 판매업","a",91.8,null,2.4],"501301":["자동차 신품 판매업","a",81.3,null,27.5],"501302":["자동차 신품 판매업","a",80.9,null,30.4],"501303":["중고 자동차 판매업","a",85.1,null,19.7],"503001":["자동차 신품 부품 및 내장품 판매업 · 자동차 신품 타이어 및 튜브 판매업","a",93.9,null,4.5],"503002":["자동차 신품 부품 및 내장품 판매업 · 자동차 신품 타이어 및 튜브 판매업","a",90.3,null,5.4],"503003":["자동차 중고 부품 및 내장품 판매업","a",91.2,null,4.3],"503004":["자동차 중고 부품 및 내장품 판매업","a",86.5,null,8.4],"503005":["자동차 신품 부품 및 내장품 판매업","a",84.6,null,7.1],"503006":["자동차 신품 부품 및 내장품 판매업 · 자동차용 전용 신품 부품 판매업","a",91.2,null,4.5],"503007":["자동차 신품 부품 및 내장품 판매업","a",91.2,null,7.8],"503008":["자동차 신품 부품 및 내장품 판매업","a",91.2,null,4.7],"503009":["자동차 신품 부품 및 내장품 판매업 · 자동차용 전용 신품 부품 판매업","a",86.5,null,4.9],"503010":["자동차 신품 부품 및 내장품 판매업","a",86.5,null,3.4],"503013":["자동차 신품 부품 및 내장품 판매업","a",86.5,null,6.0],"504001":["모터사이클 및 부품 판매업 · 모터사이클 및 부품 도매업","a",93.7,null,4.0],"504002":["모터사이클 및 부품 판매업 · 모터사이클 및 부품 소매업","a",88.7,null,4.9],"505001":["운송장비용 연료 소매업 · 운송장비용 주유소 운영업","a",96.4,null,1.6],"505002":["운송장비용 연료 소매업","a",94.3,null,4.4],"511111":["상품 중개업","b",86.2,null,5.4],"511112":["상품 중개업","b",84.0,null,11.8],"511114":["상품 중개업 · 음․식료품 및 담배 중개업","b",87.0,null,4.1],"511115":["상품 중개업 · 화학제품 중개업","b",80.4,null,17.3],"511116":["상품 중개업","b",82.4,null,17.4],"511117":["상품 중개업","b",79.1,null,18.5],"511123":["상품 중개업 · 음․식료품 및 담배 중개업","b",87.2,null,5.2],"512111":["산업용 농․축산물 및 동․식물 도매업 · 곡물 및 유지작물 도매업","a",97.3,null,2.6],"512112":["산업용 농․축산물 및 동․식물 도매업 · 곡물 및 유지작물 도매업","a",98.9,null,1.4],"512113":["산업용 농․축산물 및 동․식물 도매업 · 종자 및 묘목 도매업","a",92.0,null,4.5],"512116":["가공식품 도매업 · 기타 가공식품 도매업","a",97.3,null,3.1],"512119":["산업용 농․축산물 및 동․식물 도매업 · 곡물 및 유지작물 도매업","a",94.9,null,2.5],"512120":["산업용 농․축산물 및 동․식물 도매업 · 사료 도매업","a",94.5,null,6.7],"512131":["산업용 농․축산물 및 동․식물 도매업 · 화훼류 및 식물 도매업","a",89.8,null,5.4],"512132":["산업용 농․축산물 및 동․식물 도매업 · 화훼류 및 식물 도매업","a",92.6,null,6.1],"512133":["산업용 농․축산물 및 동․식물 도매업 · 화훼류 및 식물 도매업","a",96.3,null,2.6],"512135":["산업용 농․축산물 및 동․식물 도매업 · 종자 및 묘목 도매업","a",89.8,null,3.6],"512140":["산업용 농․축산물 및 동․식물 도매업 · 육지동물 및 반려 동물 도매업","a",97.3,null,2.8],"512190":["산업용 농․축산물 및 동․식물 도매업 · 기타 산업용 농산물 도매업","a",93.9,null,3.5],"512192":["산업용 농․축산물 및 동․식물 도매업 · 육지동물 및 반려 동물 도매업","a",93.9,null,4.0],"512211":["신선 식품 및 단순 가공 식품 도매업 · 과실류 도매업","a",95.9,null,2.7],"512212":["신선 식품 및 단순 가공 식품 도매업 · 채소류, 서류 및 향신작물류 도매업","a",94.9,null,1.5],"512214":["신선 식품 및 단순 가공 식품 도매업 · 과실류 도매업","a",97.4,null,0.8],"512215":["신선 식품 및 단순 가공 식품 도매업 · 채소류, 서류 및 향신작물류 도매업","a",97.0,null,1.1],"512221":["산업용 농․축산물 및 동․식물 도매업 · 기타 산업용 농산물 도매업","a",95.8,null,3.8],"512222":["산업용 농․축산물 및 동․식물 도매업 · 기타 산업용 농산물 도매업","a",96.3,null,2.2],"512223":["신선 식품 및 단순 가공 식품 도매업 · 육류 도매업","a",95.8,null,4.2],"512224":["신선 식품 및 단순 가공 식품 도매업 · 육류 도매업","a",96.5,null,4.3],"512231":["신선 식품 및 단순 가공 식품 도매업 · 신선, 냉동 및 기타 수산물 도매업","a",95.1,null,3.6],"512232":["신선 식품 및 단순 가공 식품 도매업 · 신선, 냉동 및 기타 수산물 도매업","a",95.8,null,3.1],"512234":["신선 식품 및 단순 가공 식품 도매업 · 신선, 냉동 및 기타 수산물 도매업","a",96.9,null,1.4],"512235":["신선 식품 및 단순 가공 식품 도매업 · 신선, 냉동 및 기타 수산물 도매업","a",97.7,null,2.7],"512236":["신선 식품 및 단순 가공 식품 도매업 · 건어물 및 젓갈류 도매업","a",96.9,null,2.0],"512252":["음료 및 담배 도매업 · 주류 도매업","a",94.7,null,4.5],"512260":["음료 및 담배 도매업 · 비알코올 음료 도매업","a",93.7,null,3.6],"512271":["가공식품 도매업 · 육류 가공식품 도매업","a",95.8,null,2.8],"512272":["가공식품 도매업 · 조미료 도매업","a",94.9,null,3.3],"512273":["가공식품 도매업 · 커피 및 차류 도매업","a",94.6,null,5.0],"512274":["가공식품 도매업 · 기타 가공식품 도매업","a",97.1,null,1.7],"512279":["가공식품 도매업 · 기타 가공식품 도매업","a",94.4,null,3.3],"512280":["가공식품 도매업 · 기타 가공식품 도매업","a",95.8,null,3.3],"512281":["신선 식품 및 단순 가공 식품 도매업","a",96.5,null,2.7],"512282":["가공식품 도매업 · 낙농품 및 동․식물성 유지 도매업","a",94.3,null,3.8],"512283":["가공식품 도매업 · 낙농품 및 동․식물성 유지 도매업","a",97.5,null,2.3],"512284":["가공식품 도매업 · 기타 가공식품 도매업","a",95.1,null,4.8],"512285":["가공식품 도매업 · 낙농품 및 동․식물성 유지 도매업","a",91.1,null,2.2],"512286":["음료 및 담배 도매업 · 담배 도매업","a",95.3,null,0.8],"512287":["가공식품 도매업 · 기타 가공식품 도매업","a",89.4,null,7.3],"512288":["가공식품 도매업 · 기타 가공식품 도매업","a",93.2,null,3.1],"512289":["가공식품 도매업 · 수산물 가공식품 도매업","a",93.9,null,2.6],"512290":["가공식품 도매업 · 낙농품 및 동․식물성 유지 도매업","a",96.5,null,2.7],"512293":["사행시설 관리 및 운영업 · 복권 발행 및 판매업","c",95.3,null,2.3],"512294":["가공식품 도매업 · 낙농품 및 동․식물성 유지 도매업","a",93.9,null,4.2],"512295":["가공식품 도매업 · 기타 가공식품 도매업","a",93.9,null,3.9],"513111":["생활용 섬유 및 실 도매업","a",95.1,null,3.1],"513112":["커튼 및 침구용품 도매업","a",95.6,null,4.6],"513113":["커튼 및 침구용품 도매업","a",90.8,null,5.7],"513119":["기타 생활용 섬유 및 직물 제품 도매업","a",94.0,null,4.2],"513121":["남녀용 겉옷 및 셔츠 도매업","a",93.6,null,3.9],"513130":["남녀용 겉옷 및 셔츠 도매업","a",94.2,null,4.9],"513131":["유아용 의류 도매업","a",94.2,null,4.4],"513132":["속옷 및 잠옷 도매업","a",94.2,null,4.0],"513141":["신발 도매업","a",93.2,null,2.8],"513150":["가죽 및 모피 제품 도매업","a",93.7,null,4.4],"513191":["의복 액세서리 및 모조 장신구 도매업","a",93.7,null,5.2],"513211":["생활용 가구 도매업","a",93.4,null,6.3],"513221":["가전제품, 통신장비 및 부품 도매업 · 가전제품 및 부품 도매업","a",92.3,null,4.2],"513230":["생활용기기 도매업 · 날붙이 도매업","a",93.2,null,4.5],"513231":["기타 기계 및 장비 도매업 · 그 외 기타 기계 및 장비 도매업","a",92.3,null,3.0],"513241":["전구, 램프 및 조명장치 도매업","a",90.6,null,6.7],"513250":["악기 도매업","a",93.4,null,4.5],"513253":["음반 및 비디오물 도매업","a",93.4,null,6.3],"513261":["및 모피제품 도매업 · 직물 제품 도매업","a",94.3,null,2.8],"513271":["생활용기기 도매업 · 날붙이 도매업","a",93.2,null,6.0],"513272":["생활용기기 도매업 · 날붙이 도매업","a",94.4,null,4.6],"513290":["생활용 가구 도매업","a",93.7,null,4.5],"513291":["가전제품, 통신장비 및 부품 도매업 · 가전제품 및 부품 도매업","a",94.0,null,4.9],"513295":["생활용기기 도매업 · 날붙이 도매업","a",93.7,null,3.1],"513296":["생활용기기 도매업 · 기구 도매업","a",93.7,null,4.4],"513297":["자전거 및 기타 운송장비 도매업","a",93.7,null,6.7],"513298":["재생용 재료 및 기타 상품 전문 도매업 · 그 외 기타 상품 전문 도매업","a",93.7,null,5.8],"513311":["의약품, 의료용품 및 화장품 도매업 · 의약품 도매업","a",94.8,null,3.8],"513312":["의약품, 의료용품 및 화장품 도매업 · 의약품 도매업","a",89.0,null,3.9],"513313":["의약품, 의료용품 및 화장품 도매업 · 의료용품 도매업","a",91.3,null,4.7],"513410":["출판 인쇄물 도매업 · 유사 제품 도매업","a",94.0,null,4.5],"513421":["서적, 잡지 및 기타 인쇄물 도매업","a",94.7,null,7.8],"513430":["문구용품, 회화용품, 사무용품 도매업","a",93.7,null,3.5],"513911":["안경, 사진장비 및 광학용품 도매업","a",94.3,null,4.6],"513912":["안경, 사진장비 및 광학용품 도매업","a",92.6,null,2.6],"513913":["안경, 사진장비 및 광학용품 도매업","a",92.2,null,4.9],"513920":["의복 액세서리 및 모조 장신구 도매업","a",92.7,null,3.8],"513921":["장난감 및 취미, 오락용품 도매업","a",93.1,null,6.7],"513931":["시계 및 귀금속 제품 도매업","a",94.6,null,4.9],"513933":["시계 및 귀금속 제품 도매업","a",97.1,null,1.9],"513934":["시계 및 귀금속 제품 도매업","a",91.9,null,4.4],"513941":["운동 및 경기용품 도매업","a",93.2,null,4.6],"513942":["운동 및 경기용품 도매업","a",88.1,null,3.5],"513945":["장난감 및 취미, 오락용품 도매업","a",93.2,null,4.1],"513950":["가방 및 보호용 케이스 도매업","a",94.0,null,5.7],"513960":["자전거 및 기타 운송장비 도매업","a",93.7,null,3.9],"513991":["의복 액세서리 및 모조 장신구 도매업","a",93.1,null,5.4],"513992":["그 외 기타 생활용품 도매업","a",93.2,null,2.6],"514112":["연료, 연료용 광물 및 관련제품 도매업 · 고체 연료 및 관련제품 도매업","a",95.4,null,4.2],"514121":["연료, 연료용 광물 및 관련제품 도매업 · 액체 연료 및 관련제품 도매업","a",96.0,null,3.4],"514122":["재생용 재료 및 기타 상품 전문 도매업 · 그 외 기타 상품 전문 도매업","a",93.7,null,3.3],"514130":["연료, 연료용 광물 및 관련제품 도매업 · 기체 연료 및 관련제품 도매업","a",94.9,null,5.7],"514210":["1차 금속제품 및 금속광물 도매업 · 1차 금속제품 도매업","a",90.7,null,3.4],"514220":["1차 금속제품 및 금속광물 도매업 · 1차 금속제품 도매업","a",93.2,null,3.5],"514232":["1차 금속제품 및 금속광물 도매업 · 1차 금속제품 도매업","a",95.6,null,2.8],"514239":["1차 금속제품 및 금속광물 도매업 · 1차 금속제품 도매업","a",92.4,null,3.7],"514240":["1차 금속제품 및 금속광물 도매업 · 1차 금속제품 도매업","a",91.3,null,3.9],"514250":["1차 금속제품 및 금속광물 도매업 · 금속광물 도매업","a",93.2,null,10.0],"514291":["1차 금속제품 및 금속광물 도매업 · 1차 금속제품 도매업","a",93.4,null,6.5],"514292":["1차 금속제품 및 금속광물 도매업 · 1차 금속제품 도매업","a",91.6,null,3.7],"514312":["일반 건축자재 도매업 · 원목 및 건축관련 목제품 도매업","a",93.3,null,5.8],"514320":["일반 건축자재 도매업 · 골재, 벽돌 및 시멘트 도매업","a",94.4,null,5.1],"514321":["일반 건축자재 도매업 · 유리 및 창호 도매업","a",94.4,null,6.5],"514330":["일반 건축자재 도매업 · 골재, 벽돌 및 시멘트 도매업","a",93.5,null,8.8],"514350":["기타 건축자재 도매업 · 도료 도매업","a",92.7,null,4.5],"514361":["냉․난방장치 및 철물, 수공구 도매업 · 철물, 금속 파스너 및 수공구 도매업","a",92.2,null,4.8],"514366":["냉․난방장치 및 철물, 수공구 도매업 · 배관 및 냉․난방장치 도매업","a",92.2,null,5.8],"514370":["기타 건축자재 도매업 · 그 외 기타 건축자재 도매업","a",92.2,null,7.1],"514380":["일반 건축자재 도매업 · 골재, 벽돌 및 시멘트 도매업","a",89.0,null,3.4],"514392":["기타 건축자재 도매업 · 그 외 기타 건축자재 도매업","a",92.9,null,4.5],"514393":["기타 건축자재 도매업 · 그 외 기타 건축자재 도매업","a",92.2,null,4.8],"514911":["화학 물질 및 화학제품 도매업 · 기타 화학 물질 및 화학제품 도매업","a",91.1,null,4.8],"514912":["화학 물질 및 화학제품 도매업 · 기타 화학 물질 및 화학제품 도매업","a",93.2,null,3.6],"514916":["화학 물질 및 화학제품 도매업 · 플라스틱 물질 및 합성고무 도매업","a",93.2,null,4.6],"514919":["화학 물질 및 화학제품 도매업 · 기타 화학 물질 및 화학제품 도매업","a",92.2,null,4.8],"514920":["화학 물질 및 화학제품 도매업 · 염료, 안료 및 관련제품 도매업","a",92.2,null,3.8],"514930":["화학 물질 및 화학제품 도매업 · 비료 및 농약 도매업","a",96.6,null,5.1],"514940":["화학 물질 및 화학제품 도매업 · 비료 및 농약 도매업","a",95.6,null,3.6],"514950":["화학 물질 및 화학제품 도매업 · 플라스틱 물질 및 합성고무 도매업","a",92.4,null,4.8],"514961":["방직용 섬유, 실 및 직물 도매업 · 방직용 섬유 및 실 도매업","a",95.3,null,2.8],"514969":["방직용 섬유, 실 및 직물 도매업 · 직물 도매업","a",94.8,null,4.4],"514971":["재생용 재료 및 기타 상품 전문 도매업 · 재생용 재료 수집 및 판매업","a",95.6,null,5.0],"514990":["재생용 재료 및 기타 상품 전문 도매업 · 그 외 기타 상품 전문 도매업","a",92.0,null,4.4],"515010":["기타 기계 및 장비 도매업 · 그 외 기타 기계 및 장비 도매업","a",91.5,null,5.1],"515020":["산업용 기계 및 장비 도매업 · 농림업용 기계 및 장비 도매업","a",94.6,null,3.9],"515030":["산업용 기계 및 장비 도매업 · 건설․광업용 기계 및 장비 도매업","a",92.0,null,4.8],"515031":["기타 기계 및 장비 도매업 · 그 외 기타 기계 및 장비 도매업","a",92.0,null,6.6],"515040":["산업용 기계 및 장비 도매업 · 공작용 기계 및 장비 도매업","a",91.6,null,4.8],"515050":["컴퓨터 및 주변장치, 소프트웨어 도매업 컴퓨터 및 주변장치, 소프트웨어 도매업","a",91.8,null,8.1],"515051":["기타 기계 및 장비 도매업 · 사무용 가구 및 기기 도매업","a",91.4,null,9.5],"515060":["가전제품, 통신장비 및 부품 도매업 · 통신․방송장비 및 부품 도매업","a",90.0,null,13.2],"515070":["기타 기계 및 장비 도매업","a",92.3,null,5.9],"515074":["기타 기계 및 장비 도매업 · 전지 및 케이블 도매업","a",92.3,null,8.3],"515080":["기타 기계 및 장비 도매업 · 의료 기기 도매업","a",91.6,null,5.3],"515093":["자전거 및 기타 운송장비 도매업","a",91.7,null,8.0],"515094":["기타 기계 및 장비 도매업 · 수송용 운송장비 도매업","a",91.7,null,8.0],"519111":["상품 종합 도매업","a",94.0,null,5.3],"519112":["상품 종합 도매업","a",88.4,null,5.3],"519113":["상품 종합 도매업","a",85.2,null,6.8],"519910":["상품 종합 도매업","a",93.6,null,5.9],"519991":["장난감 및 취미, 오락용품 도매업","a",94.8,null,5.3],"521100":["음․식료품 위주 종합 소매업 · 슈퍼마켓","a",95.2,null,2.8],"521910":["대형 종합 소매업 · 백화점","a",92.5,null,4.0],"521911":["대형 종합 소매업 · 기타 대형 종합 소매업","a",91.3,null,4.0],"521912":["대형 종합 소매업 · 대형 마트","a",91.3,null,4.0],"521913":["면세점","a",91.3,null,4.0],"521991":["그 외 기타 종합 소매업","a",95.7,null,6.1],"521992":["음․식료품 위주 종합 소매업 · 체인화 편의점","a",93.7,null,6.0],"522011":["신선식품 및 단순 가공식품 소매업 · 곡물, 곡분 및 가축 사료 소매업","a",96.3,null,2.2],"522039":["신선식품 및 단순 가공식품 소매업 · 건어물 및 젓갈류 소매업","a",91.6,null,4.0],"522040":["신선식품 및 단순 가공식품 소매업 · 채소, 과실 및 뿌리작물 소매업","a",94.1,null,2.6],"522050":["신선식품 및 단순 가공식품 소매업 · 채소, 과실 및 뿌리작물 소매업","a",93.7,null,3.3],"522061":["가공식품 소매업 · 빵류, 과자류 및 당류 소매업","a",90.7,null,3.4],"522062":["가공식품 소매업 · 빵류, 과자류 및 당류 소매업","a",95.3,null,4.6],"522063":["소매업","a",90.1,null,9.6],"522071":["음․식료품 위주 종합 소매업 · 기타 음․식료품 위주 종합 소매업","a",92.7,null,4.6],"522080":["음료 및 담배 소매업 · 담배 소매업","a",96.0,null,5.6],"522081":["그 외 기타 가정용품 소매업 · 그 외 기타 분류 안된 가정용품 소매업","a",95.0,null,3.5],"522082":["사행시설 관리 및 운영업 · 복권 발행 및 판매업","c",93.6,null,8.4],"522091":["가공식품 소매업 · 건강 보조식품 소매업","a",92.8,null,4.9],"522092":["그 외 기타 상품 전문 소매업","a",86.3,null,3.5],"522093":["음료 및 담배 소매업 · 음료 소매업","a",86.3,null,3.3],"522094":["음료 및 담배 소매업 · 음료 소매업","a",89.1,null,3.6],"522095":["음료 및 담배 소매업 · 음료 소매업","a",88.3,null,5.1],"522096":["가공식품 소매업 · 기타 가공식품 소매업","a",88.5,null,5.2],"522099":["음료 및 담배 소매업 · 음료 소매업","a",93.5,null,2.8],"522105":["그 외 기타 상품 전문 소매업","a",85.8,null,1.9],"522109":["가공식품 소매업 · 조리 반찬류 소매업","a",91.2,null,6.8],"523111":["의약품 및 의료용품 소매업","a",83.5,null,4.0],"523114":["의약품 및 의료용품 소매업","a",80.4,null,9.4],"523116":["의약품 및 의료용품 소매업","a",86.9,null,7.7],"523120":["의료용 기구 소매업","a",86.7,null,5.4],"523131":["화장품, 비누 및 방향제 소매업","a",87.2,null,8.3],"523132":["기타 무점포 소매업 · 방문 판매업","a",92.2,null,10.4],"523211":["섬유, 직물 및 의복 액세서리 소매업 · 섬유 원단, 실 및 기타 섬유제품 소매업","a",91.9,null,4.2],"523214":["섬유, 직물 및 의복 액세서리 소매업 · 섬유 원단, 실 및 기타 섬유제품 소매업","a",91.1,null,4.5],"523221":["의복 소매업 · 속옷 및 잠옷 소매업","a",90.2,null,6.8],"523223":["의복 소매업 · 유아용 의류 소매업","a",90.2,null,5.2],"523231":["의복 소매업 · 셔츠 및 블라우스 소매업","a",89.0,null,2.8],"523233":["의복 소매업 · 남자용 겉옷 소매업","a",89.0,null,5.6],"523234":["의복 소매업 · 여자용 겉옷 소매업","a",89.0,null,9.4],"523235":["의복 소매업 · 한복 소매업","a",89.0,null,8.2],"523236":["의복 소매업 · 가죽 및 모피 의복 소매업","a",89.0,null,7.0],"523237":["의복 소매업 · 기타 의복 소매업","a",89.0,null,3.5],"523241":["신발 소매업","a",88.1,null,4.1],"523242":["신발 소매업","a",91.2,null,6.0],"523252":["섬유, 직물 및 의복 액세서리 소매업 · 의복 액세서리 및 모조 장신구 소매업","a",89.1,null,7.7],"523260":["가방 및 기타 가죽제품 소매업","a",89.2,null,5.9],"523291":["섬유, 직물 및 의복 액세서리 소매업 · 섬유 원단, 실 및 기타 섬유제품 소매업","a",91.6,null,1.4],"523292":["섬유, 직물 및 의복 액세서리 소매업 · 의복 액세서리 및 모조 장신구 소매업","a",88.5,null,7.4],"523311":["가구 소매업","a",92.0,null,6.1],"523312":["가구 소매업","a",89.5,null,4.4],"523314":["가구 소매업","a",89.2,null,3.2],"523321":["가전제품 소매업","a",92.8,null,4.0],"523323":["통신기기 소매업","a",86.7,null,18.9],"523330":["가전제품 소매업","a",90.1,null,4.2],"523331":["가구 소매업","a",90.6,null,2.9],"523332":["그 외 기타 가정용품 소매업","a",90.6,null,4.8],"523341":["그 외 기타 가정용품 소매업 · 악기 소매업","a",90.2,null,1.5],"523349":["그 외 기타 가정용품 소매업 · 악기 소매업","a",89.6,null,4.5],"523352":["그 외 기타 가정용품 소매업 · 전기용품 및 조명장치 소매업","a",88.7,null,7.7],"523363":["섬유, 직물 및 의복 액세서리 소매업 · 가정용 직물제품 소매업","a",90.1,null,3.1],"523370":["그 외 기타 가정용품 소매업 · 그 외 기타 분류 안된 가정용품 소매업","a",90.6,null,3.1],"523390":["가전제품 소매업","a",89.3,null,10.9],"523391":["그 외 기타 가정용품 소매업 · 그 외 기타 분류 안된 가정용품 소매업","a",89.3,null,6.5],"523411":["철물, 공구, 창호 및 건설자재 소매업 · 철물 및 난방용구 소매업","a",90.1,null,3.2],"523412":["철물, 공구, 창호 및 건설자재 소매업 · 철물 및 난방용구 소매업","a",89.3,null,4.8],"523413":["철물, 공구, 창호 및 건설자재 소매업 · 공구 소매업","a",95.1,null,3.6],"523421":["철물, 공구, 창호 및 건설자재 소매업 · 페인트, 창호 및 기타 건설자재 소매업","a",86.6,null,6.7],"523422":["그 외 기타 가정용품 소매업","a",89.1,null,8.5],"523531":["컴퓨터 및 주변장치, 소프트웨어 소매업","a",88.2,null,7.9],"523532":["사무용 기기 소매업","a",89.4,null,7.3],"523541":["안경 및 렌즈 소매업","a",82.0,null,7.9],"523550":["사진기 및 사진용품 소매업","a",87.2,null,2.1],"523552":["기타 광학 및 정밀 기기 소매업","a",87.2,null,4.6],"523619":["가정용 연료 소매업 · 가정용 고체 연료 소매업","a",92.8,null,1.9],"523621":["가정용 연료 소매업 · 가정용 액체 연료 소매업","a",95.1,null,2.1],"523630":["가정용 연료 소매업 · 가정용 가스 연료 소매업","a",94.0,null,5.2],"523910":["철물, 공구, 창호 및 건설자재 소매업 · 벽지, 마루덮개 및 장판류 소매업","a",89.2,null,3.9],"523921":["시계 및 귀금속 소매업","a",88.5,null,5.1],"523922":["시계 및 귀금속 소매업","a",82.8,null,4.3],"523923":["시계 및 귀금속 소매업","a",86.5,null,5.3],"523931":["운동용품 및 자전거 소매업 · 운동 및 경기용품 소매업","a",89.1,null,3.6],"523932":["운동용품 및 자전거 소매업 · 운동 및 경기용품 소매업","a",89.7,null,5.0],"523935":["의복 소매업 · 기타 의복 소매업","a",89.7,null,2.7],"523936":["의복 소매업 · 기타 의복 소매업","a",89.7,null,4.8],"523940":["게임용구, 인형 및 장난감 소매업","a",90.1,null,4.4],"523951":["예술품, 기념품 및 장식용품 소매업 · 예술품 및 골동품 소매업","a",88.0,null,8.6],"523952":["예술품, 기념품 및 장식용품 소매업 · 예술품 및 골동품 소매업","a",87.6,null,10.5],"523954":["그 외 기타 상품 전문 소매업","a",88.9,null,4.6],"523961":["예술품, 기념품 및 장식용품 소매업","a",89.9,null,9.0],"523970":["운동용품 및 자전거 소매업 · 자전거 및 기타 운송장비 소매업","a",91.9,null,3.3],"523980":["음반 및 비디오물 소매업","a",90.1,null,1.3],"523981":["그 외 기타 가정용품 소매업 · 그 외 기타 분류 안된 가정용품 소매업","a",90.6,null,1.3],"523982":["그 외 기타 가정용품 소매업 · 그 외 기타 분류 안된 가정용품 소매업","a",90.0,null,6.0],"523983":["서적 및 문구용품 소매업 · 문구용품 및 회화용품 소매업","a",86.6,null,5.9],"523984":["그 외 기타 상품 전문 소매업","a",98.3,null,3.3],"523985":["그 외 기타 상품 전문 소매업","a",99.6,null,4.6],"523986":["그 외 기타 상품 전문 소매업","a",87.7,null,4.6],"523987":["그 외 기타 상품 전문 소매업 · 화초 및 식물 소매업","a",90.5,null,4.7],"523988":["그 외 기타 상품 전문 소매업 · 화초 및 식물 소매업","a",86.7,null,8.5],"523990":["기타 여행 보조 및 예약 서비스업","c",98.3,null,33.7],"523994":["그 외 기타 상품 전문 소매업","a",91.7,null,3.0],"523995":["그 외 기타 상품 전문 소매업","a",96.6,null,7.1],"523996":["그 외 기타 상품 전문 소매업 · 반려용 동물 및 관련용품 소매업","a",84.5,null,10.7],"523999":["그 외 기타 상품 전문 소매업","a",85.2,null,6.8],"524000":["섬유, 직물 및 의복 액세서리 소매업 · 의복 액세서리 및 모조 장신구 소매업","a",85.2,null,5.6],"524001":["철물, 공구, 창호 및 건설자재 소매업 · 공구 소매업","a",85.2,null,8.6],"524010":["중고 상품 소매업 · 중고 가구 소매업","a",87.9,null,5.9],"524020":["중고 상품 소매업 · 기타 중고 상품 소매업","a",92.4,null,6.3],"524091":["중고 상품 소매업 · 기타 중고 상품 소매업","a",94.9,null,3.1],"524092":["중고 상품 소매업 · 중고 가전제품 및 통신장비 소매업","a",90.1,null,7.2],"524093":["중고 상품 소매업 · 기타 중고 상품 소매업","a",90.1,null,2.3],"525101":["통신 판매업 · 전자상거래 소매업","a",86.0,null,11.4],"525102":["통신 판매업 · 기타 통신 판매업","a",87.6,null,13.8],"525103":["통신 판매업 · 전자상거래 소매 중개업","a",86.0,null,10.0],"525104":["통신판매업 · SNS마켓","a",86.0,null,10.4],"525105":["통신 판매업 · 해외직구 대행업","a",86.0,null,15.6],"525200":["기타 무점포 소매업 · 방문 판매업","a",84.6,null,22.4],"525300":["기타 무점포 소매업 · 계약배달 판매업","a",95.6,null,8.4],"525910":["기타 무점포 소매업 · 자동 판매기 운영업","a",88.7,null,5.7],"525911":["노점 및 유사 이동 소매업","a",87.6,null,8.7],"525912":["기타 무점포 소매업 · 그 외 기타 무점포 소매업","a",86.3,null,8.6],"551001":["일반 및 생활 숙박시설 운영업 · 호텔업","b",87.1,null,32.6],"551002":["일반 및 생활 숙박시설 운영업 · 여관업","b",85.0,null,23.7],"551004":["일반 및 생활 숙박시설 운영업 · 휴양 콘도 운영업","b",77.0,null,26.1],"551005":["일반 및 생활 숙박시설 운영업 · 민박업","b",82.9,null,25.7],"551006":["일반 및 생활 숙박시설 운영업 · 기타 일반 및 생활 숙박시설 운영업","b",88.1,null,22.9],"551007":["일반 및 생활 숙박시설 운영업 · 숙박공유업","b",84.6,null,17.2],"551009":["일반 및 생활 숙박시설 운영업 · 여관업","b",86.0,null,21.3],"551010":["일반 및 생활 숙박시설 운영업 · 휴양 콘도 운영업","b",84.9,null,21.2],"551015":["일반 및 생활 숙박시설 운영업 · 야영장업","b",87.9,null,24.9],"551016":["기타 숙박업 · 기숙사 및 고시원 운영업","b",87.7,null,16.1],"551017":["기타 숙박업 · 그 외 기타 숙박업","b",89.0,null,22.6],"552101":["한식 음식점업 · 한식 일반 음식점업","b",89.7,null,9.7],"552102":["외국식 음식점업 · 중식 음식점업","b",88.4,null,10.2],"552103":["외국식 음식점업 · 일식 음식점업","b",86.7,null,10.9],"552104":["외국식 음식점업 · 서양식 음식점업","b",87.4,null,13.4],"552109":["기관 구내식당업","b",90.0,null,9.6],"552114":["한식 음식점업 · 한식 면 요리 전문점","b",89.7,null,13.2],"552115":["한식 음식점업 · 한식 육류 요리 전문점","b",89.7,null,11.0],"552116":["한식 음식점업 · 한식 해산물 요리 전문점","b",89.7,null,10.0],"552117":["외국식 음식점업 · 기타 외국식 음식점업","b",86.7,null,14.6],"552118":["피자, 햄버거 및 치킨 전문점","b",86.1,null,15.5],"552123":["김밥 및 기타 간이 음식점업 · 간이 음식 포장 판매 전문점","b",91.0,null,14.9],"552201":["주점업 · 일반 유흥 주점업","b",46.0,null,11.6],"552202":["주점업 · 일반 유흥 주점업","b",64.6,null,13.7],"552203":["주점업 · 무도 유흥 주점업","b",56.5,null,12.5],"552204":["주점업 · 일반 유흥 주점업","b",84.2,null,20.5],"552205":["주점업 · 생맥주 전문점","b",88.2,null,13.1],"552206":["주점업 · 일반 유흥 주점업","b",56.5,null,12.3],"552207":["주점업 · 기타 주점업","b",58.4,null,13.1],"552208":["주점업 · 기타 주점업","b",84.0,null,15.4],"552209":["주점업 · 기타 주점업","b",88.7,null,10.9],"552210":["주점업 · 기타 주점업","b",88.2,null,13.3],"552211":["주점업 · 기타 주점업","b",64.6,null,23.5],"552301":["제과점업","b",89.9,null,10.6],"552303":["비알코올 음료점업 · 커피 전문점","b",87.5,null,15.1],"552305":["김밥 및 기타 간이 음식점업 · 간이 음식 포장 판매 전문점","b",87.1,null,12.2],"552307":["비알코올 음료점업 · 기타 비알코올 음료점업","b",89.0,null,13.6],"552308":["출장 및 이동 음식점업 · 이동 음식점업","b",87.1,null,14.0],"552309":["피자, 햄버거 및 치킨 전문점","b",87.1,null,15.2],"601000":["도시 정기 육상 여객 운송업 · 도시철도 운송업","b",95.1,null,24.5],"601001":["철도 운송업 · 철도 여객 운송업","b",95.1,null,24.5],"601002":["철도 운송업 · 철도 화물 운송업","b",95.1,null,24.5],"602101":["시외버스 운송업","b",83.0,null,21.1],"602102":["시외버스 운송업","b",92.0,null,16.0],"602103":["도시 정기 육상 여객 운송업 · 시내버스 운송업","b",93.5,null,26.0],"602104":["도시 정기 육상 여객 운송업 · 기타 도시 정기 육상 여객 운송업","b",93.5,null,30.9],"602109":["도시 정기 육상 여객 운송업 · 기타 도시 정기 육상 여객 운송업","b",85.6,null,24.3],"602110":["도시 정기 육상 여객 운송업 · 기타 도시 정기 육상 여객 운송업","b",85.6,null,14.0],"602201":["부정기 육상 여객 운송업 · 택시 운송업","b",90.8,null,24.3],"602203":["부정기 육상 여객 운송업 · 택시 운송업","b",86.0,null,22.8],"602204":["시외버스 운송업","b",95.7,null,22.3],"602205":["부정기 육상 여객 운송업 · 전세버스 운송업","b",87.6,null,23.6],"602206":["부정기 육상 여객 운송업 · 택시 운송업","b",95.7,null,25.7],"602209":["부정기 육상 여객 운송업 · 기타 부정기 여객 육상 운송업","b",86.3,null,29.1],"602301":["도로 화물 운송업","b",91.6,null,25.1],"602302":["도로 화물 운송업","b",91.1,null,26.9],"602303":["도로 화물 운송업","b",90.8,null,30.4],"602304":["도로 화물 운송업","b",86.2,null,28.9],"602305":["도로 화물 운송업","b",90.8,null,22.7],"602306":["부정기 육상 여객 운송업 · 특수 여객 자동차 운송업","b",88.6,null,30.5],"602307":["도로 화물 운송업","b",89.7,null,27.9],"602308":["도로 화물 운송업","b",87.3,null,26.7],"602310":["도로 화물 운송업 · 개인 화물자동차 운송업","b",91.6,null,25.9],"602314":["도로 화물 운송업 · 개인 화물자동차 운송업","b",90.8,null,27.4],"602315":["도로 화물 운송업","b",91.6,null,31.4],"602316":["도로 화물 운송업 · 개인 화물자동차 운송업","b",91.1,null,37.8],"603000":["파이프라인 운송업","b",91.9,null,27.5],"611001":["내항 운송업 · 내항 여객 운송업","b",93.3,null,27.5],"611002":["외항 운송업 · 외항 화물 운송업","b",88.2,null,22.2],"611003":["내항 운송업 · 내항 화물 운송업","b",88.8,null,24.8],"611004":["기타 해상 운송업","b",88.2,null,28.8],"611005":["외항 운송업 · 외항 여객 운송업","b",88.2,null,24.7],"612000":["내륙 수상 및 항만 내 운송업 · 기타 내륙 수상 여객 및 화물 운송업","b",87.6,null,29.5],"612001":["내륙 수상 및 항만 내 운송업 · 항만 내 여객 운송업","b",88.7,null,25.2],"612002":["내륙 수상 및 항만 내 운송업 · 기타 내륙 수상 여객 및 화물 운송업","b",88.7,null,25.2],"612003":["화물 취급업 · 수상 화물 취급업","b",88.7,null,25.2],"621000":["항공 여객 운송업","b",97.0,null,23.5],"621001":["항공 화물 운송업","b",97.0,null,23.5],"630101":["화물 취급업 · 항공 및 육상 화물 취급업","b",89.2,null,24.5],"630102":["화물 취급업 · 수상 화물 취급업","b",92.4,null,20.5],"630201":["보관 및 창고업 · 일반 창고업","b",81.8,null,22.5],"630202":["보관 및 창고업 · 냉장 및 냉동 창고업","b",76.9,null,21.0],"630203":["보관 및 창고업 · 농산물 창고업","b",76.3,null,20.4],"630204":["보관 및 창고업 · 위험 물품 보관업","b",76.3,null,19.3],"630205":["보관 및 창고업 · 기타 보관 및 창고업","b",81.0,null,29.3],"630301":["육상 운송 지원 서비스업 · 철도 운송 지원 서비스업","b",91.5,null,25.2],"630302":["육상 운송 지원 서비스업 · 여객 자동차 터미널 운영업","b",87.6,null,31.3],"630303":["육상 운송 지원 서비스업 · 주차장 운영업","b",82.8,null,17.3],"630304":["자동차 임대업 · 자동차 임대업(렌트카)","c",82.5,null,29.7],"630305":["육상 운송 지원 서비스업 · 물류 터미널 운영업","b",87.6,null,31.3],"630309":["육상 운송 지원 서비스업 · 기타 육상 운송지원 서비스업","b",85.3,null,37.9],"630311":["육상 운송 지원 서비스업 · 도로 및 관련시설 운영업","b",81.3,null,19.5],"630401":["수상 운송 지원 서비스업 · 기타 수상 운송 지원 서비스업","b",58.2,null,29.8],"630402":["수상 운송 지원 서비스업","b",83.9,null,17.0],"630403":["수상 운송 지원 서비스업 · 기타 수상 운송 지원 서비스업","b",60.2,null,34.7],"630405":["수상 운송 지원 서비스업 · 항구 및 기타 해상 터미널 운영업","b",83.9,null,25.2],"630500":["항공 운송 지원 서비스업 · 기타 항공 운송지원 서비스업","b",97.2,null,25.2],"630501":["항공 운송 지원 서비스업 · 공항 운영업","b",97.2,null,25.2],"630600":["여행사업","c",84.2,null,31.0],"630601":["기타 여행 보조 및 예약 서비스업","c",86.9,null,27.8],"630701":["시외버스 운송업","b",78.7,null,28.5],"630702":["도로 화물 운송업","b",80.3,null,31.0],"630901":["소화물 전문 운송업 · 택배업","b",86.5,null,29.4],"630902":["그 외 기타 운송관련 서비스업","b",84.4,null,25.0],"630904":["소화물 전문 운송업 · 늘찬 배달업","b",86.5,null,35.4],"630909":["그 외 기타 운송관련 서비스업","b",82.1,null,32.1],"641200":["공영 우편업","b",92.5,null,25.2],"641201":["소화물 전문 운송업 · 택배업","b",93.3,null,29.3],"642001":["무선 및 위성 통신업","b",81.2,null,19.6],"642002":["기타 전기 통신업 · 통신 재판매업","b",83.9,null,28.2],"642003":["기타 전기 통신업 · 그 외 기타 전기 통신업","b",79.9,null,27.4],"642004":["서비스업 · 정보 매개 서비스업","b",77.9,null,20.0],"642005":["유선 통신업","b",81.2,null,19.6],"659201":["일반은행 · 국내은행","b",71.7,null,17.6],"659202":["신용조합 및 저축기관 · 신용조합","b",83.5,null,18.0],"659203":["여신 금융업 · 그 외 기타 여신 금융업","b",25.7,null,18.5],"659204":["여신 금융업 · 그 외 기타 여신 금융업","b",40.9,null,32.8],"659205":["신용조합 및 저축기관 · 상호 저축은행 및 기타 저축기관","b",71.7,null,21.8],"659206":["여신 금융업 · 신용카드 및 할부 금융업","b",78.5,null,17.4],"659207":["일반은행 · 외국은행","b",71.7,null,17.6],"659208":["여신 금융업 · 금융 리스업","b",78.5,null,17.4],"659209":["여신 금융업 · 개발 금융기관","b",78.5,null,17.4],"659900":["신탁업 및 집합 투자업 · 기타 금융 투자업","b",77.6,null,17.4],"659901":["그 외 기타 사업 지원 서비스업","c",70.3,null,14.0],"659902":["그 외 기타 금융업 · 그 외 기타 분류 안된 금융업","b",83.4,null,12.2],"659903":["신탁업 및 집합 투자업","b",77.6,null,17.4],"659904":["여신 금융업 · 그 외 기타 여신 금융업","b",79.3,null,17.4],"659905":["그 외 기타 금융업 · 기금 운영업","b",79.3,null,17.4],"660301":["손해 및 보증보험업 · 손해보험업","b",86.9,null,31.7],"660302":["손해 및 보증보험업 · 손해보험업","b",72.8,null,26.3],"660303":["손해 및 보증보험업 · 손해보험업","b",70.6,null,26.3],"660304":["손해 및 보증보험업 · 보증보험업","b",70.6,null,26.3],"660305":["사회보장보험업 · 건강보험업","b",70.6,null,26.3],"660306":["사회보장보험업 · 산업 재해 및 기타 사회보장보험업","b",70.6,null,26.3],"660307":["공제업 · 개인 공제업","b",70.6,null,26.3],"660308":["공제업 · 사업 공제업","b",70.6,null,26.3],"660309":["연금업","b",70.6,null,26.3],"671201":["기타 금융 지원 서비스업 · 그 외 기타 금융 지원 서비스업","b",99.8,null,8.0],"671202":["증권 및 선물 중개업 · 증권 중개업","b",95.0,null,8.0],"671203":["증권 및 선물 중개업 · 선물 중개업","b",95.0,null,8.0],"671900":["기타 금융 지원 서비스업 · 그 외 기타 금융 지원 서비스업","b",85.1,null,34.3],"671901":["금융시장 관리업","b",85.1,null,29.0],"671902":["기타 금융 지원 서비스업","b",85.1,null,29.0],"671903":["기타 금융 지원 서비스업 · 투자 자문업 및 투자 일임업","b",85.1,null,25.3],"672000":["보험 및 연금관련 서비스업 · 보험 대리 및 중개업","b",73.0,null,25.6],"672001":["보험 및 연금관련 서비스업 · 기타 보험 및 연금관련 서비스업","b",73.0,null,20.7],"701101":["부동산 임대업 · 주거용 건물 임대업(고가주택임대)","c",37.4,null,9.5],"701102":["부동산 임대업 · 주거용 건물 임대업(일반주택임대)","c",42.6,null,20.2],"701103":["부동산 임대업","c",61.6,null,20.1],"701104":["부동산 임대업","c",59.2,null,17.2],"701201":["부동산 임대업 · 비주거용 건물 임대업(점포, 자기땅)","c",41.5,null,19.9],"701202":["부동산 임대업 · 비주거용 건물 임대업(점포, 타인땅)","c",36.9,null,12.2],"701203":["부동산 임대업 · 비주거용 건물 임대업","c",57.2,null,27.2],"701204":["부동산 임대업 · 비주거용 건물 임대업","c",42.3,null,18.5],"701205":["부동산 임대업 · 비주거용 건물 임대업","c",60.4,null,5.3],"701206":["부동산 임대업","c",59.0,null,25.8],"701300":["부동산 임대업 · 비주거용 건물 임대업","c",43.4,null,4.8],"701301":["부동산 임대업 · 주거용 건물 임대업","c",43.4,null,11.3],"701302":["부동산 임대업","c",60.4,null,7.1],"701600":["무형 재산권 임대업","c",67.2,null,14.3],"701700":["장례식장 및 관련 서비스업 · 화장터 운영, 묘지 분양 및 관리업","c",89.0,null,15.2],"702001":["부동산 중개, 자문 및 감정 평가업","c",78.2,null,23.4],"702002":["부동산 중개, 자문 및 감정 평가업 · 부동산 감정 평가업","c",58.2,null,29.3],"702003":["부동산 관리업 · 비주거용 부동산 관리업","c",84.2,null,15.1],"702004":["부동산 중개, 자문 및 감정 평가업 · 부동산 투자 자문업","c",80.6,null,30.9],"702005":["부동산 관리업 · 주거용 부동산 관리업","c",85.8,null,21.4],"703011":["부동산 개발 및 공급업 · 주거용 건물 개발 및 공급업","b",82.1,null,15.8],"703016":["부동산 개발 및 공급업 · 비주거용 건물 개발 및 공급업","a",70.0,null,8.0],"712100":["기타 산업용 기계 및 장비 임대업","c",81.2,null,25.1],"712200":["기타 운송장비 임대업","c",78.5,null,23.9],"712201":["기타 산업용 기계 및 장비 임대업","c",79.6,null,24.8],"712202":["건설 및 토목공사용 기계․장비 임대업","c",79.6,null,20.3],"712203":["컴퓨터 및 사무용 기계․장비 임대업","c",79.6,null,15.3],"713001":["기타 개인 및 가정용품 임대업 · 그 외 기타 개인 및 가정용품 임대업","c",84.9,null,23.3],"713002":["스포츠 및 레크리에이션 용품 임대업","c",84.8,null,24.0],"713003":["기타 산업용 기계 및 장비 임대업","c",83.2,null,24.4],"713004":["음반 및 비디오물 임대업","c",83.4,null,14.6],"721000":["구축 및 관리업 · 구축 서비스업","b",75.0,null,23.4],"721001":["컴퓨터시설 관리업","b",78.1,null,27.9],"722000":["시스템․응용 소프트웨어 개발 및 공급업 · 응용 소프트웨어 개발 및 공급업","b",75.2,null,24.7],"722001":["게임 소프트웨어 개발 및 공급업","b",75.2,null,22.7],"722002":["게임 소프트웨어 개발 및 공급업","b",68.3,null,14.8],"723000":["자료 처리, 호스팅 및 관련 서비스업 · 자료 처리업","b",82.0,null,20.0],"723001":["자료 처리, 호스팅 및 관련 서비스업 · 호스팅 및 관련 서비스업","b",80.5,null,19.0],"724000":["오디오물 제공 서비스업","b",76.0,null,20.9],"724001":["뉴스 제공업","b",76.7,null,27.0],"724002":["그 외 기타 정보 서비스업","b",77.8,null,23.4],"725000":["컴퓨터 및 주변 기기 수리업","c",80.9,null,15.2],"729000":["운영 관련 서비스업","b",82.2,null,22.8],"730000":["인문 및 사회과학 연구개발업 · 기타 인문 및 사회과학 연구개발업","c",79.7,null,24.3],"730001":["자연과학 연구개발업 · 물리, 화학 및 생물학 연구개발업","c",79.3,null,22.1],"730002":["자연과학 연구개발업 · 농림수산학 및 수의학 연구개발업","c",83.3,null,28.7],"730003":["자연과학 연구개발업 · 의학 및 약학 연구개발업","c",80.2,null,23.2],"730004":["자연과학 연구개발업 · 기타 자연과학 연구개발업","c",79.3,null,16.5],"730005":["공학 연구개발업 · 전기․전자공학 연구개발업","c",79.3,null,22.4],"730006":["공학 연구개발업 · 기타 공학 연구개발업","c",79.3,null,21.0],"730007":["자연과학 및 공학 융합 연구개발업","c",85.9,null,27.0],"730008":["인문 및 사회과학 연구개발업 · 경제 및 경영학 연구개발업","c",79.3,null,31.1],"741101":["법무관련 서비스업 · 변호사업","c",44.6,null,15.9],"741104":["법무관련 서비스업 · 변리사업","c",60.7,null,19.8],"741106":["법무관련 서비스업 · 기타 법무관련 서비스업(공증인)","c",53.8,null,16.7],"741107":["법무관련 서비스업 · 법무사업","c",58.3,null,15.5],"741108":["법무관련 서비스업 · 기타 법무관련 서비스업(집행관)","c",51.5,null,27.3],"741109":["법무관련 서비스업 · 기타 법무관련 서비스업","c",66.1,null,17.2],"741110":["법무관련 서비스업 · 기타 법무관련 서비스업(노무사)","c",66.1,null,20.3],"741114":["법무관련 서비스업 · 기타 법무관련 서비스업","c",72.9,null,16.5],"741203":["회계 및 세무관련 서비스업","c",72.9,null,23.0],"741204":["회계 및 세무관련 서비스업","c",72.9,null,23.0],"741300":["시장 조사 및 여론 조사업","c",78.8,null,30.8],"741400":["경영 컨설팅 및 공공 관계 서비스업 · 경영 컨설팅업","c",77.3,null,23.1],"741401":["경영 컨설팅 및 공공 관계 서비스업 · 경영 컨설팅업(경영지도사)","c",73.2,null,26.3],"741403":["경영 컨설팅 및 공공 관계 서비스업 · 공공관계 서비스업","c",77.8,null,32.3],"742101":["측량, 지질 조사 및 지도 제작업 · 측량업","c",72.3,null,23.5],"742102":["측량, 지질 조사 및 지도 제작업 · 지질 조사·탐사 및 지도 제작업","c",74.2,null,20.6],"742103":["건축 및 조경 설계 서비스업 · 건축 설계 및 관련 서비스업","c",76.0,null,23.3],"742104":["엔지니어링 서비스업 · 기타 엔지니어링 서비스업","c",76.3,null,23.3],"742105":["건축 및 조경 설계 서비스업 · 건축 설계 및 관련 서비스업(건축사)","c",73.6,null,21.0],"742106":["엔지니어링 서비스업","c",77.4,null,30.2],"742107":["건축 및 조경 설계 서비스업 · 도시 계획 및 조경 설계 서비스업","c",77.3,null,27.7],"742108":["측량, 지질 조사 및 지도 제작업 · 제도업","c",72.3,null,27.4],"742109":["엔지니어링 서비스업 · 건물 및 토목 엔지니어링 서비스업","c",76.3,null,24.4],"742110":["엔지니어링 서비스업 · 환경 관련 엔지니어링 서비스업","c",76.3,null,21.8],"742113":["측량, 지질 조사 및 지도 제작업 · 지질 조사·탐사 및 지도 제작업","c",76.3,null,19.9],"742201":["기술 시험, 검사 및 분석업 · 기타 기술 시험, 검사 및 분석업","c",76.0,null,24.0],"742202":["기술 시험, 검사 및 분석업","c",80.2,null,28.8],"742203":["기술 시험, 검사 및 분석업 · 물질 성분 검사 및 분석업","c",76.0,null,24.8],"743001":["기타 광고업 · 옥외 광고업","c",79.9,null,16.5],"743002":["광고 대행업","c",79.3,null,27.6],"743003":["기타 광고업 · 그 외 기타 광고 관련 서비스업","c",81.5,null,36.8],"743004":["기타 광고업 · 광고물 문안, 도안, 설계 등 작성업","c",81.4,null,20.8],"743005":["기타 광고업 · 그 외 기타 광고 관련 서비스업","c",79.3,null,29.5],"749100":["고용 알선업","c",84.1,null,22.4],"749101":["인력 공급업 · 임시 및 일용 인력 공급업","c",83.7,null,24.7],"749102":["인력 공급업 · 상용 인력 공급 및 인사관리 서비스업","c",83.7,null,18.1],"749200":["경비 및 경호 서비스업","c",85.0,null,25.7],"749201":["보안 시스템 서비스업","c",85.0,null,25.7],"749300":["건물 및 산업설비 청소업 · 건축물 일반 청소업","c",85.5,null,21.6],"749301":["하수 및 폐수 처리업 · 하수 처리업","b",85.5,null,31.4],"749302":["소독, 구충 및 방제 서비스업","c",85.5,null,18.5],"749303":["조경관리 및 유지 서비스업","c",85.5,null,17.9],"749400":["사진 촬영 및 처리업 · 인물 사진 및 행사용 영상 촬영업","c",87.1,null,21.2],"749401":["그 외 기타 분류 안된 개인 서비스업","c",83.3,null,20.8],"749402":["사진 촬영 및 처리업 · 상업용 사진 촬영업","c",87.1,null,27.4],"749403":["사진 촬영 및 처리업 · 사진 처리업","c",87.1,null,22.8],"749500":["그 외 기타 사업 지원 서비스업 · 포장 및 충전업","c",88.6,null,22.9],"749601":["그 외 기타 사업 지원 서비스업","c",84.1,null,30.0],"749602":["그 외 기타 사업 지원 서비스업","c",85.7,null,12.0],"749603":["그 외 기타 사업 지원 서비스업","c",91.4,null,22.6],"749604":["그 외 기타 사업 지원 서비스업","c",88.4,null,20.0],"749609":["그 외 기타 사업 지원 서비스업","c",86.4,null,27.0],"749901":["사무 지원 서비스업 · 문서 작성 및 복사업","c",81.5,null,21.5],"749902":["번역 및 통역 서비스업","c",77.5,null,26.3],"749903":["사업 및 무형 재산권 중개업","c",77.9,null,28.3],"749904":["보험 및 연금관련 서비스업 · 손해 사정업","b",73.6,null,28.1],"749905":["사무 지원 서비스업 · 문서 작성 및 복사업","c",78.7,null,30.6],"749906":["그 외 기타 운송관련 서비스업 · 통관 대리 및 관련서비스업","b",72.1,null,24.8],"749910":["전문 디자인업 · 시각 디자인업","c",78.8,null,19.1],"749911":["매니저업","c",80.7,null,30.2],"749912":["물품 감정, 계량 및 견본 추출업","c",80.9,null,29.3],"749914":["전문 디자인업 · 인테리어 디자인업","c",81.5,null,21.9],"749915":["전문 디자인업 · 제품 디자인업","c",82.0,null,21.0],"749916":["전문 디자인업 · 패션, 섬유류 및 기타 전문 디자인업","c",80.5,null,19.8],"749921":["그 외 기타 사업 지원 서비스업","c",77.2,null,21.8],"749927":["상품 중개업","b",71.3,null,16.1],"749930":["육상 운송 지원 서비스업 · 도로 및 관련시설 운영업","b",77.2,null,16.7],"749935":["사업시설 유지․관리 서비스업","c",81.5,null,19.0],"749941":["사업 및 무형 재산권 중개업","c",49.9,null,22.0],"749942":["기타 전문 서비스업","c",81.9,null,25.2],"804101":["외국인학교","c",null,null,null],"809001":["기술 및 직업 훈련학원 · 운전학원","c",80.2,null,29.8],"809002":["기술 및 직업 훈련학원 · 기타 기술 및 직업 훈련학원","c",83.3,null,19.4],"809003":["스포츠 및 레크리에이션 교육기관 · 레크리에이션 교육기관","c",84.1,null,21.8],"809004":["일반 교습학원 · 일반 교과학원","c",83.3,null,23.6],"809005":["일반 교습학원 · 일반 교과학원","c",80.0,null,21.5],"809006":["기타 스포츠시설 운영업 · 그 외 기타 스포츠시설 운영업","c",87.2,null,23.3],"809007":["일반 교습학원(교과·예술·외국어 등)","c",78.0,null,23.4],"809009":["예술학원 · 음악학원","c",81.8,null,24.8],"809010":["기술 및 직업 훈련학원 · 기타 기술 및 직업 훈련학원","c",84.0,null,20.4],"809011":["기술 및 직업 훈련학원 · 운전학원","c",80.2,null,30.8],"809012":["일반 교습학원 · 일반 교과학원","c",81.9,null,25.1],"809014":["스포츠 및 레크리에이션 교육기관 · 태권도 및 무술 교육기관","c",81.1,null,23.4],"809015":["스포츠 및 레크리에이션 교육기관 · 기타 스포츠 교육기관","c",84.9,null,22.8],"809016":["일반 교습학원 · 온라인 교육학원","c",83.2,null,32.1],"809017":["외국어학원 및 기타 교습학원 · 외국어학원","c",83.2,null,23.7],"809018":["외국어학원 및 기타 교습학원 · 기타 교습학원","c",79.9,null,28.8],"809019":["그 외 기타 오락관련 서비스업 · 기원 운영업","c",88.2,null,30.7],"809020":["예술학원 · 미술학원","c",83.3,null,22.7],"809021":["예술학원 · 기타 예술학원","c",83.9,null,24.4],"809022":["그 외 기타 교육기관 · 그 외 기타 분류 안된 교육기관","c",84.2,null,26.6],"851101":["병원 · 요양병원","c",78.6,null,19.0],"851102":["병원 · 치과병원","c",63.6,null,21.5],"851103":["병원 · 한방병원","c",67.5,null,23.4],"851113":["병원 · 종합병원","c",78.6,null,19.0],"851114":["병원 · 일반병원","c",78.6,null,19.0],"851201":["의원 · 일반의원","c",70.5,null,27.9],"851202":["의원 · 일반의원","c",74.8,null,27.5],"851203":["의원 · 일반의원","c",73.9,null,27.0],"851204":["의원 · 일반의원","c",68.3,null,25.9],"851205":["의원 · 일반의원","c",69.5,null,28.7],"851206":["의원 · 일반의원","c",73.1,null,31.0],"851207":["의원 · 일반의원","c",65.0,null,22.8],"851208":["의원 · 방사선진단 및 병리검사 의원","c",71.1,null,29.1],"851209":["의원 · 일반의원","c",42.7,null,16.1],"851211":["의원 · 치과의원","c",61.7,null,17.2],"851212":["의원 · 한의원","c",56.6,null,18.9],"851219":["의원 · 일반의원","c",67.1,null,15.0],"851901":["기타 보건업 · 그 외 기타 보건업","c",75.2,null,15.0],"851902":["기타 보건업 · 유사 의료업","c",77.5,null,19.0],"851903":["기타 보건업 · 유사 의료업","c",79.1,null,18.9],"851904":["기타 보건업 · 유사 의료업","c",60.2,null,11.1],"851905":["의원 · 방사선진단 및 병리검사 의원","c",70.4,null,15.8],"851906":["기타 보건업 · 그 외 기타 보건업","c",83.5,null,15.6],"851907":["기타 보건업 · 그 외 기타 보건업","c",78.0,null,16.0],"851908":["기타 보건업 · 유사 의료업","c",85.3,null,18.9],"851909":["의원 · 방사선진단 및 병리검사 의원","c",78.0,null,17.1],"851911":["기타 보건업 · 앰뷸런스 서비스업","c",78.0,null,17.1],"851912":["기타 보건업 · 유사 의료업","c",85.3,null,19.6],"852000":["수의업","c",65.1,null,12.6],"900100":["지정 외 폐기물 수집, 운반업","b",88.0,null,25.6],"900101":["지정 외 폐기물 처리업","b",88.0,null,25.8],"900102":["방사성 폐기물 수집, 운반 및 처리업","b",88.0,null,20.4],"900103":["지정 폐기물 수집, 운반업","b",88.0,null,15.6],"900104":["건설 폐기물 수집, 운반업","b",88.0,null,15.6],"900200":["하수 및 폐수 처리업 · 하수 처리업","b",84.6,null,20.8],"900201":["분뇨 처리업 · 사람 분뇨 처리업","b",83.8,null,19.9],"900202":["하수 및 폐수 처리업 · 폐수 처리업","b",84.6,null,19.9],"900203":["분뇨 처리업 · 축산 분뇨 처리업","b",83.8,null,19.9],"900300":["금속류 해체, 선별 및 원료 재생업 · 금속류 해체 및 선별업","b",87.9,null,15.6],"900900":["건물 및 산업설비 청소업 · 산업설비, 운송장비 및 공공장소 청소업","c",86.9,null,19.7],"921100":["방송 프로그램 배급업","b",83.3,null,32.2],"921200":["영화 및 비디오물 상영업 · 영화관 운영업","b",82.4,null,22.7],"921301":["라디오 방송업","b",79.1,null,32.2],"921302":["지상파 방송업","b",78.3,null,23.7],"921303":["유선, 위성 및 기타 방송업 · 유선 방송업","b",75.8,null,16.6],"921304":["방송 프로그램 제작업","b",88.6,null,27.6],"921305":["유선, 위성 및 기타 방송업 · 위성 및 기타 방송업","b",75.8,null,23.7],"921306":["유선, 위성 및 기타 방송업 · 프로그램 공급업","b",88.6,null,41.9],"921401":["기타 창작 및 예술관련 서비스업 · 공연 기획업","c",85.0,null,26.1],"921402":["공연단체 · 무용 및 음악단체","c",94.3,null,27.9],"921403":["공연단체 · 연극단체","c",96.7,null,25.6],"921404":["부동산 임대업 · 비주거용 건물 임대업","c",85.5,null,21.8],"921405":["기타 창작 및 예술관련 서비스업 · 그 외 기타 창작 및 예술관련 서비스업","c",83.5,null,30.7],"921406":["기타 창작 및 예술관련 서비스업 · 그 외 기타 창작 및 예술관련 서비스업","c",83.5,null,26.7],"921407":["공연단체 · 기타 공연단체","c",94.3,null,32.9],"921501":["광고 영화 및 비디오물 제작업","b",82.0,null,27.3],"921502":["일반 영화 및 비디오물 제작업","b",87.3,null,21.6],"921503":["방송 프로그램 제작 관련 서비스업","b",87.3,null,24.2],"921504":["애니메이션 영화 및 비디오물 제작업","b",87.3,null,15.3],"921901":["공연시설 운영업","c",87.3,null,21.5],"921902":["스포츠 및 레크리에이션 교육기관 · 레크리에이션 교육기관","c",86.9,null,24.1],"921903":["유원지 및 테마파크 운영업","c",84.0,null,18.2],"921904":["그 외 기타 오락관련 서비스업 · 무도장 운영업","c",87.4,null,13.7],"922101":["기타 개인 및 가정용품 수리업 · 그 외 기타 개인 및 가정용품 수리업","c",90.9,null,21.2],"922102":["일반 기계류 수리업 · 기타 일반 기계 및 장비 수리업","b",88.9,null,11.9],"922103":["전기․전자 및 정밀 기기 수리업","b",88.9,null,16.7],"922104":["가전제품 수리업","c",89.4,null,17.1],"922105":["기타 개인 및 가정용품 수리업 · 의복 및 기타 가정용 직물제품 수리업","c",89.4,null,19.2],"922106":["일반 기계류 수리업 · 건설․광업용 기계 및 장비 수리업","b",88.9,null,9.5],"922107":["통신장비 수리업","c",88.9,null,20.9],"922108":["기타 개인 및 가정용품 수리업 · 가죽, 가방 및 신발 수리업","c",89.4,null,23.3],"922109":["기타 개인 및 가정용품 수리업 · 시계, 귀금속 및 악기 수리업","c",89.4,null,16.8],"922201":["자동차 수리 및 세차업 · 자동차 종합 수리업","c",86.5,null,10.2],"922202":["자동차 수리 및 세차업 · 자동차 전문 수리업","c",83.9,null,7.1],"922203":["자동차 수리 및 세차업 · 자동차 세차업","c",84.9,null,14.0],"922204":["모터사이클 수리업","c",88.5,null,7.6],"923100":["도서관, 기록 보존소 및 독서실 운영업 · 독서실 운영업","c",87.4,null,18.4],"923101":["도서관, 기록 보존소 및 독서실 운영업 · 도서관 및 기록 보존소 운영업","c",83.9,null,16.2],"923102":["도서관, 기록 보존소 및 독서실 운영업 · 독서실 운영업","c",87.4,null,22.5],"923200":["박물관 및 사적지 관리 운영업 · 박물관 운영업","c",89.6,null,23.9],"923201":["박물관 및 사적지 관리 운영업 · 사적지 관리 운영업","c",87.9,null,19.1],"923300":["식물원, 동물원 및 자연공원 운영업 · 식물원 및 동물원 운영업","c",87.5,null,19.7],"923301":["기타 유사 여가관련 서비스업","c",88.9,null,19.4],"924101":["기타 스포츠 서비스업 · 그 외 기타 스포츠 서비스업","c",84.9,null,43.6],"924102":["기타 스포츠 서비스업 · 그 외 기타 스포츠 서비스업","c",85.3,null,34.3],"924103":["기타 스포츠 서비스업 · 스포츠 클럽 운영업","c",81.6,null,22.2],"924200":["경기장 운영업 · 실내 경기장 운영업","c",87.6,null,21.1],"924201":["경기장 운영업 · 실외 경기장 운영업","c",82.7,null,18.4],"924202":["경기장 운영업 · 경주장 및 동물 경기장 운영업","c",82.7,null,18.4],"924302":["기타 스포츠시설 운영업 · 볼링장 운영업","c",88.5,null,17.6],"924303":["골프장 및 스키장 운영업 · 골프장 운영업","c",81.0,null,28.9],"924304":["골프장 및 스키장 운영업 · 스키장 운영업","c",82.2,null,22.6],"924305":["기타 스포츠시설 운영업 · 체력 단련시설 운영업","c",85.5,null,27.4],"924306":["기타 스포츠시설 운영업 · 그 외 기타 스포츠시설 운영업","c",83.4,null,19.6],"924307":["기타 스포츠시설 운영업 · 골프 연습장 운영업","c",83.4,null,21.2],"924308":["기타 스포츠시설 운영업 · 골프 연습장 운영업","c",88.9,null,24.1],"924309":["기타 스포츠시설 운영업 · 당구장 운영업","c",85.7,null,16.6],"924310":["기타 스포츠시설 운영업 · 그 외 기타 스포츠시설 운영업","c",88.7,null,19.9],"924311":["기타 스포츠시설 운영업 · 수영장 운영업","c",83.4,null,15.6],"924312":["기타 스포츠시설 운영업 · 그 외 기타 스포츠시설 운영업","c",82.4,null,26.0],"924313":["기타 스포츠시설 운영업 · 종합 스포츠시설 운영업","c",82.3,null,24.8],"924314":["기타 스포츠시설 운영업 · 그 외 기타 스포츠시설 운영업","c",89.0,null,18.5],"924902":["오락장 운영업 · 기타 오락장 운영업","c",85.4,null,18.7],"924903":["오락장 운영업 · 노래 연습장 운영업","c",84.6,null,16.7],"924904":["오락장 운영업 · 기타 오락장 운영업","c",75.1,null,17.9],"924905":["식물원, 동물원 및 자연공원 운영업 · 자연공원 운영업","c",87.6,null,20.8],"924906":["사행시설 관리 및 운영업 · 복권 발행 및 판매업","c",35.4,null,11.6],"924907":["오락장 운영업 · 전자 게임장 운영업","c",75.9,null,9.1],"924908":["오락장 운영업 · 전자 게임장 운영업","c",86.4,null,12.4],"924909":["오락장 운영업 · 컴퓨터 게임방 운영업","c",89.0,null,18.1],"924911":["그 외 기타 오락관련 서비스업 · 그 외 기타 분류 안된 오락관련 서비스업","c",88.6,null,17.4],"924912":["오락장 운영업 · 전자 게임장 운영업","c",77.6,null,17.5],"924913":["오락장 운영업 · 기타 오락장 운영업","c",87.2,null,16.6],"924914":["수상오락 서비스업 · 낚시장 운영업","c",88.7,null,12.9],"924915":["수상오락 서비스업 · 기타 수상오락 서비스업","c",89.4,null,29.0],"924916":["그 외 기타 오락관련 서비스업 · 체육 공원 및 유사 공원 운영업","c",85.8,null,17.5],"924917":["사행시설 관리 및 운영업","c",35.4,null,13.7],"930100":["세탁업 · 가정용 세탁업","c",83.3,null,18.3],"930101":["세탁업 · 산업용 세탁업","c",85.9,null,19.4],"930102":["세탁업 · 세탁물 공급업","c",84.8,null,25.7],"930201":["이용 및 미용업 · 이용업","c",82.7,null,27.3],"930203":["이용 및 미용업 · 두발 미용업","c",82.4,null,22.0],"930205":["이용 및 미용업 · 피부 미용업","c",85.8,null,18.3],"930207":["이용 및 미용업 · 기타 미용업","c",86.9,null,19.6],"930208":["마사지업","c",85.8,null,22.3],"930209":["체형 등 기타 신체 관리 서비스업","c",85.8,null,17.4],"930301":["장례식장 및 관련 서비스업 · 장례식장 및 장의관련 서비스업","c",75.2,null,14.8],"930302":["장례식장 및 관련 서비스업 · 화장터 운영, 묘지 분양 및 관리업","c",77.4,null,29.7],"930901":["그 외 기타 분류 안된 개인 서비스업 · 예식장업","c",79.2,null,15.0],"930902":["욕탕업","c",87.5,null,16.7],"930903":["기타 개인 및 가정용품 임대업 · 의류 임대업","c",85.1,null,20.2],"930904":["사진 촬영 및 처리업 · 인물 사진 및 행사용 영상 촬영업","c",82.5,null,22.2],"930908":["그 외 기타 분류 안된 개인 서비스업","c",83.7,null,24.6],"930909":["그 외 기타 분류 안된 개인 서비스업 · 점술 및 유사 서비스업","c",61.5,null,20.1],"930911":["그 외 기타 분류 안된 개인 서비스업","c",88.3,null,21.5],"930912":["그 외 기타 분류 안된 개인 서비스업 · 결혼 상담 및 준비 서비스업","c",84.2,null,27.7],"930913":["그 외 기타 분류 안된 개인 서비스업 · 개인 간병 및 유사 서비스업","c",84.6,null,16.6],"930914":["노인 거주 복지시설 운영업 · 노인 양로 복지시설 운영업","c",54.0,null,14.7],"930915":["교육 지원 서비스업 · 기타 교육지원 서비스업","c",85.0,null,21.3],"930916":["탐정 및 조사 서비스업","c",83.8,null,37.7],"930917":["그 외 기타사업지원서비스업 · 콜센터 및 텔레미케팅 서비스업","c",85.3,null,25.1],"930919":["그 외 기타 분류 안된 개인 서비스업 · 반려동물장묘 및 보호 서비스업","c",82.4,null,25.8],"930921":["교육 지원 서비스업 · 교육관련 자문 및 평가업","c",81.9,null,27.8],"930925":["그 외 기타 분류 안된 개인 서비스업","c",86.8,null,21.9],"940100":["저술가 · 작가","b",58.7,42.2,7.2],"940200":["화가 및 관련 예술가","b",68.0,55.2,16.6],"940301":["음악가 및 연예인 · 작곡가","b",49.7,29.6,5.8],"940302":["음악가 및 연예인 · 배우, 탤런트 등","b",29.0,10.6,5.9],"940303":["음악가 및 연예인 · 모델","b",40.9,17.3,10.0],"940304":["음악가 및 연예인 · 가수","b",13.5,4.2,5.7],"940305":["음악가 및 연예인 · 성악가 등","b",61.6,46.2,26.6],"940306":["1인미디어콘텐츠창작자","b",64.1,49.7,12.1],"940500":["연예보조서비스","b",70.9,59.3,16.2],"940600":["자문,감독,지도료,고문료,교정료","b",58.4,41.8,7.6],"940901":["바둑기사","b",62.6,47.6,16.9],"940902":["꽃꽂이교사","b",81.8,74.5,22.3],"940903":["학원강사,강사,과외교습자,재단사","b",61.7,46.4,15.4],"940904":["직업운동가","b",54.5,36.3,15.7],"940905":["유흥접객원 및 댄서","b",61.7,46.4,23.5],"940906":["보험설계사","b",77.6,68.6,28.5],"940907":["음료품배달원","b",80.0,72.0,34.7],"940908":["방문판매원(서적·학습지·화장품·정수기·자동차 등)","b",75.0,65.0,19.9],"940909":["기타자영업","b",64.1,49.7,17.4],"940910":["다단계판매원의후원수당","b",67.8,54.9,14.1],"940911":["기타모집수당,채권회수수당","b",67.7,54.8,15.8],"940912":["개인간병인","b",80.2,72.3,34.0],"940913":["대리운전기사","b",73.7,63.2,32.2],"940914":["골프장캐디","b",74.3,64.0,20.9],"940915":["목욕관리사","b",78.2,69.5,39.7],"940916":["행사도우미","b",69.8,57.7,15.5],"940917":["심부름용역원","b",71.5,60.1,25.6],"940918":["퀵서비스배달원","b",79.4,71.2,19.8],"940919":["기타물품운반원","b",74.2,63.9,27.6],"940920":["학습지 방문강사","b",75.0,65.0,31.5],"940921":["교육교구 방문강사","b",75.6,65.8,28.6],"940922":["대여제품 방문점검원","b",75.0,65.0,29.9],"940923":["대출모집인","b",67.5,54.5,28.6],"940924":["신용카드 회원 모집인","b",71.3,59.8,29.2],"940925":["방과후강사","b",69.3,57.0,19.3],"940926":["소프트웨어프리랜서","b",64.4,50.2,20.9],"940927":["관광통역안내사","b",64.1,49.7,17.0],"940928":["어린이통학버스기사","b",72.4,61.4,19.8],"940929":["중고자동차판매원","b",75.0,65.0,24.2],"950000":["개인 서비스업","c",84.3,null,22.8],"950001":["가구 내 고용활동","c",79.7,null,31.3],"950002":["보육시설 운영업","c",86.6,null,22.7]};
+  const DEFAULT_CODE = '940909';
+  function codeInfo(){
+    const raw = $('code').value.replace(/[^0-9]/g, '');
+    const code = raw.length === 6 ? raw : raw ? null : DEFAULT_CODE;
+    if(code === null) return {code: raw, partial: true};
+    const r = RATES[code];
+    if(!r) return {code, known: false};
+    if(r[2] === null) return {code, known: false, noRate: true, name: r[0]};
+    const name = r[0].split(' · ').pop();
+    return {code, known: true, blank: !raw, name, full: r[0], g: r[1], simple: r[2], over: r[3], std: r[4]};
+  }
+  // 단순경비율 필요경비: 인적용역(940***)은 4천만 원까지 기본율, 초과분은 초과율
+  function simpleExp(R, base, over){
+    if(over === null || over === undefined) return Math.floor(R * base + 1e-6);
+    return Math.floor(Math.min(R, 4e7) * base + Math.max(0, R - 4e7) * over + 1e-6);
+  }
+  const IND = {
+    a: {simple: 6e7, book: 3e8},
+    b: {simple: 3.6e7, book: 1.5e8},
+    c: {simple: 2.4e7, book: 7.5e7}
+  };
+  // 종합소득세 기본세율 (소득세법 제55조) [상한, 세율, 누진공제]
+  const BRACKETS = [
+    [14e6, .06, 0], [50e6, .15, 1.26e6], [88e6, .24, 5.76e6], [150e6, .35, 15.44e6],
+    [300e6, .38, 19.94e6], [500e6, .40, 25.94e6], [1e9, .42, 35.94e6], [Infinity, .45, 65.94e6]
+  ];
+  function progressive(base){
+    for(const [lim, r, d] of BRACKETS) if(base <= lim) return {tax: Math.max(0, Math.floor(base * r - d)), r, d};
+  }
+  // 노란우산공제 한도 (조세특례제한법 제86조의3, 사업소득금액 기준)
+  function yellowLimit(bi){
+    if(bi <= 4e7) return 6e6;
+    if(bi <= 6e7) return 5e6;
+    if(bi <= 1e8) return 4e6;
+    return 2e6;
+  }
+  // 자녀세액공제 (소득세법 제59조의2)
+  function childCredit(n){
+    if(n <= 0) return 0;
+    if(n === 1) return 25e4;
+    if(n === 2) return 55e4;
+    return 55e4 + (n - 2) * 40e4;
+  }
+  const BIRTH = {0: 0, 1: 30e4, 2: 50e4, 3: 70e4};
+  const METHOD = {book: '장부 (실제 경비)', simple: '단순경비율', std: '기준경비율'};
+  const pctTxt = r => (Math.round(r * 10000) / 100) + '%';
+  const CIRC = '①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳';
+
+  /* ---------- 화면 조건 ---------- */
+  let lastKnown = false;
+  function syncVisibility(){
+    const method = pick('method'), duty = pick('duty'), ci = codeInfo(), ind = IND[ci.known ? ci.g : $('grp').value];
+    $('grp-wrap').hidden = ci.known || ci.partial;
+    $('code-hint').textContent = ci.partial ? '업종코드 6자리를 넣어 주세요.'
+      : ci.known ? (ci.blank ? '업종코드를 넣지 않아 940909(' + ci.name + ')로 계산합니다. ' : ci.code + ' ' + ci.name + '. ')
+          + '단순경비율 ' + ci.simple + '%' + (ci.over !== null ? '(4천만 원 초과분 ' + ci.over + '%)' : '') + ', 기준경비율 ' + ci.std + '%가 자동으로 들어갑니다. 단순경비율은 직전 연도 수입금액 ' + man(ind.simple) + ' 미만일 때 적용합니다.'
+      : ci.noRate ? ci.code + ' ' + ci.name + '은(는) 고시된 경비율이 없는 업종입니다. 업종 구분을 고르고 경비율을 직접 넣어 주세요.'
+      : '2025년 귀속 경비율표에 없는 업종코드입니다. 코드를 다시 확인하시거나, 업종 구분을 고르고 경비율을 직접 넣어 주세요.';
+    ['r-simple', 'r-std', 'r-simple2'].forEach(id => { $(id).readOnly = !!ci.known; });
+    if(ci.known){ $('r-simple').value = ci.simple; $('r-simple2').value = ci.simple; $('r-std').value = ci.std; }
+    else if(lastKnown){ ['r-simple', 'r-std', 'r-simple2'].forEach(id => $(id).value = ''); }
+    lastKnown = !!ci.known;
+    document.querySelectorAll('[data-ratehint]').forEach(h => h.textContent = ci.known
+      ? '업종코드 ' + ci.code + '의 2025년 귀속 고시 경비율(일반율)이 자동으로 들어갔습니다.' + (ci.over !== null ? ' 인적용역은 수입금액 4천만 원 초과분에 초과율 ' + ci.over + '%를 적용합니다.' : '') + ' 바꾸려면 위에서 업종코드를 고치세요.'
+      : '업종코드별 고시율(일반율)을 넣으세요. 홈택스 \'기준·단순경비율(업종코드) 조회\'에서 확인할 수 있습니다.');
+    $('fill-wht').hidden = pick('kind') !== 'free';
+    form.querySelectorAll('[data-method]').forEach(g => g.hidden = g.dataset.method !== method);
+    $('bookcredit-wrap').hidden = !(method === 'book' && duty === 'simple');
+    $('nobook-wrap').hidden = method === 'book';
+    $('duty-hint').textContent = '직전 연도(2025년) 수입금액이 ' + man(ind.book) + ' 이상이면 복식부기의무자입니다. 의사·변호사·세무사 등 전문직 사업자는 수입금액과 관계없이 복식부기의무자입니다.';
+    $('std-hint').textContent = '주요경비와 수입금액 × 기준경비율' + (duty === 'double' ? '의 2분의 1(복식부기의무자)' : '') + '을 뺀 금액이 소득금액입니다. 단순경비율을 넣으면 단순경비율 소득금액의 ' + (duty === 'double' ? '3.4' : '2.8') + '배와 비교해 적은 금액을 씁니다.';
+    $('prepaid-hint').textContent = pick('kind') === 'free'
+      ? '프리랜서는 받을 때 3.3%가 떼였습니다. 지급명세서(원천징수영수증)의 소득세 합계를 넣으세요.'
+      : '원천징수세액과 11월에 낸 중간예납세액은 확정신고 때 빼 줍니다.';
+  }
+
+  /* ---------- 계산 ---------- */
+  let last = null;
+  function compute(){
+    const ci = codeInfo();
+    if(ci.partial) return {ok: false, R: num($('rev')), partial: true};
+    const kind = pick('kind'), duty = pick('duty'), method = pick('method'), indKey = ci.known ? ci.g : $('grp').value, ind = IND[indKey];
+    const R = num($('rev'));
+    const notes = [];
+    let exp = 0, expSub = '', income = 0, ok = true;
+
+    if(method === 'book'){
+      exp = num($('exp'));
+      income = R - exp;
+      expSub = '장부상 필요경비';
+    } else if(method === 'simple'){
+      const r = rateOf($('r-simple'));
+      const over = ci.known && ci.over !== null ? ci.over / 100 : null;
+      if(r === null) ok = false;
+      else {
+        exp = simpleExp(R, r, over); income = R - exp;
+        expSub = over !== null && R > 4e7
+          ? '4천만 원 × ' + pctTxt(r) + ' + 초과분 ' + won(R - 4e7) + ' × ' + pctTxt(over)
+          : '수입금액 × 단순경비율 ' + pctTxt(r);
+      }
+      if(duty === 'double') notes.push('복식부기의무자는 단순경비율을 적용할 수 없습니다. 기준경비율로 계산해 보세요.');
+      else if(R >= ind.book) notes.push('2026년 수입금액이 ' + man(ind.book) + ' 이상이면 단순경비율을 적용할 수 없습니다. 기준경비율로 계산해 보세요.');
+      notes.push('단순경비율은 신규 사업자이거나 직전 연도 수입금액이 ' + man(ind.simple) + ' 미만인 경우에만 쓸 수 있습니다.');
+    } else {
+      const rs = rateOf($('r-std')), rsim = rateOf($('r-simple2'));
+      if(rs === null) ok = false;
+      else {
+        const main = num($('main-exp'));
+        const stdPart = Math.floor(R * rs * (duty === 'double' ? .5 : 1) + 1e-6);
+        const base = R - Math.min(R, main + stdPart);
+        income = base; exp = R - base;
+        expSub = '주요경비 ' + won(main) + ' + 수입금액 × ' + pctTxt(rs) + (duty === 'double' ? ' × ½' : '');
+        if(rsim !== null){
+          const mult = duty === 'double' ? 3.4 : 2.8;
+          const over = ci.known && ci.over !== null ? ci.over / 100 : null;
+          const cap = Math.floor((R - simpleExp(R, rsim, over)) * mult + 1e-6);
+          if(cap < base){
+            income = cap; exp = R - cap;
+            expSub = '단순경비율 소득금액 × ' + mult + '배 한도 적용 (단순경비율 ' + pctTxt(rsim) + ')';
+          }
+        }
+      }
+    }
+    if(!ok || !R) return {ok: false, R, method};
+
+    if(income < 0){ notes.push('필요경비가 수입금액보다 많아 결손금 ' + won(-income) + '이 생깁니다. 결손금은 다음 해 이후로 이월해 공제받을 수 있습니다.'); }
+    const bi = Math.max(0, income);
+
+    // 인적공제
+    const spouse = chk('spouse'), deps = cnt('deps'), elder = cnt('elder'), dis = cnt('disabled');
+    const basicN = 1 + (spouse ? 1 : 0) + deps;
+    let woman = chk('woman'), single = chk('single');
+    if(single && woman) woman = false;
+    if(woman && bi > 3e7){ woman = false; notes.push('종합소득금액이 3,000만 원을 넘어 부녀자 공제는 적용하지 않았습니다.'); }
+    const pBasic = basicN * 150e4, pAdd = elder * 100e4 + dis * 200e4 + (woman ? 50e4 : 0) + (single ? 100e4 : 0);
+    const personal = pBasic + pAdd;
+    const pSub = ['기본 ' + basicN + '명 ' + man(pBasic)];
+    if(elder) pSub.push('경로 ' + elder + '명');
+    if(dis) pSub.push('장애인 ' + dis + '명');
+    if(woman) pSub.push('부녀자');
+    if(single) pSub.push('한부모');
+    if(elder + dis > basicN) notes.push('경로우대·장애인 인원은 기본공제 대상자 안에서 세야 합니다. 인원을 다시 확인해 주세요.');
+
+    const nps = num($('nps'));
+    const yPaid = num($('yellow')), yLim = yellowLimit(bi), yDed = Math.min(yPaid, yLim);
+    if(yPaid > yLim) notes.push('노란우산공제는 사업소득금액 ' + won(bi) + ' 구간의 한도 ' + man(yLim) + '까지만 소득공제됩니다.');
+
+    const taxBase = Math.max(0, bi - personal - nps - yDed);
+    const pr = progressive(taxBase);
+    const calcTax = pr.tax;
+
+    // 세액공제
+    const credits = [];
+    const bookCredit = method === 'book' && duty === 'simple' && chk('bookcredit') ? Math.min(1e6, Math.floor(calcTax * .2)) : 0;
+    if(bookCredit) credits.push({label: '기장세액공제', sub: '산출세액 × 20% (100만 원 한도)', v: bookCredit});
+    const kids = cnt('kids'), birth = Number(pick('birth')) || 0;
+    const cc = childCredit(kids), bc = BIRTH[birth];
+    if(cc) credits.push({label: '자녀세액공제', sub: '8세 이상 자녀 ' + kids + '명', v: cc});
+    if(bc) credits.push({label: '출산·입양 세액공제', sub: ['', '첫째', '둘째', '셋째 이상'][birth] + ' 출산·입양', v: bc});
+    const ps = num($('psave')), irp = num($('irp'));
+    const pElig = Math.min(9e6, Math.min(ps, 6e6) + irp);
+    const pRate = bi <= 4.5e7 ? .15 : .12;
+    const pCredit = Math.floor(pElig * pRate);
+    if(pCredit) credits.push({label: '연금계좌세액공제', sub: '공제 대상 ' + won(pElig) + ' × ' + (pRate * 100) + '%', v: pCredit});
+    if(ps + irp > pElig) notes.push('연금저축 600만 원, 연금저축·IRP 합계 900만 원을 넘는 납입액은 세액공제 대상이 아닙니다.');
+    credits.push({label: '표준세액공제', sub: '근로소득 없는 종합소득자', v: 7e4});
+    const creditSum = credits.reduce((a, c) => a + c.v, 0);
+    const creditUsed = Math.min(creditSum, calcTax);
+    if(creditSum > calcTax && creditSum > 0) notes.push('세액공제 합계가 산출세액보다 커서 산출세액(' + won(calcTax) + ')까지만 공제됩니다.');
+    const decided = calcTax - creditUsed;
+
+    // 가산세
+    const penalty = method !== 'book' && chk('nobook') ? Math.floor(calcTax * .2) : 0;
+    if(method !== 'book' && duty === 'double') notes.push('복식부기의무자가 장부 없이 경비율로 신고하면 무신고로 보아, 무신고가산세(납부세액의 20%와 수입금액의 0.07% 중 큰 금액)와 무기장가산세 중 큰 금액이 부과됩니다. 이 계산서에는 무기장가산세만 반영했습니다.');
+
+    const totalTax = decided + penalty;
+    const wht = num($('wht')), prepay = num($('prepay'));
+    const incomeDue = totalTax - wht - prepay;
+    const localTax = Math.floor(totalTax * .1);
+    const localWht = Math.floor(wht * .1);
+    const localDue = localTax - localWht;
+    const grand = incomeDue + localDue;
+
+    if(incomeDue > 1e7) notes.push('납부할 소득세가 1,000만 원을 넘으면 일부를 납부기한이 지난 뒤 2개월 안에 나눠 낼 수 있습니다(2,000만 원 이하는 1,000만 원 초과분, 2,000만 원 초과는 절반 이하).');
+    if(nps || yDed) {} // 표시용
+    if(yPaid) notes.push('노란우산공제 소득공제는 부동산임대업 소득에는 적용되지 않습니다.');
+
+    return {ok: true, kind, duty, method, indKey, R, exp, expSub, income, bi, personal, pSub, nps, yPaid, yLim, yDed,
+      taxBase, pr, calcTax, credits, creditSum, creditUsed, decided, penalty, totalTax, wht, prepay,
+      incomeDue, localTax, localWht, localDue, grand, notes};
+  }
+
+  function buildRows(c){
+    const rows = [];
+    const add = r => rows.push(r);
+    add({label: '총수입금액', value: won(c.R)});
+    add({label: '필요경비', sub: c.expSub, value: won(c.exp), minus: true});
+    add({label: '사업소득금액', sub: c.income < 0 ? '결손금 ' + won(-c.income) + ' → 0원' : '종합소득금액', value: won(c.bi), key: true});
+    add({label: '인적공제', sub: c.pSub.join(', '), value: won(c.personal), minus: true});
+    if(c.nps) add({label: '연금보험료공제', sub: '국민연금 보험료 전액', value: won(c.nps), minus: true});
+    if(c.yPaid) add({label: '노란우산공제', sub: '납입 ' + won(c.yPaid) + ', 한도 ' + man(c.yLim), value: won(c.yDed), minus: true});
+    add({label: '과세표준', value: won(c.taxBase), key: true});
+    add({label: '세율', sub: c.pr.d ? '누진공제 ' + won(c.pr.d) : '', value: (c.pr.r * 100) + '%'});
+    add({label: '산출세액', value: won(c.calcTax), key: true});
+    c.credits.forEach(x => add({label: x.label, sub: x.sub, value: won(x.v), minus: true}));
+    add({label: '결정세액', sub: c.creditSum > c.creditUsed ? '세액공제 ' + won(c.creditSum) + ' 중 산출세액까지만 공제' : '', value: won(c.decided), key: true});
+    if(c.penalty) add({label: '무기장가산세', sub: '산출세액 × 20%', value: won(c.penalty)});
+    if(c.prepay) add({label: '중간예납세액', value: won(c.prepay), minus: true});
+    if(c.wht) add({label: '원천징수세액', sub: '소득세 3%분', value: won(c.wht), minus: true});
+    add({label: c.incomeDue >= 0 ? '소득세 납부할 세액' : '소득세 환급세액', value: (c.incomeDue < 0 ? '환급 ' : '') + won(Math.abs(c.incomeDue)), key: true});
+    add({label: '지방소득세', sub: '(결정세액' + (c.penalty ? '+가산세' : '') + ') × 10% ' + won(c.localTax) + (c.localWht ? ' − 특별징수 ' + won(c.localWht) : ''),
+      value: (c.localDue < 0 ? '환급 ' : '') + won(Math.abs(c.localDue)), key: true});
+    rows.forEach((r, i) => r.no = CIRC[i] || String(i + 1));
+    return rows;
+  }
+
+  function rowsHTML(rows){
+    return '<div class="st-body">' + rows.map(r =>
+      '<div class="row' + (r.minus ? ' minus' : '') + (r.key ? ' key' : '') + '">' +
+      '<span class="no">' + r.no + '</span>' +
+      '<span class="lb">' + esc(r.label) + (r.sub ? '<small>' + esc(r.sub) + '</small>' : '') + '</span>' +
+      '<span class="v">' + esc(r.value) + '</span></div>').join('') + '</div>';
+  }
+  function totalHTML(c){
+    const refund = c.grand < 0;
+    return '<div class="total"><span class="tl">' + (refund ? '총 환급세액' : '총 납부세액') + '<small>소득세 + 지방소득세</small></span>' +
+      '<span class="tv' + (refund ? ' refund' : '') + '">' + won(Math.abs(c.grand)) + '</span></div>';
+  }
+  function notesHTML(list){
+    return list.length ? '<ul class="notes">' + list.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>' : '';
+  }
+  function deadlineHTML(c){
+    return '<div class="deadline">신고·납부 기한: 2027년 5월 31일(월)까지' +
+      '. 지방소득세는 같은 기한까지 위택스 등으로 따로 신고·납부합니다.' + (c.grand < 0 ? ' 환급세액은 신고 후 보통 한 달 안팎에 지급됩니다.' : '') + '</div>';
+  }
+
+  function conditions(c){
+    const items = [];
+    const labelOf = id => { const l = form.querySelector('label[for="' + id + '"]'); return l ? l.textContent.trim() : ''; };
+    items.push(['소득 구분', pick('kind') === 'free' ? '프리랜서 (3.3%)' : '개인사업자']);
+    const ci = codeInfo();
+    items.push(['업종코드', ci.known ? ci.code + ' ' + ci.name + (ci.blank ? ' (미입력 기본값)' : '') : ci.code + (ci.name ? ' ' + ci.name : '') + ' (' + $('grp').options[$('grp').selectedIndex].text + ')']);
+    items.push(['장부 구분', pick('duty') === 'double' ? '복식부기의무자' : '간편장부대상자']);
+    items.push(['필요경비 계산', METHOD[pick('method')]]);
+    items.push(['총수입금액', won(num($('rev')))]);
+    const m = pick('method');
+    if(m === 'book') items.push(['필요경비', won(num($('exp')))]);
+    if(m === 'simple') items.push(['단순경비율', $('r-simple').value + '%']);
+    if(m === 'std'){
+      items.push(['주요경비', won(num($('main-exp')))]);
+      items.push(['기준경비율', $('r-std').value + '%']);
+      if($('r-simple2').value) items.push(['단순경비율', $('r-simple2').value + '%']);
+    }
+    const fam = ['본인'];
+    if(chk('spouse')) fam.push('배우자');
+    if(cnt('deps')) fam.push('부양가족 ' + cnt('deps') + '명');
+    if(cnt('elder')) fam.push('70세 이상 ' + cnt('elder') + '명');
+    if(cnt('disabled')) fam.push('장애인 ' + cnt('disabled') + '명');
+    items.push(['인적공제', fam.join(', ')]);
+    [['nps', '국민연금'], ['yellow', '노란우산공제'], ['psave', '연금저축'], ['irp', 'IRP'], ['wht', '원천징수 소득세'], ['prepay', '중간예납세액']]
+      .forEach(([id, k]) => { if(num($(id))) items.push([k, won(num($(id)))]); });
+    if(cnt('kids')) items.push(['8세 이상 자녀', cnt('kids') + '명']);
+    const b = pick('birth');
+    if(b !== '0') items.push(['2026년 출산·입양', ['', '첫째', '둘째', '셋째 이상'][b]]);
+    const checks = [];
+    form.querySelectorAll('input[type=checkbox]').forEach(x => {
+      if(!x.checked || x.closest('[hidden]') || x.id === 'spouse') return;
+      const sp = x.nextElementSibling;
+      checks.push((sp.firstChild ? sp.firstChild.textContent : sp.textContent).trim());
+    });
+    if(checks.length) items.push(['해당 사항', checks.join(', ')]);
+    return items;
+  }
+
+  function render(){
+    syncVisibility();
+    const c = compute();
+    last = null;
+    const m = pick('method');
+    $('meta').textContent = '2026년 귀속 · ' + (pick('kind') === 'free' ? '프리랜서' : '개인사업자') + ' · ' + METHOD[m];
+    if(!c.ok){
+      $('exp-total').textContent = '0원';
+      $('inc-sum').textContent = '0원'; $('inc-sum-kr').textContent = '';
+      $('out').innerHTML = '<p class="empty">' + (c.partial ? '업종코드 6자리를 넣어 주세요.' : !c.R ? '총수입금액을 넣으면 계산서가 나타납니다.' : '경비율(%)을 넣으면 계산서가 나타납니다.') + '</p>';
+      return;
+    }
+    $('exp-total').textContent = won(c.exp);
+    $('inc-sum').textContent = won(c.bi);
+    $('inc-sum-kr').textContent = korUnit(c.bi);
+    $('inc-sum-sub').textContent = '수입금액 ' + won(c.R) + ' − 필요경비 ' + won(c.exp);
+    const rows = buildRows(c);
+    $('out').innerHTML = rowsHTML(rows) + totalHTML(c) + deadlineHTML(c) + notesHTML(c.notes);
+    last = {c, rows};
+  }
+
+  $('fill-wht').addEventListener('click', () => { setMoney($('wht'), Math.floor(num($('rev')) * .03)); render(); });
+  form.querySelectorAll('input[name=kind]').forEach(r => r.addEventListener('change', () => {
+    if(r.checked && r.value === 'free'){ $('grp').value = 'b'; }
+  }));
+  form.addEventListener('input', render);
+  form.addEventListener('change', render);
+  $('reset').addEventListener('click', () => {
+    form.reset();
+    document.querySelectorAll('.helper[data-for]').forEach(h => h.textContent = '');
+    render(); drawLaws();
+  });
+
+  /* ---------- 적용 법령 ---------- */
+  const url = (law, art) => 'https://www.law.go.kr/' + encodeURI('법령/' + law.replace(/\s/g, '') + '/' + art);
+  const LAWS = [
+    {c: '소득세법 제19조', l: ['소득세법', '제19조'], s: '사업소득의 범위와 사업소득금액(총수입금액 − 필요경비)'},
+    {c: '소득세법 제24조·제27조', l: ['소득세법', '제27조'], s: '총수입금액의 계산과 필요경비의 계산', when: x => x.m === 'book'},
+    {c: '소득세법 제160조', l: ['소득세법', '제160조'], s: '장부의 비치·기록, 간편장부대상자와 복식부기의무자 구분'},
+    {c: '소득세법 제80조 제3항', l: ['소득세법', '제80조'], s: '장부가 없는 경우 소득금액의 추계 결정', when: x => x.m !== 'book'},
+    {c: '소득세법 시행령 제143조', l: ['소득세법 시행령', '제143조'], s: '기준경비율·단순경비율에 의한 추계 방법, 단순경비율 적용대상자', when: x => x.m !== 'book'},
+    {c: '소득세법 시행령 제145조', l: ['소득세법 시행령', '제145조'], s: '경비율은 국세청장이 결정·고시(2025년 귀속: 국세청 고시 제2026-14호). 인적용역(940***)은 수입금액 4천만 원 초과분에 단순경비율 초과율 적용', when: x => x.m !== 'book'},
+    {c: '소득세법 시행규칙 제67조', l: ['소득세법 시행규칙', '제67조'], s: '기준경비율 소득금액 한도 배율: 간편장부대상자 2.8배, 복식부기의무자 3.4배', when: x => x.m === 'std'},
+    {c: '소득세법 제50조', l: ['소득세법', '제50조'], s: '기본공제: 본인·배우자·부양가족 1명당 150만 원'},
+    {c: '소득세법 제51조', l: ['소득세법', '제51조'], s: '추가공제: 경로우대 100만 원, 장애인 200만 원, 부녀자 50만 원, 한부모 100만 원', when: x => x.add},
+    {c: '소득세법 제51조의3', l: ['소득세법', '제51조의3'], s: '연금보험료공제: 국민연금 보험료 전액', when: x => x.nps},
+    {c: '조세특례제한법 제86조의3', l: ['조세특례제한법', '제86조의3'], s: '소기업·소상공인 공제부금(노란우산공제) 소득공제: 사업소득금액 4천만 원 이하 600만 원, 6천만 원 이하 500만 원, 1억 원 이하 400만 원, 1억 원 초과 200만 원', when: x => x.yellow},
+    {c: '소득세법 제55조', l: ['소득세법', '제55조'], s: '종합소득세 기본세율 6~45% (8단계 누진세율)'},
+    {c: '소득세법 제56조의2', l: ['소득세법', '제56조의2'], s: '기장세액공제: 간편장부대상자의 복식부기 신고 시 산출세액의 20%, 100만 원 한도', when: x => x.bookcredit},
+    {c: '소득세법 제59조의2', l: ['소득세법', '제59조의2'], s: '자녀세액공제: 1명 25만 원, 2명 55만 원, 3명 이상 55만 원 + 1명당 40만 원 / 출산·입양 첫째 30만, 둘째 50만, 셋째 이상 70만 원', when: x => x.child},
+    {c: '소득세법 제59조의3', l: ['소득세법', '제59조의3'], s: '연금계좌세액공제: 연금저축 600만 원, IRP 합산 900만 원 한도, 종합소득금액 4,500만 원 이하 15%, 초과 12%', when: x => x.pension},
+    {c: '소득세법 제59조의4 제9항', l: ['소득세법', '제59조의4'], s: '표준세액공제: 근로소득 없는 종합소득자 7만 원'},
+    {c: '소득세법 제61조', l: ['소득세법', '제61조'], s: '세액공제 합계가 산출세액을 넘으면 넘는 금액은 없는 것으로 봄'},
+    {c: '소득세법 제81조의5', l: ['소득세법', '제81조의5'], s: '장부의 기록·보관 불성실 가산세(무기장가산세): 산출세액 × 무기장 소득 비율 × 20%', when: x => x.m !== 'book'},
+    {c: '소득세법 제129조 제1항', l: ['소득세법', '제129조'], s: '원천징수세율: 인적용역 등 사업소득 3%', when: x => x.wht},
+    {c: '소득세법 제65조', l: ['소득세법', '제65조'], s: '중간예납: 직전 연도 중간예납기준액의 2분의 1을 11월에 납부', when: x => x.prepay},
+    {c: '소득세법 제70조', l: ['소득세법', '제70조'], s: '종합소득 과세표준 확정신고: 다음 해 5월 1일부터 31일까지'},
+    {c: '소득세법 제77조', l: ['소득세법', '제77조'], s: '분할납부: 납부세액 1,000만 원 초과 시 2개월 이내 분납'},
+    {c: '지방세법 제103조의3', l: ['지방세법', '제103조의3'], s: '개인지방소득세 표준세율 0.6~4.5% (소득세 세율의 10분의 1)'}
+  ];
+  let lawsAll = false;
+  function drawLaws(){
+    const m = pick('method');
+    const ctx = {m, nps: num($('nps')) > 0, yellow: num($('yellow')) > 0, pension: num($('psave')) + num($('irp')) > 0,
+      child: cnt('kids') > 0 || pick('birth') !== '0', wht: num($('wht')) > 0, prepay: num($('prepay')) > 0,
+      bookcredit: m === 'book' && pick('duty') === 'simple' && chk('bookcredit'),
+      add: cnt('elder') + cnt('disabled') > 0 || chk('woman') || chk('single')};
+    const items = lawsAll ? LAWS : LAWS.filter(x => !x.when || x.when(ctx));
+    $('laws').innerHTML = items.map(x =>
+      '<li><a href="' + url(x.l[0], x.l[1]) + '" target="_blank" rel="noopener noreferrer">' + esc(x.c) +
+      '<span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)"> (새 창)</span></a>' +
+      '<span class="sum">' + esc(x.s) + '</span></li>').join('');
+    $('lawsall').textContent = lawsAll ? '선택한 조건의 조문만 보기' : '모든 조문 보기';
+  }
+  $('lawsall').addEventListener('click', () => { lawsAll = !lawsAll; drawLaws(); });
+  form.addEventListener('change', drawLaws);
+  form.addEventListener('input', drawLaws);
+
+  /* ---------- 계산서 PDF 저장 ---------- */
+  const TITLE = '종합소득세 계산서';
+  const H2C = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+  const JSPDF = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+  const dlPromise = (window.claude && typeof window.claude.use === 'function')
+    ? window.claude.use('downloads').catch(() => null) : Promise.resolve(null);
+
+  function calcLines(){
+    if(!last) return '';
+    const {c, rows} = last;
+    return rows.map(r => '- ' + r.label + ': ' + (r.minus ? '−' : '') + r.value).join('\n') +
+      '\n- ' + (c.grand < 0 ? '총 환급세액' : '총 납부세액') + '(소득세 + 지방소득세): ' + won(Math.abs(c.grand));
+  }
+
+  function buildSheet(){
+    const today = new Date();
+    const dstr = today.getFullYear() + '년 ' + (today.getMonth() + 1) + '월 ' + today.getDate() + '일';
+    const memo = $('memo-inc').value.trim();
+    const logo = document.querySelector('.brand img');
+    const name = $('s-name').value.trim(), tel = $('s-phone').value.trim();
+    const items = conditions(last.c);
+    if(name || tel) items.unshift(['계산하신 분', [name && name + ' 님', tel].filter(Boolean).join(', ')]);
+    const conds = items.map(([k, v]) =>
+      '<div class="' + (String(v).length > 28 ? 'wide' : '') + '"><b>' + esc(k) + '</b><span>' + esc(v) + '</span></div>').join('');
+    const el = document.createElement('div');
+    el.className = 'rpt';
+    el.innerHTML =
+      '<div class="rpt-top">' + (logo ? '<img src="' + logo.src + '" alt="">' : '<span></span>') +
+      '<div class="dt">작성일 ' + dstr + '</div>' +
+      '<div class="d"><div class="who">이동희 세무사</div><div class="tel">010-8278-1382</div></div></div>' +
+      '<h1>' + TITLE + '</h1>' +
+      '<p class="m">' + esc($('meta').textContent) + '</p>' +
+      '<h3>입력 조건</h3><div class="conds">' + conds + '</div>' +
+      '<h3>계산 내역</h3>' + $('out').innerHTML +
+      '<h3>메모</h3><div class="memo">' + esc(memo) + '</div>' +
+      '<div class="foot">이 계산서는 동감 세무회계가 AI의 도움을 받아 제작한 계산기로 작성되었으며, 계산 결과에 오류가 있을 수 있습니다. 실제 신고 전에는 반드시 세무사의 검토를 받으시기 바랍니다. 이 계산기의 이용으로 발생하는 어떠한 문제에 대해서도 동감 세무회계는 책임지지 않습니다. 문의 blog.naver.com/francepigeon</div>';
+    return el;
+  }
+
+  function loadScript(src){
+    return new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = src; s.async = true;
+      s.onload = res; s.onerror = () => rej(Object.assign(new Error('lib'), {lib: true}));
+      document.head.appendChild(s);
+    });
+  }
+  let libs = null;
+  function loadLibs(){
+    if(!libs) libs = Promise.all([
+      window.html2canvas ? 1 : loadScript(H2C),
+      window.jspdf ? 1 : loadScript(JSPDF)
+    ]).catch(e => { libs = null; throw e; });
+    return libs;
+  }
+  const framed = (() => { try{ return window.top !== window.self; }catch(e){ return true; } })();
+  async function deliver(filename, data){
+    const dl = await dlPromise;
+    if(dl){ await dl.save({filename, data}); return 'saved'; }
+    if(framed) return 'noSave';
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(data instanceof Blob ? data : new Blob([data]));
+    a.download = filename;
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    return 'saved';
+  }
+  async function makeCanvas(){
+    const sheet = buildSheet();
+    const holder = document.createElement('div');
+    holder.style.cssText = 'position:absolute;left:-10000px;top:0;width:794px;pointer-events:none;';
+    holder.setAttribute('aria-hidden', 'true');
+    holder.appendChild(sheet);
+    document.body.appendChild(holder);
+    try{
+      await loadLibs();
+      if(document.fonts && document.fonts.ready) await document.fonts.ready;
+      return await window.html2canvas(sheet, {scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false, scrollX: 0, scrollY: -window.scrollY, windowWidth: 1200});
+    }finally{
+      holder.remove();
+    }
+  }
+  let modal = null, lastFocus = null;
+  function ensureModal(){
+    if(modal) return modal;
+    modal = document.createElement('div');
+    modal.className = 'img-modal';
+    modal.hidden = true;
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-labelledby', 'im-title');
+    modal.innerHTML = '<div class="im-box"><div class="im-head"><h2 id="im-title">' + TITLE + '</h2><button type="button" class="im-close">닫기</button></div>' +
+      '<p class="im-help">휴대폰은 이미지를 길게 눌러, 컴퓨터는 마우스 오른쪽 버튼을 눌러 이미지 저장을 고르세요. 저장한 이미지는 A4 한 장으로 그대로 인쇄할 수 있습니다.</p>' +
+      '<div class="im-scroll"><img alt="계산서 이미지"></div></div>';
+    document.body.appendChild(modal);
+    const close = () => { modal.hidden = true; modal.querySelector('img').removeAttribute('src'); if(lastFocus) lastFocus.focus(); };
+    modal.querySelector('.im-close').addEventListener('click', close);
+    modal.addEventListener('click', e => { if(e.target === modal) close(); });
+    modal.addEventListener('keydown', e => { if(e.key === 'Escape') close(); if(e.key === 'Tab'){ e.preventDefault(); modal.querySelector('.im-close').focus(); } });
+    return modal;
+  }
+  async function showImage(msg, btn){
+    if(btn) btn.disabled = true;
+    msg.textContent = '계산서 이미지를 만드는 중입니다.';
+    try{
+      const canvas = await makeCanvas();
+      const m = ensureModal();
+      m.querySelector('img').src = canvas.toDataURL('image/png');
+      lastFocus = document.activeElement;
+      m.hidden = false;
+      m.querySelector('.im-close').focus();
+      msg.textContent = '';
+      return true;
+    }catch(e){
+      msg.textContent = '계산서 이미지를 만들지 못했습니다. 인터넷 연결을 확인하고 다시 눌러 주세요.';
+      return false;
+    }finally{
+      if(btn) btn.disabled = false;
+    }
+  }
+  function printableHtml(sheet){
+    const css = [...document.querySelectorAll('style')].map(x => x.textContent).join('\n');
+    return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>' + TITLE + '</title>' +
+      '<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Nanum+Myeongjo:wght@700;800&display=swap" rel="stylesheet">' +
+      '<style>' + css + '\n@page{size:A4;margin:0}html,body{margin:0;padding:0;background:#fff}:root{padding:0}.rpt{margin:0 auto}</style></head><body>' +
+      sheet.outerHTML + '</body></html>';
+  }
+  async function save(btn){
+    const msg = $('save-msg');
+    btn.disabled = true;
+    msg.textContent = '계산서를 만드는 중입니다.';
+    const t = new Date();
+    const stamp = t.getFullYear() + String(t.getMonth() + 1).padStart(2, '0') + String(t.getDate()).padStart(2, '0');
+    const base = TITLE.replace(/\s/g, '_') + '_' + stamp;
+    let fallback = false;
+    try{
+      let blob, name;
+      try{
+        const canvas = await makeCanvas();
+        const pdf = new window.jspdf.jsPDF({unit: 'mm', format: 'a4', orientation: 'portrait'});
+        let w = 210, h = canvas.height * 210 / canvas.width;
+        if(h > 297){ w = w * 297 / h; h = 297; }
+        pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', (210 - w) / 2, 0, w, h);
+        blob = pdf.output('blob'); name = base + '.pdf';
+      }catch(e){
+        if(e && e.code) throw e;
+        blob = new Blob([printableHtml(buildSheet())], {type: 'text/html'}); name = base + '.html';
+      }
+      const r = await deliver(name, blob);
+      if(r === 'noSave') fallback = true;
+      else msg.textContent = name.endsWith('.pdf')
+        ? '저장했습니다. 파일을 열어 인쇄할 수 있습니다.'
+        : 'PDF를 만들지 못해 인쇄용 파일(HTML)로 저장했습니다. 파일을 브라우저로 열어 인쇄하세요.';
+    }catch(e){
+      const code = e && e.code;
+      if(code === 'declined') msg.textContent = '저장을 취소했습니다.';
+      else if(code === 'rate_limited') msg.textContent = '저장 창이 이미 열려 있습니다. 잠시 후 다시 눌러 주세요.';
+      else fallback = true;
+    }finally{
+      btn.disabled = false;
+    }
+    if(fallback){
+      const ok = await showImage(msg);
+      if(ok) msg.textContent = '이 화면에서는 파일 저장이 막혀 있어 계산서를 이미지로 띄웠습니다.';
+    }
+  }
+  $('savebtn').addEventListener('click', e => save(e.currentTarget));
+  $('imgbtn').addEventListener('click', e => showImage($('save-msg'), e.currentTarget));
+
+  /* ---------- 상담 신청 (구글 시트 저장) ---------- */
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzS5MRwChXHXcCt3T0m08ZKGLqxP0IGBD_x6kO9nikNCvMmqb7Ku2YDIWQXEUDX6VCB/exec';
+  let posting = false, sentSig = '';
+  function fmtPhone(v){
+    const d = v.replace(/[^0-9]/g, '').slice(0, 11);
+    if(d.startsWith('02')){
+      return d.length <= 2 ? d : d.length <= 5 ? d.slice(0, 2) + '-' + d.slice(2)
+        : d.length <= 9 ? d.slice(0, 2) + '-' + d.slice(2, 5) + '-' + d.slice(5)
+        : d.slice(0, 2) + '-' + d.slice(2, 6) + '-' + d.slice(6, 10);
+    }
+    return d.length <= 3 ? d : d.length <= 6 ? d.slice(0, 3) + '-' + d.slice(3)
+      : d.length <= 10 ? d.slice(0, 3) + '-' + d.slice(3, 6) + '-' + d.slice(6)
+      : d.slice(0, 3) + '-' + d.slice(3, 7) + '-' + d.slice(7);
+  }
+  function state(){
+    const name = $('s-name').value.trim(), tel = $('s-phone').value.trim(), digits = tel.replace(/[^0-9]/g, '');
+    let why = '';
+    if(!last) why = '먼저 계산을 마쳐 주세요.';
+    else if(!name) why = '이름을 적어 주세요.';
+    else if(!/^0\d{8,10}$/.test(digits)) why = '연락처를 정확히 적어 주세요.';
+    else if(!$('s-agree').checked) why = '개인정보 수집·이용에 동의하셔야 보낼 수 있습니다.';
+    return {ok: !why, why, name, tel};
+  }
+  function taxText(){
+    if(!last) return '';
+    return (last.c.grand < 0 ? '환급 ' : '') + won(Math.abs(last.c.grand));
+  }
+  function signature(){
+    const st = state();
+    return st.name + '|' + st.tel + '|' + calcLines() + '|' + $('memo-inc').value.trim();
+  }
+  function postData(){
+    const st = state();
+    const t = new Date();
+    const today = t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
+    return {
+      kind: '종합소득세',
+      name: st.name, phone: st.tel,
+      agree: '동의 (' + today + ')',
+      tax: taxText(),
+      conds: conditions(last.c).map(([k, v]) => k + ': ' + v).join('\n'),
+      calc: calcLines().replace(/^- /gm, ''),
+      memo: $('memo-inc').value.trim()
+    };
+  }
+  function syncSend(){
+    const st = state(), pb = $('postbtn'), pm = $('post-msg');
+    const sent = sentSig && sentSig === signature();
+    pb.disabled = !st.ok || posting || sent;
+    pb.textContent = sent ? '신청 완료' : posting ? '보내는 중…' : '상담 신청하기';
+    if(!posting && !sent){ pm.classList.remove('bad', 'good'); pm.textContent = st.ok ? '' : st.why; }
+  }
+  $('s-phone').addEventListener('input', e => { e.target.value = fmtPhone(e.target.value); });
+  ['s-name', 's-phone', 's-agree', 'memo-inc'].forEach(id => { $(id).addEventListener('input', syncSend); $(id).addEventListener('change', syncSend); });
+  $('postbtn').addEventListener('click', async () => {
+    const st = state(), pm = $('post-msg');
+    if(!st.ok){ pm.textContent = st.why; pm.classList.add('bad'); return; }
+    const sig = signature();
+    posting = true; syncSend();
+    pm.classList.remove('bad', 'good'); pm.textContent = '보내는 중입니다.';
+    try{
+      await fetch(SHEET_URL, {method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify(postData())});
+      sentSig = sig;
+      posting = false; syncSend();
+      pm.classList.add('good');
+      pm.textContent = '상담 신청이 접수되었습니다. 세무사가 확인 후 ' + st.tel + '로 연락드리겠습니다.';
+    }catch(e){
+      posting = false; syncSend();
+      pm.classList.add('bad');
+      pm.textContent = '전송하지 못했습니다. 인터넷 연결을 확인하고 다시 눌러 주세요. 계속 안 되면 010-8278-1382로 전화 주세요.';
+    }
+  });
+
+  // 계산이 끝났을 때만 저장·상담 영역 표시
+  const out = $('out');
+  new MutationObserver(() => {
+    document.querySelectorAll('[data-save]').forEach(b => b.hidden = !out.querySelector('.total'));
+    syncSend();
+  }).observe(out, {childList: true});
+
+  render(); drawLaws(); syncSend();
+})();
+</script>
+</body>
+</html>
