@@ -408,7 +408,7 @@ textarea:focus-visible{outline:3px solid var(--accent);outline-offset:1px;border
 
       <div class="section">
         <h2>미리 증여한 재산</h2>
-        <p class="hint">돌아가시기 전 10년 안에 상속인에게, 5년 안에 그 밖의 사람에게 증여한 재산은 상속재산에 더합니다. 증여 당시 가액으로 넣으세요.</p>
+        <p class="hint">돌아가시기 전 10년 안에 상속인에게, 5년 안에 상속인이 아닌 사람이나 법인에게 증여한 재산은 상속재산에 더합니다. 증여 당시 가액으로 넣으세요.</p>
         <div class="fields">
           <div class="field full">
             <label class="lab" for="i-gift">사전증여재산</label>
@@ -943,7 +943,7 @@ document.querySelectorAll('[data-date]').forEach(el => {
     b.add('장례비용', won(fun + bong), {minus: true, sub: (funIn < 5e6 ? '최소 500만 원 인정' : funIn > 1e7 ? '1천만 원 한도' : '실제 비용') + (bong ? ', 봉안·자연장 ' + won(bong) : '')});
     const net = Math.max(0, estate - pub - debt - fun - bong);
     if(estate - pub - debt - fun - bong < 0) notes.push('빚이 재산보다 많아 차감 후 금액을 0원으로 보았습니다. 상속포기나 한정승인을 검토하세요.');
-    if(gift) b.add('사전증여재산', won(gift), {plus: true, sub: '상속인 10년, 그 외 5년 이내 증여분'});
+    if(gift) b.add('사전증여재산', won(gift), {plus: true, sub: '상속인 10년, 상속인 아닌 사람·법인 5년 이내 증여분'});
     if(presumed.total) b.add('추정상속재산', won(presumed.total), {plus: true, sub: presumed.sub});
     notes.push(...presumed.notes);
     const gross = net + presumed.total + gift;
@@ -1096,7 +1096,7 @@ document.querySelectorAll('[data-date]').forEach(el => {
     {c: '상속세 및 증여세법 제71조', l: [L, '제71조'], s: '연부연납: 납부세액 2천만 원 초과 시 증여세 5년, 상속세 10년 분할납부'}
   ];
   const INH = [
-    {c: '상속세 및 증여세법 제13조', l: [L, '제13조'], s: '상속세 과세가액: 상속재산에서 공과금·장례비·채무를 빼고 사전증여재산(상속인 10년, 그 외 5년)을 더함'},
+    {c: '상속세 및 증여세법 제13조', l: [L, '제13조'], s: '상속세 과세가액: 상속재산에서 공과금·장례비·채무를 빼고 사전증여재산(상속인 10년, 상속인 아닌 사람·법인 5년)을 더함'},
     {c: '상속세 및 증여세법 제8조', l: [L, '제8조'], s: '상속재산으로 보는 보험금: 피상속인이 보험료를 낸 사망보험금', when: g => g.ins},
     {c: '상속세 및 증여세법 제10조', l: [L, '제10조'], s: '상속재산으로 보는 퇴직금: 피상속인의 사망으로 받는 퇴직금·퇴직수당 등', when: g => g.ret},
     {c: '상속세 및 증여세법 제15조', l: [L, '제15조'], s: '추정상속재산: 사망 전 1년 2억 원, 2년 5억 원 이상 처분·인출·채무 중 용도가 불분명한 금액', when: g => g.pres},
