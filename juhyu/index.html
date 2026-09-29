@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Nanum+Myeongjo:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
   --paper:#E8ECEE; --sheet:#FAFBFC; --field:#FFFFFF; --ink:#1E2A30; --muted:#566670;
@@ -227,16 +228,114 @@ textarea:focus-visible{outline:3px solid var(--accent);outline-offset:1px;border
 .hub-back:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:2px;}
 @media print{.hub-back{display:none}}
 </style>
+<style id="dg-theme">
+/* ── dg-theme: 동감 세무회계 공통 테마 (밝은 바탕 + 동감 청회색). assets/calc-theme.css 가 원본이며 각 계산기에 그대로 복사해 넣습니다. ── */
+:root,
+:root[data-theme="dark"]{
+  --paper:#F6F8F9; --sheet:#FFFFFF; --field:#FFFFFF; --ink:#18232B; --muted:#66737C;
+  --rule:#D9E0E4; --rule-soft:#EAEEF1; --accent:#3D5F70; --accent-soft:#EAF1F4; --on-accent:#FFFFFF;
+  --stamp:#B23A2E; --note-bg:#F5F8FA; --note-ink:#34505E;
+  --brand:#3D5F70; --brand-deep:#2C4756; --brand-tint:#F0F5F7; --warm:#B8945C;
+  --sans:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --serif:var(--sans);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#F6F8F9; --sheet:#FFFFFF; --field:#FFFFFF; --ink:#18232B; --muted:#66737C;
+    --rule:#D9E0E4; --rule-soft:#EAEEF1; --accent:#3D5F70; --accent-soft:#EAF1F4; --on-accent:#FFFFFF;
+    --stamp:#B23A2E; --note-bg:#F5F8FA; --note-ink:#34505E; color-scheme:light;
+  }
+  :root:not([data-theme="light"]) .brand{background:none;padding:0;}
+}
+.rpt{--accent:#3D5F70;--accent-soft:#EAF1F4;}
+body{word-break:keep-all;letter-spacing:-.01em;}
+h1,h2,h3,.tv,.tabs button{letter-spacing:-.025em;}
+
+/* 머리글 */
+.dg-hd{background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--rule-soft);position:sticky;top:0;z-index:40;}
+.dg-hd .in{max-width:1120px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:22px;}
+.dg-hd .logo img{height:26px;width:auto;display:block;}
+.dg-hd nav{margin-left:auto;display:flex;gap:24px;}
+.dg-hd nav a{color:var(--ink);text-decoration:none;font-size:15px;font-weight:500;}
+.dg-hd nav a:hover{color:var(--brand);}
+.dg-hd .tel{color:#fff;background:var(--brand);text-decoration:none;font-weight:600;font-size:14px;padding:9px 16px;border-radius:999px;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.dg-hd .tel:hover{background:var(--brand-deep);}
+.dg-hd a:focus-visible{outline:3px solid var(--brand);outline-offset:3px;border-radius:4px;}
+@media (max-width:760px){.dg-hd nav{display:none}.dg-hd .in{justify-content:space-between;padding:12px 16px}.dg-hd .logo img{height:22px}.dg-hd .tel{font-size:13px;padding:8px 13px}}
+
+/* 첫 띠 */
+.dg-hero{position:relative;overflow:hidden;background:linear-gradient(180deg,var(--brand-tint),var(--paper));border-bottom:1px solid var(--rule-soft);}
+.dg-hero::before{content:"";position:absolute;right:-120px;top:-160px;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(61,95,112,.12),transparent 65%);}
+.dg-hero::after{content:"";position:absolute;right:60px;top:-60px;width:300px;height:300px;border-radius:50%;border:1px solid rgba(61,95,112,.14);}
+.dg-hero .in{position:relative;z-index:1;max-width:1120px;margin:0 auto;padding:40px 20px 36px;}
+.dg-hero .back{display:inline-flex;gap:6px;color:var(--muted);text-decoration:none;font-size:14px;font-weight:500;margin-bottom:20px;}
+.dg-hero .back:hover{color:var(--brand);}
+.dg-hero .kicker{font-size:13px;font-weight:700;letter-spacing:.18em;color:var(--brand);text-transform:uppercase;display:flex;align-items:center;gap:10px;margin:0 0 12px;}
+.dg-hero .kicker::before{content:"";width:22px;height:2px;background:var(--warm);}
+.dg-hero header{margin:0;max-width:780px;}
+.dg-hero h1{color:var(--ink);font-weight:800;font-size:clamp(30px,4.2vw,44px);line-height:1.25;margin:0 0 12px;}
+.dg-hero .lede{color:var(--muted);font-size:16.5px;}
+.dg-hero .advise{background:#fff;border:1px solid var(--rule-soft);border-left:4px solid var(--brand);color:var(--ink);border-radius:10px;margin:0 0 14px;box-shadow:0 8px 24px -18px rgba(24,35,43,.35);}
+.dg-sw{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px;padding:0;list-style:none;}
+.dg-sw a{display:inline-block;text-decoration:none;font-size:14px;font-weight:500;color:var(--ink);background:#fff;border:1px solid var(--rule);border-radius:999px;padding:7px 15px;}
+.dg-sw a:hover{border-color:var(--brand);color:var(--brand);}
+.dg-sw a[aria-current="page"]{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600;}
+@media (max-width:640px){.dg-hero::after{display:none}.dg-hero .in{padding:28px 16px 26px}.dg-sw{flex-wrap:nowrap;overflow-x:auto;margin-right:-16px;padding-right:16px;scrollbar-width:none}.dg-sw li{flex:none}.dg-sw a{font-size:13px;padding:6px 12px}}
+
+/* 본문 요소 다듬기 */
+.wrap{padding-top:30px;}
+.panel,.statement{border-color:var(--rule-soft);border-radius:16px;box-shadow:0 1px 2px rgba(24,35,43,.04),0 16px 36px -28px rgba(24,35,43,.3);}
+.panel{padding:26px;}
+.st-head{border-bottom:1px solid var(--rule-soft);background:var(--brand-tint);}
+.st-head h2{color:var(--brand-deep);}
+.total{border-top:2px solid var(--brand);}
+.total .tv{font-weight:800;}
+.disclaimer{border:1px solid var(--rule-soft);border-left:4px solid var(--warm);border-radius:12px;background:var(--sheet);}
+.topconsult{background:var(--brand);border-radius:14px;}
+.tabs button{font-weight:700;}
+.tabs button[aria-selected="true"]{border-bottom-color:var(--brand);}
+.seg{border-radius:10px;}
+input[type=text],input[type=date],input[type=number],select,textarea{border-radius:10px;border-color:var(--rule);}
+input[type=text]:hover,select:hover{border-color:#B9C5CC;}
+.btn-fill{border-radius:10px;}
+.btn-save,.btn-print,.btn-post{border-radius:10px;}
+.btn-print{border-color:var(--rule);color:var(--ink);}
+.btn-add,.btn-mini,.btn-reset{border-radius:999px;}
+.exp-sum{border-radius:12px;}
+.notes{border-top:1px solid var(--rule-soft);}
+.laws{border-top:1px solid var(--rule);}
+
+/* 바닥글 */
+.dg-ft{max-width:none;background:#fff;border-top:1px solid var(--rule-soft);color:var(--muted);font-size:13.5px;margin-top:40px;}
+.dg-ft .in{max-width:1120px;margin:0 auto;padding:28px 20px;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between;}
+.dg-ft img{height:20px;width:auto;}
+.dg-ft a{color:var(--brand);font-weight:600;text-decoration:none;}
+</style>
 </head>
 <body>
-<div class="wrap">
-  <div><a class="hub-back" href="../">← 전체 계산기 보기</a></div>
-  <div class="brand"><a href="https://blog.naver.com/francepigeon" target="_blank" rel="noopener noreferrer" title="동감 세무회계 블로그로 이동"><img src="data:image/png;base64,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" alt="동감 세무회계 블로그" width="1010" height="151"></a></div>
-  <div class="disclaimer" role="note"><strong>이용 전 확인해 주세요</strong><p>이 계산기는 동감 세무회계가 AI의 도움을 받아 제작한 것으로, 계산 결과에 오류가 있을 수 있습니다.</p><p>주휴수당 등 임금·노무 문제는 세무사가 아닌 공인노무사의 전문 분야입니다. 동감 세무회계는 노무사 사무소가 아니어서 이 분야의 전문성에 한계가 있습니다. 실제 임금 지급이나 분쟁 대응 전에는 반드시 공인노무사 등 전문가의 상담을 받으시기 바랍니다.</p><p>이 계산기의 이용으로 발생하는 어떠한 문제에 대해서도 동감 세무회계는 책임지지 않음을 알려드립니다.</p></div>
+<!-- dg-hd -->
+<div class="dg-hd"><div class="in">
+  <a class="logo" href="../" aria-label="동감 세무회계 홈"><img src="../logo.png" alt="동감 세무회계" width="1010" height="151"></a>
+  <nav aria-label="주요 메뉴"><a href="../">세금 계산기 전체</a><a href="https://blog.naver.com/francepigeon" target="_blank" rel="noopener noreferrer">블로그</a></nav>
+  <a class="tel" href="tel:01082781382">상담 010-8278-1382</a>
+</div></div>
+<div class="dg-hero"><div class="in">
+  <a class="back" href="../">← 전체 계산기 보기</a>
+  <p class="kicker">Tax Calculator</p>
   <header>
     <h1>주휴수당 계산기</h1>
     <p class="lede">시급과 근무시간을 넣으면 주휴수당과 월 환산 임금이 바로 계산됩니다. 2026년 9월 시행 중인 근로기준법과 최저임금법을 기준으로 합니다.</p>
   </header>
+  <ul class="dg-sw" aria-label="다른 계산기">
+      <li><a href="../sangsok/">상속세·증여세</a></li>
+      <li><a href="../yangdo/">양도소득세·취득세</a></li>
+      <li><a href="../jonghap/">종합소득세</a></li>
+      <li><a href="../juhyu/" aria-current="page">주휴수당</a></li>
+  </ul>
+</div></div>
+<div class="wrap">
+  <div class="disclaimer" role="note"><strong>이용 전 확인해 주세요</strong><p>이 계산기는 동감 세무회계가 AI의 도움을 받아 제작한 것으로, 계산 결과에 오류가 있을 수 있습니다.</p><p>주휴수당 등 임금·노무 문제는 세무사가 아닌 공인노무사의 전문 분야입니다. 동감 세무회계는 노무사 사무소가 아니어서 이 분야의 전문성에 한계가 있습니다. 실제 임금 지급이나 분쟁 대응 전에는 반드시 공인노무사 등 전문가의 상담을 받으시기 바랍니다.</p><p>이 계산기의 이용으로 발생하는 어떠한 문제에 대해서도 동감 세무회계는 책임지지 않음을 알려드립니다.</p></div>
 
   <div class="grid">
     <form class="panel" id="form" autocomplete="off" onsubmit="return false">
@@ -348,6 +447,11 @@ textarea:focus-visible{outline:3px solid var(--accent);outline-offset:1px;border
   </footer>
 </div>
 
+<footer class="dg-ft"><div class="in">
+  <img src="../logo.png" alt="동감 세무회계" width="1010" height="151">
+  <span>동감 세무회계 · 대표세무사 이동희 · 경기도 고양시 덕양구 향동로 217 DMC플렉스데시앙 KB 824호</span>
+  <a href="tel:01082781382">010-8278-1382</a>
+</div></footer>
 <script>
 (function(){
   const $ = id => document.getElementById(id);
@@ -649,6 +753,7 @@ textarea:focus-visible{outline:3px solid var(--accent);outline-offset:1px;border
     const css = [...document.querySelectorAll('style')].map(x => x.textContent).join('\n');
     return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>' + sheet.querySelector('h1').textContent + '</title>' +
       '<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Nanum+Myeongjo:wght@700;800&display=swap" rel="stylesheet">' +
+      '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">' +
       '<style>' + css + '\n@page{size:A4;margin:0}html,body{margin:0;padding:0;background:#fff}:root{padding:0}.rpt{margin:0 auto}</style></head><body>' +
       sheet.outerHTML + '</body></html>';
   }
