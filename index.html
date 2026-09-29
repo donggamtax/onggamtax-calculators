@@ -4,109 +4,163 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>동감 세무회계 세금 계산기</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <meta name="description" content="상속세·증여세, 양도소득세·취득세, 종합소득세, 주휴수당을 금액만 넣어 바로 계산해 보세요. 동감 세무회계 이동희 세무사.">
 <link rel="icon" href="logo.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Nanum+Myeongjo:wght@700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#E8ECEE; --sheet:#FAFBFC; --ink:#1E2A30; --body:#45555E; --muted:#566670;
-  --rule:#C4CED3; --rule-soft:#DCE2E5; --chip:#EEF1F2; --accent:#3D5F70; --on-accent:#FFFFFF;
-  --note-bg:#F3EBD9; --note-ink:#5E4412;
-  --sans:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
-  --serif:"Nanum Myeongjo","AppleMyungjo","Batang",serif;
+  --brand:#3D5F70; --deep:#2C4756; --tint:#EEF4F6; --warm:#B8945C;
+  --ink:#18232B; --muted:#66737C; --line:#E1E7EA; --paper:#F6F8F9;
+  --sans:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
   color-scheme:light;
 }
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --paper:#121719; --sheet:#192024; --ink:#E3E9EC; --body:#B7C3C9; --muted:#98A7AE;
-    --rule:#33424A; --rule-soft:#28343A; --chip:#22323A; --accent:#8FB3C4; --on-accent:#10181C;
-    --note-bg:#2D2819; --note-ink:#E6D3A6; color-scheme:dark;
-  }
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{font-family:var(--sans);color:var(--ink);background:#fff;line-height:1.65;word-break:keep-all;letter-spacing:-.01em;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+img{display:block;max-width:100%}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+a:focus-visible{outline:3px solid var(--brand);outline-offset:3px;border-radius:6px}
+
+.hd{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.hd .wrap{display:flex;align-items:center;gap:24px;padding-top:14px;padding-bottom:14px}
+.hd .logo img{height:28px;width:auto}
+.hd nav{margin-left:auto;display:flex;gap:24px}
+.hd nav a{text-decoration:none;font-size:15px;font-weight:500}
+.hd nav a:hover{color:var(--brand)}
+.hd .tel{text-decoration:none;color:#fff;background:var(--brand);font-weight:600;font-size:14px;padding:9px 16px;border-radius:999px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.hd .tel:hover{background:var(--deep)}
+
+.hero{position:relative;overflow:hidden;background:linear-gradient(180deg,#F1F6F8,#fff 90%);padding:84px 0 64px}
+.hero::before{content:"";position:absolute;right:-160px;top:-200px;width:680px;height:680px;border-radius:50%;background:radial-gradient(circle,rgba(61,95,112,.14),transparent 65%)}
+.hero .ring{position:absolute;right:-60px;top:-130px;width:500px;height:500px;border-radius:50%;border:1.5px solid rgba(61,95,112,.14);animation:spin 70s linear infinite}
+.hero .ring::after{content:"";position:absolute;left:-6px;top:50%;width:12px;height:12px;border-radius:50%;background:var(--warm)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hero .grid{position:absolute;inset:0;background-image:linear-gradient(rgba(61,95,112,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(61,95,112,.06) 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse at 75% 30%,#000 10%,transparent 60%);mask-image:radial-gradient(ellipse at 75% 30%,#000 10%,transparent 60%)}
+.hero .wrap{position:relative}
+.eyebrow{font-size:14px;font-weight:700;letter-spacing:.14em;color:var(--brand);display:flex;align-items:center;gap:12px}
+.eyebrow::before{content:"";width:28px;height:2px;background:var(--warm)}
+.hero h1{font-weight:800;font-size:clamp(36px,5.4vw,64px);line-height:1.2;letter-spacing:-.045em;margin:18px 0 22px}
+.hero h1 em{font-style:normal;color:var(--brand);background:linear-gradient(transparent 68%,rgba(184,148,92,.28) 68%)}
+.hero .lede{font-size:clamp(16px,1.6vw,19px);color:var(--muted);max-width:600px}
+.btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+.btn{display:inline-flex;align-items:center;gap:10px;text-decoration:none;font-weight:600;font-size:16px;padding:14px 24px;border-radius:999px;transition:transform .25s,background .25s,border-color .25s,color .25s}
+.btn:hover{transform:translateY(-2px)}
+.btn.pri{background:var(--brand);color:#fff;box-shadow:0 14px 28px -16px rgba(61,95,112,.8)}
+.btn.pri:hover{background:var(--deep)}
+.btn.sec{background:#fff;border:1px solid #C9D3D8}
+.btn.sec:hover{border-color:var(--brand);color:var(--brand)}
+.btn svg{width:18px;height:18px}
+.chips{list-style:none;display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:34px;color:var(--muted);font-size:14.5px}
+.chips li{display:flex;align-items:center;gap:8px}
+.chips li::before{content:"";width:16px;height:16px;border-radius:50%;background:var(--tint) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 8.2l2.3 2.3 4.7-4.9' fill='none' stroke='%233D5F70' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/16px no-repeat}
+
+.disclaimer{margin:0 0 36px;padding:16px 20px;border:1px solid var(--line);border-left:4px solid var(--warm);border-radius:12px;background:#fff;font-size:14px;color:var(--muted);line-height:1.65}
+.disclaimer strong{display:block;color:var(--ink);margin-bottom:2px;font-size:14.5px}
+
+main{padding:48px 0 0}
+.sec-h{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.kicker{font-size:13px;letter-spacing:.2em;font-weight:700;color:var(--brand);text-transform:uppercase}
+.sec-h h2{font-size:clamp(24px,2.8vw,32px);font-weight:800;letter-spacing:-.035em;margin-top:6px}
+.sec-h p{color:var(--muted);font-size:15px}
+
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+.card{position:relative;overflow:hidden;text-decoration:none;background:#fff;border:1px solid var(--line);border-radius:20px;padding:28px 24px 24px;display:flex;flex-direction:column;gap:14px;box-shadow:0 18px 36px -30px rgba(24,35,43,.35);transition:transform .3s,box-shadow .3s,border-color .3s}
+.card::after{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,var(--brand),var(--warm));transform:scaleX(0);transform-origin:left;transition:transform .4s}
+.card:hover{transform:translateY(-6px);border-color:rgba(61,95,112,.35);box-shadow:0 30px 50px -30px rgba(24,35,43,.45)}
+.card:hover::after{transform:scaleX(1)}
+.card .head{display:flex;justify-content:space-between;align-items:center}
+.card .ic{width:52px;height:52px;border-radius:15px;background:var(--tint);color:var(--brand);display:grid;place-items:center;transition:background .3s,color .3s}
+.card:hover .ic{background:var(--brand);color:#fff}
+.card .ic svg{width:26px;height:26px;stroke:currentColor}
+.card h2{font-size:21px;font-weight:800;letter-spacing:-.035em;margin-bottom:6px}
+.card p{font-size:15px;color:var(--muted)}
+.tags{list-style:none;display:flex;flex-wrap:wrap;gap:6px}
+.tags li{font-size:12.5px;font-weight:500;background:var(--paper);color:var(--brand);border-radius:999px;padding:4px 10px}
+.card .go{margin-top:auto;padding-top:4px;font-weight:700;font-size:15px;color:var(--brand);display:flex;align-items:center;gap:6px}
+.card .go::after{content:"→";transition:transform .3s}
+.card:hover .go::after{transform:translateX(5px)}
+.card.soon{opacity:.6}
+.badge{font-size:12px;font-weight:700;color:var(--warm);border:1px solid var(--warm);border-radius:999px;padding:3px 10px}
+
+.steps{margin-top:84px;padding:64px 0;background:var(--paper);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.steps ol{list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.steps li{background:#fff;border:1px solid var(--line);border-radius:18px;padding:28px 26px}
+.steps .num{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--brand);color:#fff;font-weight:800;font-size:16px;margin-bottom:16px}
+.steps b{display:block;font-size:18px;font-weight:800;letter-spacing:-.03em;margin-bottom:6px}
+.steps p{font-size:15px;color:var(--muted)}
+
+.band{margin:72px 0 0;border-radius:24px;padding:44px 48px;background:linear-gradient(120deg,var(--brand),var(--deep));color:#fff;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;position:relative;overflow:hidden}
+.band::after{content:"";position:absolute;right:-90px;top:-110px;width:300px;height:300px;border-radius:50%;border:1.5px solid rgba(255,255,255,.18)}
+.band .t{font-size:clamp(22px,2.6vw,28px);font-weight:800;letter-spacing:-.035em}
+.band .s{margin-top:6px;color:rgba(255,255,255,.78);font-size:15.5px}
+.band a{position:relative;z-index:1;text-decoration:none;background:#fff;color:var(--brand);border-radius:16px;padding:14px 24px;display:grid;gap:2px;text-align:right}
+.band a span:first-child{font-size:13px;font-weight:600;color:var(--muted)}
+.band a span:last-child{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+
+footer{margin-top:72px;border-top:1px solid var(--line);padding:32px 0;color:var(--muted);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+footer img{height:22px;width:auto}
+footer a{color:var(--brand);font-weight:600;text-decoration:none}
+
+.fab{position:fixed;right:16px;bottom:16px;z-index:50;display:none;align-items:center;gap:8px;background:var(--brand);color:#fff;text-decoration:none;font-weight:700;padding:13px 19px;border-radius:999px;box-shadow:0 12px 30px -8px rgba(24,35,43,.45)}
+.fab svg{width:18px;height:18px}
+
+@media (prefers-reduced-motion:reduce){.hero .ring{animation:none}.card,.btn{transition:none}}
+@media (max-width:1000px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:760px){
+  .hd nav{display:none}
+  .hd .wrap{justify-content:space-between;padding-top:12px;padding-bottom:12px}
+  .hd .logo img{height:23px}
+  .hd .tel{font-size:13px;padding:8px 13px}
+  .steps ol{grid-template-columns:1fr}
+  .fab{display:inline-flex}
 }
-:root[data-theme="dark"]{
-  --paper:#121719; --sheet:#192024; --ink:#E3E9EC; --body:#B7C3C9; --muted:#98A7AE;
-  --rule:#33424A; --rule-soft:#28343A; --chip:#22323A; --accent:#8FB3C4; --on-accent:#10181C;
-  --note-bg:#2D2819; --note-ink:#E6D3A6; color-scheme:dark;
+@media (max-width:560px){
+  .wrap{padding:0 16px}
+  .hero{padding:52px 0 44px}
+  .hero .ring{width:320px;height:320px;right:-150px;top:-90px}
+  .cards{grid-template-columns:1fr}
+  .band{padding:32px 24px;border-radius:20px}
+  .band a{text-align:left;width:100%}
+  .steps{padding:48px 0;margin-top:64px}
 }
-*,*::before,*::after{box-sizing:border-box}
-body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;}
-.wrap{max-width:1136px;margin:0 auto;padding:40px 20px 48px;display:flex;flex-direction:column;gap:40px;}
-a{color:var(--accent);}
-
-.top{display:flex;justify-content:space-between;align-items:center;gap:12px 20px;flex-wrap:wrap;}
-.brand{display:inline-block;line-height:0;border-radius:4px;}
-.brand img{height:36px;width:auto;display:block;}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brand{background:#F4F6F7;padding:8px 12px;}}
-:root[data-theme="dark"] .brand{background:#F4F6F7;padding:8px 12px;}
-.tel{display:flex;align-items:baseline;gap:10px;text-decoration:none;color:var(--ink);flex-wrap:wrap;}
-.tel .l{font-size:14px;color:var(--muted);}
-.tel .n{font-size:16px;font-weight:700;}
-.tel .p{font-family:var(--serif);font-weight:800;font-size:24px;color:var(--accent);font-variant-numeric:tabular-nums;}
-a:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:4px;}
-
-.disclaimer{background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:14px 18px;font-size:14px;line-height:1.65;color:var(--body);max-width:820px;margin:0;}
-.disclaimer strong{display:block;color:var(--ink);margin-bottom:2px;}
-
-.hero{display:flex;flex-direction:column;gap:14px;max-width:820px;}
-.eyebrow{font-size:16px;font-weight:700;letter-spacing:.1em;color:var(--accent);}
-h1{margin:0;font-family:var(--serif);font-weight:800;font-size:clamp(34px,6vw,58px);line-height:1.22;letter-spacing:-0.01em;}
-.lede{margin:0;font-size:clamp(17px,2.2vw,20px);line-height:1.65;color:var(--body);}
-
-.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;}
-@media (max-width:760px){.cards{grid-template-columns:minmax(0,1fr);gap:16px;}}
-.card{display:flex;flex-direction:column;gap:16px;padding:28px;background:var(--sheet);border:1px solid var(--rule);border-radius:8px;text-decoration:none;color:inherit;min-height:300px;transition:border-color .15s, box-shadow .15s;}
-@media (max-width:760px){.card{padding:22px;min-height:0;}}
-a.card:hover{border-color:var(--accent);box-shadow:0 2px 10px rgba(30,42,48,.08);}
-.card .ic{width:52px;height:52px;border-radius:8px;background:var(--chip);display:flex;align-items:center;justify-content:center;flex:none;}
-.card .ic svg{width:30px;height:30px;stroke:var(--accent);}
-.card .head{display:flex;justify-content:space-between;align-items:center;gap:10px;}
-.card h2{margin:0 0 6px;font-family:var(--serif);font-weight:800;font-size:26px;line-height:1.3;}
-.card p{margin:0;font-size:16px;line-height:1.6;color:var(--body);}
-.tags{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none;}
-.tags li{font-size:13.5px;padding:5px 10px;border-radius:999px;background:var(--chip);color:var(--body);}
-.card .go{margin-top:auto;padding-top:16px;border-top:1px solid var(--rule-soft);font-size:16px;font-weight:700;color:var(--accent);}
-.badge{font-size:13px;font-weight:700;padding:4px 10px;border-radius:3px;background:var(--note-bg);color:var(--note-ink);}
-.card.soon{opacity:.85;}
-.card.soon .go{color:var(--muted);}
-
-.steps h2{margin:0 0 20px;font-size:22px;font-weight:700;}
-.steps ol{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px 40px;margin:0;padding:0;list-style:none;}
-@media (max-width:760px){.steps ol{grid-template-columns:minmax(0,1fr);}}
-.steps li{display:flex;flex-direction:column;gap:8px;}
-.steps .num{width:40px;height:40px;border-radius:50%;border:2px solid var(--accent);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;}
-.steps b{font-size:18px;}
-.steps p{margin:0;font-size:15px;line-height:1.6;color:var(--body);}
-
-.band{background:var(--accent);color:var(--on-accent);border-radius:8px;padding:36px 44px;display:flex;justify-content:space-between;align-items:center;gap:18px 32px;flex-wrap:wrap;}
-@media (max-width:760px){.band{padding:28px 24px;}}
-.band .t{font-family:var(--serif);font-weight:800;font-size:clamp(23px,3vw,30px);line-height:1.3;margin:0 0 6px;}
-.band .s{font-size:16px;line-height:1.6;opacity:.92;margin:0;}
-.band a{display:flex;flex-direction:column;gap:2px;text-decoration:none;color:inherit;}
-.band a span:first-child{font-size:14px;opacity:.88;}
-.band a span:last-child{font-family:var(--serif);font-weight:800;font-size:clamp(28px,4vw,36px);font-variant-numeric:tabular-nums;}
-.band a:focus-visible{outline-color:var(--on-accent);}
-
-footer{padding-top:24px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;gap:10px 20px;flex-wrap:wrap;font-size:14px;color:var(--muted);}
-footer strong{color:var(--ink);}
 </style>
 </head>
 <body>
-<div class="wrap">
 
-  <div class="top">
-    <a class="brand" href="https://blog.naver.com/francepigeon" target="_blank" rel="noopener noreferrer" title="동감 세무회계 블로그로 이동"><img src="logo.png" alt="동감 세무회계" width="1010" height="151"></a>
-    <a class="tel" href="tel:01082781382"><span class="l">상담문의</span><span class="n">이동희 세무사</span><span class="p">010-8278-1382</span></a>
+<header class="hd">
+  <div class="wrap">
+    <a class="logo" href="https://blog.naver.com/francepigeon" target="_blank" rel="noopener noreferrer" title="동감 세무회계 블로그로 이동"><img src="logo.png" alt="동감 세무회계" width="1010" height="151"></a>
+    <nav aria-label="주요 메뉴"><a href="#cards">세금 계산기</a><a href="#steps-h">이용 방법</a><a href="https://blog.naver.com/francepigeon" target="_blank" rel="noopener noreferrer">블로그</a></nav>
+    <a class="tel" href="tel:01082781382">상담 010-8278-1382</a>
   </div>
+</header>
+
+<section class="hero">
+  <div class="grid" aria-hidden="true"></div>
+  <div class="ring" aria-hidden="true"></div>
+  <div class="wrap">
+    <div class="eyebrow">동감 세무회계 무료 세금 계산기</div>
+    <h1>세금, 신고 전에<br><em>미리 계산</em>해 보세요</h1>
+    <p class="lede">상속·증여부터 양도, 종합소득세, 주휴수당까지. 금액만 넣으면 현행 법령 기준으로 단계별 계산서를 바로 보여 드립니다.</p>
+    <div class="btns">
+      <a class="btn pri" href="#cards">계산기 고르기</a>
+      <a class="btn sec" href="tel:01082781382"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>전화 상담하기</a>
+    </div>
+    <ul class="chips"><li>무료, 회원가입 없음</li><li>단계별 계산서</li><li>PDF로 저장</li></ul>
+  </div>
+</section>
+
+<main>
+<div class="wrap">
 
   <p class="disclaimer" role="note"><strong>이용 전 확인해 주세요</strong>이 계산기는 동감 세무회계가 AI의 도움을 받아 제작한 것으로, 계산 결과에 오류가 있을 수 있습니다. 실제 신고나 거래 결정 전에는 반드시 세무사의 검토를 받으시기 바랍니다. 이 계산기의 이용으로 발생하는 어떠한 문제에 대해서도 동감 세무회계는 책임지지 않음을 알려드립니다.</p>
 
-  <section class="hero">
-    <div class="eyebrow">동감 세무회계 무료 계산기</div>
-    <h1>세금, 신고 전에<br>미리 계산해 보세요</h1>
-    <p class="lede">상속·증여부터 양도, 종합소득세, 주휴수당까지. 금액만 넣으면 현행 법령 기준으로 단계별 계산서를 바로 보여 드립니다.</p>
-  </section>
+  <div class="sec-h">
+    <div><p class="kicker">Tax Calculator</p><h2>어떤 세금을 계산할까요?</h2></div>
+    <p>카드를 누르면 계산기가 열립니다.</p>
+  </div>
 
   <!--
     ■ 계산기 카드 목록
@@ -114,34 +168,34 @@ footer strong{color:var(--ink);}
     href(폴더 이름), 제목, 설명, 태그만 바꾸면 됩니다.
     계산기 파일은 같은 이름의 폴더 안에 index.html 로 넣습니다. (예: jaesan/index.html)
   -->
-  <nav class="cards" aria-label="계산기 선택">
+  <nav class="cards" id="cards" aria-label="계산기 선택">
 
     <a class="card" href="sangsok/">
       <div class="head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16"/><path d="M6 20V10l6-5 6 5v10"/><path d="M10 20v-5h4v5"/></svg></span></div>
       <div><h2>상속세·증여세</h2><p>가족에게 재산을 물려주거나 미리 증여할 때 내는 세금을 계산합니다.</p></div>
       <ul class="tags"><li>배우자·자녀 공제</li><li>10년 합산</li><li>추정상속재산</li></ul>
-      <span class="go">계산하기 →</span>
+      <span class="go">계산하기</span>
     </a>
 
     <a class="card" href="yangdo/">
       <div class="head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h13l-3-3"/><path d="M20 16H7l3 3"/></svg></span></div>
       <div><h2>양도소득세·취득세</h2><p>집, 상가, 토지, 주식을 팔거나 살 때 내는 세금을 계산합니다.</p></div>
       <ul class="tags"><li>1세대 1주택 비과세</li><li>장기보유특별공제</li><li>취득세</li></ul>
-      <span class="go">계산하기 →</span>
+      <span class="go">계산하기</span>
     </a>
 
     <a class="card" href="jonghap/">
       <div class="head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h10v18l-2.5-1.5L12 21l-2.5-1.5L7 21z"/><path d="M10 8h4"/><path d="M10 12h4"/></svg></span></div>
       <div><h2>종합소득세</h2><p>사업자와 프리랜서가 5월에 신고하는 소득세를 계산합니다.</p></div>
       <ul class="tags"><li>업종코드 경비율 자동</li><li>노란우산공제</li><li>납부·환급액</li></ul>
-      <span class="go">계산하기 →</span>
+      <span class="go">계산하기</span>
     </a>
 
     <a class="card" href="juhyu/">
       <div class="head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span></div>
       <div><h2>주휴수당</h2><p>시급과 근무시간으로 주휴수당과 월 환산 임금을 계산합니다.</p></div>
       <ul class="tags"><li>2026·2027 최저임금</li><li>요일별 근무</li><li>월 환산 임금</li></ul>
-      <span class="go">계산하기 →</span>
+      <span class="go">계산하기</span>
     </a>
 
     <!--
@@ -153,7 +207,7 @@ footer strong{color:var(--ink);}
       <div class="head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V8h6v13"/><path d="M11 21V4h8v17"/><path d="M14 8h2M14 12h2M14 16h2"/></svg></span></div>
       <div><h2>재산세·종합부동산세</h2><p>집과 땅을 가지고 있을 때 매년 내는 보유세를 계산합니다.</p></div>
       <ul class="tags"><li>공시가격</li><li>1세대 1주택 공제</li><li>세부담 상한</li></ul>
-      <span class="go">계산하기 →</span>
+      <span class="go">계산하기</span>
     </a>
 
     <div class="card soon">
@@ -165,15 +219,20 @@ footer strong{color:var(--ink);}
 
   </nav>
 
+</div>
+
   <section class="steps" aria-labelledby="steps-h">
-    <h2 id="steps-h">이렇게 이용하세요</h2>
+    <div class="wrap">
+    <div class="sec-h"><div><p class="kicker">How to use</p><h2 id="steps-h">이렇게 이용하세요</h2></div></div>
     <ol>
       <li><span class="num" aria-hidden="true">1</span><b>금액 입력</b><p>재산, 소득, 근무시간 등 아는 만큼만 넣으면 됩니다.</p></li>
       <li><span class="num" aria-hidden="true">2</span><b>계산서 확인</b><p>공제부터 납부세액까지 단계별 계산서가 바로 나오고 PDF로 저장할 수 있습니다.</p></li>
       <li><span class="num" aria-hidden="true">3</span><b>상담 신청</b><p>결과가 궁금하면 이름과 연락처를 남기거나 전화 주세요. 세무사가 직접 상담해 드립니다.</p></li>
     </ol>
+    </div>
   </section>
 
+<div class="wrap">
   <section class="band">
     <div>
       <p class="t">계산 결과, 절세 방법이 궁금하신가요?</p>
@@ -181,12 +240,18 @@ footer strong{color:var(--ink);}
     </div>
     <a href="tel:01082781382"><span>상담문의 이동희 세무사</span><span>010-8278-1382</span></a>
   </section>
-
-  <footer>
-    <div><strong>동감 세무회계</strong> 이동희 세무사</div>
-    <a href="https://blog.naver.com/francepigeon" target="_blank" rel="noopener noreferrer">blog.naver.com/francepigeon</a>
-  </footer>
-
 </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <img src="logo.png" alt="동감 세무회계" width="1010" height="151">
+    <div>동감 세무회계 · 대표세무사 이동희 · 010-8278-1382</div>
+    <a href="https://blog.naver.com/francepigeon" target="_blank" rel="noopener noreferrer">네이버 블로그</a>
+  </div>
+</footer>
+
+<a class="fab" href="tel:01082781382"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>전화 상담</a>
+
 </body>
 </html>
