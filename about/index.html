@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>이동희 세무사 소개 | 동감 세무회계</title>
+<meta name="description" content="감사원과 LG유플러스를 거친 17년 차 이동희 세무사. 경정청구·과세예고통지 대응, 상속·증여, 양도, 종합소득세 상담. 경기도 고양시 향동 동감 세무회계.">
+<link rel="icon" href="../logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Nanum+Myeongjo:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E8ECEE; --sheet:#FAFBFC; --ink:#1E2A30; --body:#45555E; --muted:#566670;
+  --rule:#C4CED3; --rule-soft:#DCE2E5; --chip:#EEF1F2; --accent:#3D5F70; --on-accent:#FFFFFF;
+  --stamp:#A5352A;
+  --sans:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --serif:"Nanum Myeongjo","AppleMyungjo","Batang",serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#121719; --sheet:#192024; --ink:#E3E9EC; --body:#B7C3C9; --muted:#98A7AE;
+    --rule:#33424A; --rule-soft:#28343A; --chip:#22323A; --accent:#8FB3C4; --on-accent:#10181C;
+    --stamp:#E58374; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#121719; --sheet:#192024; --ink:#E3E9EC; --body:#B7C3C9; --muted:#98A7AE;
+  --rule:#33424A; --rule-soft:#28343A; --chip:#22323A; --accent:#8FB3C4; --on-accent:#10181C;
+  --stamp:#E58374; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+.wrap{max-width:1136px;margin:0 auto;padding:32px 20px 48px;display:flex;flex-direction:column;gap:56px;}
+a{color:var(--accent);}
+a:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:4px;}
+
+/* 머리글 + 메뉴 (계산기 첫 화면과 동일) */
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px 20px;flex-wrap:wrap;}
+.brand{display:inline-block;line-height:0;border-radius:4px;}
+.brand img{height:36px;width:auto;display:block;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brand{background:#F4F6F7;padding:8px 12px;}}
+:root[data-theme="dark"] .brand{background:#F4F6F7;padding:8px 12px;}
+.tel{display:flex;align-items:baseline;gap:10px;text-decoration:none;color:var(--ink);flex-wrap:wrap;}
+.tel .l{font-size:14px;color:var(--muted);}
+.tel .n{font-size:16px;font-weight:700;}
+.tel .p{font-family:var(--serif);font-weight:800;font-size:24px;color:var(--accent);font-variant-numeric:tabular-nums;}
+.menu{display:flex;gap:28px;border-bottom:1px solid var(--rule);margin-top:-24px;}
+.menu a{font-family:var(--serif);font-weight:800;font-size:19px;color:var(--muted);text-decoration:none;padding:4px 0 12px;margin-bottom:-1px;border-bottom:3px solid transparent;}
+.menu a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent);}
+.menu a:hover{color:var(--ink);}
+
+h2.sec{margin:0 0 20px;font-family:var(--serif);font-weight:800;font-size:clamp(26px,3.4vw,34px);line-height:1.3;}
+.sec-sub{margin:-12px 0 22px;color:var(--body);font-size:16px;}
+
+/* 인사 */
+.hero{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:40px;align-items:center;}
+@media (max-width:760px){.hero{grid-template-columns:minmax(0,1fr);gap:24px;}}
+.photo{margin:0;border-radius:8px;overflow:hidden;background:#D5DADC;aspect-ratio:325/377;max-width:300px;}
+@media (max-width:760px){.photo{max-width:220px;}}
+.photo img{display:block;width:100%;height:100%;object-fit:cover;}
+.eyebrow{font-size:15px;font-weight:700;letter-spacing:.1em;color:var(--accent);margin:0 0 10px;}
+.hero h1{margin:0 0 16px;font-family:var(--serif);font-weight:800;font-size:clamp(32px,5vw,50px);line-height:1.25;letter-spacing:-0.01em;}
+.hero .lede{margin:0 0 20px;font-size:clamp(17px,2.1vw,19px);line-height:1.75;color:var(--body);max-width:640px;}
+.facts{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0;list-style:none;}
+.facts li{font-size:14px;font-weight:600;padding:6px 12px;border-radius:999px;background:var(--sheet);border:1px solid var(--rule);color:var(--ink);}
+
+/* 숫자 */
+.nums{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:8px;overflow:hidden;}
+@media (max-width:640px){.nums{grid-template-columns:minmax(0,1fr);}}
+.nums div{background:var(--sheet);padding:24px 26px;}
+.nums b{display:block;font-family:var(--serif);font-weight:800;font-size:clamp(30px,4vw,40px);line-height:1.15;color:var(--accent);font-variant-numeric:tabular-nums;}
+.nums span{display:block;margin-top:6px;font-size:15px;color:var(--body);}
+
+/* 강점 */
+.strengths{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin:0;padding:0;list-style:none;}
+@media (max-width:900px){.strengths{grid-template-columns:minmax(0,1fr);}}
+.strengths li{background:var(--sheet);border:1px solid var(--rule);border-radius:8px;padding:26px;display:flex;flex-direction:column;gap:10px;}
+.strengths .k{font-size:14px;font-weight:700;color:var(--accent);}
+.strengths h3{margin:0;font-family:var(--serif);font-weight:800;font-size:22px;line-height:1.35;}
+.strengths p{margin:0;font-size:15.5px;line-height:1.7;color:var(--body);}
+
+/* 경력 */
+.career{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;}
+@media (max-width:860px){.career{grid-template-columns:minmax(0,1fr);}}
+.timeline{margin:0;padding:0;list-style:none;background:var(--sheet);border:1px solid var(--rule);border-radius:8px;padding:8px 26px;}
+.timeline li{display:grid;grid-template-columns:150px minmax(0,1fr);gap:4px 16px;padding:14px 0;border-bottom:1px solid var(--rule-soft);}
+.timeline li:last-child{border-bottom:0;}
+@media (max-width:480px){.timeline li{grid-template-columns:minmax(0,1fr);}}
+.timeline .when{font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:2px;}
+.timeline b{display:block;font-size:16.5px;}
+.timeline small{display:block;font-size:14px;color:var(--body);line-height:1.6;margin-top:2px;}
+.works{display:flex;flex-direction:column;gap:16px;}
+.work{background:var(--sheet);border:1px solid var(--rule);border-radius:8px;padding:22px 26px;}
+.work h3{margin:0 0 8px;font-size:17px;font-weight:700;}
+.work ul{margin:0;padding-left:18px;font-size:15px;line-height:1.7;color:var(--body);}
+
+/* 사례 */
+.cases{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;}
+@media (max-width:760px){.cases{grid-template-columns:minmax(0,1fr);}}
+.case{display:flex;justify-content:space-between;align-items:center;gap:16px;background:var(--sheet);border:1px solid var(--rule);border-radius:8px;padding:20px 22px;text-decoration:none;color:inherit;transition:border-color .15s;}
+.case:hover{border-color:var(--accent);}
+.case .t{font-size:13.5px;font-weight:700;color:var(--accent);}
+.case .d{display:block;font-size:16px;font-weight:600;line-height:1.5;margin-top:2px;}
+.case .amt{flex:none;text-align:right;font-family:var(--serif);font-weight:800;font-size:22px;line-height:1.25;color:var(--stamp);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.case .amt small{display:block;font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--muted);}
+@media (max-width:520px){.case{flex-direction:column;align-items:flex-start;gap:8px;}.case .amt{text-align:left;}}
+.more{margin-top:14px;font-size:15px;}
+.fine{margin:10px 0 0;font-size:13px;color:var(--muted);}
+
+/* 약속 */
+.promise{background:var(--sheet);border:1px solid var(--rule);border-left:4px solid var(--accent);border-radius:6px;padding:26px 30px;}
+.promise p{margin:0;font-family:var(--serif);font-weight:800;font-size:clamp(19px,2.4vw,23px);line-height:1.6;}
+.promise small{display:block;margin-top:10px;font-size:15px;color:var(--muted);}
+
+/* 오시는 길 + 상담 */
+.band{background:var(--accent);color:var(--on-accent);border-radius:8px;padding:36px 44px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:24px 40px;}
+@media (max-width:760px){.band{grid-template-columns:minmax(0,1fr);padding:28px 24px;}}
+.band .t{font-family:var(--serif);font-weight:800;font-size:clamp(23px,3vw,30px);line-height:1.3;margin:0 0 10px;}
+.band dl{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;font-size:15.5px;}
+.band dt{opacity:.8;}
+.band dd{margin:0;}
+.band dd a{color:inherit;}
+.band .call{display:flex;flex-direction:column;gap:2px;text-decoration:none;color:inherit;}
+.band .call span:first-child{font-size:14px;opacity:.88;}
+.band .call span:last-child{font-family:var(--serif);font-weight:800;font-size:clamp(28px,4vw,36px);font-variant-numeric:tabular-nums;}
+.band a:focus-visible{outline-color:var(--on-accent);}
+
+footer{padding-top:24px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;gap:10px 20px;flex-wrap:wrap;font-size:14px;color:var(--muted);}
+footer strong{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <a class="brand" href="https://blog.naver.com/francepigeon" target="_blank" rel="noopener noreferrer" title="동감 세무회계 블로그로 이동"><img src="../logo.png" alt="동감 세무회계" width="1010" height="151"></a>
+    <a class="tel" href="tel:01082781382"><span class="l">상담문의</span><span class="n">이동희 세무사</span><span class="p">010-8278-1382</span></a>
+  </div>
+
+  <nav class="menu" aria-label="주요 메뉴">
+    <a href="../">세금 계산기</a>
+    <a href="./" aria-current="page">세무사 소개</a>
+  </nav>
+
+  <section class="hero" aria-labelledby="hero-h">
+    <figure class="photo"><img src="photo.png" alt="이동희 세무사" width="325" height="377"></figure>
+    <div>
+      <p class="eyebrow">동감 세무회계 대표세무사</p>
+      <h1 id="hero-h">국세청을 감사하던 눈으로<br>고객의 세금을 봅니다</h1>
+      <p class="lede">안녕하세요, 동감 세무회계 이동희 세무사입니다. LG유플러스 세무회계팀에서 대기업의 세금을, 감사원에서 국세청의 일하는 방식을 직접 다뤘습니다. 그 경험으로 문제가 생기지 않는 범위에서 가장 적은 세금을 찾아 드리고, 누구보다 쉽고 친절하게 설명해 드립니다.</p>
+      <ul class="facts">
+        <li>2010년 제47회 세무사</li>
+        <li>前 감사원 감사관</li>
+        <li>前 LG유플러스 금융팀·세무회계팀</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="nums" aria-label="동감 세무회계 숫자">
+    <div><b>17년 차</b><span>2010년 세무사 합격 이후 기업, 공직, 세무사 사무실을 두루 거쳤습니다.</span></div>
+    <div><b>300곳 이상</b><span>개업 3년 만에 300곳이 넘는 업체가 동감 세무회계와 함께하고 있습니다.</span></div>
+    <div><b>수천 건</b><span>감사원에서 분석한 세무조사 사례입니다. 과세관청이 어디를 보는지 압니다.</span></div>
+  </section>
+
+  <section aria-labelledby="str-h">
+    <h2 class="sec" id="str-h">이동희 세무사를 선택하셔야 하는 이유</h2>
+    <ul class="strengths">
+      <li>
+        <span class="k">감사원 출신</span>
+        <h3>과세관청의 시각을 압니다</h3>
+        <p>감사원에서 국세청, 서울지방국세청, 기획재정부, 조세심판원을 감사했습니다. 세무조사 선정 기준과 과세 관점을 알기에 소명요구, 과세예고통지, 세무조사에 정확하게 대응합니다.</p>
+      </li>
+      <li>
+        <span class="k">대기업 세무 실무</span>
+        <h3>1원도 소홀히 하지 않습니다</h3>
+        <p>매출 12조 원 LG유플러스에서 부가세·원천세·지방세 신고와 정기 세무조사 대응, CEO·CFO의 종합소득세 신고를 맡았습니다. 대표님께는 세무사를 넘어 유능한 CFO가 되어 드리겠습니다.</p>
+      </li>
+      <li>
+        <span class="k">친절하고 성실하게</span>
+        <h3>세무사가 직접 챙깁니다</h3>
+        <p>세무사가 직접 기장 업무를 챙기고 언제든 바로 답해 드립니다. 해마다 가결산으로 다음 해 세금을 미리 예측합니다. 제게 이득이어도 고객께 이득이 아니면 권하지 않습니다.</p>
+      </li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="car-h">
+    <h2 class="sec" id="car-h">경력</h2>
+    <div class="career">
+      <ol class="timeline">
+        <li><span class="when">2023. 7. ~</span><span><b>동감 세무회계 대표세무사</b><small>법무법인 소울 전문위원, 노무법인 노무케어 고문 세무사</small></span></li>
+        <li><span class="when">2022. 12. ~ 2023. 5.</span><span><b>세무법인 더봄</b><small>기장 업무, 세무조사 대응</small></span></li>
+        <li><span class="when">2018. 2. ~ 2022. 11.</span><span><b>감사원 감사관</b><small>재정경제감사국 제3과(국세청 감사), 국방감사단 제1과</small></span></li>
+        <li><span class="when">2011. 7. ~ 2016. 5.</span><span><b>LG유플러스</b><small>금융팀(자금 조달·집행), 세무회계팀(원천세·부가세·지방세·법인세)</small></span></li>
+        <li><span class="when">2011. 8.</span><span><b>홍익대학교 경영학과 졸업</b></span></li>
+        <li><span class="when">2010.</span><span><b>세무사 합격(제47회)</b></span></li>
+      </ol>
+      <div class="works">
+        <div class="work">
+          <h3>감사원에서 수행한 일</h3>
+          <ul>
+            <li>'과세대상 재산가액 평가실태' 등 국세청, 기획재정부, 서울지방국세청, 조세심판원 감사 기획 및 참여</li>
+            <li>'국가통계시스템 운영 및 관리실태' 등 국토교통부, 한국부동산원 감사 기획 및 참여</li>
+            <li>육군본부, 국방과학연구소 기관운영감사 등 국방부, 방위사업청 감사 기획 및 참여</li>
+          </ul>
+        </div>
+        <div class="work">
+          <h3>LG유플러스에서 수행한 일</h3>
+          <ul>
+            <li>2015년 서울지방국세청 정기 세무조사, 2014년 서울시 지방세 세무조사 대응</li>
+            <li>CEO, CFO의 종합소득세 신고 등 세금 업무 전담</li>
+            <li>용산 본사 이전, 안양 IDC센터 취득 관련 지방세 업무 주관</li>
+            <li>LG그룹 기업세무회계실무 성적 LG그룹 전체 1위</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="case-h">
+    <h2 class="sec" id="case-h">주요 절세·환급 사례</h2>
+    <p class="sec-sub">경정청구와 과세예고통지 대응으로 고객께 돌려드린 세금입니다. 누르면 블로그의 자세한 이야기로 이동합니다.</p>
+    <div class="cases">
+      <a class="case" href="https://blog.naver.com/francepigeon/223547328458" target="_blank" rel="noopener noreferrer"><span><span class="t">상속세 경정청구</span><span class="d">돌아가신 뒤 낸 상속세를 다시 검토해 환급</span></span><span class="amt">1억 6,600만 원<small>환급</small></span></a>
+      <a class="case" href="https://blog.naver.com/francepigeon/224363266700" target="_blank" rel="noopener noreferrer"><span><span class="t">소득세 경정청구</span><span class="d">임대사업자의 빠진 이자비용을 반영해 환급</span></span><span class="amt">5,300만 원<small>환급</small></span></a>
+      <a class="case" href="https://blog.naver.com/francepigeon/224408207730" target="_blank" rel="noopener noreferrer"><span><span class="t">소득세 경정청구</span><span class="d">상담 중 창업감면 대상임을 찾아내 환급</span></span><span class="amt">3,600만 원<small>환급</small></span></a>
+      <a class="case" href="https://blog.naver.com/francepigeon/224073241587" target="_blank" rel="noopener noreferrer"><span><span class="t">부가세 경정청구</span><span class="d">휴대폰 대리점의 부가세를 다시 따져 환급</span></span><span class="amt">2,500만 원<small>환급</small></span></a>
+      <a class="case" href="https://blog.naver.com/francepigeon/224392899447" target="_blank" rel="noopener noreferrer"><span><span class="t">과세예고통지 대응</span><span class="d">주택임대사업자, 2,600만 원 고지 예정을 환급으로</span></span><span class="amt">300만 원<small>환급으로 전환</small></span></a>
+      <a class="case" href="https://blog.naver.com/francepigeon/224140229909" target="_blank" rel="noopener noreferrer"><span><span class="t">과세예고통지 대응</span><span class="d">공동사업 형제의 고지 예정 세액을 줄임</span></span><span class="amt">2,123만 → 217만 원<small>감액</small></span></a>
+      <a class="case" href="https://blog.naver.com/francepigeon/223588861719" target="_blank" rel="noopener noreferrer"><span><span class="t">과세예고통지 대응</span><span class="d">종합소득세 과세예고통지에 대응해 세금을 막음</span></span><span class="amt">1,000만 → 0원<small>감액</small></span></a>
+      <a class="case" href="https://blog.naver.com/francepigeon/224307844780" target="_blank" rel="noopener noreferrer"><span><span class="t">종합소득세 경정청구</span><span class="d">과거 신고서에서 비과세 특례 누락을 찾아 환급</span></span><span class="amt">1,476만 원<small>환급</small></span></a>
+    </div>
+    <p class="more"><a href="https://blog.naver.com/francepigeon" target="_blank" rel="noopener noreferrer">블로그에서 더 많은 사례 보기 →</a></p>
+    <p class="fine">사례의 결과는 개별 사정에 따라 다르며, 같은 결과를 보장하지 않습니다.</p>
+  </section>
+
+  <section class="promise" aria-label="약속">
+    <p>"모든 고객의 일을 제 일로 여기고, 아는 것도 한 번 더 확인하며, 더 나은 방법을 끝까지 찾겠습니다."</p>
+    <small>동감(同感)은 감사원 시절 '이동희 감사관'의 줄임말이자, 누구보다 고객의 이야기에 귀 기울이고 공감하겠다는 약속입니다.</small>
+  </section>
+
+  <section class="band" aria-labelledby="visit-h">
+    <div>
+      <p class="t" id="visit-h">언제든 편하게 상담하세요</p>
+      <dl>
+        <dt>주소</dt><dd>경기도 고양시 덕양구 향동로 217 DMC플렉스데시앙 KB 824호</dd>
+        <dt>이메일</dt><dd><a href="mailto:pigeontax@naver.com">pigeontax@naver.com</a></dd>
+        <dt>지도</dt><dd><a href="https://naver.me/Ix7F7fhw" target="_blank" rel="noopener noreferrer">네이버 지도에서 보기</a></dd>
+      </dl>
+    </div>
+    <a class="call" href="tel:01082781382"><span>상담문의 이동희 세무사</span><span>010-8278-1382</span></a>
+  </section>
+
+  <footer>
+    <div><strong>동감 세무회계</strong> 이동희 세무사</div>
+    <a href="https://blog.naver.com/francepigeon" target="_blank" rel="noopener noreferrer">blog.naver.com/francepigeon</a>
+  </footer>
+
+</div>
+</body>
+</html>
