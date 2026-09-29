@@ -205,6 +205,25 @@ textarea:focus-visible{outline:3px solid var(--accent);outline-offset:1px;border
 .hub-back:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:2px;}
 @media print{.hub-back{display:none}}
 </style>
+<style>
+.types{margin-top:14px;border:1px solid var(--rule);border-radius:12px;background:var(--field);overflow:hidden;}
+.types summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px;font-weight:600;font-size:15px;color:var(--accent);user-select:none;}
+.types summary::-webkit-details-marker{display:none;}
+.types summary::after{content:"";flex:none;width:9px;height:9px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translate(-2px,-2px);transition:transform .2s;}
+.types[open] summary::after{transform:rotate(-135deg) translate(-2px,-2px);}
+.types summary:hover{background:var(--accent-soft);}
+.types summary:focus-visible{outline:3px solid var(--accent);outline-offset:-3px;}
+.types[open] summary{border-bottom:1px solid var(--rule-soft);}
+.types-body{padding:14px 16px 16px;font-size:14.5px;line-height:1.6;}
+.types-lead{margin:0 0 10px;color:var(--ink);}
+.types ol{margin:0;padding:0;list-style:none;counter-reset:t;display:grid;gap:10px;}
+.types li{counter-increment:t;position:relative;padding-left:30px;}
+.types li::before{content:counter(t);position:absolute;left:0;top:1px;width:21px;height:21px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:700;display:grid;place-items:center;}
+.types li b{display:block;font-size:15px;}
+.types li span{color:var(--muted);}
+.types-note{margin:12px 0 0;padding-top:10px;border-top:1px dashed var(--rule);color:var(--muted);font-size:13.5px;}
+.types-note small{display:block;margin-top:2px;}
+</style>
 <style id="dg-theme">
 /* ── dg-theme: 동감 세무회계 공통 테마 (밝은 바탕 + 동감 청회색). assets/calc-theme.css 가 원본이며 각 계산기에 그대로 복사해 넣습니다. ── */
 :root,
@@ -420,6 +439,21 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
             <label class="chip"><input type="radio" name="hcount" value="3"><span>3주택 이상</span></label>
           </div>
           <div class="helper left" id="h1-hint">일시적 2주택 비과세 특례에 해당하면 1세대 1주택으로 고르세요.</div>
+          <details class="types">
+            <summary>2주택이어도 1세대 1주택으로 보는 경우 알아보기</summary>
+            <div class="types-body">
+              <p class="types-lead">아래에 해당하면 집이 두 채여도 1세대 1주택 비과세를 받을 수 있습니다. 해당하면 위에서 <b>1세대 1주택</b>을 고르세요.</p>
+              <ol>
+                <li><b>일시적 2주택 (이사·갈아타기)</b><span>집을 산 날부터 1년 이상 지나 새 집을 사고, 새 집을 산 날부터 3년 안에 먼저 있던 집을 팔 때. 먼저 있던 집은 2년 이상 보유(취득 당시 조정대상지역이면 2년 거주)해야 합니다.</span></li>
+                <li><b>상속받은 집이 생긴 경우</b><span>원래 갖고 있던 집에 부모님 등에게 상속받은 집이 더해져 2주택이 되었을 때, 원래 갖고 있던 집을 팔면 1주택처럼 봅니다.</span></li>
+                <li><b>부모님을 모시려고 합친 경우 (동거봉양)</b><span>60세 이상 부모님을 모시려고 세대를 합쳐 2주택이 되었을 때, 합친 날부터 10년 안에 먼저 파는 집.</span></li>
+                <li><b>결혼으로 합친 경우 (혼인 합가)</b><span>각자 집이 있던 두 사람이 결혼해 2주택이 되었을 때, 혼인한 날부터 10년 안에 먼저 파는 집.</span></li>
+                <li><b>학교·직장·질병 때문에 지방에 산 집</b><span>취학, 근무, 질병 치료 같은 부득이한 사유로 수도권 밖에 집을 샀을 때, 그 사유가 끝난 날부터 3년 안에 원래 집을 팔면 1주택처럼 봅니다.</span></li>
+                <li><b>농어촌주택·등록임대주택이 있는 경우</b><span>일정 요건의 농어촌주택(상속·이농·귀농)이나 장기임대주택은 주택 수에서 빼고 판단할 수 있습니다. 요건이 까다로워 꼭 확인이 필요합니다.</span></li>
+              </ol>
+              <p class="types-note">유형마다 보유·거주 기간 등 세부 요건이 더 있습니다. 해당하는지 헷갈리면 이동희 세무사(010-8278-1382)에게 확인해 보세요. <small>근거: 소득세법 시행령 제155조</small></p>
+            </div>
+          </details>
         </div>
         <div class="fields">
           <div class="field full" data-show="emig">
