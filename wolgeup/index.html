@@ -327,6 +327,11 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
 .bar-key{display:flex;flex-wrap:wrap;gap:4px 14px;margin:6px 22px 2px;font-size:12.5px;color:var(--muted);}
 .bar-key span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;background:var(--c);vertical-align:0;}
 .rpt .bar,.rpt .bar-key{margin-left:0;margin-right:0;}
+.nt-list{display:grid;gap:12px;}
+.nt{display:grid;grid-template-columns:minmax(0,1fr) 170px;gap:10px 16px;align-items:center;padding:12px 14px;border:1px solid var(--rule-soft);border-radius:12px;background:var(--field);}
+.nt-two{display:grid;grid-template-columns:minmax(0,1fr) 170px;gap:8px 16px;}
+.nt [data-nt=child]{grid-column:1 / -1;}
+@media (max-width:560px){.nt,.nt-two{grid-template-columns:minmax(0,1fr);}}
 .num-sel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 18px;}
 @media (max-width:560px){.num-sel{grid-template-columns:minmax(0,1fr);}}
 </style>
@@ -376,25 +381,29 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
             <div class="money"><input type="text" inputmode="numeric" id="amt" data-money placeholder="0"></div>
             <div class="helper" data-for="amt"></div>
           </div>
-          <div class="field full" id="sev-box">
-            <label class="lab">퇴직금</label>
-            <div class="radios" role="radiogroup" aria-label="퇴직금 포함 여부">
-              <label class="chip"><input type="radio" name="sev" value="0" checked><span>연봉에 포함 안 됨</span></label>
-              <label class="chip"><input type="radio" name="sev" value="1"><span>연봉에 포함 (÷13)</span></label>
-            </div>
-            <div class="helper left">퇴직금 포함 연봉이면 연봉을 13으로 나눈 금액이 매달 월급입니다.</div>
-          </div>
         </div>
       </div>
 
       <div class="section">
         <h2>비과세 수당</h2>
-        <p class="hint">식대처럼 세금과 4대보험을 매기지 않는 월 금액입니다. 식대는 월 20만원까지 비과세입니다.</p>
-        <div class="fields">
-          <div class="field">
-            <label class="lab" for="nontax">월 비과세액</label>
-            <div class="money"><input type="text" inputmode="numeric" id="nontax" data-money value="200,000" placeholder="0"></div>
-            <div class="helper" data-for="nontax">20만 원</div>
+        <p class="hint">월급에 들어 있는 수당 중 세금과 4대보험을 매기지 않는 항목을 고르세요. 한도를 넘는 금액은 과세 급여로 계산합니다.</p>
+        <div class="nt-list">
+          <div class="nt">
+            <label class="check"><input type="checkbox" id="nt-meal" checked><span>식대<small>월 20만원까지. 회사에서 식사를 따로 제공받지 않는 경우</small></span></label>
+            <div class="money" data-nt="meal"><input type="text" inputmode="numeric" id="amt-meal" data-money value="200,000" aria-label="식대 월 금액"></div>
+          </div>
+          <div class="nt">
+            <label class="check"><input type="checkbox" id="nt-car"><span>자가운전보조금<small>월 20만원까지. 본인 차량을 업무에 쓰고 출장비 실비를 따로 받지 않는 경우</small></span></label>
+            <div class="money" data-nt="car" hidden><input type="text" inputmode="numeric" id="amt-car" data-money value="200,000" aria-label="자가운전보조금 월 금액"></div>
+          </div>
+          <div class="nt">
+            <label class="check"><input type="checkbox" id="nt-child"><span>출산·보육수당<small>6세 이하 자녀 1명당 월 20만원까지 (그해 1월 1일 기준 나이)</small></span></label>
+            <div data-nt="child" hidden>
+              <div class="nt-two">
+                <select id="kids6" aria-label="6세 이하 자녀 수"><option value="1">6세 이하 자녀 1명</option><option value="2">6세 이하 자녀 2명</option><option value="3">6세 이하 자녀 3명</option><option value="4">6세 이하 자녀 4명</option></select>
+                <div class="money"><input type="text" inputmode="numeric" id="amt-child" data-money value="200,000" aria-label="출산·보육수당 월 금액"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -450,7 +459,7 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
     </section>
     <p><b>계산 기준 (2026년)</b> 국민연금 4.75%(기준소득월액 41만~659만원, 2026년 7월~2027년 6월 적용), 건강보험 3.595%, 장기요양보험 건강보험료의 13.14%(소득 대비 0.9448%의 절반), 고용보험 0.9%. 모두 근로자 부담분이며 10원 미만은 버립니다. 건강보험료 상·하한과 두루누리 지원, 산재보험(회사 전액 부담)은 반영하지 않았습니다.</p>
     <p><b>소득세</b> 국세청 근로소득 간이세액표(소득세법 시행령 별표 2, 2026. 2. 27. 개정)의 세액을 표 작성 계산식으로 구해 썼고, 8세 이상 20세 이하 자녀 공제(1명 20,830원, 2명 45,830원, 3명부터 1명당 33,330원 추가)와 원천징수 비율을 반영했습니다. 지방소득세는 소득세의 10%입니다.</p>
-    <p>연봉은 12개월(퇴직금 포함이면 13)로 나눈 월급 기준이며, 상여금·연장근로수당처럼 달마다 달라지는 금액과 연말정산 결과는 반영하지 않았습니다. 실수령액 → 세전 계산은 그 실수령액 이상이 되는 가장 적은 세전 월급을 찾습니다. 간이세액표 구간 경계에서는 세전 금액이 조금 달라도 실수령액이 같을 수 있습니다.</p>
+    <p>연봉은 12개월로 나눈 월급 기준이고 비과세는 식대·자가운전보조금·출산·보육수당만 반영했으며, 상여금·연장근로수당처럼 달마다 달라지는 금액과 연말정산 결과는 반영하지 않았습니다. 실수령액 → 세전 계산은 그 실수령액 이상이 되는 가장 적은 세전 월급을 찾습니다. 간이세액표 구간 경계에서는 세전 금액이 조금 달라도 실수령액이 같을 수 있습니다.</p>
     <p>상담문의: 이동희 세무사(010-8278-1382)</p>
   </footer>
 </div>
@@ -541,7 +550,7 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
   const childCredit = c => c <= 0 ? 0 : c === 1 ? 20830 : 45830 + Math.max(0, c - 2) * 33330;
 
   /* ---------- 한 달 공제 계산 ---------- */
-  function monthly(gross, o){ // o: {nontax, fam, kids, ratio}
+  function monthly(gross, o){ // o: {nontax(비과세 합계), fam, kids, ratio}
     const nontax = Math.min(o.nontax, gross);
     const pay = gross - nontax;
     const npBase = Math.min(Math.max(Math.floor(pay / 1000) * 1000, R.npMin), R.npMax);
@@ -611,10 +620,18 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
     $('amt-h').textContent = f ? '세전 급여' : '받고 싶은 실수령액';
     $('amt-hint').textContent = f ? '회사와 약속한 세전 금액을 넣으세요.' : '세금과 4대보험을 떼고 통장에 들어올 금액을 넣으세요.';
     $('amt-lab').textContent = (f ? '세전 ' : '세후 ') + (y ? '연봉' : '월급') + (f ? '' : ' (실수령액)');
-    $('sev-box').hidden = !(f && y);
+    [['meal', 'nt-meal'], ['car', 'nt-car'], ['child', 'nt-child']].forEach(([k, c]) => { form.querySelector('[data-nt="' + k + '"]').hidden = !$(c).checked; });
     $('st-title').textContent = f ? '월급 실수령액 계산서' : '세전 급여 역산 계산서';
     const fam = +$('fam').value, kids = +$('kids').value;
     $('fam-msg').textContent = kids > fam - 1 ? '자녀도 공제대상가족 수에 들어갑니다. 가족 수를 자녀 수 + 1명 이상으로 고르세요.' : '';
+  }
+
+  function nontaxItems(){
+    const L = [];
+    if($('nt-meal').checked){ const p = num($('amt-meal')); L.push({name: '식대', paid: p, limit: 200000, free: Math.min(p, 200000), sub: '월 20만원 한도'}); }
+    if($('nt-car').checked){ const p = num($('amt-car')); L.push({name: '자가운전보조금', paid: p, limit: 200000, free: Math.min(p, 200000), sub: '월 20만원 한도'}); }
+    if($('nt-child').checked){ const k = +$('kids6').value, p = num($('amt-child')); L.push({name: '출산·보육수당', paid: p, limit: 200000 * k, free: Math.min(p, 200000 * k), sub: '6세 이하 자녀 ' + k + '명 × 월 20만원 한도'}); }
+    return L;
   }
 
   /* ---------- 계산 ---------- */
@@ -623,8 +640,8 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
     const out = $('out'), meta = $('meta');
     const y = unit() === 'year', f = dir === 'fwd';
     const amt = num($('amt'));
-    const o = {nontax: num($('nontax')), fam: +$('fam').value, kids: Math.min(+$('kids').value, +$('fam').value - 1), ratio: +form.querySelector('input[name=ratio]:checked').value};
-    const sev = f && y && form.querySelector('input[name=sev]:checked').value === '1';
+    const nt = nontaxItems();
+    const o = {nontax: nt.reduce((a, x) => a + x.free, 0), fam: +$('fam').value, kids: Math.min(+$('kids').value, +$('fam').value - 1), ratio: +form.querySelector('input[name=ratio]:checked').value};
     meta.textContent = '2026년 기준, 공제대상가족 ' + o.fam + '명' + (o.kids ? '(8~20세 자녀 ' + o.kids + '명)' : '') + ', 비과세 월 ' + won(o.nontax) + (o.ratio !== 100 ? ', 원천징수 ' + o.ratio + '%' : '');
 
     if(!amt){
@@ -632,14 +649,15 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
       return;
     }
     let gross, target;
-    if(f){ gross = y ? Math.floor(amt / (sev ? 13 : 12)) : amt; }
+    if(f){ gross = y ? Math.floor(amt / 12) : amt; }
     else { target = y ? Math.ceil(amt / 12) : amt; gross = reverse(target, o); }
     const r = monthly(gross, o);
 
     let rows = [], n = 0;
     const add = (label, value, opt) => rows.push({no: CIRC[n++] || '', label, value, ...(opt || {})});
-    add('세전 월급', won(r.gross), {key: true, sub: f ? (y ? '연봉 ' + won(amt) + ' ÷ ' + (sev ? '13 (퇴직금 포함)' : '12') : '입력한 월급') : '실수령액 ' + won(target) + '이 되는 세전 월급'});
-    if(r.nontax) add('비과세 수당', won(r.nontax), {sub: '식대 등, 세금·4대보험 제외', minus: true});
+    add('세전 월급', won(r.gross), {key: true, sub: f ? (y ? '연봉 ' + won(amt) + ' ÷ 12' : '입력한 월급') : '실수령액 ' + won(target) + '이 되는 세전 월급'});
+    let left = r.gross;
+    nt.forEach(x => { const v = Math.min(x.free, left); left -= v; if(v) add(x.name + ' (비과세)', won(v), {sub: x.sub, minus: true}); });
     add('과세 대상 급여', won(r.pay), {sub: '세금과 4대보험을 매기는 금액'});
     const top = rowsHTML(rows);
 
@@ -666,7 +684,8 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
 
     const notes = [];
     if(!f && y) notes.push('세후 연봉 ' + won(amt) + '을 12개월로 나눈 월 ' + won(target) + '을 목표로 계산했습니다.');
-    if(o.nontax > 200000) notes.push('식대 비과세는 월 20만원까지입니다. 20만원을 넘는 비과세액은 자가운전보조금·육아수당 등 다른 비과세 요건을 갖춘 경우에만 인정됩니다.');
+    nt.forEach(x => { if(x.paid > x.limit) notes.push(x.name + ' ' + won(x.paid) + ' 중 한도 ' + won(x.limit) + '을 넘는 ' + won(x.paid - x.limit) + '은 과세 급여로 계산했습니다.'); });
+    if($('nt-child').checked) notes.push('출산지원금(자녀 출생 후 2년 안에 2번까지 받는 금액)은 전액 비과세지만 매달 받는 월급이 아니라서 이 계산에는 넣지 않았습니다.');
     if(+$('kids').value > o.kids) notes.push('자녀 수가 공제대상가족 수보다 많아 자녀 ' + o.kids + '명으로 계산했습니다.');
     if(r.pay > 0 && r.table === 0) notes.push('과세 대상 급여가 적어 간이세액표상 소득세가 없습니다.');
     notes.push('매달 떼는 소득세는 간이세액표로 미리 걷는 금액입니다. 실제 1년 세금은 다음 해 2월 연말정산에서 신용카드·보험료·의료비 등 공제를 반영해 다시 계산됩니다.');
@@ -696,7 +715,7 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
   form.addEventListener('change', render);
   $('reset').addEventListener('click', () => {
     form.reset();
-    setMoney($('amt'), ''); setMoney($('nontax'), '200000');
+    setMoney($('amt'), ''); ['amt-meal', 'amt-car', 'amt-child'].forEach(id => setMoney($(id), '200000'));
     render();
   });
   window.__wgDir = () => dir;
@@ -712,7 +731,9 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
     {c: '소득세법 제134조 제1항', l: ['소득세법', '제134조'], s: '회사는 매달 근로소득을 지급할 때 간이세액표에 따라 소득세를 원천징수함'},
     {c: '소득세법 시행령 제194조 제1항', l: ['소득세법 시행령', '제194조'], s: '간이세액표 세액 기준, 근로자가 신청하면 80% 또는 120%로 원천징수'},
     {c: '소득세법 시행령 제189조 [별표 2]', l: ['소득세법 시행령', '제189조'], s: '근로소득 간이세액표(2026. 2. 27. 개정): 월급여·공제대상가족 수별 세액, 8~20세 자녀 공제'},
-    {c: '소득세법 제12조 제3호 머목, 시행령 제17조의2', l: ['소득세법 시행령', '제17조의2'], s: '식사대 월 20만원 이하 비과세'},
+    {c: '소득세법 제12조 제3호 러목, 시행령 제17조의2', l: ['소득세법 시행령', '제17조의2'], s: '식사를 제공받지 않는 근로자의 식사대 월 20만원 이하 비과세'},
+    {c: '소득세법 제12조 제3호 자목, 시행령 제12조 제3호', l: ['소득세법 시행령', '제12조'], s: '자가운전보조금(본인 차량 업무 사용, 실비 미지급) 월 20만원 이하 비과세'},
+    {c: '소득세법 제12조 제3호 머목', l: ['소득세법', '제12조'], s: '출산지원금(출생 후 2년 내 2회) 전액, 6세 이하 자녀 보육수당 자녀 1명당 월 20만원 비과세'},
     {c: '지방세법 제103조의13', l: ['지방세법', '제103조의13'], s: '개인지방소득세 특별징수: 소득세의 10%'},
     {c: '국민연금법 제88조', l: ['국민연금법', '제88조'], s: '연금보험료율 2026년 9.5%(사용자·근로자 각 4.75%)'},
     {c: '국민연금법 시행령 제5조', l: ['국민연금법 시행령', '제5조'], s: '기준소득월액 상·하한(2026. 7.~2027. 6. 41만~659만원, 보건복지부 고시)'},
@@ -752,8 +773,11 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
     items.push(['계산 방향', rev ? '실수령액 → 세전' : '세전 → 실수령액']);
     const a = form.querySelector('#amt');
     if(a.value) items.push([form.querySelector('#amt-lab').textContent, a.value + '원']);
-    if(!rev && unit === 'year') items.push(['퇴직금', form.querySelector('input[name=sev]:checked').value === '1' ? '연봉에 포함 (÷13)' : '연봉에 포함 안 됨']);
-    items.push(['월 비과세액', (form.querySelector('#nontax').value || '0') + '원']);
+    const nts = [];
+    if(form.querySelector('#nt-meal').checked) nts.push('식대 ' + (form.querySelector('#amt-meal').value || '0') + '원');
+    if(form.querySelector('#nt-car').checked) nts.push('자가운전보조금 ' + (form.querySelector('#amt-car').value || '0') + '원');
+    if(form.querySelector('#nt-child').checked) nts.push('출산·보육수당 ' + (form.querySelector('#amt-child').value || '0') + '원(자녀 ' + form.querySelector('#kids6').value + '명)');
+    items.push(['비과세 수당(월)', nts.length ? nts.join(', ') : '없음']);
     items.push(['공제대상가족', form.querySelector('#fam').value + '명']);
     items.push(['8~20세 자녀', form.querySelector('#kids').value + '명']);
     items.push(['원천징수 비율', form.querySelector('input[name=ratio]:checked').value + '%']);
