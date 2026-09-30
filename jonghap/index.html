@@ -590,7 +590,7 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
       <button type="button" class="all" id="lawsall">모든 조문 보기</button>
     </section>
     <p>이 계산기는 신고 전 규모를 가늠하기 위한 참고용입니다. 사업소득 외 다른 종합소득, 기부금·의료비 등 그 밖의 공제, 중소기업특별세액감면 등 조세특례제한법상 감면, 성실신고확인비용 세액공제, 결손금·이월결손금, 복식부기의무자의 무신고가산세는 반영하지 않으니 실제 신고 전에는 국세청 홈택스나 세무 전문가를 통해 확인하세요.</p>
-    <p>경비율은 국세청 「2025년 귀속 기준경비율 및 단순경비율」(국세청 고시 제2026-14호)의 일반율을 적용합니다. 2026년 귀속 경비율은 2027년 4월 이후 공개되므로 그 전까지는 직전 연도 고시율로 가늠하는 값입니다. 자가사업자의 자가율(기준경비율 +0.4, 단순경비율 −0.3)은 반영하지 않았습니다.</p>
+    <p>경비율은 국세청 「2025년 귀속 기준경비율 및 단순경비율」(국세청 고시 제2026-14호)의 일반율을 적용합니다. 2026년 귀속 경비율은 2027년 확정신고기간 개시 1개월 전(3월 말)까지 고시되므로 그 전까지는 직전 연도 고시율로 가늠하는 값입니다. 자가사업자의 자가율(기준경비율 +0.4, 단순경비율 −0.3)은 반영하지 않았습니다.</p>
     <p>세율과 공제액은 2026년 9월 현재 시행 중인 소득세법과 조세특례제한법을 기준으로 합니다. 지방소득세는 소득세 결정세액(가산세 포함)의 10%로 계산했습니다.</p>
   </footer>
 </div>
@@ -679,6 +679,8 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
     b: {simple: 3.6e7, book: 1.5e8},
     c: {simple: 2.4e7, book: 7.5e7}
   };
+  // 인적용역(940***): 단순경비율 기준은 나목(3,600만 원), 복식부기 기준은 제208조 제5항 제2호 다목 '수리 및 기타 개인서비스업'(7,500만 원)
+  const indOf = (ci, key) => ci.known && /^940/.test(ci.code) ? {simple: IND[key].simple, book: 7.5e7} : IND[key];
   // 종합소득세 기본세율 (소득세법 제55조) [상한, 세율, 누진공제]
   const BRACKETS = [
     [14e6, .06, 0], [50e6, .15, 1.26e6], [88e6, .24, 5.76e6], [150e6, .35, 15.44e6],
@@ -709,7 +711,7 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
   /* ---------- 화면 조건 ---------- */
   let lastKnown = false;
   function syncVisibility(){
-    const method = pick('method'), duty = pick('duty'), ci = codeInfo(), ind = IND[ci.known ? ci.g : $('grp').value];
+    const method = pick('method'), duty = pick('duty'), ci = codeInfo(), ind = indOf(ci, ci.known ? ci.g : $('grp').value);
     $('grp-wrap').hidden = ci.known || ci.partial;
     $('code-hint').textContent = ci.partial ? '업종코드 6자리를 넣어 주세요.'
       : ci.known ? (ci.blank ? '업종코드를 넣지 않아 940909(' + ci.name + ')로 계산합니다. ' : ci.code + ' ' + ci.name + '. ')
@@ -739,7 +741,7 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
   function compute(){
     const ci = codeInfo();
     if(ci.partial) return {ok: false, R: num($('rev')), partial: true};
-    const kind = pick('kind'), duty = pick('duty'), method = pick('method'), indKey = ci.known ? ci.g : $('grp').value, ind = IND[indKey];
+    const kind = pick('kind'), duty = pick('duty'), method = pick('method'), indKey = ci.known ? ci.g : $('grp').value, ind = indOf(ci, indKey);
     const R = num($('rev'));
     const notes = [];
     let exp = 0, expSub = '', income = 0, ok = true;
@@ -990,7 +992,7 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
     {c: '소득세법 제65조', l: ['소득세법', '제65조'], s: '중간예납: 직전 연도 중간예납기준액의 2분의 1을 11월에 납부', when: x => x.prepay},
     {c: '소득세법 제70조', l: ['소득세법', '제70조'], s: '종합소득 과세표준 확정신고: 다음 해 5월 1일부터 31일까지'},
     {c: '소득세법 제77조', l: ['소득세법', '제77조'], s: '분할납부: 납부세액 1,000만 원 초과 시 2개월 이내 분납'},
-    {c: '지방세법 제103조의3', l: ['지방세법', '제103조의3'], s: '개인지방소득세 표준세율 0.6~4.5% (소득세 세율의 10분의 1)'}
+    {c: '지방세법 제92조', l: ['지방세법', '제92조'], s: '개인지방소득세 표준세율 0.6~4.5% (소득세 세율의 10분의 1)'}
   ];
   let lawsAll = false;
   function drawLaws(){

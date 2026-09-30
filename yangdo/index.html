@@ -446,7 +446,7 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
             <div class="types-body">
               <p class="types-lead">아래에 해당하면 집이 두 채여도 1세대 1주택 비과세를 받을 수 있습니다. 해당하면 위에서 <b>1세대 1주택</b>을 고르세요.</p>
               <ol>
-                <li><b>일시적 2주택 (이사·갈아타기)</b><span>집을 산 날부터 1년 이상 지나 새 집을 사고, 새 집을 산 날부터 3년 안에 먼저 있던 집을 팔 때. 먼저 있던 집은 2년 이상 보유(취득 당시 조정대상지역이면 2년 거주)해야 합니다.</span></li>
+                <li><b>일시적 2주택 (이사·갈아타기)</b><span>집을 산 날부터 1년 이상 지나 새 집을 사고, 새 집을 산 날부터 3년 안에 먼저 있던 집을 팔 때. 다만 2026년 8월 4일 이후 조정대상지역의 집을 가진 채 조정대상지역의 새 집을 샀다면 2026년 10월 1일 이후 양도분부터 2년 안에 팔아야 합니다. 먼저 있던 집은 2년 이상 보유(취득 당시 조정대상지역이면 2년 거주)해야 합니다.</span></li>
                 <li><b>상속받은 집이 생긴 경우</b><span>원래 갖고 있던 집에 부모님 등에게 상속받은 집이 더해져 2주택이 되었을 때, 원래 갖고 있던 집을 팔면 1주택처럼 봅니다.</span></li>
                 <li><b>부모님을 모시려고 합친 경우 (동거봉양)</b><span>60세 이상 부모님을 모시려고 세대를 합쳐 2주택이 되었을 때, 합친 날부터 10년 안에 먼저 파는 집.</span></li>
                 <li><b>결혼으로 합친 경우 (혼인 합가)</b><span>각자 집이 있던 두 사람이 결혼해 2주택이 되었을 때, 혼인한 날부터 10년 안에 먼저 파는 집.</span></li>
@@ -591,10 +591,10 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
         <div class="fields">
           <div class="field full"><label class="check"><input type="checkbox" id="q-adj"><span>조정대상지역에 있음<small>서울 전역과 경기 일부 지역이 해당됩니다.</small></span></label></div>
           <div class="field full"><label class="check"><input type="checkbox" id="q-big"><span>전용면적 85㎡ 초과<small>85㎡ 이하 주택은 농어촌특별세가 비과세됩니다.</small></span></label></div>
-          <div class="field full" data-qshow="temp"><label class="check"><input type="checkbox" id="q-temp"><span>일시적 2주택에 해당함<small>종전 주택을 3년 안에 처분하는 조건으로 1주택 세율이 적용됩니다.</small></span></label></div>
+          <div class="field full" data-qshow="temp"><label class="check"><input type="checkbox" id="q-temp"><span>일시적 2주택에 해당함<small>종전 주택을 3년(2026년 10월 1일부터는 종전·신규 주택이 모두 조정대상지역이면 2년) 안에 처분하는 조건으로 1주택 세율이 적용됩니다.</small></span></label></div>
           <div class="field full" data-qshow="buy"><label class="check"><input type="checkbox" id="q-cheap"><span>공시가격 1억 원 이하 주택<small>정비구역 등을 제외하면 다주택 중과에서 빠집니다.</small></span></label></div>
           <div class="field full" data-qshow="buy"><label class="check"><input type="checkbox" id="q-corp"><span>법인 명의로 취득<small>법인의 주택 유상취득은 주택 수와 관계없이 12%입니다.</small></span></label></div>
-          <div class="field full" data-qshow="first"><label class="check"><input type="checkbox" id="q-first"><span>생애최초 주택 구입 감면<small>본인과 배우자 모두 주택 소유 이력이 없고 12억 원 이하, 3개월 안에 전입해야 합니다.</small></span></label></div>
+          <div class="field full" data-qshow="first"><label class="check"><input type="checkbox" id="q-first"><span>생애최초 주택 구입 감면<small>본인과 배우자 모두 주택 소유 이력이 없고, 본인이 살 목적으로 사는 12억 원 이하 주택이어야 합니다.</small></span></label></div>
           <div class="field full" data-qshow="first300"><label class="check"><input type="checkbox" id="q-first300"><span>소형 비아파트 또는 인구감소지역 주택<small>감면 한도가 200만 원에서 300만 원으로 늘어납니다.</small></span></label></div>
           <div class="field full" data-qshow="gift"><label class="check"><input type="checkbox" id="q-gift3"><span>시가표준액(공시가격) 3억 원 이상<small>조정대상지역 3억 원 이상 주택 증여는 12% 중과 대상입니다.</small></span></label></div>
           <div class="field full" data-qshow="gift"><label class="check"><input type="checkbox" id="q-giftfam"><span>1세대 1주택자가 배우자나 직계존비속에게 증여<small>이 경우 중과 없이 3.5%가 적용됩니다.</small></span></label></div>
@@ -813,6 +813,8 @@ document.querySelectorAll('[data-date]').forEach(el => {
       heavy = false;
       notes.push('2026년 5월 9일 이전 양도분이고 2년 이상 보유해 다주택 중과 유예가 적용됩니다.');
     }
+    if(heavy && !beforeResume && hy >= 2 && saleD <= new Date(2026, 10, 9))
+      notes.push('2026년 5월 9일까지 매매계약을 맺고 계약금을 받았고 계약일부터 4개월(강남·서초·송파·용산 외 조정대상지역은 6개월) 안에 양도했다면 중과 유예가 적용됩니다. 토지거래허가구역은 5월 9일까지 허가를 신청했어야 합니다. 해당하면 중과배제 주택에 체크하세요.');
     if(heavy){
       notes.push('조정대상지역 ' + (count === 2 ? '2주택' : '3주택 이상') + ' 중과세율(기본세율 + ' + pct(add) + 'p)이 적용되고 장기보유특별공제는 배제됩니다.');
       if(shortRate) notes.push('단기세율과 중과세율로 각각 계산해 큰 세액을 적용했습니다.');
@@ -1178,7 +1180,7 @@ document.querySelectorAll('[data-date]').forEach(el => {
         tax = Math.floor(1e-3 + price * rate);
         eduAmt = Math.floor(tax * .1); eduLabel = '취득세의 10%';
         farmAmt = big ? Math.floor(1e-3 + price * .002) : 0; farmLabel = big ? '0.2%' : '85㎡ 이하 비과세';
-        if(temp) notes.push('일시적 2주택으로 1주택 세율을 적용했습니다. 종전 주택을 3년 안에 팔지 않으면 중과세율과의 차액이 추징됩니다.');
+        if(temp) notes.push('일시적 2주택으로 1주택 세율을 적용했습니다. 종전 주택을 3년(종전·신규 주택이 모두 조정대상지역이면 2년, 2026년 10월 1일 시행) 안에 팔지 않으면 중과세율과의 차액이 추징됩니다.');
         if(cheap && count >= 2) notes.push('공시가격 1억 원 이하 주택이라 다주택 중과에서 제외했습니다.');
         if(!adj && count === 2) notes.push('비조정대상지역 2주택은 중과 없이 표준세율이 적용됩니다.');
         // 생애최초 감면
@@ -1188,7 +1190,7 @@ document.querySelectorAll('[data-date]').forEach(el => {
             const lim = $('q-first300').checked ? 3e6 : 2e6;
             relief = Math.min(tax, lim);
             eduAmt = Math.floor(eduAmt * (tax - relief) / tax);
-            notes.push('생애최초 감면으로 취득세 ' + won(relief) + '을 줄였고, 지방교육세도 감면 후 취득세 기준으로 계산했습니다. 3개월 안에 전입하지 않거나 3년 안에 팔면 추징됩니다.');
+            notes.push('생애최초 감면으로 취득세 ' + won(relief) + '을 줄였고, 지방교육세도 감면 후 취득세 기준으로 계산했습니다. 취득일부터 3년 안에 팔거나 증여하거나 임대 등 다른 용도로 쓰면 추징됩니다.');
           }
         }
       }
@@ -1275,8 +1277,8 @@ document.querySelectorAll('[data-date]').forEach(el => {
     {c: '소득세법 제104조 제1항 제8호', l: ['소득세법', '제104조'], s: '비사업용 토지 세율: 기본세율 + 10%p(16~55%), 2년 미만 보유 시 단기세율과 비교해 큰 세액', when: {a: ['shop'], nb: true}},
     {c: '소득세법 제104조 제1항 제1~3호', l: ['소득세법', '제104조'], s: '단기세율: 1년 미만 50%(주택·분양권 70%), 2년 미만 40%(주택·분양권 60%), 분양권 2년 이상 60%', when: {a: ['house', 'shop', 'presale']}},
     {c: '소득세법 제104조 제7항', l: ['소득세법', '제104조'], s: '조정대상지역 다주택 중과: 2주택 +20%p, 3주택 이상 +30%p', when: {a: ['house'], hc: 'multi'}},
-    {c: '소득세법 시행령 제167조의10', l: ['소득세법 시행령', '제167조의10'], s: '1세대 2주택 중과 대상과 중과배제 주택', when: {a: ['house'], hc: 'multi'}},
-    {c: '소득세법 시행령 제167조의3', l: ['소득세법 시행령', '제167조의3'], s: '1세대 3주택 이상 중과 대상과 중과배제 주택', when: {a: ['house'], hc: 'multi'}},
+    {c: '소득세법 시행령 제167조의10', l: ['소득세법 시행령', '제167조의10'], s: '1세대 2주택 중과 대상과 중과배제 주택(제12호의2: 2년 이상 보유 주택 2026.5.9.까지 양도 또는 5.9.까지 계약 후 4·6개월 내 양도 시 중과 배제)', when: {a: ['house'], hc: 'multi'}},
+    {c: '소득세법 시행령 제167조의3', l: ['소득세법 시행령', '제167조의3'], s: '1세대 3주택 이상 중과 대상과 중과배제 주택(제12호의2 한시 배제 동일)', when: {a: ['house'], hc: 'multi'}},
     {c: '소득세법 제104조 제1항 제11·12호', l: ['소득세법', '제104조'], s: '주식 세율: 대주주 20%·25%(비중소기업 1년 미만 30%), 소액주주 10%·20%, 국외주식 10%·20%', when: {a: ['stock']}},
     {c: '소득세법 시행령 제167조의8', l: ['소득세법 시행령', '제167조의8'], s: '상장주식 대주주의 범위(지분율·시가총액 기준)', when: {a: ['stock']}},
     {c: '소득세법 제105조 제1항', l: ['소득세법', '제105조'], s: '예정신고: 부동산·분양권은 양도일이 속한 달 말일부터 2개월, 국내주식은 반기 말일부터 2개월'},
@@ -1291,7 +1293,7 @@ document.querySelectorAll('[data-date]').forEach(el => {
     {c: '지방세법 제13조의2', l: ['지방세법', '제13조의2'], s: '법인·다주택 중과(8%, 12%)와 조정대상지역 3억 원 이상 주택 증여 중과(12%)', when: {k: ['house', 'presale'], h: ['buy', 'gift']}},
     {c: '지방세법 제13조의3', l: ['지방세법', '제13조의3'], s: '주택 수 판단: 조합원입주권, 분양권, 주거용 오피스텔 포함', when: {k: ['house', 'presale'], h: ['buy']}},
     {c: '지방세법 시행령 제28조의2', l: ['지방세법 시행령', '제28조의2'], s: '중과 제외 주택: 시가표준액 1억 원 이하 주택 등', when: {k: ['house', 'presale'], h: ['buy']}},
-    {c: '지방세법 시행령 제28조의5', l: ['지방세법 시행령', '제28조의5'], s: '일시적 2주택: 종전 주택 3년 내 처분 시 1주택 세율', when: {k: ['house', 'presale'], h: ['buy']}},
+    {c: '지방세법 시행령 제28조의5', l: ['지방세법 시행령', '제28조의5'], s: '일시적 2주택: 종전 주택 3년(2026.10.1.부터 종전·신규 모두 조정대상지역이면 2년) 내 처분 시 1주택 세율', when: {k: ['house', 'presale'], h: ['buy']}},
     {c: '지방세법 시행령 제28조의6', l: ['지방세법 시행령', '제28조의6'], s: '증여 중과 제외: 1세대 1주택자의 배우자·직계존비속 증여 등', when: {k: ['house', 'presale'], h: ['gift']}},
     {c: '지방세특례제한법 제36조의3', l: ['지방세특례제한법', '제36조의3'], s: '생애최초 주택 구입 감면: 12억 원 이하, 200만 원 한도(소형 비아파트 등 300만 원)', when: {k: ['house', 'presale'], h: ['buy']}},
     {c: '지방세법 제151조 제1항 제1호', l: ['지방세법', '제151조'], s: '지방교육세: (표준세율 − 2%) × 20%, 주택 유상취득은 취득세의 10%'},
