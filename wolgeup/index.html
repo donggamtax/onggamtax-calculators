@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>주휴수당 계산기</title>
+<title>월급 실수령액 계산기</title>
+<meta name="description" content="세전 연봉·월급으로 실수령액을, 실수령액으로 세전 금액을 계산합니다. 2026년 4대보험 요율과 국세청 근로소득 간이세액표 기준.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Nanum+Myeongjo:wght@700;800&display=swap" rel="stylesheet">
@@ -312,6 +313,23 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
 .dg-ft img{height:20px;width:auto;}
 .dg-ft a{color:var(--brand);font-weight:600;text-decoration:none;}
 </style>
+<style>
+.res-top{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--rule-soft);border-bottom:1px solid var(--rule-soft);}
+.res-top div{background:var(--sheet);padding:12px 22px;}
+.res-top b{display:block;font-size:12.5px;font-weight:600;color:var(--muted);}
+.res-top span.hl{color:var(--stamp);font-size:21px;}
+.res-top span{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;}
+.rpt .res-top div{padding:8px 12px;}
+.rpt .res-top span{font-size:15px;}
+.row.sum .lb,.row.sum .v{font-weight:700;color:var(--accent);}
+.bar{display:flex;height:12px;border-radius:999px;overflow:hidden;margin:14px 22px 4px;background:var(--rule-soft);}
+.bar i{display:block;height:100%;}
+.bar-key{display:flex;flex-wrap:wrap;gap:4px 14px;margin:6px 22px 2px;font-size:12.5px;color:var(--muted);}
+.bar-key span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;background:var(--c);vertical-align:0;}
+.rpt .bar,.rpt .bar-key{margin-left:0;margin-right:0;}
+.num-sel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 18px;}
+@media (max-width:560px){.num-sel{grid-template-columns:minmax(0,1fr);}}
+</style>
 </head>
 <body>
 <!-- dg-hd -->
@@ -324,99 +342,86 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
   <a class="back" href="../">← 전체 계산기 보기</a>
   <p class="kicker">Tax Calculator</p>
   <header>
-    <h1>주휴수당 계산기</h1>
-    <p class="lede">시급과 근무시간을 넣으면 주휴수당과 월 환산 임금이 바로 계산됩니다. 2026년 9월 시행 중인 근로기준법과 최저임금법을 기준으로 합니다.</p>
+    <h1>월급 계산기</h1>
+    <p class="lede">세전 연봉이나 월급을 넣으면 소득세·지방소득세와 4대보험을 뺀 실수령액을, 받고 싶은 실수령액을 넣으면 필요한 세전 금액을 계산합니다. 2026년 요율과 국세청 근로소득 간이세액표(2026. 2. 27. 개정)를 기준으로 합니다.</p>
   </header>
   <ul class="dg-sw" aria-label="다른 계산기">
       <li><a href="../sangsok/">상속세·증여세</a></li>
       <li><a href="../yangdo/">양도소득세·취득세</a></li>
       <li><a href="../jonghap/">종합소득세</a></li>
-      <li><a href="../wolgeup/">월급 실수령액</a></li>
-      <li><a href="../juhyu/" aria-current="page">주휴수당</a></li>
+      <li><a href="../wolgeup/" aria-current="page">월급 실수령액</a></li>
+      <li><a href="../juhyu/">주휴수당</a></li>
   </ul>
 </div></div>
 <div class="wrap">
-  <div class="disclaimer" role="note"><strong>이용 전 확인해 주세요</strong><p>이 계산기는 동감 세무회계가 AI의 도움을 받아 제작한 것으로, 계산 결과에 오류가 있을 수 있습니다.</p><p>주휴수당 등 임금·노무 문제는 세무사가 아닌 공인노무사의 전문 분야입니다. 동감 세무회계는 노무사 사무소가 아니어서 이 분야의 전문성에 한계가 있습니다. 실제 임금 지급이나 분쟁 대응 전에는 반드시 공인노무사 등 전문가의 상담을 받으시기 바랍니다.</p><p>이 계산기의 이용으로 발생하는 어떠한 문제에 대해서도 동감 세무회계는 책임지지 않음을 알려드립니다.</p></div>
+  <div class="disclaimer" role="note"><strong>이용 전 확인해 주세요</strong><p>이 계산기는 동감 세무회계가 AI의 도움을 받아 제작한 것으로, 계산 결과에 오류가 있을 수 있습니다. 매달 월급에서 떼는 금액(원천징수)을 보여 주며, 1년 치 최종 세금은 연말정산에서 다시 정산되어 환급 또는 추가 납부가 생길 수 있습니다.</p><p>이 계산기의 이용으로 발생하는 어떠한 문제에 대해서도 동감 세무회계는 책임지지 않음을 알려드립니다.</p></div>
+
+  <div class="tabs" role="tablist" aria-label="계산 방향">
+    <button type="button" role="tab" id="tab-fwd" aria-selected="true" data-dir="fwd">세전 → 실수령액</button>
+    <button type="button" role="tab" id="tab-rev" aria-selected="false" data-dir="rev">실수령액 → 세전</button>
+  </div>
 
   <div class="grid">
     <form class="panel" id="form" autocomplete="off" onsubmit="return false">
       <div class="section">
-        <h2>시급</h2>
-        <p class="hint">기준 연도를 고르면 그해 최저임금과 비교합니다.</p>
-        <div class="radios" role="radiogroup" aria-label="기준 연도" style="margin-bottom:16px">
-          <label class="chip"><input type="radio" name="year" value="2026" checked><span>2026년 (10,320원)</span></label>
-          <label class="chip"><input type="radio" name="year" value="2027"><span>2027년 (10,700원)</span></label>
+        <h2 id="amt-h">세전 급여</h2>
+        <p class="hint" id="amt-hint">회사와 약속한 세전 금액을 넣으세요.</p>
+        <div class="radios" role="radiogroup" aria-label="금액 기준" style="margin-bottom:16px">
+          <label class="chip"><input type="radio" name="unit" value="year" checked><span>연봉</span></label>
+          <label class="chip"><input type="radio" name="unit" value="month"><span>월급</span></label>
         </div>
         <div class="fields">
-          <div class="field">
-            <label class="lab" for="wage">시급</label>
-            <div class="money"><input type="text" inputmode="numeric" id="wage" data-money placeholder="0"></div>
-            <div class="helper" data-for="wage"></div>
+          <div class="field full">
+            <label class="lab" for="amt" id="amt-lab">세전 연봉</label>
+            <div class="money"><input type="text" inputmode="numeric" id="amt" data-money placeholder="0"></div>
+            <div class="helper" data-for="amt"></div>
           </div>
-          <div class="field" style="align-self:start;padding-top:29px">
-            <button type="button" class="btn-fill" id="fillMin">최저임금으로 채우기</button>
+          <div class="field full" id="sev-box">
+            <label class="lab">퇴직금</label>
+            <div class="radios" role="radiogroup" aria-label="퇴직금 포함 여부">
+              <label class="chip"><input type="radio" name="sev" value="0" checked><span>연봉에 포함 안 됨</span></label>
+              <label class="chip"><input type="radio" name="sev" value="1"><span>연봉에 포함 (÷13)</span></label>
+            </div>
+            <div class="helper left">퇴직금 포함 연봉이면 연봉을 13으로 나눈 금액이 매달 월급입니다.</div>
           </div>
         </div>
       </div>
 
       <div class="section">
-        <h2>근무시간</h2>
-        <p class="hint">휴게시간과 연장근로는 빼고, 근로계약서에 정한 시간(소정근로시간)만 넣으세요.</p>
-        <div class="seg three" role="radiogroup" aria-label="근무 방식">
-          <input type="radio" name="mode" id="m-same" value="same" checked><label for="m-same">매일 같음</label>
-          <input type="radio" name="mode" id="m-day" value="day"><label for="m-day">요일마다 다름</label>
-          <input type="radio" name="mode" id="m-week" value="week"><label for="m-week">주마다 다름</label>
-        </div>
-
-        <div class="fields" data-mode="same" style="margin-top:18px">
-          <div class="field">
-            <label class="lab" for="dayH">1일 근무시간</label>
-            <div class="unit" data-unit="시간"><input type="text" inputmode="decimal" id="dayH" data-hours placeholder="0"></div>
-          </div>
-          <div class="field">
-            <label class="lab" for="days">주 근무일수</label>
-            <select id="days">
-              <option value="1">1일</option><option value="2">2일</option><option value="3">3일</option>
-              <option value="4">4일</option><option value="5" selected>5일</option><option value="6">6일</option><option value="7">7일</option>
-            </select>
-          </div>
-        </div>
-
-        <div data-mode="day" hidden style="margin-top:18px">
-          <div class="week" id="dayGrid"></div>
-          <div class="helper left">쉬는 날은 비워 두세요. 30분은 0.5로 넣습니다.</div>
-        </div>
-
-        <div data-mode="week" hidden style="margin-top:18px">
-          <div class="week four" id="weekGrid"></div>
-          <div class="helper left">최근 4주 각 주의 소정근로시간을 넣으면 4주 평균으로 판단합니다.</div>
-        </div>
-      </div>
-
-      <div class="section">
-        <h2>사업장의 통상근로자 기준</h2>
-        <p class="hint">같은 사업장에서 같은 일을 하는 정규 근로자의 근무시간입니다. 단시간근로자의 주휴시간은 이 기준에 비례해 정해집니다. 모르면 40시간·5일로 두세요.</p>
+        <h2>비과세 수당</h2>
+        <p class="hint">식대처럼 세금과 4대보험을 매기지 않는 월 금액입니다. 식대는 월 20만원까지 비과세입니다.</p>
         <div class="fields">
           <div class="field">
-            <label class="lab" for="stdH">1주 소정근로시간</label>
-            <div class="unit" data-unit="시간"><input type="text" inputmode="decimal" id="stdH" data-hours value="40" placeholder="40"></div>
-          </div>
-          <div class="field">
-            <label class="lab" for="stdD">1주 소정근로일수</label>
-            <select id="stdD">
-              <option value="4">4일</option><option value="5" selected>5일</option><option value="6">6일</option>
-            </select>
+            <label class="lab" for="nontax">월 비과세액</label>
+            <div class="money"><input type="text" inputmode="numeric" id="nontax" data-money value="200,000" placeholder="0"></div>
+            <div class="helper" data-for="nontax">20만 원</div>
           </div>
         </div>
-        <div class="helper left" id="std-hint">통상근로자 1일 소정근로시간 8시간</div>
       </div>
 
       <div class="section">
-        <h2>주휴 요건</h2>
-        <p class="hint">주 15시간 이상이어도 아래 요건을 채워야 주휴수당이 생깁니다.</p>
-        <div style="display:grid;gap:14px">
-          <label class="check"><input type="checkbox" id="full" checked><span>그 주 근무하기로 한 날에 모두 출근함(개근)<small>지각·조퇴는 결근이 아닙니다. 하루라도 결근하면 그 주 주휴수당은 생기지 않습니다.</small></span></label>
-          <label class="check"><input type="checkbox" id="quit"><span>그 주를 끝으로 퇴직함<small>1주를 넘겨 근로관계가 이어져야 마지막 주 주휴수당이 생깁니다.</small></span></label>
+        <h2>부양가족</h2>
+        <p class="hint">회사에 낸 원천징수 신고서 기준입니다. 공제대상가족 수에는 본인과 배우자, 자녀도 각각 1명으로 셉니다.</p>
+        <div class="num-sel">
+          <div class="field">
+            <label class="lab" for="fam">공제대상가족 수 (본인 포함)</label>
+            <select id="fam"></select>
+          </div>
+          <div class="field">
+            <label class="lab" for="kids">그중 8세 이상 20세 이하 자녀</label>
+            <select id="kids"></select>
+          </div>
+        </div>
+        <div class="helper left bad" id="fam-msg"></div>
+      </div>
+
+      <div class="section">
+        <h2>원천징수 비율</h2>
+        <p class="hint">근로자가 신청하면 간이세액표 세액의 80% 또는 120%로 뗄 수 있습니다. 신청하지 않았다면 100%입니다.</p>
+        <div class="seg three" role="radiogroup" aria-label="원천징수 비율">
+          <input type="radio" name="ratio" id="r80" value="80"><label for="r80">80%</label>
+          <input type="radio" name="ratio" id="r100" value="100" checked><label for="r100">100%</label>
+          <input type="radio" name="ratio" id="r120" value="120"><label for="r120">120%</label>
         </div>
         <button type="button" class="btn-reset" id="reset">입력 지우기</button>
       </div>
@@ -424,15 +429,15 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
 
     <aside class="statement">
       <div class="st-head">
-        <h2>주휴수당 계산서</h2>
+        <h2 id="st-title">월급 실수령액 계산서</h2>
         <div class="st-meta" id="meta">2026년 기준</div>
       </div>
       <div id="out"></div>
-      <div class="save-box" data-save="jh" hidden>
-        <label class="lab" for="memo-jh">메모</label>
-        <textarea id="memo-jh" rows="3" maxlength="500" placeholder="고객명, 상담 내용 등 계산서에 함께 남길 메모 (비워 두면 손으로 쓸 수 있는 빈 칸으로 저장됩니다)"></textarea>
-        <div class="save-actions"><button type="button" class="btn-save" data-savebtn="jh">계산서 PDF로 저장</button><button type="button" class="btn-print" data-imgbtn="jh">이미지로 보기</button></div>
-        <p class="save-msg" id="save-msg-jh" role="status"></p>
+      <div class="save-box" data-save="wg" hidden>
+        <label class="lab" for="memo-wg">메모</label>
+        <textarea id="memo-wg" rows="3" maxlength="500" placeholder="고객명, 상담 내용 등 계산서에 함께 남길 메모 (비워 두면 손으로 쓸 수 있는 빈 칸으로 저장됩니다)"></textarea>
+        <div class="save-actions"><button type="button" class="btn-save" data-savebtn="wg">계산서 PDF로 저장</button><button type="button" class="btn-print" data-imgbtn="wg">이미지로 보기</button></div>
+        <p class="save-msg" id="save-msg-wg" role="status"></p>
       </div>
     </aside>
   </div>
@@ -443,8 +448,10 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
       <p class="sub">이 계산에 쓰인 조문입니다. 조문을 누르면 국가법령정보센터에서 원문이 새 창으로 열립니다.</p>
       <ul id="laws"></ul>
     </section>
-    <p>이 계산기는 주휴수당 규모를 가늠하기 위한 참고용입니다. 단시간근로자의 주휴시간은 입력한 통상근로자 기준에 비례해 (1주 소정근로시간 ÷ 통상근로자 1주 소정근로일수)로, 통상근로자는 1일 소정근로시간으로 계산했습니다. 월급제·포괄임금제처럼 주휴수당이 월급에 이미 들어 있는 경우, 휴직·휴업 주, 연차휴가만으로 채워진 주 등 개별 사정은 반영하지 않으니 고용노동부 상담센터(국번 없이 1350)나 전문가를 통해 확인하세요.</p>
-    <p>최저임금: 2026년 시급 10,320원, 2027년 시급 10,700원(2027년 1월 1일부터 적용). 주 40시간 기준 월 환산액은 2026년 2,156,880원, 2027년 2,236,300원입니다.</p>
+    <p><b>계산 기준 (2026년)</b> 국민연금 4.75%(기준소득월액 41만~659만원, 2026년 7월~2027년 6월 적용), 건강보험 3.595%, 장기요양보험 건강보험료의 13.14%(소득 대비 0.9448%의 절반), 고용보험 0.9%. 모두 근로자 부담분이며 10원 미만은 버립니다. 건강보험료 상·하한과 두루누리 지원, 산재보험(회사 전액 부담)은 반영하지 않았습니다.</p>
+    <p><b>소득세</b> 국세청 근로소득 간이세액표(소득세법 시행령 별표 2, 2026. 2. 27. 개정)의 세액을 표 작성 계산식으로 구해 썼고, 8세 이상 20세 이하 자녀 공제(1명 20,830원, 2명 45,830원, 3명부터 1명당 33,330원 추가)와 원천징수 비율을 반영했습니다. 지방소득세는 소득세의 10%입니다.</p>
+    <p>연봉은 12개월(퇴직금 포함이면 13)로 나눈 월급 기준이며, 상여금·연장근로수당처럼 달마다 달라지는 금액과 연말정산 결과는 반영하지 않았습니다. 실수령액 → 세전 계산은 그 실수령액 이상이 되는 가장 적은 세전 월급을 찾습니다. 간이세액표 구간 경계에서는 세전 금액이 조금 달라도 실수령액이 같을 수 있습니다.</p>
+    <p>상담문의: 이동희 세무사(010-8278-1382)</p>
   </footer>
 </div>
 
@@ -457,24 +464,115 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
 (function(){
   const $ = id => document.getElementById(id);
   const form = $('form');
-  const MIN = {2026: 10320, 2027: 10700};
-  const DAYS = ['월', '화', '수', '목', '금', '토', '일'];
   const CIRC = '①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮';
-  const WPM = 365 / 7 / 12; // 1개월 평균 주 수
+  /* ---------- 2026년 기준 요율 ---------- */
+  const R = {
+    np: 0.0475, npMin: 410000, npMax: 6590000,      // 국민연금 근로자 4.75%, 기준소득월액 41만~659만원(2026.7.~2027.6.)
+    hi: 0.0719, ltc: 0.9448 / 7.19,                  // 건강보험 7.19%(근로자 절반), 장기요양 = 건강보험료 × 0.9448%/7.19%
+    ei: 0.009                                        // 고용보험 근로자 0.9%
+  };
+  const f10 = x => Math.floor(x / 10 + 1e-9) * 10;
 
-  // 요일·주차 입력칸 만들기
-  $('dayGrid').innerHTML = DAYS.map((d, i) =>
-    '<div class="field"><label class="lab" for="d' + i + '">' + d + '</label>' +
-    '<div class="unit" data-unit="시간"><input type="text" inputmode="decimal" id="d' + i + '" data-hours placeholder="0"></div></div>').join('');
-  $('weekGrid').innerHTML = [1, 2, 3, 4].map(i =>
-    '<div class="field"><label class="lab" for="w' + i + '">' + i + '주차</label>' +
-    '<div class="unit" data-unit="시간"><input type="text" inputmode="decimal" id="w' + i + '" data-hours placeholder="0"></div></div>').join('');
+  /* ---------- 근로소득 간이세액표(소득세법 시행령 별표 2, 2026. 2. 27. 개정) ----------
+     국세청이 표를 만들 때 쓰는 계산식을 그대로 옮겼습니다. 월급여 구간의 중간값으로 1년 세액을 계산해 12로 나눈 값입니다. */
+  function earnDed(S){
+    let d;
+    if(S <= 5e6) d = S * 0.7;
+    else if(S <= 15e6) d = 3.5e6 + (S - 5e6) * 0.4;
+    else if(S <= 45e6) d = 7.5e6 + (S - 15e6) * 0.15;
+    else if(S <= 1e8) d = 12e6 + (S - 45e6) * 0.05;
+    else d = 14.75e6 + (S - 1e8) * 0.02;
+    return Math.min(d, 2e7);
+  }
+  function specialDed(S, n){
+    const base = n === 1 ? 3.1e6 : n === 2 ? 3.6e6 : 5e6;
+    let v;
+    if(S <= 3e7) v = base + S * (n >= 3 ? 0.07 : 0.04);
+    else if(S <= 4.5e7) v = base + S * (n >= 3 ? 0.07 : 0.04) - (S - 3e7) * 0.05;
+    else if(S <= 7e7) v = base + S * (n === 1 ? 0.015 : n === 2 ? 0.02 : 0.05);
+    else if(S <= 1.2e8) v = base + S * (n === 1 ? 0.005 : n === 2 ? 0.01 : 0.03);
+    else v = 0;
+    if(n >= 3 && S > 4e7 && S <= 1.2e8) v += (S - 4e7) * 0.04;
+    return v;
+  }
+  function progTax(t){
+    const B = [[14e6, .06], [50e6, .15], [88e6, .24], [150e6, .35], [300e6, .38], [500e6, .40], [1e9, .42], [Infinity, .45]];
+    let prev = 0, s = 0;
+    for(const [lim, r] of B){
+      if(t > lim){ s += (lim - prev) * r; prev = lim; }
+      else { s += (t - prev) * r; break; }
+    }
+    return s;
+  }
+  function tableCell(m, n){ // m: 월급여(구간 중간값), n: 공제대상가족 수(1~11)
+    const S = m * 12;
+    const pen = Math.floor(Math.min(m, 4.49e6) * 0.045 / 10) * 10;
+    const t = S - earnDed(S) - 1.5e6 * n - pen * 12 - specialDed(S, n);
+    if(t <= 0) return 0;
+    const calc = progTax(t);
+    const cr = Math.min(calc <= 5e5 ? calc * 0.55 : 275000 + (calc - 5e5) * 0.3, S <= 55e6 ? 660000 : S <= 7e7 ? 630000 : 500000);
+    const v = Math.floor((calc - cr) / 12 / 10 + 1e-9) * 10;
+    return v < 1000 ? 0 : v;
+  }
+  function cellN(m, n){
+    if(n <= 11) return tableCell(m, n);
+    const a = tableCell(m, 11), b = tableCell(m, 10);
+    return Math.max(0, a - (b - a) * (n - 11));
+  }
+  function simpleTax(pay, n){ // pay: 월 과세급여(원)
+    const k = Math.floor(pay / 1000);
+    if(k < 770) return 0;
+    if(pay <= 1e7){
+      if(k >= 10000) return cellN(1e7, n);
+      const step = k < 1500 ? 5 : k < 3000 ? 10 : 20;
+      const lo = Math.floor(k / step) * step;
+      return cellN((lo + step / 2) * 1000, n);
+    }
+    const base = cellN(1e7, n), x = pay;
+    let add;
+    if(x <= 14e6) add = (x - 1e7) * 0.98 * 0.35 + 25000;
+    else if(x <= 28e6) add = 1397000 + (x - 14e6) * 0.98 * 0.38;
+    else if(x <= 30e6) add = 6610600 + (x - 28e6) * 0.98 * 0.40;
+    else if(x <= 45e6) add = 7394600 + (x - 30e6) * 0.40;
+    else if(x <= 87e6) add = 13394600 + (x - 45e6) * 0.42;
+    else add = 31034600 + (x - 87e6) * 0.45;
+    return f10(base + add);
+  }
+  const childCredit = c => c <= 0 ? 0 : c === 1 ? 20830 : 45830 + Math.max(0, c - 2) * 33330;
 
+  /* ---------- 한 달 공제 계산 ---------- */
+  function monthly(gross, o){ // o: {nontax, fam, kids, ratio}
+    const nontax = Math.min(o.nontax, gross);
+    const pay = gross - nontax;
+    const npBase = Math.min(Math.max(Math.floor(pay / 1000) * 1000, R.npMin), R.npMax);
+    const np = pay > 0 ? f10(npBase * R.np) : 0;
+    const hiAll = f10(pay * R.hi);
+    const hi = f10(hiAll / 2);
+    const ltc = f10(f10(hiAll * R.ltc) / 2);
+    const ei = f10(pay * R.ei);
+    const table = simpleTax(pay, o.fam);
+    const afterKids = Math.max(0, table - childCredit(o.kids));
+    const it = f10(afterKids * o.ratio / 100);
+    const lt = f10(it * 0.1);
+    const ded = np + hi + ltc + ei + it + lt;
+    return {gross, nontax, pay, npBase, np, hi, ltc, ei, table, afterKids, it, lt, ins: np + hi + ltc + ei, tax: it + lt, ded, net: gross - ded};
+  }
+  // 실수령액 → 세전: 실수령액이 목표 이상이 되는 가장 작은 세전 월급
+  function reverse(target, o){
+    let lo = 0, hi = Math.max(1000, target * 3);
+    while(monthly(hi, o).net < target) hi *= 2;
+    while(hi - lo > 1){
+      const mid = Math.floor((lo + hi) / 2);
+      if(monthly(mid, o).net >= target) hi = mid; else lo = mid;
+    }
+    return hi;
+  }
   /* ---------- 입력 ---------- */
+  for(let i = 1; i <= 15; i++) $('fam').insertAdjacentHTML('beforeend', '<option value="' + i + '"' + (i === 1 ? ' selected' : '') + '>' + i + '명' + (i === 1 ? ' (본인만)' : '') + '</option>');
+  for(let i = 0; i <= 8; i++) $('kids').insertAdjacentHTML('beforeend', '<option value="' + i + '">' + (i ? i + '명' : '없음') + '</option>');
+
   const num = el => Number((el.value || '').replace(/[^0-9]/g, '')) || 0;
-  const hrs = el => { const v = parseFloat((el.value || '').replace(/[^0-9.]/g, '')); return isFinite(v) ? v : 0; };
-  const won = n => Math.floor(n + 1e-6).toLocaleString('ko-KR') + '원';
-  const h1 = n => (Math.round(n * 100) / 100).toLocaleString('ko-KR', {maximumFractionDigits: 2}) + '시간';
+  const won = n => Math.round(n).toLocaleString('ko-KR') + '원';
   function korUnit(n){
     if(!n) return '';
     const eok = Math.floor(n / 1e8), man = Math.floor((n % 1e8) / 1e4), rest = n % 1e4;
@@ -493,139 +591,115 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
     el.addEventListener('input', () => {
       const pos = el.selectionStart || 0;
       const before = el.value.slice(0, pos).replace(/[^0-9]/g, '').length;
-      setMoney(el, el.value.replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, '').slice(0, 9));
+      setMoney(el, el.value.replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, '').slice(0, 11));
       let i = 0, c = 0;
       while(i < el.value.length && c < before){ if(/\d/.test(el.value[i])) c++; i++; }
       try{ el.setSelectionRange(i, i); }catch(e){}
     });
   });
-  document.querySelectorAll('[data-hours]').forEach(el => {
-    el.addEventListener('input', () => {
-      let v = el.value.replace(/[^0-9.]/g, '');
-      const p = v.indexOf('.');
-      if(p >= 0) v = v.slice(0, p + 1) + v.slice(p + 1).replace(/\./g, '').slice(0, 2);
-      el.value = v.slice(0, 6);
-    });
-  });
-  const year = () => form.querySelector('input[name=year]:checked').value;
-  const mode = () => form.querySelector('input[name=mode]:checked').value;
-  $('fillMin').addEventListener('click', () => { setMoney($('wage'), String(MIN[year()])); render(); });
-  function syncStd(){
-    const h = Math.min(hrs($('stdH')) || 40, 40), d = +$('stdD').value;
-    $('std-hint').textContent = '통상근로자 1일 소정근로시간 ' + h1(Math.min(8, h / d)) + (hrs($('stdH')) > 40 ? ' (주 40시간을 넘는 부분은 제외)' : '');
-  }
 
-  function syncMode(){
-    const m = mode();
-    form.querySelectorAll('[data-mode]').forEach(s => s.hidden = s.dataset.mode !== m);
-  }
+  let dir = 'fwd';
+  const unit = () => form.querySelector('input[name=unit]:checked').value;
+  document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => {
+    dir = b.dataset.dir;
+    document.querySelectorAll('.tabs button').forEach(x => x.setAttribute('aria-selected', String(x === b)));
+    render();
+  }));
 
-  /* ---------- 1주 소정근로시간 ---------- */
-  function weekHours(){
-    const m = mode();
-    if(m === 'same'){
-      const d = hrs($('dayH')), n = +$('days').value;
-      return {h: d * n, sub: h1(d).replace('시간', '') + '시간 × ' + n + '일', dayMax: d, entered: d > 0, workDays: n};
-    }
-    if(m === 'day'){
-      const v = DAYS.map((_, i) => hrs($('d' + i)));
-      const on = v.map((x, i) => x ? DAYS[i] + ' ' + h1(x).replace('시간', '') : '').filter(Boolean);
-      return {h: v.reduce((a, b) => a + b, 0), sub: on.join(' · '), dayMax: Math.max(...v), entered: on.length > 0, workDays: on.length};
-    }
-    const w = [1, 2, 3, 4].map(i => hrs($('w' + i)));
-    const sum = w.reduce((a, b) => a + b, 0);
-    return {h: sum / 4, sub: '4주 평균 (' + w.map(x => h1(x).replace('시간', '')).join(' + ') + ') ÷ 4', dayMax: 0, entered: sum > 0, avg: true};
+  function syncLabels(){
+    const y = unit() === 'year', f = dir === 'fwd';
+    $('amt-h').textContent = f ? '세전 급여' : '받고 싶은 실수령액';
+    $('amt-hint').textContent = f ? '회사와 약속한 세전 금액을 넣으세요.' : '세금과 4대보험을 떼고 통장에 들어올 금액을 넣으세요.';
+    $('amt-lab').textContent = (f ? '세전 ' : '세후 ') + (y ? '연봉' : '월급') + (f ? '' : ' (실수령액)');
+    $('sev-box').hidden = !(f && y);
+    $('st-title').textContent = f ? '월급 실수령액 계산서' : '세전 급여 역산 계산서';
+    const fam = +$('fam').value, kids = +$('kids').value;
+    $('fam-msg').textContent = kids > fam - 1 ? '자녀도 공제대상가족 수에 들어갑니다. 가족 수를 자녀 수 + 1명 이상으로 고르세요.' : '';
   }
 
   /* ---------- 계산 ---------- */
   function render(){
-    syncMode(); syncStd();
+    syncLabels();
     const out = $('out'), meta = $('meta');
-    const y = year(), min = MIN[y], wage = num($('wage'));
-    const wk = weekHours();
-    meta.textContent = y + '년 기준' + (wk.entered ? ', 주 ' + h1(wk.h) : '') + (hrs($('stdH')) && hrs($('stdH')) !== 40 || $('stdD').value !== '5' ? ', 통상근로자 주 ' + h1(Math.min(hrs($('stdH')) || 40, 40)) + '·' + $('stdD').value + '일' : '');
+    const y = unit() === 'year', f = dir === 'fwd';
+    const amt = num($('amt'));
+    const o = {nontax: num($('nontax')), fam: +$('fam').value, kids: Math.min(+$('kids').value, +$('fam').value - 1), ratio: +form.querySelector('input[name=ratio]:checked').value};
+    const sev = f && y && form.querySelector('input[name=sev]:checked').value === '1';
+    meta.textContent = '2026년 기준, 공제대상가족 ' + o.fam + '명' + (o.kids ? '(8~20세 자녀 ' + o.kids + '명)' : '') + ', 비과세 월 ' + won(o.nontax) + (o.ratio !== 100 ? ', 원천징수 ' + o.ratio + '%' : '');
 
-    if(!wage){ out.innerHTML = '<div class="empty">시급부터 입력하세요. 최저임금으로 채우기를 누르면 ' + y + '년 최저임금(' + won(min) + ')이 들어갑니다.</div>'; return; }
-    if(!wk.entered){ out.innerHTML = '<div class="empty">근무시간을 입력하세요. 1주 소정근로시간에 따라 주휴수당 대상 여부와 금액이 정해집니다.</div>'; return; }
-
-    const notes = [];
-    const hEff = Math.min(wk.h, 40);
-    const over15 = wk.h >= 15;
-    const full = $('full').checked, quit = $('quit').checked;
-    const ok = over15 && full && !quit;
-    // 통상근로자 기준
-    const stdH = Math.min(hrs($('stdH')) || 40, 40), stdD = +$('stdD').value;
-    const stdDay = Math.min(8, stdH / stdD);
-    const partTime = hEff < stdH;
-    let holRaw, holSub;
-    if(partTime){
-      holRaw = hEff / stdD;
-      holSub = '단시간근로자: 1주 소정근로시간 ÷ 통상근로자 주 ' + stdD + '일' + (wk.avg ? ' (4주 합계 ÷ ' + stdD * 4 + '일)' : '');
-    } else if(mode() === 'same'){
-      holRaw = hrs($('dayH'));
-      holSub = '통상근로자: 1일 소정근로시간';
-    } else {
-      holRaw = hEff / Math.max(1, wk.workDays || stdD);
-      holSub = '통상근로자: 1주 소정근로시간 ÷ 근무일수';
+    if(!amt){
+      out.innerHTML = '<div class="empty">' + (f ? '세전 ' + (y ? '연봉' : '월급') + '을 입력하세요. 매달 떼는 세금과 4대보험, 실수령액이 바로 나옵니다.' : '받고 싶은 ' + (y ? '1년 실수령액' : '월 실수령액') + '을 입력하세요. 그만큼 받으려면 세전으로 얼마가 필요한지 계산합니다.') + '</div>';
+      return;
     }
-    const holH = ok ? Math.min(8, holRaw) : 0;
-    const hol = Math.floor(wage * holH + 1e-6);
+    let gross, target;
+    if(f){ gross = y ? Math.floor(amt / (sev ? 13 : 12)) : amt; }
+    else { target = y ? Math.ceil(amt / 12) : amt; gross = reverse(target, o); }
+    const r = monthly(gross, o);
 
     let rows = [], n = 0;
     const add = (label, value, opt) => rows.push({no: CIRC[n++] || '', label, value, ...(opt || {})});
-    add('시급', won(wage), {sub: wage < min ? y + '년 최저임금 ' + won(min) + '보다 낮음' : y + '년 최저임금 ' + won(min) + ' 이상'});
-    add('1주 소정근로시간', h1(wk.h), {sub: wk.sub});
-    add('주 15시간 이상', over15 ? '충족' : '미충족', {sub: wk.avg ? '4주 평균으로 판단' : '1주 소정근로시간 기준', ok: over15});
-    add('개근', full ? '충족' : '미충족', {ok: full});
-    if(quit) add('다음 주 근로관계', '없음', {sub: '그 주를 끝으로 퇴직', ok: false});
-    add('주휴시간', h1(holH), {key: true, sub: ok ? holSub + ', 최대 8시간' : '요건 미충족'});
-    add('주휴수당', won(hol), {key: true, sub: '시급 × 주휴시간'});
+    add('세전 월급', won(r.gross), {key: true, sub: f ? (y ? '연봉 ' + won(amt) + ' ÷ ' + (sev ? '13 (퇴직금 포함)' : '12') : '입력한 월급') : '실수령액 ' + won(target) + '이 되는 세전 월급'});
+    if(r.nontax) add('비과세 수당', won(r.nontax), {sub: '식대 등, 세금·4대보험 제외', minus: true});
+    add('과세 대상 급여', won(r.pay), {sub: '세금과 4대보험을 매기는 금액'});
     const top = rowsHTML(rows);
 
-    // 월 환산
     rows = [];
-    const weekPay = Math.floor(wage * hEff + 1e-6);
-    add('1주 소정근로 임금', won(weekPay), {sub: '시급 × ' + h1(hEff)});
-    add('1주 임금 합계', won(weekPay + hol), {key: true, sub: '소정근로 임금 + 주휴수당'});
-    const monH = Math.round((hEff + holH) * WPM);
-    add('월 환산 시간', monH.toLocaleString('ko-KR') + '시간', {sub: '(' + h1(hEff).replace('시간', '') + ' + ' + h1(holH).replace('시간', '') + ') × 365 ÷ 7 ÷ 12'});
-    add('월 환산 주휴수당', won(hol * WPM), {sub: '주휴수당 × 약 4.345주'});
-    add('월 환산 임금', won(wage * monH), {key: true, sub: '시급 × 월 환산 시간, 주휴수당 포함 세전'});
+    add('국민연금', won(r.np), {minus: true, sub: '기준소득월액 ' + won(r.npBase) + ' × 4.75%' + (r.pay > R.npMax ? ' (상한 적용)' : r.pay < R.npMin ? ' (하한 적용)' : '')});
+    add('건강보험', won(r.hi), {minus: true, sub: '과세 대상 급여 × 7.19% ÷ 2'});
+    add('장기요양보험', won(r.ltc), {minus: true, sub: '건강보험료 × 13.14%'});
+    add('고용보험', won(r.ei), {minus: true, sub: '과세 대상 급여 × 0.9%'});
+    add('4대보험 합계', won(r.ins), {sum: true});
+    const ins = rowsHTML(rows);
 
-    if(wage < min) notes.push('시급이 ' + y + '년 최저임금(' + won(min) + ')보다 낮습니다. 최저임금에 못 미치는 임금 약정은 그 부분이 무효가 되고 최저임금으로 지급해야 합니다.');
-    if(!over15) notes.push('1주 소정근로시간이 15시간 미만(4주 평균)이면 주휴일 규정이 적용되지 않아 주휴수당이 없습니다.');
-    if(over15 && !full) notes.push('그 주에 결근한 날이 있어 이번 주 주휴수당은 생기지 않습니다. 다음 주에 개근하면 다시 생깁니다.');
-    if(over15 && full && quit) notes.push('마지막 주는 1주를 넘겨 근로관계가 이어지지 않으면 주휴수당이 생기지 않는다는 것이 고용노동부 행정해석(2021. 8. 4.)입니다. 퇴직일이 다음 주 월요일 이후라면 체크를 해제하세요.');
-    if(wk.h > 40) notes.push('주 40시간을 넘는 시간은 연장근로라 소정근로시간에 넣지 않았습니다. 연장근로는 통상임금의 50% 이상을 가산해 따로 지급해야 합니다(상시 5명 이상 사업장).');
-    else if(wk.dayMax > 8) notes.push('하루 8시간을 넘는 시간은 연장근로입니다. 계약서상 소정근로시간인지 확인하세요.');
-    if(ok && partTime) notes.push('통상근로자(주 ' + h1(stdH) + ', ' + stdD + '일)보다 적게 일하는 단시간근로자라 근로시간에 비례해 주휴시간을 정했습니다(근로기준법 시행령 별표 2).');
-    if(ok && !partTime && mode() !== 'same') notes.push('통상근로자와 같거나 더 많이 일하면 주휴시간은 1일 소정근로시간입니다. 요일마다 시간이 다르면 평균으로 계산했으니 계약서의 1일 소정근로시간을 확인하세요.');
-    notes.push('주휴수당은 상시 5명 미만 사업장에도 똑같이 적용되며, 받지 못한 임금은 3년 안에 청구할 수 있습니다.');
-    notes.push('월 환산은 1년 평균 주 수(365 ÷ 7 ÷ 12 ≈ 4.345주)를 쓴 값이라 달마다 실제 주 수에 따라 달라질 수 있습니다.');
+    rows = [];
+    const itSub = ['간이세액표 ' + won(r.table)];
+    if(o.kids) itSub.push('자녀 ' + o.kids + '명 공제 −' + won(childCredit(o.kids)));
+    if(o.ratio !== 100) itSub.push(o.ratio + '% 적용');
+    add('소득세', won(r.it), {minus: true, sub: itSub.join(', ')});
+    add('지방소득세', won(r.lt), {minus: true, sub: '소득세 × 10%'});
+    add('세금 합계', won(r.tax), {sum: true});
+    const tax = rowsHTML(rows);
 
-    out.innerHTML = top +
-      '<div class="total"><span class="tl">1주 주휴수당<small>' + (ok ? '월 환산 약 ' + won(hol * WPM) : '이번 주는 요건 미충족') + '</small></span>' +
-      '<span class="tv">' + (ok ? won(hol) : '발생 안 함') + '</span></div>' +
-      '<div class="sub-head">월 환산</div>' + rowsHTML(rows) +
+    const pct = x => (x / r.gross * 100);
+    const bar = '<div class="bar" aria-hidden="true"><i style="width:' + pct(r.net) + '%;background:var(--accent)"></i><i style="width:' + pct(r.ins) + '%;background:#8FAAB8"></i><i style="width:' + pct(r.tax) + '%;background:var(--warm)"></i></div>' +
+      '<div class="bar-key"><span style="--c:var(--accent)">실수령 ' + pct(r.net).toFixed(1) + '%</span><span style="--c:#8FAAB8">4대보험 ' + pct(r.ins).toFixed(1) + '%</span><span style="--c:var(--warm)">세금 ' + pct(r.tax).toFixed(1) + '%</span></div>';
+
+    const notes = [];
+    if(!f && y) notes.push('세후 연봉 ' + won(amt) + '을 12개월로 나눈 월 ' + won(target) + '을 목표로 계산했습니다.');
+    if(o.nontax > 200000) notes.push('식대 비과세는 월 20만원까지입니다. 20만원을 넘는 비과세액은 자가운전보조금·육아수당 등 다른 비과세 요건을 갖춘 경우에만 인정됩니다.');
+    if(+$('kids').value > o.kids) notes.push('자녀 수가 공제대상가족 수보다 많아 자녀 ' + o.kids + '명으로 계산했습니다.');
+    if(r.pay > 0 && r.table === 0) notes.push('과세 대상 급여가 적어 간이세액표상 소득세가 없습니다.');
+    notes.push('매달 떼는 소득세는 간이세액표로 미리 걷는 금액입니다. 실제 1년 세금은 다음 해 2월 연말정산에서 신용카드·보험료·의료비 등 공제를 반영해 다시 계산됩니다.');
+    notes.push('상여금, 연장·야간근로수당, 성과급처럼 달마다 달라지는 금액이 있으면 그달 실수령액이 달라집니다.');
+
+    const summary = f
+      ? '<div class="res-top"><div><b>월 실수령액</b><span class="hl">' + won(r.net) + '</span></div><div><b>연 실수령액 (× 12)</b><span>' + won(r.net * 12) + '</span></div></div>'
+      : '<div class="res-top"><div><b>필요한 세전 월급</b><span class="hl">' + won(r.gross) + '</span></div><div><b>세전 연봉 (× 12)</b><span>' + won(r.gross * 12) + '</span></div></div>';
+    out.innerHTML = summary + top +
+      '<div class="sub-head">4대보험 (근로자 부담분)</div>' + ins +
+      '<div class="sub-head">세금</div>' + tax +
+      '<div class="total"><span class="tl">' + (f ? '월 실수령액' : '필요한 세전 월급') + '<small>' + (f ? '공제 합계 ' + won(r.ded) + ', 연 ' + won(r.net * 12) : '이때 실수령액 ' + won(r.net) + ', 공제 ' + won(r.ded)) + '</small></span>' +
+      '<span class="tv">' + won(f ? r.net : r.gross) + '</span></div>' + bar +
       '<ul class="notes" style="margin-top:14px">' + notes.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
   }
 
   const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   function rowsHTML(rows){
     return '<div class="st-body">' + rows.map(r =>
-      '<div class="row' + (r.key ? ' key' : '') + '">' +
+      '<div class="row' + (r.key ? ' key' : '') + (r.sum ? ' sum' : '') + (r.minus ? ' minus' : '') + '">' +
       '<span class="no">' + r.no + '</span>' +
       '<span class="lb">' + esc(r.label) + (r.sub ? '<small>' + esc(r.sub) + '</small>' : '') + '</span>' +
-      '<span class="v' + (r.ok === true ? ' free' : r.ok === false ? ' bad' : '') + '">' + esc(r.value) + '</span></div>').join('') + '</div>';
+      '<span class="v">' + esc(r.value) + '</span></div>').join('') + '</div>';
   }
 
   form.addEventListener('input', render);
   form.addEventListener('change', render);
   $('reset').addEventListener('click', () => {
     form.reset();
-    document.querySelectorAll('.helper[data-for]').forEach(h => h.textContent = '');
+    setMoney($('amt'), ''); setMoney($('nontax'), '200000');
     render();
   });
+  window.__wgDir = () => dir;
   render();
 })();
 </script>
@@ -635,17 +709,16 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
 (function(){
   const url = (law, art) => 'https://www.law.go.kr/' + encodeURI('법령/' + law.replace(/\s/g, '') + '/' + art);
   const LAWS = [
-    {c: '근로기준법 제55조 제1항', l: ['근로기준법', '제55조'], s: '사용자는 1주에 평균 1회 이상 유급휴일(주휴일)을 보장해야 함'},
-    {c: '근로기준법 시행령 제30조 제1항', l: ['근로기준법 시행령', '제30조'], s: '주휴일은 1주 동안 소정근로일을 개근한 근로자에게 줌'},
-    {c: '근로기준법 제18조 제3항', l: ['근로기준법', '제18조'], s: '4주 평균 1주 소정근로시간이 15시간 미만이면 주휴일(제55조) 적용 제외'},
-    {c: '근로기준법 제18조 제1·2항', l: ['근로기준법', '제18조'], s: '단시간근로자의 근로조건은 통상근로자와의 근로시간 비율에 따라 결정'},
-    {c: '근로기준법 시행령 제9조 제1항 [별표 2]', l: ['근로기준법 시행령', '제9조'], s: '단시간근로자 유급휴일 시간: 4주 소정근로시간 합계 ÷ 통상근로자 4주 소정근로일수'},
-    {c: '근로기준법 제2조 제1항 제8호', l: ['근로기준법', '제2조'], s: '소정근로시간: 법정근로시간 범위에서 근로자와 사용자가 정한 근로시간'},
-    {c: '근로기준법 제50조', l: ['근로기준법', '제50조'], s: '법정근로시간: 1주 40시간, 1일 8시간'},
-    {c: '근로기준법 시행령 제7조 [별표 1]', l: ['근로기준법 시행령', '제7조'], s: '상시 5명 미만 사업장에도 주휴일(제55조 제1항) 규정 적용'},
-    {c: '최저임금법 제5조 제1항, 제6조', l: ['최저임금법', '제5조'], s: '최저임금액과 효력: 2026년 시급 10,320원, 2027년 시급 10,700원(고용노동부 고시)'},
-    {c: '최저임금법 시행령 제5조 제1항', l: ['최저임금법 시행령', '제5조'], s: '주·월 단위 임금의 시간급 환산: 유급 주휴시간을 포함한 시간으로 나눔(주 40시간이면 월 209시간)'},
-    {c: '근로기준법 제49조', l: ['근로기준법', '제49조'], s: '임금채권 소멸시효 3년'}
+    {c: '소득세법 제134조 제1항', l: ['소득세법', '제134조'], s: '회사는 매달 근로소득을 지급할 때 간이세액표에 따라 소득세를 원천징수함'},
+    {c: '소득세법 시행령 제194조 제1항', l: ['소득세법 시행령', '제194조'], s: '간이세액표 세액 기준, 근로자가 신청하면 80% 또는 120%로 원천징수'},
+    {c: '소득세법 시행령 제189조 [별표 2]', l: ['소득세법 시행령', '제189조'], s: '근로소득 간이세액표(2026. 2. 27. 개정): 월급여·공제대상가족 수별 세액, 8~20세 자녀 공제'},
+    {c: '소득세법 제12조 제3호 머목, 시행령 제17조의2', l: ['소득세법 시행령', '제17조의2'], s: '식사대 월 20만원 이하 비과세'},
+    {c: '지방세법 제103조의13', l: ['지방세법', '제103조의13'], s: '개인지방소득세 특별징수: 소득세의 10%'},
+    {c: '국민연금법 제88조', l: ['국민연금법', '제88조'], s: '연금보험료율 2026년 9.5%(사용자·근로자 각 4.75%)'},
+    {c: '국민연금법 시행령 제5조', l: ['국민연금법 시행령', '제5조'], s: '기준소득월액 상·하한(2026. 7.~2027. 6. 41만~659만원, 보건복지부 고시)'},
+    {c: '국민건강보험법 제69조, 제73조, 제76조', l: ['국민건강보험법', '제73조'], s: '직장가입자 보험료율 2026년 7.19%, 사용자·근로자 각 50% 부담'},
+    {c: '노인장기요양보험법 제8조, 제9조', l: ['노인장기요양보험법', '제9조'], s: '장기요양보험료는 건강보험료에 장기요양보험료율을 곱해 산정(2026년 0.9448%, 건강보험료 대비 13.14%)'},
+    {c: '고용보험 및 산업재해보상보험의 보험료징수 등에 관한 법률 제13조, 제14조', l: ['고용보험및산업재해보상보험의보험료징수등에관한법률', '제14조'], s: '실업급여 보험료율 1.8%, 근로자 0.9% 부담'}
   ];
   const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   document.getElementById('laws').innerHTML = LAWS.map(x =>
@@ -654,14 +727,13 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
     '<span class="sum">' + esc(x.s) + '</span></li>').join('');
 })();
 </script>
-
 <script>
 /* ---------- 계산서 PDF 저장 ---------- */
 (function(){
   const H2C = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
   const JSPDF = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
   const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  const IDS = {jh: {out: 'out', meta: 'meta', form: 'form', title: '주휴수당 계산서'}};
+  const IDS = {wg: {out: 'out', meta: 'meta', form: 'form', get title(){ return document.getElementById('st-title').textContent; }}};
   const dlPromise = (window.claude && typeof window.claude.use === 'function')
     ? window.claude.use('downloads').catch(() => null) : Promise.resolve(null);
 
@@ -675,25 +747,16 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
 
   function collect(form){
     const items = [];
-    const vis = el => el && !el.closest('[hidden]');
-    const y = form.querySelector('input[name=year]:checked');
-    items.push(['기준 연도', y.nextElementSibling.textContent.trim()]);
-    const w = form.querySelector('#wage');
-    if(w.value) items.push(['시급', w.value + '원']);
-    const m = form.querySelector('input[name=mode]:checked');
-    items.push(['근무 방식', form.querySelector('label[for="' + m.id + '"]').textContent.trim()]);
-    if(m.value === 'same'){
-      items.push(['근무시간', (form.querySelector('#dayH').value || '0') + '시간 × 주 ' + form.querySelector('#days').value + '일']);
-    } else {
-      const parts = [];
-      form.querySelectorAll('[data-mode="' + m.value + '"] [data-hours]').forEach(el => {
-        if(vis(el) && el.value){ const l = form.querySelector('label[for="' + el.id + '"]'); parts.push(l.textContent.trim() + ' ' + el.value + '시간'); }
-      });
-      if(parts.length) items.push(['근무시간', parts.join(', ')]);
-    }
-    items.push(['통상근로자 기준', '주 ' + (form.querySelector('#stdH').value || '40') + '시간, ' + form.querySelector('#stdD').value + '일']);
-    items.push(['개근', form.querySelector('#full').checked ? '예' : '아니오']);
-    if(form.querySelector('#quit').checked) items.push(['퇴직', '그 주를 끝으로 퇴직']);
+    const rev = window.__wgDir && window.__wgDir() === 'rev';
+    const unit = form.querySelector('input[name=unit]:checked').value;
+    items.push(['계산 방향', rev ? '실수령액 → 세전' : '세전 → 실수령액']);
+    const a = form.querySelector('#amt');
+    if(a.value) items.push([form.querySelector('#amt-lab').textContent, a.value + '원']);
+    if(!rev && unit === 'year') items.push(['퇴직금', form.querySelector('input[name=sev]:checked').value === '1' ? '연봉에 포함 (÷13)' : '연봉에 포함 안 됨']);
+    items.push(['월 비과세액', (form.querySelector('#nontax').value || '0') + '원']);
+    items.push(['공제대상가족', form.querySelector('#fam').value + '명']);
+    items.push(['8~20세 자녀', form.querySelector('#kids').value + '명']);
+    items.push(['원천징수 비율', form.querySelector('input[name=ratio]:checked').value + '%']);
     return items;
   }
 
@@ -703,7 +766,7 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
     const today = new Date();
     const dstr = today.getFullYear() + '년 ' + (today.getMonth() + 1) + '월 ' + today.getDate() + '일';
     const memo = document.getElementById('memo-' + key).value.trim();
-    const logo = document.querySelector('.brand img');
+    const logo = document.querySelector('.dg-hd .logo img');
     const conds = collect(form).map(([k, v]) =>
       '<div class="' + (String(v).length > 28 ? 'wide' : '') + '"><b>' + esc(k) + '</b><span>' + esc(v) + '</span></div>').join('');
     const el = document.createElement('div');
@@ -716,7 +779,7 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
       '<h3>입력 조건</h3><div class="conds">' + conds + '</div>' +
       '<h3>계산 내역</h3>' + document.getElementById(c.out).innerHTML +
       '<h3>메모</h3><div class="memo">' + esc(memo) + '</div>' +
-      '<div class="foot">이 계산서는 동감 세무회계가 AI의 도움을 받아 제작한 계산기로 작성되었으며, 계산 결과에 오류가 있을 수 있습니다. 주휴수당 등 임금·노무 문제는 공인노무사의 전문 분야로, 동감 세무회계는 노무사 사무소가 아니어서 이 분야의 전문성에 한계가 있습니다. 실제 임금 지급이나 분쟁 대응 전에는 반드시 공인노무사 등 전문가의 상담을 받으시기 바랍니다. 이 계산기의 이용으로 발생하는 어떠한 문제에 대해서도 동감 세무회계는 책임지지 않습니다. 문의 blog.naver.com/francepigeon</div>';
+      '<div class="foot">이 계산서는 동감 세무회계가 AI의 도움을 받아 제작한 계산기로 작성되었으며, 계산 결과에 오류가 있을 수 있습니다. 2026년 4대보험 요율과 국세청 근로소득 간이세액표(2026. 2. 27. 개정)에 따른 매달 원천징수 기준이며, 1년 치 최종 세액은 연말정산에서 달라질 수 있습니다. 이 계산기의 이용으로 발생하는 어떠한 문제에 대해서도 동감 세무회계는 책임지지 않습니다. 상담문의: 이동희 세무사(010-8278-1382)</div>';
     return el;
   }
 
@@ -756,111 +819,5 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
       '<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Nanum+Myeongjo:wght@700;800&display=swap" rel="stylesheet">' +
       '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">' +
       '<style>' + css + '\n@page{size:A4;margin:0}html,body{margin:0;padding:0;background:#fff}:root{padding:0}.rpt{margin:0 auto}</style></head><body>' +
-      sheet.outerHTML + '</body></html>';
-  }
-
-  async function save(key, btn){
-    const msg = document.getElementById('save-msg-' + key);
-    btn.disabled = true;
-    msg.textContent = '계산서를 만드는 중입니다.';
-    const sheet = buildSheet(key);
-    const holder = document.createElement('div');
-    holder.style.cssText = 'position:absolute;left:-10000px;top:0;width:794px;pointer-events:none;';
-    holder.setAttribute('aria-hidden', 'true');
-    holder.appendChild(sheet);
-    document.body.appendChild(holder);
-    const t = new Date();
-    const stamp = t.getFullYear() + String(t.getMonth() + 1).padStart(2, '0') + String(t.getDate()).padStart(2, '0');
-    const base = IDS[key].title.replace(/\s/g, '_') + '_' + stamp;
-    try{
-      let blob, name;
-      try{
-        await loadLibs();
-        if(document.fonts && document.fonts.ready) await document.fonts.ready;
-        const canvas = await window.html2canvas(sheet, {scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false, scrollX: 0, scrollY: -window.scrollY, windowWidth: 1200});
-        const pdf = new window.jspdf.jsPDF({unit: 'mm', format: 'a4', orientation: 'portrait'});
-        let w = 210, h = canvas.height * 210 / canvas.width;
-        if(h > 297){ w = w * 297 / h; h = 297; }
-        pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', (210 - w) / 2, 0, w, h);
-        blob = pdf.output('blob'); name = base + '.pdf';
-      }catch(e){
-        if(e && e.code) throw e;
-        blob = new Blob([printableHtml(sheet)], {type: 'text/html'}); name = base + '.html';
-      }
-      const r = await deliver(name, blob);
-      if(r === 'noSave'){ fallbackPrint(key, msg); return; }
-      msg.textContent = name.endsWith('.pdf')
-        ? '저장했습니다. 파일을 열어 인쇄할 수 있습니다.'
-        : 'PDF를 만들지 못해 인쇄용 파일(HTML)로 저장했습니다. 파일을 브라우저로 열어 인쇄하세요.';
-    }catch(e){
-      const code = e && e.code;
-      if(code === 'declined') msg.textContent = '저장을 취소했습니다.';
-      else if(code === 'rate_limited') msg.textContent = '저장 창이 이미 열려 있습니다. 잠시 후 다시 눌러 주세요.';
-      else fallbackPrint(key, msg);
-    }finally{
-      holder.remove();
-      btn.disabled = false;
-    }
-  }
-
-  async function fallbackPrint(key, msg){
-    msg.textContent = '계산서 이미지를 만드는 중입니다.';
-    try{ showModal(key, await makeCanvas(key)); msg.textContent = '이 화면에서는 파일 저장이 막혀 있어 계산서를 이미지로 띄웠습니다.'; }
-    catch(e){ msg.textContent = '계산서를 저장하지 못했습니다. 인터넷 연결을 확인하고 다시 눌러 주세요.'; }
-  }
-  document.querySelectorAll('[data-savebtn]').forEach(b => b.addEventListener('click', () => save(b.dataset.savebtn, b)));
-
-  /* ---------- 이미지로 저장 ---------- */
-  async function makeCanvas(key){
-    const sheet = buildSheet(key);
-    const holder = document.createElement('div');
-    holder.style.cssText = 'position:absolute;left:-10000px;top:0;width:794px;pointer-events:none;';
-    holder.setAttribute('aria-hidden', 'true');
-    holder.appendChild(sheet);
-    document.body.appendChild(holder);
-    try{
-      await loadLibs();
-      if(document.fonts && document.fonts.ready) await document.fonts.ready;
-      return await window.html2canvas(sheet, {scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false, scrollX: 0, scrollY: -window.scrollY, windowWidth: 1200});
-    }finally{ holder.remove(); }
-  }
-  let modal = null, lastFocus = null;
-  function ensureModal(){
-    if(modal) return modal;
-    modal = document.createElement('div');
-    modal.className = 'img-modal';
-    modal.hidden = true;
-    modal.setAttribute('role', 'dialog');
-    modal.setAttribute('aria-modal', 'true');
-    modal.setAttribute('aria-labelledby', 'im-title');
-    modal.innerHTML = '<div class="im-box"><div class="im-head"><h2 id="im-title">계산서 이미지</h2><button type="button" class="im-close">닫기</button></div>' +
-      '<p class="im-help">휴대폰은 이미지를 길게 눌러, 컴퓨터는 마우스 오른쪽 버튼을 눌러 이미지 저장을 고르세요. 저장한 이미지는 A4 한 장으로 그대로 인쇄할 수 있습니다.</p>' +
-      '<div class="im-scroll"><img alt="계산서 이미지"></div></div>';
-    document.body.appendChild(modal);
-    const close = () => { modal.hidden = true; modal.querySelector('img').removeAttribute('src'); if(lastFocus) lastFocus.focus(); };
-    modal.querySelector('.im-close').addEventListener('click', close);
-    modal.addEventListener('click', e => { if(e.target === modal) close(); });
-    modal.addEventListener('keydown', e => { if(e.key === 'Escape') close(); if(e.key === 'Tab'){ e.preventDefault(); modal.querySelector('.im-close').focus(); } });
-    return modal;
-  }
-  function showModal(key, canvas){
-    const m = ensureModal();
-    m.querySelector('#im-title').textContent = IDS[key].title;
-    m.querySelector('img').src = canvas.toDataURL('image/png');
-    lastFocus = document.activeElement;
-    m.hidden = false;
-    m.querySelector('.im-close').focus();
-  }
-  async function saveImage(key, btn){
-    const msg = document.getElementById('save-msg-' + key);
-    btn.disabled = true;
-    msg.textContent = '계산서 이미지를 만드는 중입니다.';
-    try{ showModal(key, await makeCanvas(key)); msg.textContent = ''; }
-    catch(e){ msg.textContent = '계산서 이미지를 만들지 못했습니다. 인터넷 연결을 확인하고 다시 눌러 주세요.'; }
-    finally{ btn.disabled = false; }
-  }
-  document.querySelectorAll('[data-imgbtn]').forEach(b => b.addEventListener('click', () => saveImage(b.dataset.imgbtn, b)));
-})();
-</script>
-</body>
+      sheet.outerHTML + '</body>
 </html>
