@@ -56,17 +56,10 @@ a:focus-visible{outline:3px solid var(--brand);outline-offset:3px;border-radius:
 .photo{position:relative;margin:0}
 .photo::before{content:"";position:absolute;left:-14px;top:14px;right:14px;bottom:-14px;border:1.5px solid var(--warm);border-radius:24px;opacity:.55}
 .photo img{position:relative;width:100%;aspect-ratio:325/377;object-fit:cover;border-radius:22px;box-shadow:0 30px 60px -36px rgba(24,35,43,.55);background:#D5DADC}
-.photo figcaption{position:absolute;right:-12px;bottom:22px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-size:13px;line-height:1.45;box-shadow:0 18px 36px -24px rgba(24,35,43,.45)}
-.photo figcaption b{display:block;font-size:15px;color:var(--brand)}
 
-/* 숫자 */
-.nums{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:-8px}
-.nums div{background:#fff;border:1px solid var(--line);border-radius:20px;padding:26px 26px 24px;box-shadow:0 18px 36px -30px rgba(24,35,43,.35)}
-.nums b{display:block;font-size:clamp(30px,3.6vw,40px);font-weight:800;letter-spacing:-.04em;line-height:1.15;color:var(--brand);font-variant-numeric:tabular-nums}
-.nums b small{font-size:.5em;font-weight:700;margin-left:2px}
-.nums span{display:block;margin-top:8px;font-size:15px;color:var(--muted)}
 
 main section{margin-top:96px}
+main section:first-child{margin-top:72px}
 .sec-h{margin-bottom:26px}
 .kicker{font-size:13px;letter-spacing:.2em;font-weight:700;color:var(--brand);text-transform:uppercase}
 .sec-h h2{font-size:clamp(25px,3vw,34px);font-weight:800;letter-spacing:-.035em;margin-top:6px;line-height:1.3}
@@ -113,17 +106,13 @@ main section{margin-top:96px}
 .fine{font-size:13px;color:var(--muted)}
 
 /* 사무실 */
-.office{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);grid-template-rows:auto auto;gap:14px}
-.office figure{position:relative;margin:0;border-radius:18px;overflow:hidden;background:var(--paper);border:1px solid var(--line)}
+.office{display:grid;gap:14px}
+.office figure{margin:0;border-radius:18px;overflow:hidden;background:var(--paper);border:1px solid var(--line)}
 .office img{width:100%;height:100%;object-fit:cover}
-.office figcaption{position:absolute;left:12px;bottom:12px;background:rgba(255,255,255,.94);border-radius:10px;padding:6px 12px;font-size:13px;font-weight:600}
-.office .sign{grid-row:1 / span 2}
-.office .sign img{object-position:center 30%}
-.office .shelf{aspect-ratio:2/1}
-.office .pair{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:14px}
-.office .pair figure{aspect-ratio:3/2}
-.office .pair .gam{aspect-ratio:auto}
-.office .gam img{object-fit:contain;background:#ECEEF0;padding:10px}
+.office .main{aspect-ratio:2/1}
+.office .row{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,.9fr) minmax(0,1fr);gap:14px;height:300px}
+.office .sign img{object-position:center 20%}
+.office .gam img{object-fit:contain;background:#ECEEF0;padding:12px}
 
 /* 약속 */
 .promise{position:relative;background:var(--paper);border:1px solid var(--line);border-radius:24px;padding:48px 56px;text-align:center;overflow:hidden}
@@ -165,10 +154,10 @@ footer a{color:var(--brand);font-weight:600;text-decoration:none}
   .hd nav a{font-size:14px;white-space:nowrap}
   .hero .wrap{grid-template-columns:1fr;gap:40px}
   .photo{max-width:300px;margin:0 auto 0 14px}
-  .nums{grid-template-columns:1fr}
   .cases{grid-template-columns:1fr}
-  .office{grid-template-columns:1fr}
-  .office .sign{grid-row:auto;aspect-ratio:9/10}
+  .office .row{grid-template-columns:1fr;height:auto}
+  .office .row figure{aspect-ratio:3/2}
+  .office .row .sign{aspect-ratio:9/10}
   .fab{display:inline-flex}
 }
 @media (max-width:560px){
@@ -179,7 +168,6 @@ footer a{color:var(--brand);font-weight:600;text-decoration:none}
   .timeline li{grid-template-columns:1fr}
   .case{flex-direction:column;align-items:flex-start;gap:8px}
   .case .amt{text-align:left}
-  .office .pair{grid-template-columns:1fr}
   .promise{padding:36px 22px}
   .band{grid-template-columns:1fr;padding:32px 24px;border-radius:20px;margin-top:72px}
   .band .call{text-align:left}
@@ -213,7 +201,6 @@ footer a{color:var(--brand);font-weight:600;text-decoration:none}
     </div>
     <figure class="photo">
       <img src="photo.png" alt="이동희 세무사" width="325" height="377">
-      <figcaption><b>이동희 세무사</b>前 감사원 감사관<br>前 LG유플러스 세무회계팀</figcaption>
     </figure>
   </div>
 </section>
@@ -221,11 +208,6 @@ footer a{color:var(--brand);font-weight:600;text-decoration:none}
 <main>
 <div class="wrap">
 
-  <div class="nums" aria-label="동감 세무회계 숫자">
-    <div><b>17<small>년 차</small></b><span>2010년 세무사 합격 후 기업, 공직, 세무법인을 두루 거쳤습니다.</span></div>
-    <div><b>300<small>곳 이상</small></b><span>개업 3년 만에 300곳이 넘는 업체가 함께하고, 한 곳도 떠나지 않으셨습니다.</span></div>
-    <div><b>수천<small> 건</small></b><span>감사원에서 분석한 세무조사 사례입니다. 과세관청이 어디를 보는지 압니다.</span></div>
-  </div>
 
   <section aria-labelledby="why-h">
     <div class="sec-h"><p class="kicker">Why Donggam</p><h2 id="why-h">이동희 세무사를 선택하셔야 하는 이유</h2></div>
@@ -313,11 +295,11 @@ footer a{color:var(--brand);font-weight:600;text-decoration:none}
   <section aria-labelledby="office-h">
     <div class="sec-h"><p class="kicker">Office</p><h2 id="office-h">동감 세무회계 사무실</h2><p>경기도 고양시 향동, DMC플렉스데시앙 KB 824호에서 기다리고 있습니다.</p></div>
     <div class="office">
-      <figure class="sign"><img src="office-sign.jpg" alt="이동희 세무사 경력이 적힌 사무실 현판" width="900" height="1002" loading="lazy"><figcaption>사무실 현판</figcaption></figure>
-      <figure class="shelf"><img src="office-shelf.jpg" alt="감사원 자격증, 표창장, 세법 책이 놓인 사무실 서가" width="1200" height="603" loading="lazy"><figcaption>감사원 시절 표창과 세법 서가</figcaption></figure>
-      <div class="pair">
-        <figure><img src="office-desk.jpg" alt="세무사 등록증과 감사장이 놓인 상담실 선반" width="1200" height="765" loading="lazy"><figcaption>세무사 등록증</figcaption></figure>
-        <figure class="gam"><img src="gamsehoe.jpg" alt="감사원·국세청 출신 세무사 세법 연구모임 監稅會 현판" width="900" height="588" loading="lazy"><figcaption>세법 연구모임 監稅會</figcaption></figure>
+      <figure class="main"><img src="office-shelf.jpg" alt="감사원 시절 표창과 세법 책이 놓인 동감 세무회계 사무실 서가" width="1200" height="603" loading="lazy"></figure>
+      <div class="row">
+        <figure><img src="office-desk.jpg" alt="세무사 등록증과 감사장이 놓인 상담실 선반" width="1200" height="765" loading="lazy"></figure>
+        <figure class="sign"><img src="office-sign.jpg" alt="이동희 세무사 경력이 적힌 사무실 현판" width="900" height="1002" loading="lazy"></figure>
+        <figure class="gam"><img src="gamsehoe.jpg" alt="감사원·국세청 출신 세무사 세법 연구모임 監稅會 현판" width="900" height="588" loading="lazy"></figure>
       </div>
     </div>
   </section>
