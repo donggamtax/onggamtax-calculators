@@ -258,7 +258,7 @@ h1,h2,h3,.tv,.tabs button{letter-spacing:-.025em;}
 .dg-hd .tel{color:#fff;background:var(--brand);text-decoration:none;font-weight:600;font-size:14px;padding:9px 16px;border-radius:999px;white-space:nowrap;font-variant-numeric:tabular-nums;}
 .dg-hd .tel:hover{background:var(--brand-deep);}
 .dg-hd a:focus-visible{outline:3px solid var(--brand);outline-offset:3px;border-radius:4px;}
-@media (max-width:760px){.dg-hd nav{display:none}.dg-hd .in{justify-content:space-between;padding:12px 16px}.dg-hd .logo img{height:22px}.dg-hd .tel{font-size:13px;padding:8px 13px}}
+@media (max-width:760px){.dg-hd .in{flex-wrap:wrap;justify-content:space-between;gap:10px 16px;padding:12px 16px 10px}.dg-hd nav{order:3;width:100%;margin-left:0;gap:20px;overflow-x:auto}.dg-hd nav a{font-size:14px;white-space:nowrap}.dg-hd .logo img{height:22px}.dg-hd .tel{font-size:13px;padding:8px 13px}}
 
 /* 첫 띠 */
 .dg-hero{position:relative;overflow:hidden;background:linear-gradient(180deg,var(--brand-tint),var(--paper));border-bottom:1px solid var(--rule-soft);}
@@ -313,7 +313,7 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
 <!-- dg-hd -->
 <div class="dg-hd"><div class="in">
   <a class="logo" href="../" aria-label="동감 세무회계 홈"><img src="../logo.png" alt="동감 세무회계" width="1010" height="151"></a>
-  <nav aria-label="주요 메뉴"><a href="../">세금 계산기 전체</a><a href="https://blog.naver.com/francepigeon" target="_blank" rel="noopener noreferrer">블로그</a></nav>
+  <nav aria-label="주요 메뉴"><a href="../">세금 계산기</a><a href="../about/">대표세무사 소개</a><a href="https://blog.naver.com/francepigeon" target="_blank" rel="noopener noreferrer">대표세무사 블로그</a></nav>
   <a class="tel" href="tel:01082781382">상담 010-8278-1382</a>
 </div></div>
 <div class="dg-hero"><div class="in">

@@ -109,8 +109,9 @@ footer a{color:var(--brand);font-weight:600;text-decoration:none}
 @media (prefers-reduced-motion:reduce){.hero .ring{animation:none}.card,.btn{transition:none}}
 @media (max-width:1000px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:760px){
-  .hd nav{display:none}
-  .hd .wrap{justify-content:space-between;padding-top:12px;padding-bottom:12px}
+  .hd .wrap{flex-wrap:wrap;justify-content:space-between;gap:10px 16px;padding-top:12px;padding-bottom:10px}
+  .hd nav{order:3;width:100%;margin-left:0;gap:20px;overflow-x:auto}
+  .hd nav a{font-size:14px;white-space:nowrap}
   .hd .logo img{height:23px}
   .hd .tel{font-size:13px;padding:8px 13px}
   .steps ol{grid-template-columns:1fr}
@@ -132,7 +133,7 @@ footer a{color:var(--brand);font-weight:600;text-decoration:none}
 <header class="hd">
   <div class="wrap">
     <a class="logo" href="./" aria-label="동감 세무회계 첫 화면"><img src="logo.png" alt="동감 세무회계" width="1010" height="151"></a>
-    <nav aria-label="주요 메뉴"><a href="#cards">세금 계산기</a><a href="#steps-h">이용 방법</a><a href="https://blog.naver.com/francepigeon" target="_blank" rel="noopener noreferrer">블로그</a></nav>
+    <nav aria-label="주요 메뉴"><a href="#cards">세금 계산기</a><a href="about/">대표세무사 소개</a><a href="https://blog.naver.com/francepigeon" target="_blank" rel="noopener noreferrer">대표세무사 블로그</a></nav>
     <a class="tel" href="tel:01082781382">상담 010-8278-1382</a>
   </div>
 </header>

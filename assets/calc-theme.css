@@ -31,7 +31,7 @@ h1,h2,h3,.tv,.tabs button{letter-spacing:-.025em;}
 .dg-hd .tel{color:#fff;background:var(--brand);text-decoration:none;font-weight:600;font-size:14px;padding:9px 16px;border-radius:999px;white-space:nowrap;font-variant-numeric:tabular-nums;}
 .dg-hd .tel:hover{background:var(--brand-deep);}
 .dg-hd a:focus-visible{outline:3px solid var(--brand);outline-offset:3px;border-radius:4px;}
-@media (max-width:760px){.dg-hd nav{display:none}.dg-hd .in{justify-content:space-between;padding:12px 16px}.dg-hd .logo img{height:22px}.dg-hd .tel{font-size:13px;padding:8px 13px}}
+@media (max-width:760px){.dg-hd .in{flex-wrap:wrap;justify-content:space-between;gap:10px 16px;padding:12px 16px 10px}.dg-hd nav{order:3;width:100%;margin-left:0;gap:20px;overflow-x:auto}.dg-hd nav a{font-size:14px;white-space:nowrap}.dg-hd .logo img{height:22px}.dg-hd .tel{font-size:13px;padding:8px 13px}}
 
 /* 첫 띠 */
 .dg-hero{position:relative;overflow:hidden;background:linear-gradient(180deg,var(--brand-tint),var(--paper));border-bottom:1px solid var(--rule-soft);}
