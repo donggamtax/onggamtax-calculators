@@ -1,0 +1,5 @@
+# 홈페이지는 GitHub Pages(taxdg.com)에서 운영합니다.
+# 예전 Netlify 사이트(donggamtax.netlify.app)가 main 푸시마다 다시 빌드해 크레딧을 쓰지 않도록,
+# Netlify 빌드를 항상 건너뜁니다(ignore 명령이 0으로 끝나면 Netlify는 빌드를 취소합니다).
+[build]
+  ignore = "exit 0"
