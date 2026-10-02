@@ -106,6 +106,10 @@ main section:first-child{margin-top:72px}
 .fine{font-size:13px;color:var(--muted)}
 
 /* 사무실 */
+.gallery{columns:3 260px;column-gap:14px}
+.gallery figure{margin:0 0 14px;break-inside:avoid;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:var(--paper)}
+.gallery img{display:block;width:100%;height:auto}
+.gallery .gam img{background:#ECEEF0;padding:12px}
 .office{display:grid;gap:14px}
 .office figure{margin:0;border-radius:18px;overflow:hidden;background:var(--paper);border:1px solid var(--line)}
 .office img{width:100%;height:100%;object-fit:cover}
@@ -443,9 +447,9 @@ main section.card{margin-top:22px;display:flex;justify-content:center;gap:16px;f
         <div class="work">
           <h3>감사원에서</h3>
           <ul>
-            <li>'과세대상 재산가액 평가실태' 등 국세청, 기획재정부, 서울지방국세청, 조세심판원 감사 기획·참여</li>
-            <li>'국가통계시스템 운영 및 관리실태' 등 국토교통부, 한국부동산원 감사 기획·참여</li>
-            <li>육군본부, 국방과학연구소 기관운영감사 등 국방부, 방위사업청 감사 기획·참여</li>
+            <li>'과세대상 재산가액 평가실태' 등 국세청, 기획재정부, 서울지방국세청, 조세심판원에 대한 감사 기획 및 참여</li>
+            <li>'국가통계시스템 운영 및 관리실태' 등 국토교통부, 한국부동산원에 대한 감사 기획 및 참여</li>
+            <li>육군본부, 국방과학연구소 기관운영감사 등 국방부, 방위사업청에 대한 감사 기획 및 참여</li>
           </ul>
         </div>
         <div class="work">
@@ -453,40 +457,37 @@ main section.card{margin-top:22px;display:flex;justify-content:center;gap:16px;f
           <ul>
             <li>2015년 서울지방국세청 정기 세무조사, 2014년 서울시 지방세 세무조사 대응</li>
             <li>CEO, CFO의 종합소득세 신고 등 세금 업무 전담</li>
-            <li>용산 본사 이전, 안양 IDC센터 취득 관련 지방세 업무 주관</li>
-            <li>LG그룹 기업세무회계실무 성적 LG그룹 전체 1위</li>
+            <li>LG유플러스 용산 본사 이전, 안양 IDC센터 취득 등 지방세 관련 업무 주관</li>
+            <li>LG그룹 기업세무회계실무 성적 우수(LG그룹 전체 1위)</li>
+            <li>ABS(Asset-Backed Securities) 발행 등 자금조달 업무 관여</li>
           </ul>
         </div>
         <div class="work">
           <h3>지금 하고 있는 일</h3>
           <ul>
-            <li>S사 등 국내 법인 세무자문</li>
-            <li>세무조사, 조세불복, 경정청구 대응</li>
+            <li>법무법인 소울 전문위원</li>
+            <li>노무법인 노무케어 고문</li>
             <li>감사원·국세청 출신 세무사 세법 연구모임 감세회(監稅會) 정회원</li>
+            <li>세무조사, 조세불복, 경정청구 등</li>
+            <li>상속, 증여, 양도</li>
+            <li>세무기장, 신고 등 세무 대리</li>
+            <li>그 외 모든 세금 관련 업무</li>
           </ul>
         </div>
       </div>
     </div>
   </section>
 
-  <section aria-labelledby="rec-h">
-    <div class="sec-h"><p class="kicker">Record</p><h2 id="rec-h">감사원 감사관, 그리고 방송</h2></div>
-    <div class="rec">
-      <figure class="a"><img src="bai-appoint.jpg" alt="감사원 감사관 자격증과 임명식 사진" width="750" height="1000" loading="lazy"></figure>
-      <figure class="b"><img src="bai-cert.jpg" alt="감사관 자격증과 감사주사 임명장" width="1078" height="675" loading="lazy"></figure>
-      <figure class="c"><img src="sbs.jpg" alt="SBS 모닝와이드에 출연한 이동희 세무사" width="1200" height="679" loading="lazy"></figure>
-    </div>
-  </section>
-
-  <section aria-labelledby="office-h">
-    <div class="sec-h"><p class="kicker">Office</p><h2 id="office-h">동감 세무회계 사무실</h2></div>
-    <div class="office">
-      <figure class="main"><img src="office-shelf.jpg" alt="감사원 시절 표창과 세법 책이 놓인 동감 세무회계 사무실 서가" width="1400" height="700" loading="lazy"></figure>
-      <div class="row">
-        <figure><img src="office-desk.jpg" alt="세무사 등록증과 감사장이 놓인 상담실 선반" width="1400" height="1050" loading="lazy"></figure>
-        <figure class="sign"><img src="office-sign.jpg" alt="이동희 세무사 경력이 적힌 사무실 현판" width="900" height="1002" loading="lazy"></figure>
-        <figure class="gam"><img src="gamsehoe.jpg" alt="감사원·국세청 출신 세무사 세법 연구모임 監稅會 현판" width="900" height="588" loading="lazy"></figure>
-      </div>
+  <section aria-labelledby="gal-h">
+    <div class="sec-h"><p class="kicker">Gallery</p><h2 id="gal-h">사진으로 보는 이동희 세무사</h2></div>
+    <div class="gallery">
+      <figure><img src="bai-appoint.jpg" alt="감사원 감사관 자격증과 임명식 사진" width="750" height="1000" loading="lazy"></figure>
+      <figure><img src="office-shelf.jpg" alt="감사원 시절 표창과 세법 책이 놓인 동감 세무회계 사무실 서가" width="1400" height="700" loading="lazy"></figure>
+      <figure><img src="office-sign.jpg" alt="이동희 세무사 경력이 적힌 사무실 현판" width="900" height="1002" loading="lazy"></figure>
+      <figure><img src="office-desk.jpg" alt="세무사 등록증과 감사장이 놓인 상담실 선반" width="1400" height="1050" loading="lazy"></figure>
+      <figure><img src="sbs.jpg" alt="SBS 모닝와이드에 출연한 이동희 세무사" width="1200" height="679" loading="lazy"></figure>
+      <figure><img src="bai-cert.jpg" alt="감사관 자격증과 감사주사 임명장" width="1078" height="675" loading="lazy"></figure>
+      <figure class="gam"><img src="gamsehoe.jpg" alt="감사원·국세청 출신 세무사 세법 연구모임 監稅會 현판" width="900" height="588" loading="lazy"></figure>
     </div>
   </section>
 
