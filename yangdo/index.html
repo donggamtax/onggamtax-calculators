@@ -1035,7 +1035,7 @@ document.querySelectorAll('[data-date]').forEach(el => {
   form.addEventListener('input', render);
   form.addEventListener('change', render);
   $('reset').addEventListener('click', () => {
-    form.reset();
+    HTMLFormElement.prototype.reset.call(form);
     document.querySelectorAll('.helper[data-for]').forEach(h => h.textContent = '');
     render();
   });

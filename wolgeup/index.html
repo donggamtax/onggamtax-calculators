@@ -733,7 +733,7 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
   form.addEventListener('input', render);
   form.addEventListener('change', render);
   $('reset').addEventListener('click', () => {
-    form.reset();
+    HTMLFormElement.prototype.reset.call(form);
     setMoney($('amt'), ''); ['amt-meal', 'amt-car', 'amt-child'].forEach(id => setMoney($(id), '200000'));
     render();
   });
@@ -864,5 +864,111 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
       '<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Nanum+Myeongjo:wght@700;800&display=swap" rel="stylesheet">' +
       '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">' +
       '<style>' + css + '\n@page{size:A4;margin:0}html,body{margin:0;padding:0;background:#fff}:root{padding:0}.rpt{margin:0 auto}</style></head><body>' +
-      sheet.outerHTML + '</body>
+      sheet.outerHTML + '</body></html>';
+  }
+
+  async function save(key, btn){
+    const msg = document.getElementById('save-msg-' + key);
+    btn.disabled = true;
+    msg.textContent = '계산서를 만드는 중입니다.';
+    const sheet = buildSheet(key);
+    const holder = document.createElement('div');
+    holder.style.cssText = 'position:absolute;left:-10000px;top:0;width:794px;pointer-events:none;';
+    holder.setAttribute('aria-hidden', 'true');
+    holder.appendChild(sheet);
+    document.body.appendChild(holder);
+    const t = new Date();
+    const stamp = t.getFullYear() + String(t.getMonth() + 1).padStart(2, '0') + String(t.getDate()).padStart(2, '0');
+    const base = IDS[key].title.replace(/\s/g, '_') + '_' + stamp;
+    try{
+      let blob, name;
+      try{
+        await loadLibs();
+        if(document.fonts && document.fonts.ready) await document.fonts.ready;
+        const canvas = await window.html2canvas(sheet, {scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false, scrollX: 0, scrollY: -window.scrollY, windowWidth: 1200});
+        const pdf = new window.jspdf.jsPDF({unit: 'mm', format: 'a4', orientation: 'portrait'});
+        let w = 210, h = canvas.height * 210 / canvas.width;
+        if(h > 297){ w = w * 297 / h; h = 297; }
+        pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', (210 - w) / 2, 0, w, h);
+        blob = pdf.output('blob'); name = base + '.pdf';
+      }catch(e){
+        if(e && e.code) throw e;
+        blob = new Blob([printableHtml(sheet)], {type: 'text/html'}); name = base + '.html';
+      }
+      const r = await deliver(name, blob);
+      if(r === 'noSave'){ fallbackPrint(key, msg); return; }
+      msg.textContent = name.endsWith('.pdf')
+        ? '저장했습니다. 파일을 열어 인쇄할 수 있습니다.'
+        : 'PDF를 만들지 못해 인쇄용 파일(HTML)로 저장했습니다. 파일을 브라우저로 열어 인쇄하세요.';
+    }catch(e){
+      const code = e && e.code;
+      if(code === 'declined') msg.textContent = '저장을 취소했습니다.';
+      else if(code === 'rate_limited') msg.textContent = '저장 창이 이미 열려 있습니다. 잠시 후 다시 눌러 주세요.';
+      else fallbackPrint(key, msg);
+    }finally{
+      holder.remove();
+      btn.disabled = false;
+    }
+  }
+
+  async function fallbackPrint(key, msg){
+    msg.textContent = '계산서 이미지를 만드는 중입니다.';
+    try{ showModal(key, await makeCanvas(key)); msg.textContent = '이 화면에서는 파일 저장이 막혀 있어 계산서를 이미지로 띄웠습니다.'; }
+    catch(e){ msg.textContent = '계산서를 저장하지 못했습니다. 인터넷 연결을 확인하고 다시 눌러 주세요.'; }
+  }
+  document.querySelectorAll('[data-savebtn]').forEach(b => b.addEventListener('click', () => save(b.dataset.savebtn, b)));
+
+  /* ---------- 이미지로 저장 ---------- */
+  async function makeCanvas(key){
+    const sheet = buildSheet(key);
+    const holder = document.createElement('div');
+    holder.style.cssText = 'position:absolute;left:-10000px;top:0;width:794px;pointer-events:none;';
+    holder.setAttribute('aria-hidden', 'true');
+    holder.appendChild(sheet);
+    document.body.appendChild(holder);
+    try{
+      await loadLibs();
+      if(document.fonts && document.fonts.ready) await document.fonts.ready;
+      return await window.html2canvas(sheet, {scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false, scrollX: 0, scrollY: -window.scrollY, windowWidth: 1200});
+    }finally{ holder.remove(); }
+  }
+  let modal = null, lastFocus = null;
+  function ensureModal(){
+    if(modal) return modal;
+    modal = document.createElement('div');
+    modal.className = 'img-modal';
+    modal.hidden = true;
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-labelledby', 'im-title');
+    modal.innerHTML = '<div class="im-box"><div class="im-head"><h2 id="im-title">계산서 이미지</h2><button type="button" class="im-close">닫기</button></div>' +
+      '<p class="im-help">휴대폰은 이미지를 길게 눌러, 컴퓨터는 마우스 오른쪽 버튼을 눌러 이미지 저장을 고르세요. 저장한 이미지는 A4 한 장으로 그대로 인쇄할 수 있습니다.</p>' +
+      '<div class="im-scroll"><img alt="계산서 이미지"></div></div>';
+    document.body.appendChild(modal);
+    const close = () => { modal.hidden = true; modal.querySelector('img').removeAttribute('src'); if(lastFocus) lastFocus.focus(); };
+    modal.querySelector('.im-close').addEventListener('click', close);
+    modal.addEventListener('click', e => { if(e.target === modal) close(); });
+    modal.addEventListener('keydown', e => { if(e.key === 'Escape') close(); if(e.key === 'Tab'){ e.preventDefault(); modal.querySelector('.im-close').focus(); } });
+    return modal;
+  }
+  function showModal(key, canvas){
+    const m = ensureModal();
+    m.querySelector('#im-title').textContent = IDS[key].title;
+    m.querySelector('img').src = canvas.toDataURL('image/png');
+    lastFocus = document.activeElement;
+    m.hidden = false;
+    m.querySelector('.im-close').focus();
+  }
+  async function saveImage(key, btn){
+    const msg = document.getElementById('save-msg-' + key);
+    btn.disabled = true;
+    msg.textContent = '계산서 이미지를 만드는 중입니다.';
+    try{ showModal(key, await makeCanvas(key)); msg.textContent = ''; }
+    catch(e){ msg.textContent = '계산서 이미지를 만들지 못했습니다. 인터넷 연결을 확인하고 다시 눌러 주세요.'; }
+    finally{ btn.disabled = false; }
+  }
+  document.querySelectorAll('[data-imgbtn]').forEach(b => b.addEventListener('click', () => saveImage(b.dataset.imgbtn, b)));
+})();
+</script>
+</body>
 </html>
