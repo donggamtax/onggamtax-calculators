@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>부가가치세 계산기</title>
-<meta name="description" content="홈택스 신고도움 자료의 매출·매입 숫자를 옮겨 적으면 이번에 낼 부가가치세를 계산합니다. 일반과세자, 2026년 기준. 동감 세무회계">
+<meta name="description" content="홈택스 신고도움 자료의 매출·매입 숫자를 옮겨 적으면 이번에 낼 부가가치세를 계산합니다. 일반과세자·간이과세자, 2026년 기준. 동감 세무회계">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Nanum+Myeongjo:wght@700;800&display=swap" rel="stylesheet">
@@ -385,7 +385,7 @@ select{width:100%;}
   <p class="kicker">Tax Calculator</p>
   <header>
     <h1>부가가치세 계산기</h1>
-    <p class="lede">홈택스 신고도움 자료에 나오는 매출·매입 숫자를 그대로 옮겨 적으면 이번에 낼 부가가치세(또는 돌려받을 세금)를 계산합니다. 일반과세자 기준이며 2026년 시행 중인 부가가치세법을 따릅니다.</p>
+    <p class="lede">홈택스 신고도움 자료에 나오는 매출·매입 숫자를 그대로 옮겨 적으면 이번에 낼 부가가치세(또는 돌려받을 세금)를 계산합니다. 일반과세자와 간이과세자 모두 계산하며 2026년 시행 중인 부가가치세법을 따릅니다.</p>
   </header>
   <ul class="dg-sw" aria-label="다른 계산기">
       <li><a href="../yangdo/">양도소득세·취득세</a></li>
@@ -398,7 +398,7 @@ select{width:100%;}
   </ul>
 </div></div>
 <div class="wrap">
-  <div class="disclaimer" role="note"><strong>이용 전 확인해 주세요</strong><p>이 계산기는 동감 세무회계가 AI의 도움을 받아 제작한 것으로, 계산 결과에 오류가 있을 수 있습니다. 홈택스 자료에 없는 매출(현금 매출 등)이 빠지거나 공제되지 않는 매입이 들어가면 실제 세액과 달라지니, 신고 전에는 세무사와 상담하시기 바랍니다.</p><p>이 계산기의 이용으로 발생하는 어떠한 문제에 대해서도 동감 세무회계는 책임지지 않음을 알려드립니다.</p></div>
+  <div class="disclaimer" role="note"><strong>이용 전 확인해 주세요</strong><p>해당 계산기는 홈택스에서 조회된 내용만을 기준으로 계산됩니다. 홈택스에서 조회 불가능한 몇몇 플랫폼 매출과 현금매출 등은 따로 기입해주셔야 하고, 프랜차이즈의 경우 POS와도 대조해봐야 합니다. 때문에 가급적 세무사의 도움을 받아 신고하시는 것을 추천드립니다.</p><p>이 계산기는 동감 세무회계가 AI의 도움을 받아 제작한 것으로, 계산 결과에 오류가 있을 수 있습니다. 홈택스 자료에 없는 매출(현금 매출 등)이 빠지거나 공제되지 않는 매입이 들어가면 실제 세액과 달라지니, 신고 전에는 세무사와 상담하시기 바랍니다.</p><p>이 계산기의 이용으로 발생하는 어떠한 문제에 대해서도 동감 세무회계는 책임지지 않음을 알려드립니다.</p></div>
 
   <section class="ht-guide" aria-labelledby="ht-h">
     <h2 id="ht-h">먼저 홈택스에서 숫자를 찾아 주세요</h2>
@@ -417,13 +417,18 @@ select{width:100%;}
     <form class="panel" id="form" autocomplete="off" onsubmit="return false">
       <div class="section">
         <h2>사업자 기본사항</h2>
-        <p class="hint">홈택스 조회 화면 맨 위의 과세기간·신고구분과 같게 고르세요.</p>
-        <div class="seg two" role="radiogroup" aria-label="사업자 구분" style="margin-bottom:12px">
+        <p class="hint">홈택스 조회 화면의 신고유형·과세기간·신고구분과 같게 고르세요.</p>
+        <span class="lab" id="type-l">신고유형</span>
+        <div class="seg two" role="radiogroup" aria-labelledby="type-l" style="margin-bottom:12px">
+          <input type="radio" name="type" id="type-g" value="g" checked><label for="type-g">일반</label>
+          <input type="radio" name="type" id="type-s" value="s"><label for="type-s">간이</label>
+        </div>
+        <div class="seg two" role="radiogroup" aria-label="사업자 구분" id="who-seg" style="margin-bottom:12px">
           <input type="radio" name="who" id="who-p" value="p" checked><label for="who-p">개인사업자</label>
           <input type="radio" name="who" id="who-c" value="c"><label for="who-c">법인사업자</label>
         </div>
         <div class="fields">
-          <div class="field">
+          <div class="field" id="half-box">
             <span class="lab" id="half-l">과세기간 (2026년)</span>
             <div class="seg two" role="radiogroup" aria-labelledby="half-l">
               <input type="radio" name="half" id="half-1" value="1"><label for="half-1">1기</label>
@@ -436,6 +441,24 @@ select{width:100%;}
               <input type="radio" name="kind" id="kind-y" value="y"><label for="kind-y">예정</label>
               <input type="radio" name="kind" id="kind-f" value="f" checked><label for="kind-f">확정</label>
             </div>
+          </div>
+        </div>
+        <div class="fields" id="simple-box" hidden style="margin-top:14px">
+          <div class="field">
+            <label class="lab" for="sb-kind">업종</label>
+            <select id="sb-kind">
+              <option value="15">소매업, 음식점업, 재생용 재료수집·판매업 (15%)</option>
+              <option value="20">제조업, 농업·임업·어업, 소화물 전문 운송업 (20%)</option>
+              <option value="25">숙박업 (25%)</option>
+              <option value="30">건설업, 운수·창고업, 정보통신업 (30%)</option>
+              <option value="40">금융·보험, 전문·과학·기술서비스, 사업시설관리·임대, 부동산임대 등 (40%)</option>
+              <option value="30b">그 밖의 서비스업 (30%)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="lab" for="sb-rate">간이부가율</label>
+            <div class="unit" data-unit="%"><input type="text" inputmode="decimal" id="sb-rate" value="15"></div>
+            <div class="helper left">홈택스 사업자 기본사항의 간이부가율과 다르면 그 숫자로 고쳐 주세요.</div>
           </div>
         </div>
         <p class="ht-tip" id="period-tip"></p>
@@ -504,7 +527,7 @@ select{width:100%;}
         </div>
         <p class="ht-note">※ 카드·현금영수증 매입은 홈택스에서 '불공제'로 바꾼 건을 뺀 금액입니다. 접대비, 9인승 이하 승용차(경차 제외) 구입·유지비, 사업과 관계없는 지출은 공제되지 않으니 홈택스에서 불공제로 바꾼 뒤 다시 조회하세요.</p>
 
-        <div class="sub-q">
+        <div class="sub-q" id="ui-wrap">
           <label class="check"><input type="checkbox" id="ui-on"><span>전자계산서로 산 면세 농산물·축산물·수산물로 음식이나 제품을 만듭니다<small>음식점, 빵집, 떡집, 식품 제조업 등은 그 매입액의 일부를 매입세액으로 공제받습니다(의제매입세액공제).</small></span></label>
           <div id="ui-box" hidden>
             <div class="fields">
@@ -531,7 +554,7 @@ select{width:100%;}
             <div class="ht-r"><span class="k">등록 안 한 카드<small>대표자 개인카드 사업 사용분</small></span>
               <span class="c"><span class="cl">공급가액</span><span class="money"><input type="text" inputmode="numeric" id="p-etc" data-money data-pair="p-etc-v" aria-label="등록 안 한 카드 공급가액" placeholder="0"></span></span>
               <span class="c"><span class="cl">세액</span><span class="money"><input type="text" inputmode="numeric" id="p-etc-v" data-money aria-label="등록 안 한 카드 세액" placeholder="0"></span></span></div>
-            <div class="ht-r"><span class="k">공제받지 못할 매입세액<small>세금계산서 중 접대비·승용차·사업무관 등</small></span>
+            <div class="ht-r" id="r-no"><span class="k">공제받지 못할 매입세액<small>세금계산서 중 접대비·승용차·사업무관 등</small></span>
               <span class="c na">빼는 금액</span>
               <span class="c"><span class="cl">세액</span><span class="money"><input type="text" inputmode="numeric" id="p-no" data-money aria-label="공제받지 못할 매입세액" placeholder="0"></span></span></div>
           </div>
@@ -546,12 +569,16 @@ select{width:100%;}
             <span class="c"><span class="money"><input type="text" inputmode="numeric" id="yg" data-money aria-label="예정고지세액" placeholder="0"></span></span></div>
           <div class="ht-r" id="r-ym"><span class="k">예정신고미환급세액 (일반)</span>
             <span class="c"><span class="money"><input type="text" inputmode="numeric" id="ym" data-money aria-label="예정신고미환급세액" placeholder="0"></span></span></div>
+          <div class="ht-r" id="r-gb" hidden><span class="k">예정부과세액 (간이)</span>
+            <span class="c"><span class="money"><input type="text" inputmode="numeric" id="gb" data-money aria-label="예정부과세액 간이" placeholder="0"></span></span></div>
+          <div class="ht-r" id="r-gs" hidden><span class="k">예정신고세액 (간이)</span>
+            <span class="c"><span class="money"><input type="text" inputmode="numeric" id="gs" data-money aria-label="예정신고세액 간이" placeholder="0"></span></span></div>
           <div class="ht-r"><span class="k">매입자납부특례 기납부세액</span>
             <span class="c"><span class="money"><input type="text" inputmode="numeric" id="bp" data-money aria-label="매입자납부특례 기납부세액" placeholder="0"></span></span></div>
           <div class="ht-r"><span class="k">신용카드사를 통한 대리납부 관련 세액</span>
             <span class="c"><span class="money"><input type="text" inputmode="numeric" id="dp" data-money aria-label="신용카드사 대리납부 관련 세액" placeholder="0"></span></span></div>
         </div>
-        <p class="ht-note">※ 예정부과세액·예정신고세액(간이)은 간이과세자 칸이라 넣지 않습니다.</p>
+        <p class="ht-note" id="gen-note">※ 예정부과세액·예정신고세액(간이)은 간이과세자 칸이라 넣지 않습니다.</p>
 
         <div id="pre-wrap">
           <h3 class="ht-sub">기공제 항목</h3>
@@ -570,9 +597,9 @@ select{width:100%;}
         <h2>세액공제 확인</h2>
         <p class="hint">홈택스 화면에는 없지만 공제 여부를 정하는 항목입니다.</p>
         <div style="display:grid;gap:14px">
-          <label class="check" id="cc-wrap"><input type="checkbox" id="cc-on" checked><span>카드·현금영수증 발행세액공제 대상입니다<small>직전 연도 공급가액이 10억원 이하인 개인사업자로, 소매·음식·숙박업처럼 주로 소비자를 상대하는 업종이면 신용카드·현금영수증·판매대행 매출의 1.3%를 공제합니다(2026년까지).</small></span></label>
+          <label class="check" id="cc-wrap"><input type="checkbox" id="cc-on" checked><span>카드·현금영수증 발행세액공제 대상입니다<small id="cc-txt">직전 연도 공급가액이 10억원 이하인 개인사업자로, 소매·음식·숙박업처럼 주로 소비자를 상대하는 업종이면 신용카드·현금영수증·판매대행 매출의 1.3%를 공제합니다(2026년까지).</small></span></label>
           <label class="check" id="ef-wrap"><input type="checkbox" id="ef-on" checked><span>홈택스로 직접 신고합니다<small>사업자가 직접 전자신고하면 확정신고 때 1만원을 공제합니다. 세무대리인이 신고하면 받을 수 없습니다.</small></span></label>
-          <label class="check" id="et-wrap"><input type="checkbox" id="et-on"><span>전자세금계산서 발급세액공제 대상입니다<small>직전 연도 공급가액(면세 포함)이 3억원 미만이거나 올해 개업한 개인사업자는 발급 1건당 200원을 공제합니다.</small></span></label>
+          <label class="check" id="et-wrap"><input type="checkbox" id="et-on"><span>전자세금계산서 발급세액공제 대상입니다<small id="et-txt">직전 연도 공급가액(면세 포함)이 3억원 미만이거나 올해 개업한 개인사업자는 발급 1건당 200원을 공제합니다.</small></span></label>
           <div class="field" id="et-box" hidden>
             <label class="lab" for="et-n">이번 기간 전자세금계산서 발급 건수</label>
             <div class="unit" data-unit="건"><input type="text" inputmode="numeric" id="et-n" data-money placeholder="0"></div>
@@ -604,7 +631,8 @@ select{width:100%;}
       <ul id="laws"></ul>
     </section>
     <p><b>계산 방법</b> 카드·현금영수증·판매대행·그 밖의 매출은 합계금액의 100/110을 공급가액, 나머지를 세액으로 봅니다. 납부세액(매출세액 − 매입세액)에서 전자신고세액공제(확정신고 1만원), 전자세금계산서 발급세액공제(건당 200원), 신용카드매출전표등 발행세액공제(1.3%)를 빼고, 공제항목(예정신고미환급세액, 예정고지세액, 매입자납부특례 기납부세액, 신용카드사 대리납부 세액)을 뺀 금액이 이번에 낼 세금입니다. 발행세액공제(연 1천만원)와 전자세금계산서 발급세액공제(연 100만원)는 기공제 항목을 뺀 남은 한도와 납부세액을 넘을 수 없습니다.</p>
-    <p>일반과세자만 계산합니다. 간이과세자, 대손세액공제, 매입자발행세금계산서, 재활용폐자원 등 매입세액공제 특례, 면세사업 겸영 시 공통매입세액 안분, 가산세는 반영하지 않습니다. 의제매입세액 한도는 이번에 입력한 기간의 과세표준으로 계산하며, 법인의 예정신고분 정산과 제조업의 1년 단위 정산 특례는 반영하지 않습니다.</p>
+    <p><b>간이과세자</b> 공급대가(공급가액 + 세액) × 업종별 간이부가율 × 10%가 납부세액이며, 세금계산서·카드·현금영수증으로 받은 매입 공급대가의 0.5%, 전자세금계산서 발급세액공제, 신용카드매출전표등 발행세액공제(1.3%), 전자신고세액공제를 빼되 공제 합계는 납부세액을 넘지 않습니다. 1년 공급대가가 4,800만원 미만이면 납부의무가 면제됩니다.</p>
+    <p>대손세액공제, 간이과세자의 여러 업종 겸영, 매입자발행세금계산서, 재활용폐자원 등 매입세액공제 특례, 면세사업 겸영 시 공통매입세액 안분, 가산세는 반영하지 않습니다. 의제매입세액 한도는 이번에 입력한 기간의 과세표준으로 계산하며, 법인의 예정신고분 정산과 제조업의 1년 단위 정산 특례는 반영하지 않습니다.</p>
     <p>상담문의: 이동희 세무사(010-8278-1382)</p>
   </footer>
 </div>
@@ -664,8 +692,13 @@ select{width:100%;}
   touch($('ui-amt'));
 
   const pick = n => form.querySelector('input[name=' + n + ']:checked').value;
-  const who = () => pick('who');
-  const period = () => periodOf(who(), pick('half'), pick('kind'));
+  const simple = () => pick('type') === 's';
+  const who = () => simple() ? 'p' : pick('who');
+  const period = () => simple()
+    ? (pick('kind') === 'f'
+      ? {fin: true, half: 2, due: '2027. 1. 25.', range: '1~12월', q: '20260101-20261231', label: '2026년 확정 (1~12월)'}
+      : {fin: false, half: 1, due: '2026. 7. 27.', range: '1~6월', q: '20260101-20260630', label: '2026년 예정부과기간 (1~6월)'})
+    : periodOf(who(), pick('half'), pick('kind'));
   function fillKinds(){
     const w = who(), k = $('ui-kind').value;
     $('ui-kind').innerHTML = UI_KINDS.filter(x => !x.who || x.who === w).map(x => '<option value="' + x.v + '">' + x.label + '</option>').join('');
@@ -673,21 +706,40 @@ select{width:100%;}
   }
 
   function syncUI(){
-    const w = who(), p = period();
-    $('period-tip').innerHTML = '홈택스에서 과세기간 <b>2026년 ' + p.half + '기</b>, 신고구분 <b>' + p.q + '</b>을 고르고 사업자등록번호를 넣어 조회하세요. 신고유형이 <b>간이</b>로 나오면 이 계산기로는 계산할 수 없습니다.';
+    const w = who(), p = period(), sp = simple();
+    $('period-tip').innerHTML = sp
+      ? '간이과세자는 1월~12월 1년이 한 과세기간입니다. 홈택스 조회 화면의 사업자 기본사항에서 과세기간이 <b>' + p.q + '</b>로 나오도록 조회하고, 신고유형이 <b>간이</b>인지 확인하세요.'
+      : '홈택스에서 과세기간 <b>2026년 ' + p.half + '기</b>, 신고구분 <b>' + p.q + '</b>을 고르고 사업자등록번호를 넣어 조회하세요. 신고유형이 <b>일반</b>인지 확인하세요.';
+    $('who-seg').hidden = sp;
+    $('half-box').hidden = sp;
+    $('simple-box').hidden = !sp;
+    $('kind-f').nextElementSibling.textContent = sp ? '확정 (1~12월)' : '확정';
+    $('kind-y').nextElementSibling.textContent = sp ? '예정 (1~6월)' : '예정';
+    $('r-gb').hidden = !(sp && p.fin);
+    $('r-gs').hidden = !(sp && p.fin);
+    $('gen-note').hidden = sp;
+    $('ui-wrap').hidden = sp;
+    $('r-no').hidden = sp;
+    $('cc-txt').textContent = sp
+      ? '간이과세자는 신용카드·현금영수증·판매대행 매출의 1.3%를 공제합니다(2026년까지, 연 1천만원 한도). 직전 연도 공급대가가 4,800만원 이상이면 소매·음식·숙박업처럼 주로 소비자를 상대하는 업종일 때만 받을 수 있습니다.'
+      : '직전 연도 공급가액이 10억원 이하인 개인사업자로, 소매·음식·숙박업처럼 주로 소비자를 상대하는 업종이면 신용카드·현금영수증·판매대행 매출의 1.3%를 공제합니다(2026년까지).';
+    $('et-txt').textContent = sp
+      ? '세금계산서를 발급하는 간이과세자(직전 연도 공급대가 4,800만원 이상)가 전자세금계산서를 발급하면 1건당 200원을 공제합니다.'
+      : '직전 연도 공급가액(면세 포함)이 3억원 미만이거나 올해 개업한 개인사업자는 발급 1건당 200원을 공제합니다.';
     $('cc-wrap').hidden = w !== 'p';
     $('et-wrap').hidden = w !== 'p';
     $('et-box').hidden = !(w === 'p' && $('et-on').checked);
     $('pre-wrap').hidden = w !== 'p';
     $('ef-wrap').hidden = !p.fin;
-    $('r-yg').hidden = !p.fin;
-    $('r-ym').hidden = !p.fin;
+    $('r-yg').hidden = sp || !p.fin;
+    $('r-ym').hidden = sp || !p.fin;
     $('ui-box').hidden = !$('ui-on').checked;
   }
 
   /* ---------- 계산 ---------- */
   const split = total => { const s = Math.round(total * 10 / 11); return [s, total - s]; };
   function calc(){
+    if(simple()) return calcSimple();
     const w = who(), p = period();
     const v = id => num($(id));
     const r = {w, p};
@@ -750,8 +802,102 @@ select{width:100%;}
     return r;
   }
 
+  /* ---------- 간이과세자 (부가가치세법 제63조, 제69조, 시행령 제111조) ---------- */
+  function calcSimple(){
+    const p = period(), v = id => num($(id));
+    const r = {w: 'p', p, simple: true};
+    r.rate = Math.min(Math.max(parseFloat(($('sb-rate').value || '').replace(/[^0-9.]/g, '')) || 0, 0), 50) / 100;
+    // 매출: 간이과세자는 부가세를 포함한 공급대가가 과세표준
+    r.ti = v('s-ti') + v('s-ti-v') + v('s-pti') + v('s-pti-v');
+    r.cardPg = v('s-card') + v('s-pg');
+    r.cash = v('s-cash') + v('s-cash-v');
+    r.dup = Math.min(v('s-dup'), r.cardPg + r.cash);
+    r.rcpTotal = r.cardPg + r.cash - r.dup;
+    r.etcTotal = v('s-etc');
+    r.zero = v('s-zero');
+    r.free = v('s-inv');
+    r.taxable = r.ti + r.rcpTotal + r.etcTotal;
+    r.total = r.taxable + r.zero;
+    r.calcTax = Math.floor(r.taxable * r.rate * 0.1);
+    r.exempt = p.fin && r.total < 48000000;
+    r.payBase = r.exempt ? 0 : r.calcTax;
+    // 매입: 세금계산서등을 받은 공급대가 × 0.5%
+    r.buys = [['세금계산서', v('p-ti') + v('p-ti-v') + v('p-pti') + v('p-pti-v')], ['사업용 신용카드', v('p-card') + v('p-card-v')], ['현금영수증', v('p-cash') + v('p-cash-v')], ['화물운전자 복지카드', v('p-truck') + v('p-truck-v')], ['등록 안 한 카드', v('p-etc') + v('p-etc-v')]];
+    r.buyTotal = r.buys.reduce((a, x) => a + x[1], 0);
+    r.pinv = v('p-inv');
+    // 공제 합계는 납부세액을 넘지 못함 (제63조 제6항)
+    let room = r.payBase;
+    r.inRaw = Math.floor(r.buyTotal * 0.005);
+    r.inCr = Math.min(r.inRaw, room); room -= r.inCr;
+    r.etN = $('et-on').checked ? v('et-n') : 0;
+    r.etUsed = Math.min(v('et-used'), 1000000);
+    r.etRaw = r.etN * 200; r.etCap = 1000000 - r.etUsed;
+    r.et = Math.min(r.etRaw, r.etCap, room); room -= r.et;
+    r.ccOn = $('cc-on').checked;
+    r.ccUsed = Math.min(v('cc-used'), 10000000);
+    r.ccRaw = r.ccOn ? Math.floor(r.rcpTotal * 0.013) : 0; r.ccCap = 10000000 - r.ccUsed;
+    r.cc = Math.min(r.ccRaw, r.ccCap, room); room -= r.cc;
+    r.ef = (p.fin && $('ef-on').checked) ? Math.min(10000, room) : 0;
+    r.pay = r.payBase - r.inCr - r.et - r.cc - r.ef;
+    r.gb = p.fin ? v('gb') : 0;
+    r.gs = p.fin ? v('gs') : 0;
+    r.bp = v('bp'); r.dp = v('dp');
+    r.final = r.pay - r.gb - r.gs - r.bp - r.dp;
+    return r;
+  }
+
+  function renderSimple(r){
+    const p = r.p, out = $('out');
+    $('meta').textContent = '간이과세자 · 간이부가율 ' + Math.round(r.rate * 1000) / 10 + '% · ' + p.label + ' · 신고기한 ' + p.due;
+    if(!(r.total || r.buyTotal || r.free || r.pinv)){
+      out.innerHTML = '<div class="empty">홈택스 신고자료 통합조회 화면의 숫자를 왼쪽 같은 이름 칸에 옮겨 적으세요. 간이과세자는 공급가액과 세액을 더한 금액(공급대가)으로 계산합니다.</div>';
+      return;
+    }
+    let rows = [], n = 0;
+    const add = (label, value, opt) => rows.push({no: CIRC[n++] || '', label, value, ...(opt || {})});
+    const flush = () => { const h = rowsHTML(rows); rows = []; return h; };
+    if(r.ti) add('세금계산서', won(r.ti), {sub: '공급가액 + 세액'});
+    if(r.cardPg) add('신용카드·판매(결제)대행', won(r.cardPg));
+    if(r.cash) add('현금영수증', won(r.cash), {sub: '공급가액 + 세액'});
+    if(r.dup) add('중복분 빼기', won(r.dup), {minus: true});
+    if(r.etcTotal) add('영수증 없는 현금매출', won(r.etcTotal));
+    if(r.zero) add('영세율 매출', won(r.zero), {sub: '세율 0%'});
+    add('공급대가 합계 (과세표준)', won(r.total), {sum: true});
+    const sec1 = flush();
+
+    add('납부세액', won(r.calcTax), {key: true, sub: won(r.taxable) + ' × 간이부가율 ' + Math.round(r.rate * 1000) / 10 + '% × 10%'});
+    if(r.exempt) add('납부의무 면제', won(r.calcTax), {minus: true, sub: '1년 공급대가 4,800만원 미만'});
+    if(r.buyTotal) add('매입 세금계산서등 수취세액공제', won(r.inCr), {minus: true, sub: '매입 공급대가 ' + won(r.buyTotal) + ' × 0.5%' + (r.inCr < r.inRaw ? ' (납부세액 한도)' : '')});
+    if(r.et) add('전자세금계산서 발급세액공제', won(r.et), {minus: true, sub: r.etN.toLocaleString('ko-KR') + '건 × 200원'});
+    if(r.cc) add('신용카드매출전표등 발행세액공제', won(r.cc), {minus: true, sub: won(r.rcpTotal) + ' × 1.3%' + (r.cc < r.ccRaw ? (r.cc === r.ccCap ? ' (연 1천만원 한도)' : ' (납부세액 한도)') : '')});
+    if(r.ef) add('전자신고세액공제', won(r.ef), {minus: true, sub: '확정신고 직접 전자신고'});
+    if(r.gb) add('예정부과세액', won(r.gb), {minus: true});
+    if(r.gs) add('예정신고세액', won(r.gs), {minus: true});
+    if(r.bp) add('매입자납부특례 기납부세액', won(r.bp), {minus: true});
+    if(r.dp) add('신용카드사 대리납부 세액', won(r.dp), {minus: true});
+    const sec2 = flush();
+
+    const pay = r.final >= 0;
+    const notes = [];
+    if(r.exempt) notes.push('올해 공급대가 합계가 4,800만원 미만이라 납부의무가 면제됩니다. 신고는 해야 합니다.' + (r.gb || r.gs ? ' 미리 낸 예정부과·예정신고세액은 돌려받습니다.' : ''));
+    if(!p.fin) notes.push('예정부과기간(1~6월)은 보통 세무서가 고지한 금액을 내면 되고, 이 기간에 세금계산서를 발급했다면 예정신고를 해야 합니다. 납부의무 면제(4,800만원 미만)는 1년 치로 확정신고 때 판단합니다.');
+    if(r.total >= 104000000) notes.push('1년 공급대가가 1억 400만원 이상이면 다음 해 7월 1일부터 일반과세자로 바뀝니다(부동산임대업·과세유흥장소는 4,800만원 이상).');
+    if(r.ccOn && r.ccRaw > r.cc && r.cc !== r.ccCap) notes.push('간이과세자는 공제액이 납부세액보다 많아도 환급되지 않아, 남는 공제 ' + won(r.ccRaw - r.cc) + '은 없어집니다.');
+    if(r.free) notes.push('전자계산서 매출 ' + won(r.free) + '은 면세 매출이라 계산에서 빠집니다.');
+    if(r.pinv) notes.push('전자계산서 매입 ' + won(r.pinv) + '은 면세 매입이라 공제되지 않습니다. 간이과세자는 의제매입세액공제를 받을 수 없습니다.');
+    notes.push('여러 업종을 함께 하면 업종별로 간이부가율을 나눠 계산해야 합니다. 이 계산기는 하나의 간이부가율로 계산합니다.');
+    notes.push('홈택스 자료는 신고 직전까지 계속 갱신되니, 신고하는 날 다시 조회해 숫자를 확인하세요.');
+    out.innerHTML =
+      '<div class="res-top"><div><b>' + (pay ? '이번에 낼 세금' : '돌려받을 세금') + '</b><span class="hl' + (pay ? '' : ' ref') + '">' + won(Math.abs(r.final)) + '</span></div><div><b>신고·납부 기한</b><span>' + p.due + '</span></div></div>' +
+      '<div class="sub-head">매출 (공급대가)</div>' + sec1 +
+      '<div class="sub-head">납부세액과 공제</div>' + sec2 +
+      '<div class="total"><span class="tl">' + (pay ? '차가감 납부할 세액' : '환급받을 세액') + '<small>간이과세자 · ' + p.label + '</small></span><span class="tv">' + won(Math.abs(r.final)) + '</span></div>' +
+      '<ul class="notes" style="margin-top:14px">' + notes.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
+  }
+
   function render(){
     syncUI();
+    if(simple()) return renderSimple(calc());
     const r = calc(), p = r.p, out = $('out');
     $('meta').textContent = '일반과세자 · ' + (r.w === 'p' ? '개인' : '법인') + ' · ' + p.label + ' · 신고기한 ' + p.due;
     if(!(r.base || r.outTax || r.inTax || r.free || r.pinv)){
@@ -824,17 +970,18 @@ select{width:100%;}
   }
 
   form.querySelectorAll('input[name=who]').forEach(x => x.addEventListener('change', fillKinds));
+  $('sb-kind').addEventListener('change', () => { $('sb-rate').value = parseInt($('sb-kind').value, 10); });
   form.addEventListener('input', render);
   form.addEventListener('change', render);
   $('reset').addEventListener('click', () => {
-    const keep = ['who', 'half', 'kind'].map(n => [n, pick(n)]);
+    const keep = ['type', 'who', 'half', 'kind'].map(n => [n, pick(n)]);
     HTMLFormElement.prototype.reset.call(form);
     form.querySelectorAll('[data-money]').forEach(el => { setMoney(el, ''); delete el.dataset.touched; });
     keep.forEach(([n, val]) => { form.querySelector('input[name=' + n + '][value="' + val + '"]').checked = true; });
     fillKinds();
     render();
   });
-  window.__bugase = {calc};
+  window.__bugase = {calc, simple};
   fillKinds();
   render();
 })();
@@ -855,6 +1002,9 @@ select{width:100%;}
     {c: '부가가치세법 제46조 제1항, 시행령 제88조', l: ['부가가치세법', '제46조'], s: '신용카드매출전표등 발행세액공제: 직전 연도 공급가액 10억원 이하 개인사업자, 발행금액의 1.3%·연 1천만원 한도(2026년 12월 31일까지)'},
     {c: '부가가치세법 제47조, 시행령 제89조', l: ['부가가치세법', '제47조'], s: '전자세금계산서 발급세액공제: 직전 연도 공급가액 3억원 미만 개인사업자 등, 건당 200원·연 100만원 한도(2027년까지)'},
     {c: '조세특례제한법 제104조의8 제2항', l: ['조세특례제한법', '제104조의8'], s: '납세자가 직접 전자신고하면 확정신고 때 1만원 공제'},
+    {c: '부가가치세법 제63조, 시행령 제111조', l: ['부가가치세법', '제63조'], s: '간이과세자 납부세액 = 공급대가 × 업종별 부가가치율(15~40%) × 10%, 매입 세금계산서등 공급대가의 0.5% 공제, 공제 합계는 납부세액 한도'},
+    {c: '부가가치세법 제69조', l: ['부가가치세법', '제69조'], s: '간이과세자 1년 공급대가 4,800만원 미만이면 납부의무 면제'},
+    {c: '부가가치세법 제66조, 제67조', l: ['부가가치세법', '제66조'], s: '간이과세자 예정부과(1~6월, 직전 납부세액의 50%)와 다음 해 1월 25일까지 확정신고'},
     {c: '부가가치세법 제48조, 제49조', l: ['부가가치세법', '제48조'], s: '예정신고·예정고지(직전 과세기간 납부세액의 50%)와 확정신고: 기간이 끝난 뒤 25일 이내'}
   ];
   const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -889,7 +1039,7 @@ select{width:100%;}
     const r = window.__bugase.calc();
     const g = id => Number((form.querySelector('#' + id).value || '').replace(/[^0-9]/g, '')) || 0;
     const pair = (a, b) => '공급가액 ' + w(g(a)) + ', 세액 ' + w(g(b));
-    items.push(['사업자', '일반과세자 · ' + (r.w === 'p' ? '개인' : '법인')]);
+    items.push(['사업자', r.simple ? '간이과세자 · 간이부가율 ' + Math.round(r.rate * 1000) / 10 + '%' : '일반과세자 · ' + (r.w === 'p' ? '개인' : '법인')]);
     items.push(['신고 기간', r.p.label + ' (기한 ' + r.p.due + ')']);
     if(g('s-ti') || g('s-ti-v')) items.push(['매출 전자세금계산서', pair('s-ti', 's-ti-v')]);
     if(g('s-inv')) items.push(['매출 전자계산서', w(g('s-inv'))]);
@@ -903,9 +1053,11 @@ select{width:100%;}
     if(g('p-ti') || g('p-ti-v')) items.push(['매입 전자세금계산서', pair('p-ti', 'p-ti-v')]);
     if(g('p-inv')) items.push(['매입 전자계산서', w(g('p-inv'))]);
     [['p-card', '매입 사업용 신용카드'], ['p-cash', '매입 현금영수증'], ['p-truck', '매입 화물운전자 복지카드'], ['p-pti', '매입 종이 세금계산서'], ['p-etc', '매입 등록 안 한 카드']].forEach(([id, k]) => { if(g(id) || g(id + '-v')) items.push([k, pair(id, id + '-v')]); });
-    if(g('p-no')) items.push(['공제받지 못할 매입세액', w(g('p-no'))]);
+    if(!r.simple && g('p-no')) items.push(['공제받지 못할 매입세액', w(g('p-no'))]);
     if(r.ui) items.push(['의제매입 대상 매입액', w(r.ui.amt) + ' (' + r.ui.k.label + ')']);
     if(r.yg) items.push(['예정고지세액', w(r.yg)]);
+    if(r.gb) items.push(['예정부과세액(간이)', w(r.gb)]);
+    if(r.gs) items.push(['예정신고세액(간이)', w(r.gs)]);
     if(r.ym) items.push(['예정신고미환급세액', w(r.ym)]);
     if(r.bp) items.push(['매입자납부특례 기납부세액', w(r.bp)]);
     if(r.dp) items.push(['신용카드사 대리납부 세액', w(r.dp)]);
@@ -933,7 +1085,7 @@ select{width:100%;}
       '<h3>입력 조건</h3><div class="conds">' + conds + '</div>' +
       '<h3>계산 내역</h3>' + document.getElementById(c.out).innerHTML +
       '<h3>메모</h3><div class="memo">' + esc(memo) + '</div>' +
-      '<div class="foot">이 계산서는 동감 세무회계가 AI의 도움을 받아 제작한 계산기로 작성되었으며, 계산 결과에 오류가 있을 수 있습니다. 홈택스 신고도움 자료와 입력한 금액을 기준으로 한 일반과세자 부가가치세 추정액이며, 홈택스에 없는 매출 누락, 공제되지 않는 매입, 가산세 등에 따라 실제 세액은 달라질 수 있습니다. 이 계산기의 이용으로 발생하는 어떠한 문제에 대해서도 동감 세무회계는 책임지지 않습니다. 상담문의: 이동희 세무사(010-8278-1382)</div>';
+      '<div class="foot">이 계산서는 동감 세무회계가 AI의 도움을 받아 제작한 계산기로 작성되었으며, 계산 결과에 오류가 있을 수 있습니다. 홈택스 신고도움 자료와 입력한 금액을 기준으로 한 부가가치세 추정액이며, 홈택스에 없는 매출 누락, 공제되지 않는 매입, 가산세 등에 따라 실제 세액은 달라질 수 있습니다. 이 계산기의 이용으로 발생하는 어떠한 문제에 대해서도 동감 세무회계는 책임지지 않습니다. 상담문의: 이동희 세무사(010-8278-1382)</div>';
     return el;
   }
 
