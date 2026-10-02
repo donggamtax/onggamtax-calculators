@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>대표세무사 소개 | 동감 세무회계 이동희 세무사</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<meta name="description" content="감사원에서 국세청을 감사하고 LG유플러스에서 대기업 세무를 맡았던 17년 차 이동희 세무사. 경정청구·과세예고통지·세무조사 대응, 상속·증여, 양도, 종합소득세 상담. 경기도 고양시 향동 동감 세무회계.">
+<meta name="description" content="감사원에서 국세청을 감사하고 LG유플러스에서 대기업 세무를 맡았던 이동희 세무사. 경정청구·과세예고통지·세무조사 대응, 상속·증여, 양도, 종합소득세 상담과 고객 후기. 경기도 고양시 향동 동감 세무회계.">
 <link rel="icon" href="../logo.png">
 <style>
 :root{
@@ -201,6 +201,54 @@ footer a{color:var(--brand);font-weight:600;text-decoration:none}
 .cv2 .lg{margin-left:auto;width:108px;height:26px;display:flex;align-items:center;justify-content:flex-end}
 .cv2 .lg img{max-width:100%;max-height:100%;width:auto;height:auto}
 @media (max-width:560px){.cv2{padding:18px 18px 20px}.cv2 li{font-size:15.5px}.cv2 .lg{display:none}.cv2 li small{flex-basis:100%;padding-left:48px;margin-top:-6px}}
+
+/* 소개 글 */
+main section.intro{margin-top:80px}
+.letter{position:relative;background:#fff;border:1px solid var(--line);border-radius:24px;padding:40px 48px 36px;box-shadow:0 18px 36px -30px rgba(24,35,43,.35);max-width:880px}
+.letter::before{content:"";position:absolute;left:0;top:32px;bottom:32px;width:4px;border-radius:0 4px 4px 0;background:linear-gradient(var(--brand),var(--warm))}
+.letter p{font-size:17px;line-height:1.85;color:#2F3B43}
+.letter p+p{margin-top:14px}
+.letter b{color:var(--ink);font-weight:700;background:linear-gradient(transparent 70%,rgba(184,148,92,.22) 70%)}
+.letter .sig{margin-top:26px;text-align:right;font-size:15px;color:var(--muted)}
+.letter .sig b{font-size:20px;font-weight:800;margin-left:6px;background:none;letter-spacing:.06em}
+.why h3{font-size:19.5px}
+/* 사례 더 보기, 후기 더 보기 */
+details>summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:11px 20px;border:1px solid #C9D3D8;border-radius:999px;font-weight:700;font-size:15px;color:var(--brand);background:#fff}
+details>summary::-webkit-details-marker{display:none}
+details>summary::after{content:"";width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translateY(-3px)}
+details[open]>summary::after{transform:rotate(-135deg) translateY(-1px)}
+details[open]>summary{margin-bottom:14px}
+details>summary:hover{border-color:var(--brand)}
+/* 후기 */
+.score{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:6px}
+.score div{background:var(--tint);border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:2px}
+.score b{font-size:30px;font-weight:800;color:var(--brand);letter-spacing:-.03em;line-height:1.2;font-variant-numeric:tabular-nums}
+.score b small{font-size:16px;margin-left:2px}
+.score span{font-size:14px;color:var(--muted);font-weight:600}
+.score-note{margin-bottom:18px}
+.rvs{columns:3 300px;column-gap:14px}
+.rv{break-inside:avoid;margin:0 0 14px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px 22px 18px;display:flex;flex-direction:column;gap:12px}
+.rv .stars{color:#F2A93B;font-size:15px;letter-spacing:2px}
+.rv blockquote{font-size:15.5px;line-height:1.75;color:#2F3B43}
+.rv figcaption{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:13.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+.rv figcaption b{color:var(--ink);font-size:14.5px}
+.rv.sm{background:var(--paper);padding:18px 20px 14px}
+.rv.sm blockquote{font-size:15px}
+/* 감사원, 방송 */
+.rec{display:grid;grid-template-columns:minmax(0,.75fr) minmax(0,1.25fr);grid-template-rows:auto auto;gap:14px}
+.rec figure{margin:0;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:var(--paper)}
+.rec img{width:100%;height:100%;object-fit:cover}
+.rec .a{grid-row:span 2}
+.rec .b,.rec .c{aspect-ratio:16/9}
+/* 상담 띠 */
+.band .lead{font-size:15.5px;color:rgba(255,255,255,.85);margin:-4px 0 18px;max-width:560px;line-height:1.7}
+/* 명함 */
+main section.card{margin-top:22px;display:flex;justify-content:center;gap:16px;flex-wrap:wrap}
+.card figure{margin:0;width:386px;max-width:100%;border-radius:12px;overflow:hidden;box-shadow:0 18px 36px -24px rgba(24,35,43,.5);border:1px solid var(--line)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (max-width:960px){.score{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:760px){.rec{grid-template-columns:1fr}.rec .a{grid-row:auto;aspect-ratio:3/4}}
+@media (max-width:560px){.letter{padding:28px 22px 24px}.letter p{font-size:16px}.letter::before{top:24px;bottom:24px}.score b{font-size:26px}.rv{padding:20px 18px 16px}}
 </style>
 </head>
 <body>
@@ -250,28 +298,115 @@ footer a{color:var(--brand);font-weight:600;text-decoration:none}
 <div class="wrap">
 
 
+  <section class="intro" aria-labelledby="intro-h">
+    <div class="sec-h"><p class="kicker">About</p><h2 id="intro-h">안녕하세요.<br>동감 세무회계 이동희 세무사입니다.</h2></div>
+    <div class="letter">
+      <p>저는 <b>2010년 제47회 세무사 시험</b>을 통해 세무사 자격을 취득했습니다.</p>
+      <p>세무사 자격증을 취득한 뒤에는 압구정에 있는 세무법인에서 수습세무사 생활을 한 뒤 <b>LG유플러스 금융팀</b>으로 입사하여 자금의 조달, 집행 업무 등을 수행한 뒤 <b>세무회계팀</b>으로 옮겨 원천세, 부가세, 법인세, 세무조사 대응 등 다양한 업무를 수행하였습니다.</p>
+      <p>그 후 7급 공무원 시험을 통해 <b>감사원 감사관</b>으로 입직하여, 국세청, 서울지방국세청, 기획재정부 등에 대한 감사를 수행하였습니다.</p>
+      <p>이후 마포구에 있는 세무법인에서 다시 세무사 사무실의 실전 감각(?)을 익힌 뒤 <b>2023년 6월 26일 동감 세무회계</b> 사무실을 열었습니다.</p>
+      <p>현재는 대표세무사로 근무하면서, <b>법무법인 소울</b>에서 전문위원, <b>노무법인 노무케어</b>에서 고문 세무사 역할을 하는 등 다양한 업무를 수행하고 있습니다.</p>
+      <p class="sig">동감 세무회계 대표세무사 <b>이동희</b></p>
+    </div>
+  </section>
+
   <section aria-labelledby="why-h">
-    <div class="sec-h"><p class="kicker">Why Donggam</p><h2 id="why-h">이동희 세무사를 선택하셔야 하는 이유</h2></div>
+    <div class="sec-h"><p class="kicker">Strength</p><h2 id="why-h">이동희 세무사의 강점</h2></div>
     <ul class="why">
+      <li>
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V8h6v13"/><path d="M11 21V4h8v17"/><path d="M14 8h2M14 12h2M14 16h2"/></svg></span>
+        <span class="k">대기업 + 공무원</span>
+        <h3>기업의 업무와 공무원 업무를 두루 경험했습니다</h3>
+        <p>아직 젊지만 다양한 경험을 했고, 이로 인해 숙련된 업무능력과 대관 능력을 갖추고 있다고 자부합니다. 대기업에서 생활했기 때문에 높은 업무 수행 능력으로 다양한 상황에 유연하게 대처할 수 있고, 공무원 생활을 했기 때문에 행정적인 일에 대해서도 능숙하게 해낼 수 있습니다.</p>
+      </li>
       <li>
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></span>
         <span class="k">감사원 출신</span>
-        <h3>과세관청의 시각을 압니다</h3>
-        <p>감사원에서 국세청, 서울지방국세청, 기획재정부, 조세심판원을 감사했습니다. 세무조사 선정 기준과 과세 관점을 알기에 소명요구, 과세예고통지, 세무조사에 정확하게 대응합니다.</p>
-      </li>
-      <li>
-        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V8h6v13"/><path d="M11 21V4h8v17"/><path d="M14 8h2M14 12h2M14 16h2"/></svg></span>
-        <span class="k">대기업 세무 실무</span>
-        <h3>1원도 소홀히 하지 않습니다</h3>
-        <p>매출 12조 원 LG유플러스에서 부가세·원천세·지방세 신고와 정기 세무조사 대응, CEO·CFO의 종합소득세 신고를 맡았습니다. 대표님께는 세무사를 넘어 유능한 CFO가 되어 드리겠습니다.</p>
+        <h3>국세청이 어떻게 일하는지 압니다</h3>
+        <p>감사원에서 근무하면서 국세청, 일선 세무서 등에서 어떻게 일하는지, 어떤 의도를 갖고 어떤 절차를 통해 이를 수행해 내는지에 대해 숙지했습니다. 국세청 조사관분들이 진행한 세무조사 등의 문제점을 찾아내고 지적하기 위해 수많은 세무조사 사례를 보고 분석한 것은 저의 커다란 자산입니다.</p>
       </li>
       <li>
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"/></svg></span>
-        <span class="k">친절하고 성실하게</span>
-        <h3>세무사가 직접 챙깁니다</h3>
-        <p>세무사가 직접 기장 업무를 챙기고 언제든 바로 답해 드립니다. 해마다 가결산으로 다음 해 세금을 미리 예측합니다. 제게 이득이어도 고객께 이득이 아니면 권하지 않습니다.</p>
+        <span class="k">친절하고 상세하게</span>
+        <h3>고객의 입장에서, 고객의 이득만 생각합니다</h3>
+        <p>무엇보다도 친절하고 상세합니다. 최대한 쉽게 이해하실 수 있도록 상세히 설명드리려 노력합니다. 함께하는 업체 중 단 한 곳도 저희를 떠나지 않으셨고, 고객분들의 강력한 신뢰를 받으며 즐거운 관계를 유지하고 있음은 저의 가장 큰 자부심입니다.</p>
       </li>
     </ul>
+  </section>
+
+
+  <section id="cases" aria-labelledby="case-h">
+    <div class="sec-h"><p class="kicker">Cases</p><h2 id="case-h">주요 절세·환급 사례</h2><p>경정청구와 과세예고통지 대응으로 고객께 돌려드린 세금입니다. 누르면 블로그의 자세한 이야기로 이동합니다.</p></div>
+    <div class="cases">
+      <a class="case" href="https://blog.naver.com/francepigeon/223547328458" target="_blank" rel="noopener noreferrer"><span><span class="t">상속세 경정청구</span><span class="d">이미 낸 상속세를 다시 검토해 환급</span></span><span class="amt">1억 6,600만 원<small>환급</small></span></a>
+      <a class="case" href="https://blog.naver.com/francepigeon/224363266700" target="_blank" rel="noopener noreferrer"><span><span class="t">소득세 경정청구</span><span class="d">임대사업자의 빠진 이자비용을 반영해 환급</span></span><span class="amt">5,300만 원<small>환급</small></span></a>
+      <a class="case" href="https://blog.naver.com/francepigeon/224408207730" target="_blank" rel="noopener noreferrer"><span><span class="t">소득세 경정청구</span><span class="d">상담 중 창업감면 대상임을 찾아내 환급</span></span><span class="amt">3,600만 원<small>환급</small></span></a>
+      <a class="case" href="https://blog.naver.com/francepigeon/224073241587" target="_blank" rel="noopener noreferrer"><span><span class="t">부가세 경정청구</span><span class="d">휴대폰 대리점의 부가세를 다시 따져 환급</span></span><span class="amt">2,500만 원<small>환급</small></span></a>
+      <a class="case" href="https://blog.naver.com/francepigeon/224307844780" target="_blank" rel="noopener noreferrer"><span><span class="t">종합소득세 경정청구</span><span class="d">과거 신고서에서 비과세 특례 누락을 찾아 환급</span></span><span class="amt">1,476만 원<small>환급</small></span></a>
+      <a class="case" href="https://blog.naver.com/francepigeon/224392899447" target="_blank" rel="noopener noreferrer"><span><span class="t">과세예고통지 대응</span><span class="d">주택임대사업자, 2,600만 원 고지 예정을 환급으로</span></span><span class="amt">300만 원<small>환급으로 전환</small></span></a>
+      <a class="case" href="https://blog.naver.com/francepigeon/224140229909" target="_blank" rel="noopener noreferrer"><span><span class="t">과세예고통지 대응</span><span class="d">공동사업 형제의 고지 예정 세액을 줄임</span></span><span class="amt">2,123만 → 217만 원<small>감액</small></span></a>
+      <a class="case" href="https://blog.naver.com/francepigeon/223588861719" target="_blank" rel="noopener noreferrer"><span><span class="t">과세예고통지 대응</span><span class="d">종합소득세 과세예고통지에 대응해 세금을 막음</span></span><span class="amt">1,000만 → 0원<small>감액</small></span></a>
+    </div>
+    <details class="more-cases">
+      <summary>사례 8건 더 보기</summary>
+      <div class="cases">
+      <a class="case" href="https://blog.naver.com/francepigeon/223505340007" target="_blank" rel="noopener noreferrer"><span><span class="t">종합소득세 경정청구</span><span class="d">환급이 나오는 원리를 짚어 종소세 환급</span></span><span class="amt">2,244만 원<small>환급</small></span></a>
+      <a class="case" href="https://blog.naver.com/francepigeon/223843801650" target="_blank" rel="noopener noreferrer"><span><span class="t">부가세 경정청구</span><span class="d">신규 계약 업체의 기존 신고를 확인해 환급</span></span><span class="amt">595만 원<small>환급</small></span></a>
+      <a class="case" href="https://blog.naver.com/francepigeon/223766962693" target="_blank" rel="noopener noreferrer"><span><span class="t">부가세 경정청구</span><span class="d">새 업체와 상담하며 얻은 정보로 환급</span></span><span class="amt">308만 원<small>환급</small></span></a>
+      <a class="case" href="https://blog.naver.com/francepigeon/224343480996" target="_blank" rel="noopener noreferrer"><span><span class="t">종합소득세 경정청구</span><span class="d">중소기업 취업자 특별감면을 찾아 환급</span></span><span class="amt">300만 원<small>환급</small></span></a>
+      <a class="case" href="https://blog.naver.com/francepigeon/224216233333" target="_blank" rel="noopener noreferrer"><span><span class="t">소득세 경정청구</span><span class="d">주택 신축판매업자의 과거 신고를 검토해 환급</span></span><span class="amt">291만 원<small>환급</small></span></a>
+      <a class="case" href="https://blog.naver.com/francepigeon/223605602366" target="_blank" rel="noopener noreferrer"><span><span class="t">과세예고통지 대응</span><span class="d">종합소득세 신고누락 과세예고통지에 대응</span></span><span class="amt">3,300만 → 880만 원<small>감액</small></span></a>
+      <a class="case" href="https://blog.naver.com/francepigeon/223970734786" target="_blank" rel="noopener noreferrer"><span><span class="t">과세예고통지 대응</span><span class="d">수정신고로 고지 예정 세액을 줄임</span></span><span class="amt">441만 → 139만 원<small>감액</small></span></a>
+      <a class="case" href="https://blog.naver.com/francepigeon/223560371499" target="_blank" rel="noopener noreferrer"><span><span class="t">경정청구 5건</span><span class="d">최근 넣은 경정청구 5건 모두 환급 완료</span></span><span class="amt">100%<small>환급 완료</small></span></a>
+      </div>
+    </details>
+    <div class="more">
+      <a href="https://blog.naver.com/francepigeon" target="_blank" rel="noopener noreferrer">블로그에서 더 많은 사례 보기 →</a>
+      <span class="fine">사례의 결과는 개별 사정에 따라 다르며, 같은 결과를 보장하지 않습니다.</span>
+    </div>
+  </section>
+
+  <section id="reviews" aria-labelledby="rev-h">
+    <div class="sec-h"><p class="kicker">Reviews</p><h2 id="rev-h">고객님들이 남겨주신 후기</h2><p>네이버 예약과 온라인 상담에서 남겨주신 후기를 그대로 옮겼습니다.</p></div>
+    <div class="score" aria-label="온라인 상담 후기 평가">
+      <div><b>24</b><span>온라인 상담 후기</span></div>
+      <div><b>100<small>점</small></b><span>친절도</span></div>
+      <div><b>100<small>점</small></b><span>전문성</span></div>
+      <div><b>100<small>점</small></b><span>가격 만족도</span></div>
+    </div>
+    <p class="fine score-note">점수는 온라인 상담 후기 중 평가가 표시된 후기 기준입니다.</p>
+    <div class="rvs">
+      <figure class="rv"><div class="stars" aria-label="별점 5점">★★★★★</div><blockquote>세무 상담받으러 이곳저곳 상담받다가 다른 곳은 너무 애매하게 얘기해 주시고, 제대로 된 정보를 얻지 못해서 답답한 마음에 AI한테 적극적이고 잘하는 세무사 알려달라 하니까 알려줘서 바로 남는 시간에 예약했는데 왜 추천했는지 알 것 같아요!!! 정말 2주 넘게 답답하고 신경 쓰여서 잠도 제대로 못 잤는데 명쾌하게 잘 상담해 주시고 자세히 꼼꼼하게 설명해 주셔서 상담 이후로 맘 편해졌네요!!! 주변에 많이 알릴게요!!!</blockquote><figcaption><b>yk****</b><span>양도·상속·증여 상담 · 2026.2.</span></figcaption></figure>
+      <figure class="rv"><div class="stars" aria-label="별점 5점">★★★★★</div><blockquote>이번에 증여세 관련해서 처음으로 신고를 하게 되었는데, 너무나도 복잡하고 걱정이 많았습니다. 그런데 세무사님께서 친절하게 하나하나 설명해 주시고, 필요한 서류나 절차도 꼼꼼히 챙겨주셔서 덕분에 무사히 신고를 마칠 수 있었습니다. 답변도 빠르고 명확해서 신뢰가 갔고, 처음부터 끝까지 매우 만족스러웠습니다.</blockquote><figcaption><b>kik****</b><span>양도·상속·증여 상담 · 2025.6.</span></figcaption></figure>
+      <figure class="rv"><div class="stars" aria-label="별점 5점">★★★★★</div><blockquote>내가 하고 있는 업종에 대한 이해도가 굉장히 높고 그뿐만 아니라 사람에 대한 이해도도 굉장히 높다. 그만큼 세심하게 친절하시고 세심하게 이해해서 알아서 정말 잘 해주신다. 이분을 만난 건 행운이라고 생각한다.</blockquote><figcaption><b>:)</b><span>2026.5.</span></figcaption></figure>
+      <figure class="rv"><div class="stars" aria-label="별점 5점">★★★★★</div><blockquote>세무에 대해 아무것도 몰라 세금이 무서웠는데 ㅠㅠ 하나부터 차근차근 친절하게 알려주셔서 두려움이 많이 사라졌습니다!! 많은 서칭 끝에 블로그를 보고 믿음이 가서 일부러 일산에서 갔는데 향동까지 가길 잘했다는 생각이 들더군요. 앞으로 믿고 맡길게요!</blockquote><figcaption><b>박**</b><span>세무 상담</span></figcaption></figure>
+      <figure class="rv"><div class="stars" aria-label="별점 5점">★★★★★</div><blockquote>세알못 초보사업자입니다. 방문 전에는 세무 일 하시면 좀 차갑지 않으실까 생각했는데 제 선입견이었어요. 이야기를 정말 잘 들어주시고 세금에 무지한 제게 너무 친절히 잘 설명해 주셨어요. 사업장과 더 가까운 곳도 있었는데 인상과 운영하시는 블로그 글들을 보고 왠지 믿음이 가서 상담 예약했어요. 상담이 만족스러워 기장 계약까지 결정하게 되었습니다.</blockquote><figcaption><b>hom****</b><span>세무 상담</span></figcaption></figure>
+      <figure class="rv"><div class="stars" aria-label="별점 5점">★★★★★</div><blockquote>진짜 세무 관련된 내용 하나도 몰라서 제일 저렴한 거 예약하고 상담받았어요!! 너무 친절하시고, 진짜 전문가라는 느낌을 받아서 안심되었어요. 다른 데 상담도 받아봤는데, 경력에서 나오는 전문감이 남다르더라고요. 앞으로 믿고 맡기기로 했습니다 😊</blockquote><figcaption><b>리뷰하려고</b><span>기장 상담 · 2023.11.</span></figcaption></figure>
+      <figure class="rv"><div class="stars" aria-label="별점 5점">★★★★★</div><blockquote>회사 부가세 신고 때문에 예약 잡고 방문했는데 세무사님 친절하셨고 물어보는 거 막힘없이 차분하게 설명해 주셔서 믿음이 갔습니다. (추가적으로 세금 줄이는 여러 가지 팁들 알려주셔서 좋았음) 기장 맡겨야 되는지 궁금해서 갔는데 기장은 안 해도 되고 신고만 맡겨도 된다고 하셔서 신고만 맡기고 왔는데, 사업하는 지인들도 여기 소개해 주려고 마음먹을 정도로 마음에 들었습니다.</blockquote><figcaption><b>kyong1436</b><span>기장 상담 · 2023.7.</span></figcaption></figure>
+      <figure class="rv"><div class="stars" aria-label="별점 5점">★★★★★</div><blockquote>모임에서 알게 된 친한 사장님이 소개해 주셔서 상담받았는데 만족합니다. 낯을 좀 가려서 너무 친절하면 부담스러워하는 편인데 담백하게 친절하셔서 되게 좋았어요. 사업하면서 세무회계가 제일 어려운 부분이었는데 시원하게 긁어주셨어요. 추천합니다.</blockquote><figcaption><b>999922aaa</b><span>기장 상담 · 2023.11.</span></figcaption></figure>
+      <figure class="rv"><div class="stars" aria-label="별점 5점">★★★★★</div><blockquote>세무 관련해서 궁금한 것이 있어 찾아뵈었는데 음성부터 친절하시고 상냥한 안내 받았습니다. 세무에 대해 몰라 이런저런 것들 여쭤봤는데 친절하고 자세히 알려주셔서 정말 좋았습니다. 세무 관련 궁금한 것들이 있는 분들 세무사님께 상담받아 보시는 것을 추천드립니다!</blockquote><figcaption><b>batm****</b><span>세무 상담</span></figcaption></figure>
+    </div>
+    <details class="more-rv">
+      <summary>짧은 후기 16건 더 보기</summary>
+      <div class="rvs">
+        <figure class="rv sm"><blockquote>연말정산+종소세 문제로 혼자 서치하고 고민하다가 도저히 해결이 안 나서 상담까지 신청했는데, 10분이라는 시간 만에 고민하던 게 깔끔하게 해결되었습니다! 사회초년생이라 세금 문제 너무 어려웠는데 친절한 상담 감사합니다!</blockquote><figcaption><span>사업자 10분 전화상담 · 2025.5.</span></figcaption></figure>
+        <figure class="rv sm"><blockquote>정말 빠르고 신속하게 해주십니다. 다른 세무사님들과는 확실히 다른 것 같은 느낌입니다!! 완벽하십니다. 다음에도 세무에 관련된 것은 이동희 세무사님에게 조언을 구할 것입니다.</blockquote><figcaption><span>10분 전화상담 · 2024.5.</span></figcaption></figure>
+        <figure class="rv sm"><blockquote>답답했던 상황이 어느 정도 정리되는 상담이었습니다~ 목소리도 좋으시고 상담도 너무 친절하게 잘 해주셔서 더 신뢰가 갔습니다~ 이 한 번의 상담으로 든든한 아는 세무사님이 생긴 것 같은… 감사했습니다~</blockquote><figcaption><span>사업자 10분 전화상담 · 2023.11.</span></figcaption></figure>
+        <figure class="rv sm"><blockquote>매우 친절하시고, 정확하게 상담해 주십니다. 인터넷에 찾아보았을 때에도 헷갈리고 애매한 부분이 많았는데, 세무사님이 정확하게 알려주셔서 도움이 많이 된 것 같습니다.</blockquote><figcaption><span>10분 전화상담 · 2024.4.</span></figcaption></figure>
+        <figure class="rv sm"><blockquote>어렴풋이 알고 있던 부분을 확실하게 짚어주셔서 좋았고요! 전혀 모르고 있던 부분도 알려주셔서 너무 감사합니다~ 덕분에 수월~하게 법인 낼 수 있을 것 같습니다!</blockquote><figcaption><span>사업자 채팅상담 · 2024.9.</span></figcaption></figure>
+        <figure class="rv sm"><blockquote>궁금한 점에 대해서 아주 명쾌하게 답변해 주셨습니다. 고민하던 문제였는데 덕분에 방향이 잘 잡아졌습니다. 세무사님 추천합니다.</blockquote><figcaption><span>사업자 채팅상담 · 2024.7.</span></figcaption></figure>
+        <figure class="rv sm"><blockquote>종합소득세 신고 잘못해서 걱정 많았는데 시원하게 해결해 주신 것 같아 좋네요. 긴 시간 톡 상담 감사합니다.</blockquote><figcaption><span>사업자 채팅상담 · 2023.12.</span></figcaption></figure>
+        <figure class="rv sm"><blockquote>채팅 상담 받았는데 답변 정말 친절하시고 상세하게 잘해주십니다.</blockquote><figcaption><span>사업자 채팅상담 · 2025.4.</span></figcaption></figure>
+        <figure class="rv sm"><blockquote>응답도 빠르시고 전문적인 답변이 신뢰가 갑니다.</blockquote><figcaption><span>채팅상담 · 2025.3.</span></figcaption></figure>
+        <figure class="rv sm"><blockquote>경력을 토대로 자세하고 명확히 알려주셨습니다, 감사합니다.</blockquote><figcaption><span>사업자 채팅상담 · 2023.12.</span></figcaption></figure>
+        <figure class="rv sm"><blockquote>깔끔하고 정확하고 빠르시네요! 너무 감사합니다!</blockquote><figcaption><span>사업자 10분 전화상담 · 2023.12.</span></figcaption></figure>
+        <figure class="rv sm"><blockquote>제가 원하는 답변에 대해 정확하고 빠르게 답변 주셨습니다 :) 감사합니다!</blockquote><figcaption><span>채팅상담 · 2024.3.</span></figcaption></figure>
+        <figure class="rv sm"><blockquote>빠르고 해박한 답변 감사합니다.</blockquote><figcaption><span>양도·상속·증여 10분 전화상담 · 2024.2.</span></figcaption></figure>
+        <figure class="rv sm"><blockquote>정말 친절하시고 전문적인 상담 해주셔서 감사합니다.</blockquote><figcaption><span>양도·상속·증여 30분 방문상담 · 2024.2.</span></figcaption></figure>
+        <figure class="rv sm"><blockquote>친절하고 전문적인 상담 감사합니다.</blockquote><figcaption><span>사업자 10분 전화상담 · 2025.6.</span></figcaption></figure>
+        <figure class="rv sm"><blockquote>궁금한 점에 대해 친절하게 잘 설명해 주십니다. 아, 그리고 커피도 맛있었습니다.</blockquote><figcaption><span>기장 상담 · 2023.10.</span></figcaption></figure>
+      </div>
+    </details>
   </section>
 
   <section aria-labelledby="car-h">
@@ -315,21 +450,12 @@ footer a{color:var(--brand);font-weight:600;text-decoration:none}
     </div>
   </section>
 
-  <section id="cases" aria-labelledby="case-h">
-    <div class="sec-h"><p class="kicker">Cases</p><h2 id="case-h">주요 절세·환급 사례</h2><p>경정청구와 과세예고통지 대응으로 고객께 돌려드린 세금입니다. 누르면 블로그의 자세한 이야기로 이동합니다.</p></div>
-    <div class="cases">
-      <a class="case" href="https://blog.naver.com/francepigeon/223547328458" target="_blank" rel="noopener noreferrer"><span><span class="t">상속세 경정청구</span><span class="d">이미 낸 상속세를 다시 검토해 환급</span></span><span class="amt">1억 6,600만 원<small>환급</small></span></a>
-      <a class="case" href="https://blog.naver.com/francepigeon/224363266700" target="_blank" rel="noopener noreferrer"><span><span class="t">소득세 경정청구</span><span class="d">임대사업자의 빠진 이자비용을 반영해 환급</span></span><span class="amt">5,300만 원<small>환급</small></span></a>
-      <a class="case" href="https://blog.naver.com/francepigeon/224408207730" target="_blank" rel="noopener noreferrer"><span><span class="t">소득세 경정청구</span><span class="d">상담 중 창업감면 대상임을 찾아내 환급</span></span><span class="amt">3,600만 원<small>환급</small></span></a>
-      <a class="case" href="https://blog.naver.com/francepigeon/224073241587" target="_blank" rel="noopener noreferrer"><span><span class="t">부가세 경정청구</span><span class="d">휴대폰 대리점의 부가세를 다시 따져 환급</span></span><span class="amt">2,500만 원<small>환급</small></span></a>
-      <a class="case" href="https://blog.naver.com/francepigeon/224307844780" target="_blank" rel="noopener noreferrer"><span><span class="t">종합소득세 경정청구</span><span class="d">과거 신고서에서 비과세 특례 누락을 찾아 환급</span></span><span class="amt">1,476만 원<small>환급</small></span></a>
-      <a class="case" href="https://blog.naver.com/francepigeon/224392899447" target="_blank" rel="noopener noreferrer"><span><span class="t">과세예고통지 대응</span><span class="d">주택임대사업자, 2,600만 원 고지 예정을 환급으로</span></span><span class="amt">300만 원<small>환급으로 전환</small></span></a>
-      <a class="case" href="https://blog.naver.com/francepigeon/224140229909" target="_blank" rel="noopener noreferrer"><span><span class="t">과세예고통지 대응</span><span class="d">공동사업 형제의 고지 예정 세액을 줄임</span></span><span class="amt">2,123만 → 217만 원<small>감액</small></span></a>
-      <a class="case" href="https://blog.naver.com/francepigeon/223588861719" target="_blank" rel="noopener noreferrer"><span><span class="t">과세예고통지 대응</span><span class="d">종합소득세 과세예고통지에 대응해 세금을 막음</span></span><span class="amt">1,000만 → 0원<small>감액</small></span></a>
-    </div>
-    <div class="more">
-      <a href="https://blog.naver.com/francepigeon" target="_blank" rel="noopener noreferrer">블로그에서 더 많은 사례 보기 →</a>
-      <span class="fine">사례의 결과는 개별 사정에 따라 다르며, 같은 결과를 보장하지 않습니다.</span>
+  <section aria-labelledby="rec-h">
+    <div class="sec-h"><p class="kicker">Record</p><h2 id="rec-h">감사원 감사관, 그리고 방송</h2><p>2018년 감사관 자격을 받고 2022년 감사주사로 임명되었습니다. SBS 모닝와이드에 출연해 스테이블코인을 설명했습니다.</p></div>
+    <div class="rec">
+      <figure class="a"><img src="bai-appoint.jpg" alt="감사원 감사관 자격증과 임명식 사진" width="750" height="1000" loading="lazy"></figure>
+      <figure class="b"><img src="bai-cert.jpg" alt="감사관 자격증과 감사주사 임명장" width="1078" height="675" loading="lazy"></figure>
+      <figure class="c"><img src="sbs.jpg" alt="SBS 모닝와이드에 출연한 이동희 세무사" width="1200" height="679" loading="lazy"></figure>
     </div>
   </section>
 
@@ -353,6 +479,7 @@ footer a{color:var(--brand);font-weight:600;text-decoration:none}
   <section class="band" aria-labelledby="visit-h">
     <div>
       <p class="t" id="visit-h">언제든 편하게 상담하세요</p>
+      <p class="lead">어려움이 있으시다면 언제든 저희와 상담해 주세요. 가장 편하고 가까우며, 가장 믿음직스러운 사람으로서 언제나 충실히 도움을 드리겠습니다.</p>
       <dl>
         <dt>주소</dt><dd>경기도 고양시 덕양구 향동로 217 DMC플렉스데시앙 KB 824호</dd>
         <dt>사무실</dt><dd><a href="tel:0220881553">02-2088-1553</a></dd>
@@ -361,6 +488,12 @@ footer a{color:var(--brand);font-weight:600;text-decoration:none}
       </dl>
     </div>
     <div class="acts"><a class="call" href="tel:01082781382"><span>상담문의 이동희 세무사</span><span>010-8278-1382</span></a><a class="call k" href="https://pf.kakao.com/_xftxfAG/chat" target="_blank" rel="noopener noreferrer"><span>채팅으로 편하게</span><span>카카오톡 상담하기</span></a></div>
+  </section>
+
+  <section class="card" aria-labelledby="card-h">
+    <h2 id="card-h" class="vh">명함</h2>
+    <figure><img src="card-front.png" alt="이동희 세무사 명함 앞면: 전화 02-2088-1553, 휴대폰 010-8278-1382, 이메일 pigeontax@naver.com" width="386" height="214" loading="lazy"></figure>
+    <figure><img src="card-back.png" alt="이동희 세무사 명함 뒷면: 대표세무사 경력사항" width="386" height="213" loading="lazy"></figure>
   </section>
 
 </div>
