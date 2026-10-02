@@ -557,10 +557,6 @@ select{width:100%;}
             <span class="c"><span class="money"><input type="text" inputmode="numeric" id="gb" data-money aria-label="예정부과세액 간이" placeholder="0"></span></span></div>
           <div class="ht-r" id="r-gs" hidden><span class="k">예정신고세액 (간이)</span>
             <span class="c"><span class="money"><input type="text" inputmode="numeric" id="gs" data-money aria-label="예정신고세액 간이" placeholder="0"></span></span></div>
-          <div class="ht-r"><span class="k">매입자납부특례 기납부세액</span>
-            <span class="c"><span class="money"><input type="text" inputmode="numeric" id="bp" data-money aria-label="매입자납부특례 기납부세액" placeholder="0"></span></span></div>
-          <div class="ht-r"><span class="k">신용카드사를 통한 대리납부 관련 세액</span>
-            <span class="c"><span class="money"><input type="text" inputmode="numeric" id="dp" data-money aria-label="신용카드사 대리납부 관련 세액" placeholder="0"></span></span></div>
         </div>
         <p class="ht-note" id="gen-note">※ 예정부과세액·예정신고세액(간이)은 간이과세자 칸이라 넣지 않습니다.</p>
 
@@ -613,9 +609,9 @@ select{width:100%;}
       <p class="sub">이 계산에 쓰인 조문입니다. 조문을 누르면 국가법령정보센터에서 원문이 새 창으로 열립니다.</p>
       <ul id="laws"></ul>
     </section>
-    <p><b>계산 방법</b> 카드·현금영수증·판매대행·그 밖의 매출은 합계금액의 100/110을 공급가액, 나머지를 세액으로 봅니다. 납부세액(매출세액 − 매입세액)에서 전자세금계산서 발급세액공제(건당 200원, 연 100만원)와 신용카드매출전표등 발행세액공제(2026년분까지 1.3%·연 1천만원, 2027년분부터 1%·연 500만원)를 빼고, 공제항목(예정신고미환급세액, 예정고지세액, 매입자납부특례 기납부세액, 신용카드사 대리납부 세액)을 뺀 금액이 낼 세금입니다. 두 세액공제는 기공제 항목을 뺀 남은 한도와 납부세액을 넘을 수 없습니다. 과세기간을 따로 고르지 않고, 계산하는 날로부터 45일 전이 속한 해의 세법(공제율·한도)을 적용합니다. 전자신고세액공제(1만원)는 반영하지 않습니다.</p>
+    <p><b>계산 방법</b> 카드·현금영수증·판매대행·그 밖의 매출은 합계금액의 100/110을 공급가액, 나머지를 세액으로 봅니다. 납부세액(매출세액 − 매입세액)에서 전자세금계산서 발급세액공제(건당 200원, 연 100만원)와 신용카드매출전표등 발행세액공제(2026년분까지 1.3%·연 1천만원, 2027년분부터 1%·연 500만원)를 빼고, 공제항목(예정신고미환급세액, 예정고지세액)을 뺀 금액이 낼 세금입니다. 두 세액공제는 기공제 항목을 뺀 남은 한도와 납부세액을 넘을 수 없습니다. 과세기간을 따로 고르지 않고, 계산하는 날로부터 45일 전이 속한 해의 세법(공제율·한도)을 적용합니다. 전자신고세액공제(1만원)는 반영하지 않습니다.</p>
     <p><b>간이과세자</b> 공급대가(공급가액 + 세액) × 업종별 간이부가율 × 10%가 납부세액이며, 세금계산서·카드·현금영수증으로 받은 매입 공급대가의 0.5%, 전자세금계산서 발급세액공제, 신용카드매출전표등 발행세액공제를 빼되 공제 합계는 납부세액을 넘지 않습니다. 1년 공급대가가 4,800만원 미만이면 납부의무가 면제됩니다.</p>
-    <p>대손세액공제, 간이과세자의 여러 업종 겸영, 매입자발행세금계산서, 재활용폐자원 등 매입세액공제 특례, 면세사업 겸영 시 공통매입세액 안분, 가산세는 반영하지 않습니다. 의제매입세액 한도는 이번에 입력한 기간의 과세표준으로 계산하며, 법인의 예정신고분 정산과 제조업의 1년 단위 정산 특례는 반영하지 않습니다.</p>
+    <p>대손세액공제, 간이과세자의 여러 업종 겸영, 매입자발행세금계산서, 매입자납부특례, 신용카드사 대리납부, 재활용폐자원 등 매입세액공제 특례, 면세사업 겸영 시 공통매입세액 안분, 가산세는 반영하지 않습니다. 의제매입세액 한도는 이번에 입력한 기간의 과세표준으로 계산하며, 법인의 예정신고분 정산과 제조업의 1년 단위 정산 특례는 반영하지 않습니다.</p>
     <p>상담문의: 이동희 세무사(010-8278-1382)</p>
   </footer>
 </div>
@@ -770,9 +766,7 @@ select{width:100%;}
     // 공제항목 (이미 낸 세금)
     r.ym = p.fin ? v('ym') : 0;
     r.yg = p.fin ? v('yg') : 0;
-    r.bp = v('bp');
-    r.dp = v('dp');
-    r.final = r.pay - r.cred - r.ym - r.yg - r.bp - r.dp;
+    r.final = r.pay - r.cred - r.ym - r.yg;
     return r;
   }
 
@@ -815,8 +809,7 @@ select{width:100%;}
     r.pay = r.payBase - r.inCr - r.et - r.cc - r.ef;
     r.gb = p.fin ? v('gb') : 0;
     r.gs = p.fin ? v('gs') : 0;
-    r.bp = v('bp'); r.dp = v('dp');
-    r.final = r.pay - r.gb - r.gs - r.bp - r.dp;
+    r.final = r.pay - r.gb - r.gs;
     return r;
   }
 
@@ -846,8 +839,6 @@ select{width:100%;}
     if(r.cc) add('신용카드매출전표등 발행세액공제', won(r.cc), {minus: true, sub: won(r.rcpTotal) + ' × ' + RULE.cc.pct + (r.cc < r.ccRaw ? (r.cc === r.ccCap ? ' (연 1천만원 한도)' : ' (납부세액 한도)') : '')});
     if(r.gb) add('예정부과세액', won(r.gb), {minus: true});
     if(r.gs) add('예정신고세액', won(r.gs), {minus: true});
-    if(r.bp) add('매입자납부특례 기납부세액', won(r.bp), {minus: true});
-    if(r.dp) add('신용카드사 대리납부 세액', won(r.dp), {minus: true});
     const sec2 = flush();
 
     const pay = r.final >= 0;
@@ -905,8 +896,6 @@ select{width:100%;}
     if(r.ccOn && r.cc) add('신용카드매출전표등 발행세액공제', won(r.cc), {minus: true, sub: won(r.rcpTotal) + ' × ' + RULE.cc.pct + (r.cc < r.ccRaw ? (r.cc === r.ccCap ? ' (연 ' + RULE.cc.capTxt + ' 한도' + (r.ccUsed ? ', 기공제 ' + won(r.ccUsed) : '') + ')' : ' (납부세액 한도)') : '')});
     if(r.ym) add('예정신고미환급세액', won(r.ym), {minus: true});
     if(r.yg) add('예정고지세액', won(r.yg), {minus: true});
-    if(r.bp) add('매입자납부특례 기납부세액', won(r.bp), {minus: true});
-    if(r.dp) add('신용카드사 대리납부 세액', won(r.dp), {minus: true});
     const sec3 = flush();
 
     const pay = r.final >= 0;
@@ -1028,8 +1017,6 @@ select{width:100%;}
     if(r.gb) items.push(['예정부과세액(간이)', w(r.gb)]);
     if(r.gs) items.push(['예정신고세액(간이)', w(r.gs)]);
     if(r.ym) items.push(['예정신고미환급세액', w(r.ym)]);
-    if(r.bp) items.push(['매입자납부특례 기납부세액', w(r.bp)]);
-    if(r.dp) items.push(['신용카드사 대리납부 세액', w(r.dp)]);
     if(r.ccUsed) items.push(['발행세액공제 기공제', w(r.ccUsed)]);
     if(r.etUsed) items.push(['전자세금계산서 공제 기공제', w(r.etUsed)]);
     return items;
