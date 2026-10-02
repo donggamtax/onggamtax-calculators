@@ -200,9 +200,9 @@ footer a{color:var(--brand);font-weight:600;text-decoration:none}
 .cv2 li small{font-size:14px;color:var(--muted)}
 .cv2 .tg{flex:none;display:inline-grid;place-items:center;min-width:38px;height:24px;padding:0 6px;border-radius:6px;background:var(--paper);border:1px solid var(--line);color:var(--muted);font-size:12.5px;font-weight:700}
 .cv2 .tg.now{background:var(--brand);border-color:var(--brand);color:#fff}
-.cv2 .now .lg{margin-left:auto;width:108px;height:26px;display:flex;align-items:center;justify-content:flex-end}
-.cv2 .now .lg img{max-width:100%;max-height:100%;width:auto;height:auto}
-@media (max-width:560px){.cv2{padding:18px 18px 20px}.cv2 li{font-size:15.5px}.cv2 .now li{display:grid;grid-template-columns:auto 1fr;row-gap:6px}.cv2 .now .lg{grid-column:2;margin-left:0;justify-content:flex-start;width:96px;height:22px}}
+.cv2 .lg{margin-left:auto;width:108px;height:26px;display:flex;align-items:center;justify-content:flex-end}
+.cv2 .lg img{max-width:100%;max-height:100%;width:auto;height:auto}
+@media (max-width:560px){.cv2{padding:18px 18px 20px}.cv2 li{font-size:15.5px}.cv2 li:has(.lg){display:grid;grid-template-columns:auto 1fr;row-gap:4px}.cv2 li:has(.lg) small{grid-column:2}.cv2 .lg{grid-column:2;margin-left:0;justify-content:flex-start;width:96px;height:22px}}
 </style>
 </head>
 <body>
@@ -226,8 +226,8 @@ footer a{color:var(--brand);font-weight:600;text-decoration:none}
         <p class="cv2-h">경력</p>
         <ul>
           <li><span class="tg">자격</span><b>2010년 제47회 세무사</b></li>
-          <li><span class="tg">前</span><b>대한민국 감사원 근무</b><small>국세청 등 담당</small></li>
-          <li><span class="tg">前</span><b>LG유플러스 근무</b><small>금융팀, 세무회계팀</small></li>
+          <li><span class="tg">前</span><b>대한민국 감사원 근무</b><small>국세청 등 담당</small><span class="lg"><img src="../assets/logo-bai.png" alt="감사원" width="162" height="55"></span></li>
+          <li><span class="tg">前</span><b>LG유플러스 근무</b><small>금융팀, 세무회계팀</small><span class="lg"><img src="../assets/logo-lguplus.png" alt="LG유플러스" width="481" height="134"></span></li>
           <li><span class="tg">前</span><b>서울시 민간위탁 적격자심사위원회 위원</b></li>
         </ul>
         <p class="cv2-h">현재</p>
