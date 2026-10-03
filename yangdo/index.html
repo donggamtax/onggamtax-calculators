@@ -3,7 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>양도소득세 계산기</title>
+<title>양도소득세·취득세 계산기 | 동감 세무회계</title>
+<meta name="description" content="주택·토지·분양권 양도소득세와 취득세를 금액만 넣어 바로 계산합니다. 1세대 1주택 비과세, 2026년 세법 기준.">
+<link rel="canonical" href="https://taxdg.com/yangdo/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="동감 세무회계">
+<meta property="og:title" content="양도소득세·취득세 계산기 | 동감 세무회계">
+<meta property="og:description" content="주택·토지·분양권 양도소득세와 취득세를 금액만 넣어 바로 계산합니다. 1세대 1주택 비과세, 2026년 세법 기준.">
+<meta property="og:url" content="https://taxdg.com/yangdo/">
+<meta property="og:image" content="https://taxdg.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="ko_KR">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Nanum+Myeongjo:wght@700;800&display=swap" rel="stylesheet">
@@ -1056,7 +1067,7 @@ document.querySelectorAll('[data-date]').forEach(el => {
     });
     const key = id === 'tab-acq' ? 'acq' : 'cgt';
     document.querySelectorAll('[data-foot]').forEach(f => f.hidden = f.dataset.foot !== key);
-    document.title = key === 'acq' ? '취득세 계산기' : '양도소득세 계산기';
+    document.title = key === 'acq' ? '취득세 계산기 | 동감 세무회계' : '양도소득세 계산기 | 동감 세무회계';
     try{ localStorage.setItem('taxcalc-tab', id); }catch(e){}
   }
   tabs.forEach((t, i) => {
@@ -1563,6 +1574,15 @@ document.querySelectorAll('[data-date]').forEach(el => {
   }));
   document.querySelectorAll('[data-savebtn]').forEach(b => b.addEventListener('click', () => save(b.dataset.savebtn, b)));
 })();
+</script>
+<!-- 네이버 애널리틱스 -->
+<script type="text/javascript" src="https://wcs.pstatic.net/wcslog.js"></script>
+<script type="text/javascript">
+if(!wcs_add) var wcs_add = {};
+wcs_add["wa"] = "1c4b4263a9c8f20";
+if(window.wcs) {
+wcs_do();
+}
 </script>
 </body>
 </html>
