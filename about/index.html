@@ -76,7 +76,7 @@ main section:first-child{margin-top:72px}
 .sec-h p{color:var(--muted);font-size:15.5px;margin-top:8px}
 
 /* 강점 */
-.why{list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.why{list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
 .why li{position:relative;overflow:hidden;background:#fff;border:1px solid var(--line);border-radius:20px;padding:30px 26px 28px;display:flex;flex-direction:column;gap:12px;box-shadow:0 18px 36px -30px rgba(24,35,43,.35)}
 .why li::after{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,var(--brand),var(--warm))}
 .why .ic{width:52px;height:52px;border-radius:15px;background:var(--tint);color:var(--brand);display:grid;place-items:center}
@@ -266,7 +266,7 @@ main section.card{margin-top:22px;display:flex;justify-content:center;gap:16px;f
 @media (max-width:560px){.letter{padding:28px 22px 24px}.letter p{font-size:16px}.letter::before{top:24px;bottom:24px}.score b{font-size:26px}.rv{padding:20px 18px 16px}}
 
 /* 소개 다짐 */
-.letter .pledge{margin-top:26px;padding:18px 22px;border-radius:14px;background:var(--tint);font-size:18.5px;font-weight:800;letter-spacing:-.03em;line-height:1.6;color:var(--brand)}
+.letter .pledge{margin-top:26px;padding:18px 22px;border-radius:14px;background:var(--tint);font-size:clamp(15px,1.45vw,17px);font-weight:800;letter-spacing:-.03em;line-height:1.6;color:var(--brand)}
 /* 대표 후기 */
 .rv-hl{margin:0 0 18px;position:relative;background:linear-gradient(120deg,#F3F8FA,#FBF7F0);border:1px solid #E3D6C0;border-radius:22px;padding:34px 40px 28px}
 .rv-hl::before{content:"\201C";position:absolute;right:28px;top:-26px;font-size:150px;font-weight:800;color:rgba(184,148,92,.22);line-height:1}
@@ -347,7 +347,7 @@ main section.card{margin-top:22px;display:flex;justify-content:center;gap:16px;f
       <p>그 후 7급 공무원 시험을 통해 <b>감사원 감사관</b>으로 입직하여, 국세청, 서울지방국세청, 기획재정부 등에 대한 감사를 수행하였습니다.</p>
       <p>이후 마포구에 있는 세무법인에서 다시 세무사 사무실의 실전 감각(?)을 익힌 뒤 <b>2023년 6월 26일 동감 세무회계</b> 사무실을 열었습니다.</p>
       <p>현재는 대표세무사로 근무하면서, <b>법무법인 소울</b>에서 전문위원, <b>노무법인 노무케어</b>에서 고문 세무사 역할을 하는 등 다양한 업무를 수행하고 있습니다.</p>
-      <p class="pledge">민·관을 아우르는 경험과 업무능력, 친절함으로<br>가장 나은 세무서비스를 제공하겠습니다.</p>
+      <p class="pledge">민·관을 아우르는 경험과 업무능력, 친절함으로 가장 나은 세무서비스를 제공하겠습니다.</p>
       <p class="sig">동감 세무회계 대표세무사 <b>이동희</b></p>
     </div>
   </section>
@@ -372,6 +372,12 @@ main section.card{margin-top:22px;display:flex;justify-content:center;gap:16px;f
         <span class="k">친절하고 상세하게</span>
         <h3>고객의 입장에서, 고객의 이득만 생각합니다</h3>
         <p>무엇보다도 친절하고 상세합니다. 최대한 쉽게 이해하실 수 있도록 상세히 설명드리려 노력합니다. 함께하는 업체 중 단 한 곳도 저희를 떠나지 않으셨고, 고객분들의 강력한 신뢰를 받으며 즐거운 관계를 유지하고 있음은 저의 가장 큰 자부심입니다.</p>
+      </li>
+      <li>
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="2.5"/><circle cx="5" cy="18" r="2.5"/><circle cx="19" cy="18" r="2.5"/><path d="M10.8 7.2 6.2 15.8M13.2 7.2l4.6 8.6M7.5 18h9"/></svg></span>
+        <span class="k">원스톱 서비스</span>
+        <h3>세금 밖의 문제도 한 곳에서 해결합니다</h3>
+        <p>법무법인, 노무법인, 감정평가법인 등과 긴밀하게 연계하고 있습니다. 세금 문제에 법률, 노무, 감정평가가 얽혀 있어도 여러 곳을 찾아다니실 필요 없이 원스톱 서비스를 받으실 수 있습니다.</p>
       </li>
     </ul>
   </section>
