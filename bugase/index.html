@@ -379,6 +379,52 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
   .ht-r .c .money input{padding-left:8px;padding-right:28px;font-size:15px;}
   .ht-r .c .money::after{right:9px;font-size:13px;}
 }
+.hx-card{background:var(--sheet);border:1px solid var(--rule-soft);border-radius:16px;padding:24px;margin:0 0 22px;box-shadow:0 1px 2px rgba(24,35,43,.04),0 16px 36px -28px rgba(24,35,43,.3);}
+.hx-card>h2{font-size:17px;font-weight:700;margin:0 0 4px;}
+.hx-card>.hint{font-size:14px;color:var(--muted);margin:0 0 16px;}
+.hx{border:1px solid var(--rule);border-radius:12px;overflow:hidden;background:var(--field);}
+.hx .ht{border:0;border-radius:0;}
+.hx-blk{display:grid;grid-template-columns:76px minmax(0,1fr);min-width:0;}
+.hx-blk+.hx-blk,.hx-pair+.hx-blk,.hx-blk+.hx-pair{border-top:1px solid var(--rule);}
+.hx-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);border-top:1px solid var(--rule);}
+.hx>.hx-pair:first-child{border-top:0;}
+.hx-pair>.hx-blk+.hx-blk{border-top:0;border-left:1px solid var(--rule);}
+.hx-cap{background:#EAF3F3;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:700;font-size:14px;line-height:1.4;padding:10px 6px;border-right:1px solid var(--rule-soft);color:var(--ink);}
+.hx-kv{display:grid;grid-template-columns:110px minmax(0,1fr) 110px minmax(0,1fr);}
+.hx-kv>span{padding:8px 10px;display:flex;align-items:center;border-top:1px solid var(--rule-soft);min-width:0;}
+.hx-kv>span:nth-child(-n+4){border-top:0;}
+.hx-kv .kk{background:#F7FAFB;font-weight:600;font-size:14px;border-right:1px solid var(--rule-soft);}
+.hx-kv .kk label{font:inherit;color:inherit;}
+.hx-kv .vv{border-right:1px solid var(--rule-soft);}
+.hx-kv .vv:last-child,.hx-kv .vv:nth-child(4n){border-right:0;}
+.hx-kv .vv>*{width:100%;}
+.hx-kv .seg{margin:0;}
+.hx-kv .seg label{padding:8px 6px;}
+.hx-kv select,.hx-kv input{min-height:40px;font-size:14.5px;}
+.hx .ht-r>span{padding:7px 8px;}
+.hx .ht-r .k{font-size:14px;}
+.hx .ht-r .c input{min-height:38px;font-size:15px;padding-left:10px;padding-right:30px;}
+.hx .ht-r .c .money::after{right:10px;font-size:13px;}
+.hx .off{background:#F1F3F4;}
+.hx .off .k,.hx .off.kk,.hx .off .vv{color:#9AA4AA;}
+.hx .off input,.hx .off select{background:#F1F3F4;color:#9AA4AA;}
+.hx .off .seg label{opacity:.5;}
+.hx-card>.ht-note{margin:8px 2px 14px;}
+.hx-card>.ht-tip{margin:4px 0 0;}
+@media (max-width:1000px){
+  .hx-pair{grid-template-columns:minmax(0,1fr);}
+  .hx-pair>.hx-blk+.hx-blk{border-left:0;border-top:1px solid var(--rule);}
+}
+@media (max-width:700px){
+  .hx-card{padding:18px 14px;}
+  .hx-blk{grid-template-columns:minmax(0,1fr);}
+  .hx-cap{justify-content:flex-start;padding:9px 12px;border-right:0;border-bottom:1px solid var(--rule-soft);}
+  .hx-cap br{display:none;}
+  .hx-kv{grid-template-columns:96px minmax(0,1fr);}
+  .hx-kv>span:nth-child(-n+4){border-top:1px solid var(--rule-soft);}
+  .hx-kv>span:nth-child(-n+2){border-top:0;}
+  .hx-kv .vv{border-right:0;}
+}
 .seg.two{grid-template-columns:repeat(2,minmax(0,1fr));}
 select{width:100%;}
 </style>
@@ -423,45 +469,42 @@ select{width:100%;}
     </ol>
   </section>
 
-  <div class="grid">
-    <form class="panel" id="form" autocomplete="off" onsubmit="return false">
-      <div class="section">
-        <h2>사업자 기본사항</h2>
-        <p class="hint">홈택스 조회 화면의 신고유형과 같게 고르세요.</p>
-        <span class="lab" id="type-l">신고유형</span>
-        <div class="seg two" role="radiogroup" aria-labelledby="type-l" style="margin-bottom:12px">
-          <input type="radio" name="type" id="type-g" value="g" checked><label for="type-g">일반</label>
-          <input type="radio" name="type" id="type-s" value="s"><label for="type-s">간이</label>
-        </div>
-        <div class="seg two" role="radiogroup" aria-label="사업자 구분" id="who-seg" style="margin-bottom:12px">
-          <input type="radio" name="who" id="who-p" value="p" checked><label for="who-p">개인사업자</label>
-          <input type="radio" name="who" id="who-c" value="c"><label for="who-c">법인사업자</label>
-        </div>
-        <div class="fields" id="simple-box" hidden style="margin-top:14px">
-          <div class="field">
-            <label class="lab" for="sb-kind">업종</label>
-            <select id="sb-kind">
+<form id="form" autocomplete="off" onsubmit="return false">
+  <section class="hx-card" aria-labelledby="hx-h">
+    <h2 id="hx-h">신고자료 통합조회 옮겨 적기</h2>
+    <p class="hint">홈택스 조회 화면과 같은 모양입니다. 홈택스에서 숫자를 복사해 같은 자리에 붙여 넣으세요. 회색 칸은 지금 고른 신고유형에는 쓰지 않는 칸입니다.</p>
+    <div class="hx">
+      <div class="hx-blk" id="hx-basic">
+        <div class="hx-cap">사업자<br>기본사항</div>
+        <div class="hx-kv">
+          <span class="kk" id="type-l">신고유형</span>
+          <span class="vv"><span class="seg two" role="radiogroup" aria-labelledby="type-l">
+            <input type="radio" name="type" id="type-g" value="g" checked><label for="type-g">일반</label>
+            <input type="radio" name="type" id="type-s" value="s"><label for="type-s">간이</label>
+          </span></span>
+          <span class="kk" id="rate-k"><label for="sb-rate">간이부가율</label></span>
+          <span class="vv" id="rate-v"><span class="unit" data-unit="%"><input type="text" inputmode="decimal" id="sb-rate" value="15"></span></span>
+          <span class="kk" id="who-k">사업자 구분</span>
+          <span class="vv" id="who-v"><span class="seg two" role="radiogroup" aria-labelledby="who-k" id="who-seg">
+            <input type="radio" name="who" id="who-p" value="p" checked><label for="who-p">개인</label>
+            <input type="radio" name="who" id="who-c" value="c"><label for="who-c">법인</label>
+          </span></span>
+          <span class="kk" id="kind-k"><label for="sb-kind">업종 (간이)</label></span>
+          <span class="vv" id="kind-v"><select id="sb-kind">
               <option value="15">소매업, 음식점업, 재생용 재료수집·판매업 (15%)</option>
               <option value="20">제조업, 농업·임업·어업, 소화물 전문 운송업 (20%)</option>
               <option value="25">숙박업 (25%)</option>
               <option value="30">건설업, 운수·창고업, 정보통신업 (30%)</option>
               <option value="40">금융·보험, 전문·과학·기술서비스, 사업시설관리·임대, 부동산임대 등 (40%)</option>
               <option value="30b">그 밖의 서비스업 (30%)</option>
-            </select>
-          </div>
-          <div class="field">
-            <label class="lab" for="sb-rate">간이부가율</label>
-            <div class="unit" data-unit="%"><input type="text" inputmode="decimal" id="sb-rate" value="15"></div>
-            <div class="helper left">홈택스 사업자 기본사항의 간이부가율과 다르면 그 숫자로 고쳐 주세요.</div>
-          </div>
+            </select></span>
         </div>
-        <p class="ht-tip" id="period-tip"></p>
       </div>
-
-      <div class="section">
-        <h2>매출항목</h2>
-        <div class="ht">
-          <div class="ht-r h" aria-hidden="true"><span></span><span>공급가액(원)</span><span>세액(원)</span></div>
+      <div class="hx-pair">
+        <div class="hx-blk">
+          <div class="hx-cap">매출항목</div>
+          <div class="ht">
+            <div class="ht-r h" aria-hidden="true"><span></span><span>공급가액(원)</span><span>세액(원)</span></div>
           <div class="ht-r"><span class="k">전자세금계산서</span>
             <span class="c"><span class="cl">공급가액</span><span class="money"><input type="text" inputmode="numeric" id="s-ti" data-money data-pair="s-ti-v" aria-label="매출 전자세금계산서 공급가액" placeholder="0"></span></span>
             <span class="c"><span class="cl">세액</span><span class="money"><input type="text" inputmode="numeric" id="s-ti-v" data-money aria-label="매출 전자세금계산서 세액" placeholder="0"></span></span></div>
@@ -477,8 +520,71 @@ select{width:100%;}
           <div class="ht-r"><span class="k">판매(결제)대행</span>
             <span class="c"><span class="cl">금액 (부가세포함)</span><span class="money"><input type="text" inputmode="numeric" id="s-pg" data-money aria-label="매출 판매결제대행 금액 부가세포함" placeholder="0"></span></span>
             <span class="c na">자동으로 나눠 계산</span></div>
+          </div>
         </div>
-        <p class="ht-note">※ 신용카드·판매(결제)대행 금액에는 부가세가 포함되어 있어 100/110을 공급가액으로 계산합니다. 세액 칸은 공급가액의 10%로 자동 입력되며, 홈택스 숫자와 다르면 고쳐 주세요.</p>
+        <div class="hx-blk">
+          <div class="hx-cap">매입항목</div>
+          <div class="ht">
+            <div class="ht-r h" aria-hidden="true"><span></span><span>공급가액(원)</span><span>세액(원)</span></div>
+          <div class="ht-r"><span class="k">전자세금계산서</span>
+            <span class="c"><span class="cl">공급가액</span><span class="money"><input type="text" inputmode="numeric" id="p-ti" data-money data-pair="p-ti-v" aria-label="매입 전자세금계산서 공급가액" placeholder="0"></span></span>
+            <span class="c"><span class="cl">세액</span><span class="money"><input type="text" inputmode="numeric" id="p-ti-v" data-money aria-label="매입 전자세금계산서 세액" placeholder="0"></span></span></div>
+          <div class="ht-r"><span class="k">전자계산서</span>
+            <span class="c"><span class="cl">공급가액</span><span class="money"><input type="text" inputmode="numeric" id="p-inv" data-money aria-label="매입 전자계산서 공급가액" placeholder="0"></span></span>
+            <span class="c na">면세라 세액 없음</span></div>
+          <div class="ht-r"><span class="k">사업용 신용카드</span>
+            <span class="c"><span class="cl">공급가액</span><span class="money"><input type="text" inputmode="numeric" id="p-card" data-money data-pair="p-card-v" aria-label="매입 사업용 신용카드 공급가액" placeholder="0"></span></span>
+            <span class="c"><span class="cl">세액</span><span class="money"><input type="text" inputmode="numeric" id="p-card-v" data-money aria-label="매입 사업용 신용카드 세액" placeholder="0"></span></span></div>
+          <div class="ht-r"><span class="k">현금영수증</span>
+            <span class="c"><span class="cl">공급가액</span><span class="money"><input type="text" inputmode="numeric" id="p-cash" data-money data-pair="p-cash-v" aria-label="매입 현금영수증 공급가액" placeholder="0"></span></span>
+            <span class="c"><span class="cl">세액</span><span class="money"><input type="text" inputmode="numeric" id="p-cash-v" data-money aria-label="매입 현금영수증 세액" placeholder="0"></span></span></div>
+          <div class="ht-r"><span class="k">화물운전자 복지카드</span>
+            <span class="c"><span class="cl">공급가액</span><span class="money"><input type="text" inputmode="numeric" id="p-truck" data-money data-pair="p-truck-v" aria-label="매입 화물운전자 복지카드 공급가액" placeholder="0"></span></span>
+            <span class="c"><span class="cl">세액</span><span class="money"><input type="text" inputmode="numeric" id="p-truck-v" data-money aria-label="매입 화물운전자 복지카드 세액" placeholder="0"></span></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="ht-note">※ 신용카드 매출 금액에는 부가세가 포함되어 있습니다.</p>
+    <div class="hx">
+      <div class="hx-pair">
+        <div class="hx-blk">
+          <div class="hx-cap">공제항목</div>
+          <div class="ht two">
+            <div class="ht-r h" aria-hidden="true"><span></span><span>금액(원)</span></div>
+          <div class="ht-r" id="r-yg"><span class="k">예정고지세액 (일반)</span>
+            <span class="c"><span class="money"><input type="text" inputmode="numeric" id="yg" data-money aria-label="예정고지세액" placeholder="0"></span></span></div>
+          <div class="ht-r" id="r-ym"><span class="k">예정신고미환급세액 (일반)</span>
+            <span class="c"><span class="money"><input type="text" inputmode="numeric" id="ym" data-money aria-label="예정신고미환급세액" placeholder="0"></span></span></div>
+          <div class="ht-r" id="r-gb"><span class="k">예정부과세액 (간이)</span>
+            <span class="c"><span class="money"><input type="text" inputmode="numeric" id="gb" data-money aria-label="예정부과세액 간이" placeholder="0"></span></span></div>
+          <div class="ht-r" id="r-gs"><span class="k">예정신고세액 (간이)</span>
+            <span class="c"><span class="money"><input type="text" inputmode="numeric" id="gs" data-money aria-label="예정신고세액 간이" placeholder="0"></span></span></div>
+          </div>
+        </div>
+        <div class="hx-blk" id="pre-wrap">
+          <div class="hx-cap">기공제<br>항목</div>
+          <div class="ht two">
+            <div class="ht-r h" aria-hidden="true"><span></span><span>세액(원)</span></div>
+            <div class="ht-r" id="r-ccp"><span class="k">신용카드매출전표등 발행세액 공제<small>연간 천만원 한도</small></span>
+              <span class="c"><span class="money"><input type="text" inputmode="numeric" id="cc-used" data-money aria-label="신용카드매출전표등 발행세액 공제 기공제액" placeholder="0"></span></span></div>
+            <div class="ht-r" id="r-etp"><span class="k">전자세금계산서 발급세액 공제<small>연간 백만원 한도</small></span>
+              <span class="c"><span class="money"><input type="text" inputmode="numeric" id="et-used" data-money aria-label="전자세금계산서 발급세액 공제 기공제액" placeholder="0"></span></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="ht-note">※ 기공제 항목은 올해 앞선 신고에서 이미 받은 공제액입니다. 연간 한도에서 이 금액을 빼고 남은 만큼만 이번에 공제합니다. 개인사업자만 해당합니다.</p>
+    <p class="ht-tip" id="period-tip"></p>
+  </section>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="section">
+        <h2>홈택스 화면 밖에서 확인할 것</h2>
+        <p class="hint">위 표에 옮긴 숫자 말고 따로 챙길 매출·매입과 공제입니다. 해당할 때만 넣으세요.</p>
+        <p class="ht-note">※ 신용카드·판매(결제)대행 금액은 부가세가 포함된 금액이라 100/110을 공급가액으로 계산합니다. 세액 칸은 공급가액을 넣으면 10%로 자동 입력되며, 홈택스 숫자와 다르면 고쳐 주세요.</p>
+        <p class="ht-note">※ 카드·현금영수증 매입은 홈택스에서 '불공제'로 바꾼 건을 뺀 금액입니다. 접대비, 9인승 이하 승용차(경차 제외) 구입·유지비, 사업과 관계없는 지출은 공제되지 않으니 홈택스에서 불공제로 바꾼 뒤 다시 조회하세요.</p>
         <details class="more" id="s-more">
           <summary>홈택스 화면에 없는 매출 (있을 때만)</summary>
           <div class="ht">
@@ -497,30 +603,21 @@ select{width:100%;}
               <span class="c na">두 번 계산되지 않게 뺌</span></div>
           </div>
         </details>
-      </div>
-
-      <div class="section">
-        <h2>매입항목</h2>
-        <div class="ht">
-          <div class="ht-r h" aria-hidden="true"><span></span><span>공급가액(원)</span><span>세액(원)</span></div>
-          <div class="ht-r"><span class="k">전자세금계산서</span>
-            <span class="c"><span class="cl">공급가액</span><span class="money"><input type="text" inputmode="numeric" id="p-ti" data-money data-pair="p-ti-v" aria-label="매입 전자세금계산서 공급가액" placeholder="0"></span></span>
-            <span class="c"><span class="cl">세액</span><span class="money"><input type="text" inputmode="numeric" id="p-ti-v" data-money aria-label="매입 전자세금계산서 세액" placeholder="0"></span></span></div>
-          <div class="ht-r"><span class="k">전자계산서</span>
-            <span class="c"><span class="cl">공급가액</span><span class="money"><input type="text" inputmode="numeric" id="p-inv" data-money aria-label="매입 전자계산서 공급가액" placeholder="0"></span></span>
-            <span class="c na">면세라 세액 없음</span></div>
-          <div class="ht-r"><span class="k">사업용 신용카드</span>
-            <span class="c"><span class="cl">공급가액</span><span class="money"><input type="text" inputmode="numeric" id="p-card" data-money data-pair="p-card-v" aria-label="매입 사업용 신용카드 공급가액" placeholder="0"></span></span>
-            <span class="c"><span class="cl">세액</span><span class="money"><input type="text" inputmode="numeric" id="p-card-v" data-money aria-label="매입 사업용 신용카드 세액" placeholder="0"></span></span></div>
-          <div class="ht-r"><span class="k">현금영수증</span>
-            <span class="c"><span class="cl">공급가액</span><span class="money"><input type="text" inputmode="numeric" id="p-cash" data-money data-pair="p-cash-v" aria-label="매입 현금영수증 공급가액" placeholder="0"></span></span>
-            <span class="c"><span class="cl">세액</span><span class="money"><input type="text" inputmode="numeric" id="p-cash-v" data-money aria-label="매입 현금영수증 세액" placeholder="0"></span></span></div>
-          <div class="ht-r"><span class="k">화물운전자 복지카드</span>
-            <span class="c"><span class="cl">공급가액</span><span class="money"><input type="text" inputmode="numeric" id="p-truck" data-money data-pair="p-truck-v" aria-label="매입 화물운전자 복지카드 공급가액" placeholder="0"></span></span>
-            <span class="c"><span class="cl">세액</span><span class="money"><input type="text" inputmode="numeric" id="p-truck-v" data-money aria-label="매입 화물운전자 복지카드 세액" placeholder="0"></span></span></div>
-        </div>
-        <p class="ht-note">※ 카드·현금영수증 매입은 홈택스에서 '불공제'로 바꾼 건을 뺀 금액입니다. 접대비, 9인승 이하 승용차(경차 제외) 구입·유지비, 사업과 관계없는 지출은 공제되지 않으니 홈택스에서 불공제로 바꾼 뒤 다시 조회하세요.</p>
-
+        <details class="more" id="p-more">
+          <summary>홈택스 화면에 없는 매입 (있을 때만)</summary>
+          <div class="ht">
+            <div class="ht-r h" aria-hidden="true"><span></span><span>공급가액(원)</span><span>세액(원)</span></div>
+            <div class="ht-r"><span class="k">종이 세금계산서<small>받은 것</small></span>
+              <span class="c"><span class="cl">공급가액</span><span class="money"><input type="text" inputmode="numeric" id="p-pti" data-money data-pair="p-pti-v" aria-label="종이 세금계산서 매입 공급가액" placeholder="0"></span></span>
+              <span class="c"><span class="cl">세액</span><span class="money"><input type="text" inputmode="numeric" id="p-pti-v" data-money aria-label="종이 세금계산서 매입 세액" placeholder="0"></span></span></div>
+            <div class="ht-r"><span class="k">등록 안 한 카드<small>대표자 개인카드 사업 사용분</small></span>
+              <span class="c"><span class="cl">공급가액</span><span class="money"><input type="text" inputmode="numeric" id="p-etc" data-money data-pair="p-etc-v" aria-label="등록 안 한 카드 공급가액" placeholder="0"></span></span>
+              <span class="c"><span class="cl">세액</span><span class="money"><input type="text" inputmode="numeric" id="p-etc-v" data-money aria-label="등록 안 한 카드 세액" placeholder="0"></span></span></div>
+            <div class="ht-r" id="r-no"><span class="k">공제받지 못할 매입세액<small>세금계산서 중 접대비·승용차·사업무관 등</small></span>
+              <span class="c na">빼는 금액</span>
+              <span class="c"><span class="cl">세액</span><span class="money"><input type="text" inputmode="numeric" id="p-no" data-money aria-label="공제받지 못할 매입세액" placeholder="0"></span></span></div>
+          </div>
+        </details>
         <div class="sub-q" id="ui-wrap">
           <label class="check"><input type="checkbox" id="ui-on"><span>전자계산서로 산 면세 농산물·축산물·수산물로 음식이나 제품을 만듭니다<small>음식점, 빵집, 떡집, 식품 제조업 등은 그 매입액의 일부를 매입세액으로 공제받습니다(의제매입세액공제).</small></span></label>
           <div id="ui-box" hidden>
@@ -537,50 +634,6 @@ select{width:100%;}
             </div>
           </div>
         </div>
-
-        <details class="more" id="p-more">
-          <summary>홈택스 화면에 없는 매입 (있을 때만)</summary>
-          <div class="ht">
-            <div class="ht-r h" aria-hidden="true"><span></span><span>공급가액(원)</span><span>세액(원)</span></div>
-            <div class="ht-r"><span class="k">종이 세금계산서<small>받은 것</small></span>
-              <span class="c"><span class="cl">공급가액</span><span class="money"><input type="text" inputmode="numeric" id="p-pti" data-money data-pair="p-pti-v" aria-label="종이 세금계산서 매입 공급가액" placeholder="0"></span></span>
-              <span class="c"><span class="cl">세액</span><span class="money"><input type="text" inputmode="numeric" id="p-pti-v" data-money aria-label="종이 세금계산서 매입 세액" placeholder="0"></span></span></div>
-            <div class="ht-r"><span class="k">등록 안 한 카드<small>대표자 개인카드 사업 사용분</small></span>
-              <span class="c"><span class="cl">공급가액</span><span class="money"><input type="text" inputmode="numeric" id="p-etc" data-money data-pair="p-etc-v" aria-label="등록 안 한 카드 공급가액" placeholder="0"></span></span>
-              <span class="c"><span class="cl">세액</span><span class="money"><input type="text" inputmode="numeric" id="p-etc-v" data-money aria-label="등록 안 한 카드 세액" placeholder="0"></span></span></div>
-            <div class="ht-r" id="r-no"><span class="k">공제받지 못할 매입세액<small>세금계산서 중 접대비·승용차·사업무관 등</small></span>
-              <span class="c na">빼는 금액</span>
-              <span class="c"><span class="cl">세액</span><span class="money"><input type="text" inputmode="numeric" id="p-no" data-money aria-label="공제받지 못할 매입세액" placeholder="0"></span></span></div>
-          </div>
-        </details>
-      </div>
-
-      <div class="section">
-        <h2>공제항목</h2>
-        <div class="ht two">
-          <div class="ht-r h" aria-hidden="true"><span></span><span>금액(원)</span></div>
-          <div class="ht-r" id="r-yg"><span class="k">예정고지세액 (일반)</span>
-            <span class="c"><span class="money"><input type="text" inputmode="numeric" id="yg" data-money aria-label="예정고지세액" placeholder="0"></span></span></div>
-          <div class="ht-r" id="r-ym"><span class="k">예정신고미환급세액 (일반)</span>
-            <span class="c"><span class="money"><input type="text" inputmode="numeric" id="ym" data-money aria-label="예정신고미환급세액" placeholder="0"></span></span></div>
-          <div class="ht-r" id="r-gb" hidden><span class="k">예정부과세액 (간이)</span>
-            <span class="c"><span class="money"><input type="text" inputmode="numeric" id="gb" data-money aria-label="예정부과세액 간이" placeholder="0"></span></span></div>
-          <div class="ht-r" id="r-gs" hidden><span class="k">예정신고세액 (간이)</span>
-            <span class="c"><span class="money"><input type="text" inputmode="numeric" id="gs" data-money aria-label="예정신고세액 간이" placeholder="0"></span></span></div>
-        </div>
-        <p class="ht-note" id="gen-note">※ 예정부과세액·예정신고세액(간이)은 간이과세자 칸이라 넣지 않습니다.</p>
-
-        <div id="pre-wrap">
-          <h3 class="ht-sub">기공제 항목</h3>
-          <div class="ht two">
-            <div class="ht-r h" aria-hidden="true"><span></span><span>세액(원)</span></div>
-            <div class="ht-r" id="r-ccp"><span class="k">신용카드매출전표등 발행세액 공제<small>연간 천만원 한도</small></span>
-              <span class="c"><span class="money"><input type="text" inputmode="numeric" id="cc-used" data-money aria-label="신용카드매출전표등 발행세액 공제 기공제액" placeholder="0"></span></span></div>
-            <div class="ht-r" id="r-etp"><span class="k">전자세금계산서 발급세액 공제<small>연간 백만원 한도</small></span>
-              <span class="c"><span class="money"><input type="text" inputmode="numeric" id="et-used" data-money aria-label="전자세금계산서 발급세액 공제 기공제액" placeholder="0"></span></span></div>
-          </div>
-          <p class="ht-note">※ 올해 앞선 신고에서 이미 받은 공제액입니다. 연간 한도에서 이 금액을 빼고 남은 만큼만 이번에 공제합니다.</p>
-        </div>
       </div>
 
       <div class="section">
@@ -596,7 +649,7 @@ select{width:100%;}
         </div>
         <button type="button" class="btn-reset" id="reset">입력 지우기</button>
       </div>
-    </form>
+    </div>
 
     <aside class="statement">
       <div class="st-head">
@@ -612,6 +665,7 @@ select{width:100%;}
       </div>
     </aside>
   </div>
+  </form>
 
   <footer>
     <section class="laws" aria-labelledby="laws-h">
@@ -695,11 +749,15 @@ select{width:100%;}
     $('period-tip').innerHTML = sp
       ? '간이과세자는 1월~12월 1년이 한 과세기간입니다. 홈택스 조회 화면의 사업자 기본사항에서 과세기간이 1년(예: 0101~1231)으로 나오는지, 신고유형이 <b>간이</b>인지 확인하세요.'
       : '홈택스에서 신고할 과세기간을 골라 조회하세요. 개인사업자 확정신고는 신고구분을 <b>예정+확정</b>으로 고르면 6개월 치가 나옵니다. 신고유형이 <b>일반</b>인지 확인하세요.';
-    $('who-seg').hidden = sp;
-    $('simple-box').hidden = !sp;
-    $('r-gb').hidden = !sp;
-    $('r-gs').hidden = !sp;
-    $('gen-note').hidden = sp;
+    // 홈택스 표 모양을 그대로 두고, 지금 신고유형에 쓰지 않는 칸은 회색으로 잠금
+    const off = (ids, on) => ids.forEach(id => {
+      const el = $(id); el.classList.toggle('off', on);
+      el.querySelectorAll('input,select').forEach(x => { x.disabled = on; });
+    });
+    off(['who-k', 'who-v'], sp);
+    off(['rate-k', 'rate-v', 'kind-k', 'kind-v', 'r-gb', 'r-gs'], !sp);
+    off(['r-yg', 'r-ym'], sp);
+    off(['r-ccp', 'r-etp'], w !== 'p');
     $('ui-wrap').hidden = sp;
     $('r-no').hidden = sp;
     $('cc-txt').textContent = sp
@@ -711,9 +769,6 @@ select{width:100%;}
     $('cc-wrap').hidden = w !== 'p';
     $('et-wrap').hidden = w !== 'p' || !RULE.et;
     $('et-box').hidden = !(w === 'p' && $('et-on').checked);
-    $('pre-wrap').hidden = w !== 'p';
-    $('r-yg').hidden = sp;
-    $('r-ym').hidden = sp;
     $('ui-box').hidden = !$('ui-on').checked;
   }
 
