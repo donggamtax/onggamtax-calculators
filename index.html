@@ -139,6 +139,23 @@ footer a{color:var(--brand);font-weight:600;text-decoration:none}
   .band a{text-align:left;width:100%}
   .steps{padding:48px 0;margin-top:64px}
 }
+.card .mini{display:none}
+@media (max-width:560px){
+  main>.wrap{display:flex;flex-direction:column}
+  main>.wrap>.disclaimer{order:2;margin:24px 0 0}
+  main>.wrap>.sec-h{order:0}
+  main>.wrap>.cards{order:1}
+  main>.wrap>*:not(.disclaimer):not(.sec-h):not(.cards){order:3}
+  .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .card{padding:16px 14px;gap:10px;border-radius:16px}
+  .card .ic{width:38px;height:38px;border-radius:11px}
+  .card .ic svg{width:20px;height:20px}
+  .card h2{font-size:16px;margin-bottom:2px;letter-spacing:-.04em}
+  .card p,.card .tags,.card .go{display:none}
+  .card .mini{display:block;font-size:12.5px;color:var(--muted)}
+  .card:last-child{grid-column:1/-1;flex-direction:row;align-items:center}
+  .card:hover{transform:none}
+}
 </style>
 </head>
 <body>
@@ -187,49 +204,49 @@ footer a{color:var(--brand);font-weight:600;text-decoration:none}
 
     <a class="card" href="yangdo/">
       <div class="head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h13l-3-3"/><path d="M20 16H7l3 3"/></svg></span></div>
-      <div><h2>양도소득세·취득세</h2><p>집, 상가, 토지, 주식을 팔거나 살 때 내는 세금을 계산합니다.</p></div>
+      <div><h2>양도소득세·취득세</h2><span class="mini">팔 때·살 때</span><p>집, 상가, 토지, 주식을 팔거나 살 때 내는 세금을 계산합니다.</p></div>
       <ul class="tags"><li>1세대 1주택 비과세</li><li>장기보유특별공제</li><li>취득세</li></ul>
       <span class="go">계산하기</span>
     </a>
 
     <a class="card" href="sangsok/">
       <div class="head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16"/><path d="M6 20V10l6-5 6 5v10"/><path d="M10 20v-5h4v5"/></svg></span></div>
-      <div><h2>상속세·증여세</h2><p>가족에게 재산을 물려주거나 미리 증여할 때 내는 세금을 계산합니다.</p></div>
+      <div><h2>상속세·증여세</h2><span class="mini">물려줄 때·미리 줄 때</span><p>가족에게 재산을 물려주거나 미리 증여할 때 내는 세금을 계산합니다.</p></div>
       <ul class="tags"><li>배우자·자녀 공제</li><li>10년 합산</li><li>추정상속재산</li></ul>
       <span class="go">계산하기</span>
     </a>
 
     <a class="card" href="jaesan/">
       <div class="head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V8h6v13"/><path d="M11 21V4h8v17"/><path d="M14 8h2M14 12h2M14 16h2"/></svg></span></div>
-      <div><h2>재산세·종합부동산세</h2><p>집과 땅, 건물을 가지고 있을 때 매년 내는 보유세와 앞으로 3년치를 계산합니다.</p></div>
+      <div><h2>재산세·종합부동산세</h2><span class="mini">매년 내는 보유세</span><p>집과 땅, 건물을 가지고 있을 때 매년 내는 보유세와 앞으로 3년치를 계산합니다.</p></div>
       <ul class="tags"><li>공시가격</li><li>1세대 1주택 공제</li><li>3년 예측</li></ul>
       <span class="go">계산하기</span>
     </a>
 
     <a class="card" href="jonghap/">
       <div class="head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h10v18l-2.5-1.5L12 21l-2.5-1.5L7 21z"/><path d="M10 8h4"/><path d="M10 12h4"/></svg></span></div>
-      <div><h2>종합소득세</h2><p>사업자와 프리랜서가 5월에 신고하는 소득세를 계산합니다.</p></div>
+      <div><h2>종합소득세</h2><span class="mini">5월 사업자 신고</span><p>사업자와 프리랜서가 5월에 신고하는 소득세를 계산합니다.</p></div>
       <ul class="tags"><li>업종코드 경비율 자동</li><li>노란우산공제</li><li>납부·환급액</li></ul>
       <span class="go">계산하기</span>
     </a>
 
     <a class="card" href="bugase/">
       <div class="head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18H6z"/><path d="M9 7h6"/><path d="M9.5 16.5l5-5"/><circle cx="10" cy="12" r=".9"/><circle cx="14" cy="16" r=".9"/></svg></span></div>
-      <div><h2>부가가치세</h2><p>홈택스 신고도움 자료의 매출·매입 숫자를 옮겨 적으면 이번에 낼 부가세를 계산합니다.</p></div>
+      <div><h2>부가가치세</h2><span class="mini">1월·7월 신고</span><p>홈택스 신고도움 자료의 매출·매입 숫자를 옮겨 적으면 이번에 낼 부가세를 계산합니다.</p></div>
       <ul class="tags"><li>홈택스 자료 그대로</li><li>카드발행 세액공제</li><li>의제매입세액</li></ul>
       <span class="go">계산하기</span>
     </a>
 
     <a class="card" href="wolgeup/">
       <div class="head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><path d="M7 15h4"/></svg></span></div>
-      <div><h2>월급 실수령액</h2><p>연봉·월급에서 세금과 4대보험을 뺀 실수령액, 거꾸로 필요한 세전 금액을 계산합니다.</p></div>
+      <div><h2>월급 실수령액</h2><span class="mini">세후 실수령액</span><p>연봉·월급에서 세금과 4대보험을 뺀 실수령액, 거꾸로 필요한 세전 금액을 계산합니다.</p></div>
       <ul class="tags"><li>2026 4대보험</li><li>간이세액표</li><li>세후 → 세전</li></ul>
       <span class="go">계산하기</span>
     </a>
 
     <a class="card" href="juhyu/">
       <div class="head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span></div>
-      <div><h2>주휴수당</h2><p>시급과 근무시간으로 주휴수당과 월 환산 임금을 계산합니다.</p></div>
+      <div><h2>주휴수당</h2><span class="mini">알바·직원 주휴</span><p>시급과 근무시간으로 주휴수당과 월 환산 임금을 계산합니다.</p></div>
       <ul class="tags"><li>2026·2027 최저임금</li><li>요일별 근무</li><li>월 환산 임금</li></ul>
       <span class="go">계산하기</span>
     </a>
