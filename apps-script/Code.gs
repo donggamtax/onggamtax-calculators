@@ -7,7 +7,7 @@
 //
 // 스크립트 속성(프로젝트 설정 → 스크립트 속성)에 넣을 값: LAW_OC, STAFF_PASSWORD, SESSION_SECRET
 // AI 정리를 쓰려면 GEMINI_API_KEY 추가 (정리 모델은 기본 gemini-pro-latest, 바꾸려면 GEMINI_MODEL)
-// 자주 묻는 질문·안내문·공지·휴가 신청은 이 시트의 탭에 저장된다 (BOARDS)
+// 안내문 템플릿·공지는 이 시트의 탭에 저장된다 (BOARDS). 휴가 신청은 기존 구글 폼으로 연결 (LEAVE_FORM_URL)
 // 이 파일에는 비밀 값을 적지 마세요.
 
 const LAW_API = "https://www.law.go.kr/DRF";
@@ -63,6 +63,7 @@ function route(req) {
     case "search": return search(req, p);
     case "detail": return detail(req, p);
     case "summarize": return summarize(req, p);
+    case "config": return staffConfig(p);
     case "board.list": return boardList(req);
     case "board.save": return boardSave(req);
     case "board.delete": return boardDelete(req);
@@ -615,13 +616,15 @@ function deleteHistory(req) {
 
 // ── 게시판: 자주 묻는 질문·안내문 템플릿·공지·휴가 신청 (구글 시트 탭) ──────────
 
-const LEAVE_TYPES = ["연차", "오전 반차", "오후 반차", "병가", "경조사", "기타"];
 const BOARDS = {
-  faq: { sheet: "자주묻는질문", fields: [["category", "분류", 40], ["question", "질문", 500], ["answer", "답변", 8000], ["basis", "근거", 2000], ["author", "작성자", 20]] },
   tpl: { sheet: "안내문템플릿", fields: [["category", "분류", 40], ["title", "제목", 200], ["body", "내용", 8000], ["author", "작성자", 20]] },
   notice: { sheet: "공지매뉴얼", fields: [["type", "종류", 10], ["title", "제목", 200], ["body", "내용", 20000], ["pinned", "상단고정", 5], ["author", "작성자", 20]] },
-  leave: { sheet: "휴가신청", fields: [["name", "이름", 20], ["type", "종류", 10], ["start", "시작일", 10], ["end", "종료일", 10], ["reason", "사유", 500], ["status", "상태", 10], ["memo", "처리메모", 500]] },
 };
+// 로그인한 직원에게만 주는 설정. 휴가 신청 폼 주소는 공개 저장소에 두지 않고 스크립트 속성(LEAVE_FORM_URL)에 둔다.
+function staffConfig(p) {
+  const u = String(p.LEAVE_FORM_URL || "").trim();
+  return { leaveFormUrl: /^https:\/\/(docs\.google\.com\/forms\/|forms\.gle\/)/.test(u) ? u : "" };
+}
 function boardOf(req) {
   const b = BOARDS[String(req.board || "")];
   if (!b) throw fail("없는 메뉴입니다.");
@@ -666,18 +669,7 @@ function boardSave(req) {
     const cur = row ? boardRowToItem(b, sh.getRange(row, 1, 1, b.fields.length + 3).getValues()[0]) : {};
     const it = { id: id || Date.now().toString(36) + Math.random().toString(36).slice(2, 6) };
     b.fields.forEach(f => { it[f[0]] = t(f[0] in src ? src[f[0]] : cur[f[0]], f[2]); });
-    if (key === "leave") {
-      // 휴가 승인·반려는 대표님이 시트의 "상태" 칸에서 한다. 화면에서는 바꿀 수 없다.
-      it.status = row ? cur.status : "대기";
-      it.memo = row ? cur.memo : "";
-      if (row && cur.status !== "대기") throw fail("이미 처리된 신청은 고칠 수 없습니다.");
-      if (PEOPLE.indexOf(it.name) < 0) throw fail("이름을 고르세요.");
-      if (LEAVE_TYPES.indexOf(it.type) < 0) throw fail("휴가 종류를 고르세요.");
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(it.start) || !/^\d{4}-\d{2}-\d{2}$/.test(it.end) || it.end < it.start) throw fail("날짜를 확인하세요.");
-    } else {
-      const main = b.fields[1][0];
-      if (!String(it[main]).trim()) throw fail("내용을 입력하세요.");
-    }
+    if (!String(it[b.fields[1][0]]).trim()) throw fail("내용을 입력하세요.");
     const now = new Date().toISOString();
     const values = [it.id].concat(b.fields.map(f => it[f[0]]), [row ? cur.createdAt : now, row ? now : ""]);
     const at = row || sh.getLastRow() + 1;
@@ -691,10 +683,6 @@ function boardDelete(req) {
     const sh = boardSheet(b, key);
     const row = findRow(sh, String(req.id || ""));
     if (!row) return;
-    if (key === "leave") {
-      const cur = boardRowToItem(b, sh.getRange(row, 1, 1, b.fields.length + 3).getValues()[0]);
-      if (cur.status !== "대기") throw fail("이미 처리된 신청은 취소할 수 없습니다. 대표님께 말씀해 주세요.");
-    }
     sh.deleteRow(row);
   });
   return { ok: true };
