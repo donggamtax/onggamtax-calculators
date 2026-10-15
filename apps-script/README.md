@@ -41,7 +41,8 @@ Gemini 앱 유료 구독과 API 키는 별개라서 키를 따로 만들어야 �
 2. 같은 화면에서 결제(Billing)를 연결하면 유료 등급이 됩니다. 유료 등급은 입력 내용을 구글이 학습에 쓰지 않습니다.
    결제를 연결하지 않은 무료 등급은 입력 내용이 서비스 개선에 쓰일 수 있으니 고객 정보는 넣지 마세요.
 3. Apps Script 스크립트 속성에 `GEMINI_API_KEY` = 복사한 키 를 추가하고 저장합니다.
-   (모델을 바꾸려면 `GEMINI_MODEL`, 기본값 `gemini-flash-latest`)
+   (정리 모델을 바꾸려면 `GEMINI_MODEL`. 기본값 `gemini-flash-latest`, 더 정확한 정리는 `gemini-pro-latest`.
+   검색어 고르기는 늘 빠른 모델을 씁니다.)
 
 ## 바꿀 때
 

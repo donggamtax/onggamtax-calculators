@@ -6,7 +6,7 @@
 // - 검색된 자료 원문을 구글 Gemini에 넘겨 결론·근거를 정리 (선택)
 //
 // 스크립트 속성(프로젝트 설정 → 스크립트 속성)에 넣을 값: LAW_OC, STAFF_PASSWORD, SESSION_SECRET
-// AI 정리를 쓰려면 GEMINI_API_KEY 추가 (모델을 바꾸려면 GEMINI_MODEL, 기본 gemini-flash-latest)
+// AI 정리를 쓰려면 GEMINI_API_KEY 추가 (정리 모델은 GEMINI_MODEL, 기본 gemini-flash-latest. 더 정확하게: gemini-pro-latest)
 // 이 파일에는 비밀 값을 적지 마세요.
 
 const LAW_API = "https://www.law.go.kr/DRF";
@@ -216,7 +216,8 @@ function search(req, p) {
 function searchPlan(q, p) {
   if (p.GEMINI_API_KEY) {
     try {
-      const res = UrlFetchApp.fetch(GEMINI_API + encodeURIComponent(p.GEMINI_MODEL || "gemini-flash-latest") + ":generateContent", {
+      // 검색어 고르기는 빠른 모델로 충분하다 (정리용 모델은 GEMINI_MODEL)
+      const res = UrlFetchApp.fetch(GEMINI_API + encodeURIComponent(p.GEMINI_FAST_MODEL || "gemini-flash-latest") + ":generateContent", {
         method: "post",
         contentType: "application/json",
         headers: { "x-goog-api-key": p.GEMINI_API_KEY },
