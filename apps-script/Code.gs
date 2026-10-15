@@ -266,10 +266,10 @@ function detail(req, p) {
 }
 
 // 자료 하나의 원문(JSON 객체)을 가져온다
-function fetchDoc(item, p) {
+// 법제처 원문 요청 변수 (국세청 해석은 별도 사이트라 null)
+function docParams(item) {
   const key = String(item.kind || ""), id = String(item.id || "");
-  if (key === "nts" && item.nid) return ntsDoc(String(item.nid));
-  needOc(p);
+  if (key === "nts" && item.nid) return null;
   const params = { target: TARGETS[key].target };
   if (key === "law") {
     params.MST = id;
@@ -277,7 +277,15 @@ function fetchDoc(item, p) {
   } else {
     params.ID = id;
   }
-  const res = UrlFetchApp.fetch(lawUrl("lawService.do", params, p), { muteHttpExceptions: true });
+  return params;
+}
+// pre: 미리 동시에 받아 둔 응답 (없으면 여기서 받는다)
+function fetchDoc(item, p, pre) {
+  const key = String(item.kind || "");
+  const params = docParams(item);
+  if (!params) return ntsDoc(String(item.nid));
+  needOc(p);
+  const res = pre || UrlFetchApp.fetch(lawUrl("lawService.do", params, p), { muteHttpExceptions: true });
   let data;
   try { data = parseLaw(res); }
   catch (e) {
@@ -331,10 +339,16 @@ function stripTags(s) {
 // ── AI 정리 (구글 Gemini) ─────────────────────────────────────
 
 // AI가 법제처 검색·원문 열람을 직접 여러 번 하면서 근거를 모은 뒤 답한다 (Gemini 함수 호출)
-const AI_MAX_TURNS = 8;
+const AI_MAX_TURNS = 5;
+const AI_TIME_LIMIT_MS = 4 * 60 * 1000; // Apps Script 한 번 실행 한도(6분) 안에서 끝낸다
 const DEFAULT_ANSWER_MODEL = "gemini-pro-latest";
-const AI_TIME_LIMIT_MS = 4.5 * 60 * 1000; // Apps Script 한 번 실행 한도(6분) 안에서 끝낸다
+const DEFAULT_RESEARCH_MODEL = "gemini-flash-latest";
+const ANSWER_CACHE_SECONDS = 6 * 3600;
 
+function cacheGet(key) { try { const v = CacheService.getScriptCache().get(key); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
+function cachePut(key, obj) { try { const v = JSON.stringify(obj); if (v.length < 90000) CacheService.getScriptCache().put(key, v, ANSWER_CACHE_SECONDS); } catch (e) {} }
+
+// 조사는 빠른 모델이 법제처를 직접 찾아 읽고, 모은 원문으로 최종 답은 정리용 모델(기본 Pro)이 한 번에 쓴다
 function summarize(req, p) {
   if (!p.GEMINI_API_KEY) throw fail("AI 정리를 쓰려면 스크립트 속성에 GEMINI_API_KEY를 넣어 주세요.", 503);
   needOc(p);
@@ -342,7 +356,15 @@ function summarize(req, p) {
   if (!question) throw fail("질문을 입력하세요.");
   const year = /^\d{4}$/.test(String(req.year || "")) ? String(req.year) : String(new Date().getFullYear());
   const started = Date.now();
-  const model = p.GEMINI_MODEL || DEFAULT_ANSWER_MODEL;
+  const answerModel = p.GEMINI_MODEL || DEFAULT_ANSWER_MODEL;
+  const researchModel = p.GEMINI_FAST_MODEL || DEFAULT_RESEARCH_MODEL;
+
+  const picks = (Array.isArray(req.items) ? req.items : []).filter(it => TARGETS[it.kind] && it.id).slice(0, 8);
+  const cacheKey = "ans:" + hmac(p.SESSION_SECRET || "k", [answerModel, year, question, picks.map(x => x.kind + x.id).join(",")].join("|"));
+  if (!req.fresh) {
+    const hit = cacheGet(cacheKey);
+    if (hit) return Object.assign(hit, { cached: true });
+  }
 
   // 자료 손잡이(h1, h2 …) ↔ 실제 자료
   const reg = {}; let seq = 0;
@@ -353,9 +375,7 @@ function summarize(req, p) {
     reg[h] = { kind: it.kind, id: String(it.id), nid: it.nid || "", title: String(it.title || ""), number: String(it.number || ""), date: String(it.date || ""), label: TARGETS[it.kind].label };
     return h;
   };
-  const read = {}; const searches = [];
-
-  const picks = (Array.isArray(req.items) ? req.items : []).filter(it => TARGETS[it.kind] && it.id).slice(0, 8);
+  const texts = {}; const searches = [];
   const pickLines = picks.map(it => handleOf(it) + " · " + TARGETS[it.kind].label + " · " + (it.number ? it.number + " " : "") + it.title);
 
   const tools = [{ functionDeclarations: [
@@ -371,82 +391,119 @@ function summarize(req, p) {
         article: { type: "STRING", description: "법령에서 읽을 조문 번호" },
         focus: { type: "STRING", description: "법령에서 조문을 고를 때 쓸 단어들(공백 구분)" },
       }, required: ["handle"] } },
-    { name: "final_answer", description: "근거를 충분히 읽은 뒤 최종 답을 낸다.",
-      parameters: { type: "OBJECT", properties: {
-        conclusion: { type: "STRING", description: "결론 1~3문장" },
-        explanation: { type: "STRING", description: "근거 조문·해석을 들어 단계별로 설명. 실무자가 바로 쓸 수 있게 구체적으로" },
-        checks: { type: "ARRAY", items: { type: "STRING" }, description: "추가로 확인할 사실관계·쟁점" },
-        sources: { type: "ARRAY", items: { type: "OBJECT", properties: { handle: { type: "STRING" }, point: { type: "STRING", description: "이 자료에서 근거로 쓴 내용(조문 번호 포함)" } }, required: ["handle", "point"] } },
-      }, required: ["conclusion", "explanation", "checks", "sources"] } },
+    { name: "finish", description: "필요한 원문을 충분히 읽었으면 조사를 끝낸다. 답은 다른 담당이 쓰므로 여기서 답을 쓰지 않는다.", parameters: { type: "OBJECT", properties: {} } },
   ] }];
-
-  const system = [
-    "너는 동감 세무회계 직원의 세법 검토를 돕는 조사·정리 담당이다. 도구로 국가법령정보센터를 직접 찾아 읽고 답한다.",
-    "[근거 규칙] read로 원문을 읽은 자료만 근거로 쓴다. 기억으로 조문 번호·예규 번호·결정 내용을 지어내지 않는다. 읽은 자료로 판단할 수 없는 부분은 '확인된 근거 없음'이라고 쓴다.",
-    "[조사 순서] 1) 쟁점에 걸리는 법률·시행령을 search(kind=law, 정식 명칭)로 찾고, read로 해당 조문(의무 규정, 가산세·벌칙 규정 등)을 읽는다. 조문 번호를 모르면 focus 단어로 읽는다.",
-    "2) 국세청 해석(nts)·조세심판원(tt)·판례(prec)를 쟁점 용어로 찾아 제목을 보고 관련 있는 것 2~4건의 원문을 읽는다. 0건이면 용어를 바꿔 다시 찾는다.",
-    "3) 최소 4건 이상 원문을 읽은 뒤 final_answer를 호출한다. 검색은 짧은 용어로, 한 번에 여러 도구를 함께 불러도 된다.",
-    "[답변] 귀속연도 " + year + "년 기준. 한국어로 결론 먼저. 조문은 '법인세법 제119조 제1항'처럼, 해석·결정례·판례는 문서번호·일자를 밝힌다. 가산세·제척기간 등 금액·기간이 걸린 쟁점은 계산 방법까지 적는다.",
+  const researchSystem = [
+    "너는 동감 세무회계 직원의 세법 질문에 필요한 근거 자료를 찾아 읽어 모으는 조사 담당이다. 답을 쓰지 말고 도구로 자료만 모은다.",
+    "[순서] 1) 쟁점에 걸리는 법률을 search(kind=law, 정식 명칭)로 찾고 read로 핵심 조문(의무·가산세·벌칙 규정 등)을 읽는다. 조문 번호를 모르면 focus 단어로 읽는다.",
+    "2) 국세청 해석(nts)·조세심판원(tt)·판례(prec)를 쟁점 용어로 찾아 제목을 보고 관련 있는 2~4건을 읽는다. 0건이면 용어를 바꿔 다시 찾는다.",
+    "3) 서로 관계없는 search·read는 한 번에 여러 개를 함께 호출해 시간을 줄인다. 원문 4건 이상 읽었으면 finish를 호출한다.",
   ].join("\n");
+  const contents = [{ role: "user", parts: [{ text: "[질문]\n" + question + "\n귀속연도: " + year + (pickLines.length ? "\n\n[직원이 미리 담은 자료 — 먼저 읽어 볼 것]\n" + pickLines.join("\n") : "") }] }];
 
-  const contents = [{ role: "user", parts: [{ text: "[질문]\n" + question + (pickLines.length ? "\n\n[직원이 미리 담은 자료 — 먼저 읽어 볼 것]\n" + pickLines.join("\n") : "") }] }];
-
-  const runTool = (name, args) => {
-    if (name === "search") {
-      const kind = TARGETS[args.kind] ? args.kind : "law";
-      const query = String(args.query || "").trim().slice(0, 40);
-      if (!query) return { error: "검색어가 비었습니다." };
+  const doSearches = calls => {
+    const reqs = calls.map(c => {
+      const kind = TARGETS[c.args.kind] ? c.args.kind : "law";
+      const query = String(c.args.query || "").trim().slice(0, 40);
       const prm = { target: TARGETS[kind].target, query: query, display: 10, page: 1 };
-      if (kind === "law" && args.in_text) prm.search = 2;
-      let items = [];
-      try { items = (findItems(parseLaw(UrlFetchApp.fetch(lawUrl("lawSearch.do", prm, p), { muteHttpExceptions: true }))) || []).map(it => normalize(kind, it)); }
+      if (kind === "law" && c.args.in_text) prm.search = 2;
+      return { kind: kind, query: query, req: { url: lawUrl("lawSearch.do", prm, p), muteHttpExceptions: true } };
+    });
+    const live = reqs.filter(r => r.query);
+    const res = live.length ? UrlFetchApp.fetchAll(live.map(r => r.req)) : [];
+    return reqs.map(r => {
+      if (!r.query) return { error: "검색어가 비었습니다." };
+      let items;
+      try { items = (findItems(parseLaw(res[live.indexOf(r)])) || []).map(it => normalize(r.kind, it)); }
       catch (e) { return { error: e.publicMessage || "검색 실패" }; }
-      searches.push(TARGETS[kind].label + ": " + query + " (" + items.length + "건)");
+      searches.push(TARGETS[r.kind].label + ": " + r.query + " (" + items.length + "건)");
       if (!items.length) return { count: 0, hint: "0건입니다. 더 짧거나 다른 용어로 찾아보세요." };
       return { count: items.length, results: items.map(it => ({ handle: handleOf(it), title: it.title, number: it.number, date: it.date })) };
-    }
-    if (name === "read") {
-      const it = reg[String(args.handle || "")];
-      if (!it) return { error: "없는 handle입니다. search 결과의 handle을 쓰세요." };
+    });
+  };
+  const doReads = calls => {
+    const jobs = calls.map(c => {
+      const a = c.args, h = String(a.handle || ""), it = reg[h];
+      if (!it) return { err: "없는 handle입니다. search 결과의 handle을 쓰세요." };
+      const item = Object.assign({}, it, { efYd: it.kind === "law" ? year + "1231" : "" });
+      return { a: a, h: h, it: it, item: item, params: docParams(item) };
+    });
+    const web = jobs.filter(j => j.params);
+    const pre = web.length ? UrlFetchApp.fetchAll(web.map(j => ({ url: lawUrl("lawService.do", j.params, p), muteHttpExceptions: true }))) : [];
+    return jobs.map(j => {
+      if (j.err) return { error: j.err };
       let text = "";
       try {
-        const data = fetchDoc(Object.assign({}, it, { efYd: it.kind === "law" ? year + "1231" : "" }), p);
-        if (it.kind === "law") text = args.article ? lawArticle(data, String(args.article)) : lawExcerpt(data, keywords(question + " " + (args.focus || "")));
+        const data = fetchDoc(j.item, p, j.params ? pre[web.indexOf(j)] : null);
+        if (j.it.kind === "law") text = j.a.article ? lawArticle(data, String(j.a.article)) : lawExcerpt(data, keywords(question + " " + (j.a.focus || "")));
         else text = flatText(data).slice(0, 9000);
       } catch (e) { return { error: e.publicMessage || "원문을 불러오지 못했습니다." }; }
-      if (!text) return { error: args.article ? "그 조문을 찾지 못했습니다. focus로 다시 읽어 보세요." : "관련 조문을 찾지 못했습니다. article이나 다른 focus로 읽어 보세요." };
-      read[args.handle] = true;
-      return { handle: args.handle, title: it.title, number: it.number, text: text.slice(0, 12000) };
-    }
-    return { error: "없는 도구입니다." };
+      if (!text) return { error: j.a.article ? "그 조문을 찾지 못했습니다. focus로 다시 읽어 보세요." : "관련 조문을 찾지 못했습니다. article이나 다른 focus로 읽어 보세요." };
+      texts[j.h] = (texts[j.h] ? texts[j.h] + "\n\n" : "") + text.slice(0, 12000);
+      return { handle: j.h, title: j.it.title, number: j.it.number, chars: text.length, text: text.slice(0, 6000) };
+    });
   };
 
-  let answer = null;
-  for (let turn = 0; turn < AI_MAX_TURNS && !answer; turn++) {
+  let done = false;
+  for (let turn = 0; turn < AI_MAX_TURNS && !done; turn++) {
     const last = turn === AI_MAX_TURNS - 1 || Date.now() - started > AI_TIME_LIMIT_MS;
-    const body = callGemini(p, model, {
-      systemInstruction: { parts: [{ text: system }] },
+    if (last && Object.keys(texts).length) break;
+    const body = callGemini(p, researchModel, {
+      systemInstruction: { parts: [{ text: researchSystem }] },
       contents: contents,
       tools: tools,
-      toolConfig: { functionCallingConfig: last ? { mode: "ANY", allowedFunctionNames: ["final_answer"] } : { mode: "ANY" } },
+      toolConfig: { functionCallingConfig: { mode: "ANY" } },
       generationConfig: { temperature: 0.2 },
     });
     const content = ((body.candidates || [])[0] || {}).content;
-    if (!content || !content.parts) throw fail("AI가 답을 내지 못했습니다. 다시 시도해 주세요.", 502);
+    if (!content || !content.parts) break;
     contents.push(content); // 생각 서명 등 모델이 준 그대로 돌려줘야 한다
-    const calls = content.parts.filter(x => x.functionCall).map(x => x.functionCall);
-    if (!calls.length) { contents.push({ role: "user", parts: [{ text: "도구를 써서 조사를 이어가거나 final_answer로 답을 내세요." }] }); continue; }
-    const responses = [];
-    calls.forEach(c => {
-      if (c.name === "final_answer") { answer = c.args || {}; return; }
-      responses.push({ functionResponse: { name: c.name, response: runTool(c.name, c.args || {}) } });
-    });
-    if (!answer && responses.length) contents.push({ role: "user", parts: responses });
+    const calls = content.parts.filter(x => x.functionCall).map(x => ({ name: x.functionCall.name, args: x.functionCall.args || {} }));
+    if (!calls.length) { contents.push({ role: "user", parts: [{ text: "도구를 써서 조사를 이어가거나 finish를 호출하세요." }] }); continue; }
+    if (calls.some(c => c.name === "finish")) { done = true; break; }
+    const searchCalls = calls.filter(c => c.name === "search"), readCalls = calls.filter(c => c.name === "read");
+    const sRes = doSearches(searchCalls), rRes = doReads(readCalls);
+    const responses = calls.map(c => ({ functionResponse: { name: c.name, response: c.name === "search" ? sRes[searchCalls.indexOf(c)] : c.name === "read" ? rRes[readCalls.indexOf(c)] : { error: "없는 도구입니다." } } }));
+    contents.push({ role: "user", parts: responses });
   }
-  if (!answer) throw fail("AI가 시간 안에 정리를 마치지 못했습니다. 질문을 조금 더 좁혀 다시 시도해 주세요.", 504);
 
-  const src = (answer.sources || []).filter(x => reg[x.handle] && read[x.handle]).map(x => Object.assign({ handle: x.handle, point: String(x.point || "") }, reg[x.handle]));
-  return {
+  const handles = Object.keys(texts);
+  if (!handles.length) throw fail("관련 원문을 찾지 못했습니다. 질문에 쓰인 용어를 바꾸거나 더 구체적으로 적어 다시 시도해 주세요.", 502);
+  let budget = 90000;
+  const material = handles.map(h => {
+    const it = reg[h], t = texts[h].slice(0, Math.max(3000, Math.floor(budget / handles.length)));
+    return "[" + h + "] " + it.label + " · " + (it.number ? it.number + " " : "") + it.title + (it.date ? " (" + it.date + ")" : "") + "\n" + t;
+  }).join("\n\n----\n\n");
+
+  const writerSystem = [
+    "너는 동감 세무회계 직원의 세법 검토를 돕는 보조자다.",
+    "반드시 아래 [자료]에 적힌 내용만 근거로 답한다. 자료에 없는 조문·예규·결정례·판례를 지어내거나 기억으로 보태지 않는다.",
+    "자료로 판단할 수 없는 부분은 '확인된 근거 없음'이라고 쓴다.",
+    "조문은 '법인세법 제119조 제1항'처럼 법령명과 조·항·호를, 해석·결정례·판례는 문서번호와 일자를 밝힌다.",
+    "귀속연도 " + year + "년 기준으로 판단한다. 한국어로, 결론을 먼저 쓴다. 가산세·제척기간처럼 금액·기간이 걸린 쟁점은 계산 방법까지 적는다.",
+    "설명은 실무자가 바로 쓸 수 있게 구체적으로 쓴다. sources의 handle은 [자료] 앞의 번호(h1 등)를 쓴다.",
+  ].join("\n");
+  const schema = {
+    type: "OBJECT",
+    properties: {
+      conclusion: { type: "STRING", description: "결론 1~3문장" },
+      explanation: { type: "STRING", description: "근거 조문·해석을 들어 단계별로 설명" },
+      checks: { type: "ARRAY", items: { type: "STRING" }, description: "추가로 확인할 사실관계·쟁점" },
+      sources: { type: "ARRAY", items: { type: "OBJECT", properties: { handle: { type: "STRING" }, point: { type: "STRING", description: "이 자료에서 근거로 쓴 내용(조문 번호 포함)" } }, required: ["handle", "point"] } },
+    },
+    required: ["conclusion", "explanation", "checks", "sources"],
+  };
+  const wb = callGemini(p, answerModel, {
+    systemInstruction: { parts: [{ text: writerSystem }] },
+    contents: [{ role: "user", parts: [{ text: "[질문]\n" + question + "\n\n[자료]\n" + material }] }],
+    generationConfig: { temperature: 0.2, responseMimeType: "application/json", responseSchema: schema },
+  });
+  let answer;
+  try { answer = JSON.parse((((wb.candidates || [])[0] || {}).content.parts || []).map(x => x.text || "").join("")); }
+  catch (e) { throw fail("AI 답변을 읽지 못했습니다. 다시 시도해 주세요.", 502); }
+
+  const src = (answer.sources || []).filter(x => reg[x.handle] && texts[x.handle]).map(x => Object.assign({ handle: x.handle, point: String(x.point || "") }, reg[x.handle]));
+  const result = {
     question: question,
     year: year,
     conclusion: String(answer.conclusion || ""),
@@ -454,9 +511,12 @@ function summarize(req, p) {
     checks: (answer.checks || []).map(String),
     sources: src,
     searches: searches,
-    read: Object.keys(read).map(h => reg[h]),
-    model: model,
+    read: handles.map(h => reg[h]),
+    model: answerModel,
+    seconds: Math.round((Date.now() - started) / 1000),
   };
+  cachePut(cacheKey, result);
+  return result;
 }
 
 function callGemini(p, model, payload) {

@@ -34,16 +34,16 @@
 
 ## AI 정리(구글 Gemini) 켜기
 
-"AI로 정리하기" 버튼을 누르면 Gemini가 법제처 검색·원문 열람을 직접 여러 번 하면서 근거를 모은 뒤 결론·설명·근거를 정리합니다(1~2분).
-정확도를 높이려면 `GEMINI_MODEL`을 `gemini-pro-latest`로 두는 것을 권합니다.
+"AI로 정리하기" 버튼을 누르면 Gemini가 법제처 검색·원문 열람을 직접 여러 번 하면서 근거를 모은 뒤 결론·설명·근거를 정리합니다(보통 30초~1분).
+빠르게 하려고 자료 찾기는 빠른 모델(`GEMINI_FAST_MODEL`, 기본 `gemini-flash-latest`)이 하고, 최종 답만 Pro(`GEMINI_MODEL`, 기본 `gemini-pro-latest`)가 씁니다.
+같은 질문은 6시간 동안 저장해 둔 답을 바로 보여주며, "다시 정리하기"를 누르면 새로 만듭니다.
 Gemini 앱 유료 구독과 API 키는 별개라서 키를 따로 만들어야 합니다.
 
 1. aistudio.google.com 접속 → 왼쪽 아래 **Get API key** → **API 키 만들기** → 키 복사.
 2. 같은 화면에서 결제(Billing)를 연결하면 유료 등급이 됩니다. 유료 등급은 입력 내용을 구글이 학습에 쓰지 않습니다.
    결제를 연결하지 않은 무료 등급은 입력 내용이 서비스 개선에 쓰일 수 있으니 고객 정보는 넣지 마세요.
 3. Apps Script 스크립트 속성에 `GEMINI_API_KEY` = 복사한 키 를 추가하고 저장합니다. 정리 모델은 기본이 Gemini Pro(`gemini-pro-latest`)입니다.
-   (정리 모델을 바꾸려면 `GEMINI_MODEL`. 기본값 `gemini-flash-latest`, 더 정확한 정리는 `gemini-pro-latest`.
-   검색어 고르기는 늘 빠른 모델을 씁니다.)
+   (최종 답 모델은 `GEMINI_MODEL`, 자료 찾는 모델은 `GEMINI_FAST_MODEL`로 바꿀 수 있습니다. 비워 두면 기본값을 씁니다.)
 
 ## 직원 메뉴 (안내문·공지·휴가)
 

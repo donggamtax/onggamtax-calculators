@@ -408,15 +408,18 @@ function docHtml(data){
 // ── AI 정리 ──
 let lastAi = null;
 let aiSeq = 0;
-$("#aiBtn").onclick = () => runAi();
-async function runAi(){
+$("#aiBtn").onclick = () => runAi(true);
+async function runAi(fresh){
   const out = $("#aiOut"), my = ++aiSeq;
   const question = lastQuery || $("#q").value.trim();
   if(!question){ out.innerHTML = `<p class="err">질문을 먼저 입력하세요.</p>`; return; }
   $("#aiBtn").disabled = true;
-  out.innerHTML = `<p class="hint">AI가 법령·해석·심판례를 직접 찾아 읽고 있습니다. 1~2분 걸릴 수 있습니다…</p>`;
+  const t0 = Date.now();
+  const draw = () => { if(my === aiSeq) out.innerHTML = `<p class="hint">AI가 법령·해석·심판례를 찾아 읽고 있습니다… ${Math.round((Date.now() - t0) / 1000)}초 (보통 30초~1분)</p>`; };
+  draw(); const tick = setInterval(draw, 1000);
   try{
-    const r = await api("summarize", { question, year: $("#yr").value, items: picks.slice(0, 8) });
+    const r = await api("summarize", { question, year: $("#yr").value, items: picks.slice(0, 8), fresh: !!fresh });
+    clearInterval(tick);
     if(my !== aiSeq) return; // 그 사이 다른 검색을 했으면 버린다
     lastAi = r;
     const who = x => `${esc(x.label)} · ${esc([x.number, x.title].filter(Boolean).join(" "))}`;
@@ -429,9 +432,10 @@ async function runAi(){
       <details class="warn"><summary>AI가 찾아본 과정 (검색 ${r.searches.length}번 · 원문 ${r.read.length}건)</summary>
         <ul>${r.searches.map(q => `<li>검색 ${esc(q)}</li>`).join("")}${r.read.map(x => `<li>읽음 ${who(x)}</li>`).join("")}</ul>
       </details>
-      <p class="warn">AI(${esc(r.model)})가 국가법령정보센터 원문을 읽고 정리한 내용입니다. 신고·처분 전에는 근거 원문을 직접 확인하세요.</p>
+      <p class="warn">AI(${esc(r.model)})가 국가법령정보센터 원문을 읽고 정리한 내용입니다.${r.cached ? " 최근에 같은 질문으로 정리해 둔 답을 불러왔습니다. 새로 만들려면 \"다시 정리하기\"를 누르세요." : (r.seconds ? ` (${esc(r.seconds)}초 걸림)` : "")} 신고·처분 전에는 근거 원문을 직접 확인하세요.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn ghost sm" id="aiToNote">질문 내역 메모로 옮기기</button></div>`;
-  }catch(x){ if(my === aiSeq) out.innerHTML = `<p class="err">${esc(x.message)}</p>`; }
+  }catch(x){ clearInterval(tick); if(my === aiSeq) out.innerHTML = `<p class="err">${esc(x.message)}</p>`; }
+  clearInterval(tick);
   if(my === aiSeq) $("#aiBtn").disabled = false;
 }
 document.addEventListener("click", e => {
