@@ -181,7 +181,7 @@ button,input,select,textarea{font:inherit;color:inherit}
         <h2>AI 정리</h2>
         <button type="button" class="btn sm" id="aiBtn">AI로 정리하기</button>
       </div>
-      <p class="hint" id="aiHint">"담기"한 자료가 있으면 그 자료만, 없으면 검색 결과 위쪽 자료로 정리합니다. 고객 이름·주민번호 같은 개인정보는 질문에 넣지 마세요.</p>
+      <p class="hint" id="aiHint">AI가 검색창의 질문으로 법령·해석·심판례를 직접 찾아 읽고 정리합니다. "담기"한 자료는 먼저 읽습니다. 고객 이름·주민번호 같은 개인정보는 질문에 넣지 마세요.</p>
       <div id="aiOut"></div>
     </section>
 
@@ -372,33 +372,26 @@ function docHtml(data){
 
 // ── AI 정리 ──
 let lastAi = null;
-function aiItems(){
-  if(picks.length) return picks.slice(0, 8);
-  const out = [];
-  for(const g of lastGroups){
-    const n = g.kind === "law" ? 1 : 2;
-    out.push(...g.items.slice(0, n).map(it => ({kind:it.kind, id:it.id, nid:it.nid || "", title:it.title, number:it.number})));
-  }
-  return out.slice(0, 8);
-}
 $("#aiBtn").onclick = async () => {
-  const items = aiItems();
   const out = $("#aiOut");
-  if(!items.length){ out.innerHTML = `<p class="err">정리할 자료가 없습니다. 다른 검색어로 찾아보세요.</p>`; return; }
+  const question = lastQuery || $("#q").value.trim();
+  if(!question){ out.innerHTML = `<p class="err">질문을 먼저 입력하세요.</p>`; return; }
   $("#aiBtn").disabled = true;
-  out.innerHTML = `<p class="hint">자료 ${items.length}건의 원문을 읽고 정리하는 중입니다. 30초쯤 걸릴 수 있습니다…</p>`;
+  out.innerHTML = `<p class="hint">AI가 법령·해석·심판례를 직접 찾아 읽고 있습니다. 1~2분 걸릴 수 있습니다…</p>`;
   try{
-    const r = await api("summarize", { question: lastQuery, year: $("#yr").value, items });
+    const r = await api("summarize", { question, year: $("#yr").value, items: picks.slice(0, 8) });
     lastAi = r;
-    const failed = r.used.filter(u => !u.ok);
+    const who = x => `${esc(x.label)} · ${esc([x.number, x.title].filter(Boolean).join(" "))}`;
     out.innerHTML = `
       <div class="concl">${esc(r.conclusion)}</div>
       <h3>설명</h3><div class="txt">${esc(r.explanation)}</div>
       ${r.checks.length ? `<h3>확인할 점</h3><ul>${r.checks.map(c => `<li>${esc(c)}</li>`).join("")}</ul>` : ""}
       <h3>근거 자료</h3>
-      <ul class="src">${r.sources.length ? r.sources.map(x => `<li><b>${esc(x.label)} · ${esc(x.number || x.title)}</b><br>${esc(x.point)}</li>`).join("") : "<li>확인된 근거 없음</li>"}</ul>
-      ${failed.length ? `<p class="warn">원문을 불러오지 못해 빠진 자료: ${failed.map(u => esc(u.number || u.title)).join(", ")}</p>` : ""}
-      <p class="warn">AI(${esc(r.model)})가 위 자료 원문만 읽고 정리한 내용입니다. 신고·처분 전에는 근거 원문을 직접 확인하세요.</p>
+      <ul class="src">${r.sources.length ? r.sources.map(x => `<li><b>${who(x)}</b><br>${esc(x.point)}</li>`).join("") : "<li>확인된 근거 없음</li>"}</ul>
+      <details class="warn"><summary>AI가 찾아본 과정 (검색 ${r.searches.length}번 · 원문 ${r.read.length}건)</summary>
+        <ul>${r.searches.map(q => `<li>검색 ${esc(q)}</li>`).join("")}${r.read.map(x => `<li>읽음 ${who(x)}</li>`).join("")}</ul>
+      </details>
+      <p class="warn">AI(${esc(r.model)})가 국가법령정보센터 원문을 읽고 정리한 내용입니다. 신고·처분 전에는 근거 원문을 직접 확인하세요.</p>
       <div><button type="button" class="btn ghost sm" id="aiToNote">질문 내역 메모로 옮기기</button></div>`;
   }catch(x){ out.innerHTML = `<p class="err">${esc(x.message)}</p>`; }
   $("#aiBtn").disabled = false;
@@ -406,7 +399,7 @@ $("#aiBtn").onclick = async () => {
 document.addEventListener("click", e => {
   if(!e.target.closest("#aiToNote") || !lastAi) return;
   const r = lastAi;
-  const note = [`[결론] ${r.conclusion}`, "", r.explanation, ...(r.checks.length ? ["", "[확인할 점]", ...r.checks.map(c => "- " + c)] : []), "", "[근거]", ...r.sources.map(x => `- ${x.label} ${x.number || x.title}: ${x.point}`), "", `(AI 정리, ${r.year}년 귀속 기준)`].join("\n");
+  const note = [`[결론] ${r.conclusion}`, "", r.explanation, ...(r.checks.length ? ["", "[확인할 점]", ...r.checks.map(c => "- " + c)] : []), "", "[근거]", ...r.sources.map(x => `- ${x.label} ${[x.number, x.title].filter(Boolean).join(" ")}: ${x.point}`), "", `(AI 정리, ${r.year}년 귀속 기준)`].join("\n");
   $("#saveBox").hidden = false; $("#sq").value = $("#sq").value || r.question; $("#sn").value = note; drawPicks(); $("#saveBox").scrollIntoView({behavior:"smooth", block:"start"});
 });
 
