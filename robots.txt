@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /staff/
 
 Sitemap: https://taxdg.com/sitemap.xml
