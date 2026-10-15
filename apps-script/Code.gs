@@ -493,11 +493,17 @@ function summarize(req, p) {
     },
     required: ["conclusion", "explanation", "checks", "sources"],
   };
-  const wb = callGemini(p, answerModel, {
+  const writerPayload = {
     systemInstruction: { parts: [{ text: writerSystem }] },
     contents: [{ role: "user", parts: [{ text: "[질문]\n" + question + "\n\n[자료]\n" + material }] }],
     generationConfig: { temperature: 0.2, responseMimeType: "application/json", responseSchema: schema },
-  });
+  };
+  let wb;
+  try { wb = callGemini(p, answerModel, writerPayload); }
+  catch (e) { // Pro 한도 초과(429)면 빠른 모델로 대신 쓴다
+    if (String(e.message).indexOf("(429)") < 0 || answerModel === researchModel) throw e;
+    wb = callGemini(p, researchModel, writerPayload);
+  }
   let answer;
   try { answer = JSON.parse((((wb.candidates || [])[0] || {}).content.parts || []).map(x => x.text || "").join("")); }
   catch (e) { throw fail("AI 답변을 읽지 못했습니다. 다시 시도해 주세요.", 502); }
@@ -512,25 +518,30 @@ function summarize(req, p) {
     sources: src,
     searches: searches,
     read: handles.map(h => reg[h]),
-    model: answerModel,
+    model: wb.usedModel || answerModel,
     seconds: Math.round((Date.now() - started) / 1000),
   };
-  cachePut(cacheKey, result);
+  if (result.model === answerModel) cachePut(cacheKey, result); // 대체 모델 답은 저장하지 않는다
   return result;
 }
 
-function callGemini(p, model, payload) {
+function callGemini(p, model, payload, noRetry) {
   const res = UrlFetchApp.fetch(GEMINI_API + encodeURIComponent(model) + ":generateContent", {
     method: "post", contentType: "application/json", headers: { "x-goog-api-key": p.GEMINI_API_KEY },
     payload: JSON.stringify(payload), muteHttpExceptions: true,
   });
   let body = {};
   try { body = JSON.parse(res.getContentText("UTF-8")); } catch (e) {}
-  if (res.getResponseCode() === 404 && model === DEFAULT_ANSWER_MODEL) return callGemini(p, "gemini-flash-latest", payload); // 기본 모델 이름이 바뀐 경우
+  if (res.getResponseCode() === 404 && model === DEFAULT_ANSWER_MODEL) return callGemini(p, "gemini-flash-latest", payload, noRetry); // 기본 모델 이름이 바뀐 경우
+  if (res.getResponseCode() === 429 && !noRetry) { // 한도 초과: 잠시 뒤 한 번 더, 그래도 안 되면 호출한 쪽이 다른 모델로 바꾼다
+    Utilities.sleep(4000);
+    return callGemini(p, model, payload, true);
+  }
   if (res.getResponseCode() !== 200) {
     const msg = (body.error && body.error.message) || "";
     throw fail("Gemini 응답 오류(" + res.getResponseCode() + ")" + (msg ? ": " + msg.slice(0, 160) : ""), 502);
   }
+  body.usedModel = model;
   return body;
 }
 
