@@ -195,12 +195,13 @@ let kinds = new Set(KINDS.map(k => k[0]));
 let picks = [], hist = [], hFilter = "전체", hQuery = "", currentRec = null, lastQuery = "";
 
 // ── 서버 호출 ──
-async function api(path, opts = {}){
+async function api(action, data = {}){
   if(!API) throw new Error("서버 주소가 아직 설정되지 않았습니다. 관리자에게 문의하세요.");
-  const res = await fetch(API + path, { ...opts, headers: { "Content-Type":"application/json", ...(token ? {Authorization:"Bearer "+token} : {}), ...(opts.headers||{}) } });
-  const body = await res.json().catch(() => ({}));
-  if(res.status === 401 && path !== "/api/login"){ logout(); throw new Error("로그인 시간이 지났습니다. 다시 로그인해 주세요."); }
-  if(!res.ok) throw new Error(body.error || "요청을 처리하지 못했습니다.");
+  // 구글 Apps Script는 text/plain POST로 보내야 브라우저 사전 확인 요청 없이 받는다
+  const res = await fetch(API, { method:"POST", headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: JSON.stringify({ action, token, ...data }) });
+  const body = await res.json().catch(() => ({ error: "서버 응답을 읽지 못했습니다." }));
+  if(body.status === 401 && action !== "login"){ logout(); throw new Error("로그인 시간이 지났습니다. 다시 로그인해 주세요."); }
+  if(!res.ok || body.error) throw new Error(body.error || "요청을 처리하지 못했습니다.");
   return body;
 }
 
@@ -212,7 +213,7 @@ $("#loginForm").addEventListener("submit", async e => {
   e.preventDefault();
   const btn = $("#loginBtn"), err = $("#loginErr"); btn.disabled = true; err.hidden = true;
   try{
-    const r = await api("/api/login", { method:"POST", body: JSON.stringify({ password: $("#pw").value }) });
+    const r = await api("login", { password: $("#pw").value });
     token = r.token; store.set("staff.token", token); $("#pw").value = ""; showApp(true);
   }catch(x){ err.textContent = x.message; err.hidden = false; }
   finally{ btn.disabled = false; }
@@ -240,7 +241,7 @@ async function runSearch(q, page = 1, onlyKind){
   const ks = onlyKind ? [onlyKind] : [...kinds];
   if(page === 1 && !onlyKind) $("#results").innerHTML = `<div class="card group"><p class="hint">검색하는 중입니다…</p></div>`;
   try{
-    const r = await api(`/api/search?q=${encodeURIComponent(q)}&kinds=${ks.join(",")}&page=${page}`);
+    const r = await api("search", { q, kinds: ks.join(","), page });
     if(onlyKind){
       const g = lastGroups.find(x => x.kind === onlyKind); const ng = r.groups[0];
       g.items.push(...ng.items); g.page = page; renderResults();
@@ -295,8 +296,8 @@ async function toggleDetail(li, it){
   if(slot.innerHTML){ slot.innerHTML = ""; return; }
   slot.innerHTML = `<div class="body">본문을 불러오는 중입니다…</div>`;
   try{
-    const ef = it.kind === "law" ? `&efYd=${encodeURIComponent(($("#yr").value||new Date().getFullYear()) + "1231")}` : "";
-    const r = await api(`/api/detail?kind=${it.kind}&id=${encodeURIComponent(it.id)}${ef}`);
+    const efYd = it.kind === "law" ? String($("#yr").value || new Date().getFullYear()) + "1231" : "";
+    const r = await api("detail", { kind: it.kind, id: it.id, efYd });
     slot.innerHTML = it.kind === "law" ? lawHtml(r.data) : docHtml(r.data);
     const box = slot.querySelector(".jo input");
     if(box) box.addEventListener("input", () => filterArticles(slot, box.value.trim()));
@@ -362,7 +363,7 @@ $("#saveBtn").onclick = async () => {
   const query = $("#sq").value.trim(); if(!query){ $("#sq").focus(); return; }
   $("#saveBtn").disabled = true;
   try{
-    await api("/api/history", { method:"POST", body: JSON.stringify({ query, person: $("#sp").value, note: $("#sn").value, picks }) });
+    await api("history.save", { query, person: $("#sp").value, note: $("#sn").value, picks });
     $("#saveBox").hidden = true; $("#sq").value = ""; $("#sn").value = ""; picks = []; renderResults(); loadHist();
   }catch(x){ err.textContent = x.message; err.hidden = false; }
   finally{ $("#saveBtn").disabled = false; }
@@ -370,7 +371,7 @@ $("#saveBtn").onclick = async () => {
 
 // ── 질문 내역 ──
 async function loadHist(){
-  try{ const r = await api("/api/history"); hist = r.items || []; }
+  try{ const r = await api("history.list"); hist = r.items || []; }
   catch(x){ hist = []; $("#hist").innerHTML = `<li><p class="empty">${esc(x.message)}</p></li>`; return; }
   drawHist();
 }
@@ -397,7 +398,7 @@ $("#people").addEventListener("click", e => { const b = e.target.closest(".chip"
 $("#hq").addEventListener("input", e => { hQuery = e.target.value.trim().toLowerCase(); drawHist(); });
 $("#hist").addEventListener("change", async e => {
   const s = e.target.closest("[data-who]"); if(!s) return;
-  try{ const it = await api(`/api/history/${s.dataset.who}`, { method:"PATCH", body: JSON.stringify({ person: s.value }) }); hist = hist.map(x => x.id === it.id ? it : x); if(currentRec?.id === it.id){ currentRec = it; showRec(it); } drawHist(); }
+  try{ const it = await api("history.update", { id: s.dataset.who, person: s.value }); hist = hist.map(x => x.id === it.id ? it : x); if(currentRec?.id === it.id){ currentRec = it; showRec(it); } drawHist(); }
   catch(x){ alertInline(x.message); loadHist(); }
 });
 $("#hist").addEventListener("click", e => {
@@ -422,13 +423,13 @@ function showRec(it){
   $("#reSearch").onclick = () => { $("#q").value = it.query; runSearch(it.query); };
   $("#editNote").onclick = () => { $("#recEdit").hidden = !$("#recEdit").hidden; };
   $("#recSave").onclick = async () => {
-    try{ const u = await api(`/api/history/${it.id}`, { method:"PATCH", body: JSON.stringify({ note: $("#recNote").value }) }); hist = hist.map(x => x.id === u.id ? u : x); currentRec = u; showRec(u); }
+    try{ const u = await api("history.update", { id: it.id, note: $("#recNote").value }); hist = hist.map(x => x.id === u.id ? u : x); currentRec = u; showRec(u); }
     catch(x){ alertInline(x.message); }
   };
   let armed = false;
   $("#delRec").onclick = async () => {
     if(!armed){ armed = true; $("#delRec").textContent = "한 번 더 누르면 삭제"; return; }
-    try{ await api(`/api/history/${it.id}`, { method:"DELETE" }); hist = hist.filter(x => x.id !== it.id); currentRec = null; v.hidden = true; drawHist(); }
+    try{ await api("history.delete", { id: it.id }); hist = hist.filter(x => x.id !== it.id); currentRec = null; v.hidden = true; drawHist(); }
     catch(x){ alertInline(x.message); }
   };
   v.scrollIntoView({ behavior:"smooth", block:"start" });
