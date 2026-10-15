@@ -144,10 +144,9 @@ function search(req, p) {
   const page = Math.max(1, Number(req.page) || 1);
   const kinds = String(req.kinds || Object.keys(TARGETS).join(",")).split(",").filter(k => TARGETS[k]);
   const display = kinds.length === 1 ? 30 : 10;
-  const responses = UrlFetchApp.fetchAll(kinds.map(key => ({
-    url: lawUrl("lawSearch.do", { target: TARGETS[key].target, query: q, display: display, page: page }, p),
-    muteHttpExceptions: true,
-  })));
+  // body=true면 법령을 법령명이 아니라 조문 내용에서 찾는다 (search=2)
+  const params = (key, query, n, body) => Object.assign({ target: TARGETS[key].target, query: query, display: n, page: page }, key === "law" && body ? { search: 2 } : {});
+  const responses = UrlFetchApp.fetchAll(kinds.map(key => ({ url: lawUrl("lawSearch.do", params(key, q, display), p), muteHttpExceptions: true })));
   const groups = kinds.map((key, i) => {
     try {
       const data = parseLaw(responses[i]);
@@ -158,18 +157,60 @@ function search(req, p) {
       return { kind: key, label: TARGETS[key].label, total: 0, items: [], error: e.publicMessage || "조회 실패" };
     }
   });
-  // 법령은 기본이 법령명 검색이라 문장으로 찾으면 0건이 많다 → 0건이면 조문 본문에서 다시 찾는다
-  const law = groups.find(g => g.kind === "law" && !g.error && !g.items.length);
-  if (law) {
+
+  // 법제처 검색은 입력한 글자를 통째로 찾기 때문에 문장으로 물으면 0건이 된다.
+  // 0건인 종류는 질문에서 핵심어를 뽑아 하나씩 다시 찾고 합친다.
+  const empty = groups.filter(g => !g.error && !g.items.length);
+  let terms = [];
+  if (page === 1 && empty.length && /\s/.test(q)) {
+    terms = searchTerms(q, p);
+    const jobs = [];
+    empty.forEach(g => {
+      if (g.kind === "law") jobs.push({ g: g, t: q }); // 법령은 문장 그대로 조문 내용에서도 찾아본다
+      terms.forEach(t => jobs.push({ g: g, t: t }));
+    });
+    const rs = jobs.length ? UrlFetchApp.fetchAll(jobs.map(j => ({ url: lawUrl("lawSearch.do", params(j.g.kind, j.t, 10, true), p), muteHttpExceptions: true }))) : [];
+    jobs.forEach((j, i) => {
+      try {
+        const items = (findItems(parseLaw(rs[i])) || []).map(it => normalize(j.g.kind, it));
+        items.forEach(it => { if (!j.g.items.some(x => x.id === it.id)) j.g.items.push(it); });
+      } catch (e) {}
+    });
+    empty.forEach(g => {
+      g.items = g.items.slice(0, display);
+      g.total = g.items.length;
+      if (g.items.length) g.note = "핵심어로 나눠 찾은 결과";
+    });
+  }
+  return { q: q, page: page, groups: groups, terms: terms };
+}
+
+// 질문 문장에서 법제처 검색용 핵심어를 뽑는다. Gemini 키가 있으면 AI가, 없으면 단어 길이 순으로.
+function searchTerms(q, p) {
+  if (p.GEMINI_API_KEY) {
     try {
-      const data = parseLaw(UrlFetchApp.fetch(lawUrl("lawSearch.do", { target: "law", query: q, search: 2, display: display, page: page }, p), { muteHttpExceptions: true }));
-      law.items = (findItems(data) || []).map(it => normalize("law", it));
-      const total = findTotal(data);
-      law.total = total == null ? law.items.length : total;
-      if (law.items.length) law.note = "법령명에 없어 조문 내용에서 찾은 결과입니다.";
+      const res = UrlFetchApp.fetch(GEMINI_API + encodeURIComponent(p.GEMINI_MODEL || "gemini-flash-latest") + ":generateContent", {
+        method: "post",
+        contentType: "application/json",
+        headers: { "x-goog-api-key": p.GEMINI_API_KEY },
+        payload: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: "다음 세무 질문으로 국가법령정보센터(법령, 국세청 해석, 조세심판원 결정, 판례)를 검색하려고 한다. 법령·예규 원문에 실제로 쓰이는 용어로 된 짧은 검색어 2~4개를 중요한 순서로 골라라. 각 검색어는 1~2단어. (예: 주식등변동상황명세서, 가산세, 제척기간)\n\n질문: " + q }] }],
+          generationConfig: { temperature: 0, responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "STRING" } } },
+        }),
+        muteHttpExceptions: true,
+      });
+      if (res.getResponseCode() === 200) {
+        const body = JSON.parse(res.getContentText("UTF-8"));
+        const text = body.candidates[0].content.parts.map(x => x.text || "").join("");
+        const list = JSON.parse(text).map(t => String(t).trim()).filter(t => t.length >= 2 && t.length <= 20);
+        if (list.length) return list.slice(0, 4);
+      }
     } catch (e) {}
   }
-  return { q: q, page: page, groups: groups };
+  const stop = /^(리스크|위험|문제|경우|여부|관련|방법|어떻게|무엇|얼마|있는지|없는지|안하고|하고|했을|때|몇|년간|동안|방치|처리|법인|개인)$/;
+  const verb = /(했|하|되|된|않|안|있|없)(을|는|고|때|면|서|다|지)|때$/;
+  const seen = {};
+  return keywords(q).filter(w => !stop.test(w) && !verb.test(w) && !seen[w] && (seen[w] = 1)).sort((a, b) => b.length - a.length).slice(0, 3);
 }
 
 function detail(req, p) {

@@ -269,6 +269,7 @@ async function runSearch(q, page = 1, onlyKind){
       lastGroups = r.groups.map(g => ({...g, page:1}));
       lastCounts = Object.fromEntries(r.groups.map(g => [g.kind, g.total]));
       drawKinds(lastCounts); renderResults();
+      if(r.terms?.length) $("#results").insertAdjacentHTML("afterbegin", `<p class="hint" style="margin:0 4px 10px">문장 그대로는 결과가 없어 <b>${r.terms.map(esc).join(", ")}</b>(으)로 나눠 찾았습니다.</p>`);
       $("#aiBox").hidden = false; $("#aiOut").innerHTML = "";
     }
   }catch(x){ $("#searchErr").textContent = x.message; $("#searchErr").hidden = false; $("#results").innerHTML = ""; }
