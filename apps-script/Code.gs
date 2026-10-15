@@ -6,7 +6,8 @@
 // - 검색된 자료 원문을 구글 Gemini에 넘겨 결론·근거를 정리 (선택)
 //
 // 스크립트 속성(프로젝트 설정 → 스크립트 속성)에 넣을 값: LAW_OC, STAFF_PASSWORD, SESSION_SECRET
-// AI 정리를 쓰려면 GEMINI_API_KEY 추가 (정리 모델은 GEMINI_MODEL, 기본 gemini-flash-latest. 더 정확하게: gemini-pro-latest)
+// AI 정리를 쓰려면 GEMINI_API_KEY 추가 (정리 모델은 기본 gemini-pro-latest, 바꾸려면 GEMINI_MODEL)
+// 안내문 템플릿·공지는 이 시트의 탭에 저장된다 (BOARDS). 휴가 신청은 기존 구글 폼으로 연결 (LEAVE_FORM_URL)
 // 이 파일에는 비밀 값을 적지 마세요.
 
 const LAW_API = "https://www.law.go.kr/DRF";
@@ -62,6 +63,10 @@ function route(req) {
     case "search": return search(req, p);
     case "detail": return detail(req, p);
     case "summarize": return summarize(req, p);
+    case "config": return staffConfig(p);
+    case "board.list": return boardList(req);
+    case "board.save": return boardSave(req);
+    case "board.delete": return boardDelete(req);
     case "history.list": return listHistory();
     case "history.save": return saveHistory(req);
     case "history.update": return updateHistory(req);
@@ -327,6 +332,7 @@ function stripTags(s) {
 
 // AI가 법제처 검색·원문 열람을 직접 여러 번 하면서 근거를 모은 뒤 답한다 (Gemini 함수 호출)
 const AI_MAX_TURNS = 8;
+const DEFAULT_ANSWER_MODEL = "gemini-pro-latest";
 const AI_TIME_LIMIT_MS = 4.5 * 60 * 1000; // Apps Script 한 번 실행 한도(6분) 안에서 끝낸다
 
 function summarize(req, p) {
@@ -336,7 +342,7 @@ function summarize(req, p) {
   if (!question) throw fail("질문을 입력하세요.");
   const year = /^\d{4}$/.test(String(req.year || "")) ? String(req.year) : String(new Date().getFullYear());
   const started = Date.now();
-  const model = p.GEMINI_MODEL || "gemini-flash-latest";
+  const model = p.GEMINI_MODEL || DEFAULT_ANSWER_MODEL;
 
   // 자료 손잡이(h1, h2 …) ↔ 실제 자료
   const reg = {}; let seq = 0;
@@ -460,6 +466,7 @@ function callGemini(p, model, payload) {
   });
   let body = {};
   try { body = JSON.parse(res.getContentText("UTF-8")); } catch (e) {}
+  if (res.getResponseCode() === 404 && model === DEFAULT_ANSWER_MODEL) return callGemini(p, "gemini-flash-latest", payload); // 기본 모델 이름이 바뀐 경우
   if (res.getResponseCode() !== 200) {
     const msg = (body.error && body.error.message) || "";
     throw fail("Gemini 응답 오류(" + res.getResponseCode() + ")" + (msg ? ": " + msg.slice(0, 160) : ""), 502);
@@ -605,6 +612,95 @@ function deleteHistory(req) {
     if (row) sh.deleteRow(row);
   });
   return { ok: true };
+}
+
+// ── 게시판: 자주 묻는 질문·안내문 템플릿·공지·휴가 신청 (구글 시트 탭) ──────────
+
+const BOARDS = {
+  tpl: { sheet: "안내문템플릿", fields: [["category", "분류", 40], ["title", "제목", 200], ["body", "내용", 8000], ["author", "작성자", 20]] },
+  notice: { sheet: "공지매뉴얼", fields: [["type", "종류", 10], ["title", "제목", 200], ["body", "내용", 20000], ["pinned", "상단고정", 5], ["author", "작성자", 20]] },
+};
+// 로그인한 직원에게만 주는 설정. 휴가 신청 폼 주소는 공개 저장소에 두지 않고 스크립트 속성(LEAVE_FORM_URL)에 둔다.
+function staffConfig(p) {
+  const u = String(p.LEAVE_FORM_URL || "").trim();
+  return { leaveFormUrl: /^https:\/\/(docs\.google\.com\/forms\/|forms\.gle\/)/.test(u) ? u : "" };
+}
+function boardOf(req) {
+  const b = BOARDS[String(req.board || "")];
+  if (!b) throw fail("없는 메뉴입니다.");
+  return b;
+}
+function boardSheet(b, key) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!ss) throw fail("이 스크립트는 구글 시트의 확장 프로그램 → Apps Script에서 만들어야 합니다.", 503);
+  let sh = ss.getSheetByName(b.sheet);
+  if (!sh) {
+    sh = ss.insertSheet(b.sheet);
+    sh.appendRow(["id"].concat(b.fields.map(f => f[1]), ["작성일시", "수정일시"]));
+    sh.setFrozenRows(1);
+    if (key === "tpl") seedTemplates(sh);
+  }
+  return sh;
+}
+function boardRowToItem(b, r) {
+  const it = { id: String(r[0]) };
+  b.fields.forEach((f, i) => { it[f[0]] = r[i + 1] instanceof Date ? Utilities.formatDate(r[i + 1], "Asia/Seoul", "yyyy-MM-dd") : String(r[i + 1] == null ? "" : r[i + 1]); });
+  const iso = v => v instanceof Date ? v.toISOString() : String(v || "");
+  it.createdAt = iso(r[b.fields.length + 1]); it.updatedAt = iso(r[b.fields.length + 2]);
+  return it;
+}
+function boardList(req) {
+  const b = boardOf(req), sh = boardSheet(b, req.board);
+  const last = sh.getLastRow();
+  if (last < 2) return { items: [] };
+  const rows = sh.getRange(2, 1, last - 1, b.fields.length + 3).getValues();
+  const items = rows.filter(r => r[0]).map(r => boardRowToItem(b, r));
+  return { items: req.board === "tpl" ? items : items.reverse() }; // 템플릿은 시트 순서대로, 나머지는 최신 글이 위로
+}
+function boardSave(req) {
+  const b = boardOf(req), key = String(req.board);
+  const src = req.item || {};
+  const t = (v, n) => { const x = String(v == null ? "" : v).slice(0, n); return /^[=+\-@]/.test(x) ? "'" + x : x; };
+  return withLock(() => {
+    const sh = boardSheet(b, key);
+    const id = String(src.id || "");
+    const row = id ? findRow(sh, id) : 0;
+    if (id && !row) throw fail("없는 글입니다. 새로고침해 주세요.", 404);
+    const cur = row ? boardRowToItem(b, sh.getRange(row, 1, 1, b.fields.length + 3).getValues()[0]) : {};
+    const it = { id: id || Date.now().toString(36) + Math.random().toString(36).slice(2, 6) };
+    b.fields.forEach(f => { it[f[0]] = t(f[0] in src ? src[f[0]] : cur[f[0]], f[2]); });
+    if (!String(it[b.fields[1][0]]).trim()) throw fail("내용을 입력하세요.");
+    const now = new Date().toISOString();
+    const values = [it.id].concat(b.fields.map(f => it[f[0]]), [row ? cur.createdAt : now, row ? now : ""]);
+    const at = row || sh.getLastRow() + 1;
+    sh.getRange(at, 1, 1, values.length).setValues([values]);
+    return boardRowToItem(b, values);
+  });
+}
+function boardDelete(req) {
+  const b = boardOf(req), key = String(req.board);
+  withLock(() => {
+    const sh = boardSheet(b, key);
+    const row = findRow(sh, String(req.id || ""));
+    if (!row) return;
+    sh.deleteRow(row);
+  });
+  return { ok: true };
+}
+
+// 처음 탭을 만들 때 넣는 안내문 초안 (사무소에 맞게 고쳐 쓰세요)
+function seedTemplates(sh) {
+  const now = new Date().toISOString();
+  const T = [
+    ["부가가치세", "부가세 신고 자료 요청", "안녕하세요, 동감 세무회계입니다.\n[기간] 부가가치세 신고를 위해 아래 자료를 [마감일]까지 보내 주세요.\n\n1. 홈택스 미발행분 매출 내역(현금 매출, 기타 매출)\n2. 종이 세금계산서·계산서 (매출·매입)\n3. 사업용 신용카드 외 카드 사용 내역 중 사업 관련분\n4. 현금영수증(지출증빙) 미등록분\n5. 수출 실적이 있으면 수출신고필증·외화입금 내역\n6. 고정자산 취득 내역(차량·기계 등)\n\n자료는 이메일이나 카카오톡으로 보내 주시면 됩니다. 감사합니다."],
+    ["종합소득세", "종합소득세 신고 자료 요청", "안녕하세요, 동감 세무회계입니다.\n[연도] 귀속 종합소득세 신고를 위해 아래 자료를 [마감일]까지 보내 주세요.\n\n1. 사업소득 외 소득(근로·연금·기타·금융소득) 자료\n2. 사업용 경비 증빙(세금계산서·카드 외 지출, 인건비 지급 내역)\n3. 차량 관련 비용·운행 내역\n4. 기부금·보험료·의료비 등 공제 자료(해당 시)\n5. 가족 변동 사항(결혼·출생·부양가족)\n\n궁금한 점은 담당자에게 편하게 연락 주세요."],
+    ["법인세", "법인세 결산 자료 요청", "안녕하세요, 동감 세무회계입니다.\n[사업연도] 법인세 결산을 위해 아래 자료를 [마감일]까지 보내 주세요.\n\n1. 연말 기준 통장 잔액 증명(전 계좌)\n2. 차입금 잔액·이자 내역\n3. 재고자산 명세(기말 재고)\n4. 미수금·미지급금 내역\n5. 가지급금·가수금 발생 내역\n6. 주주 변동 내역(양도·증자 등)\n7. 고정자산 취득·처분 내역\n\n감사합니다."],
+    ["원천세·4대보험", "신규 직원 입사 자료 요청", "안녕하세요, 동감 세무회계입니다.\n신규 직원 입사 처리를 위해 아래 내용을 보내 주세요.\n\n1. 성명, 주민등록번호, 입사일\n2. 월 급여(비과세 항목 포함), 근무 형태(정규·일용·프리랜서)\n3. 주 소정근로시간\n4. 근로계약서 사본\n\n4대보험 취득신고 기한이 있어 [회신 기한]까지 보내 주시면 감사하겠습니다."],
+    ["원천세·4대보험", "직원 퇴사 자료 요청", "안녕하세요, 동감 세무회계입니다.\n직원 퇴사 처리를 위해 아래 내용을 보내 주세요.\n\n1. 성명, 퇴사일, 퇴사 사유\n2. 마지막 달 급여, 퇴직금 지급액·지급일\n\n감사합니다."],
+    ["공통", "자료 수신 확인", "안녕하세요, 동감 세무회계입니다.\n보내 주신 자료 잘 받았습니다. 검토 후 추가로 필요한 자료가 있으면 다시 연락드리겠습니다. 감사합니다."],
+    ["공통", "세액 안내", "안녕하세요, 동감 세무회계입니다.\n[세목] 신고가 완료되었습니다.\n\n납부할 세액: [금액]원\n납부 기한: [기한]\n가상계좌: [계좌]\n\n기한 안에 납부하지 않으면 납부지연가산세가 붙으니 꼭 확인 부탁드립니다. 감사합니다."],
+  ];
+  T.forEach((r, i) => sh.appendRow(["seed" + i, r[0], r[1], r[2], "", now, ""]));
 }
 
 // ── 접속 토큰 (HMAC 서명) ─────────────────────────────────────
