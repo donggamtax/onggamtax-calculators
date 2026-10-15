@@ -84,6 +84,40 @@ button,input,select,textarea{font:inherit;color:inherit}
 .jo input{width:120px;border:1px solid #C9D3D8;border-radius:8px;padding:5px 8px;font-size:13px}
 .more{margin-top:8px}
 
+/* 메뉴 탭 */
+.tabs{max-width:1280px;margin:14px auto 0;padding:0 20px;display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 16px;font-weight:700;font-size:14px;color:var(--muted);cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--deep);border-color:var(--deep);color:#fff}
+.cols.one{grid-template-columns:minmax(0,1fr);max-width:960px}
+
+/* 게시판 */
+.bhead{padding:18px;display:flex;flex-direction:column;gap:12px}
+.bhead h1{font-size:22px;font-weight:800;letter-spacing:-.03em}
+.bhead .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.bhead .note{font-size:13px;color:var(--muted)}
+.bform{padding:16px 18px;display:flex;flex-direction:column;gap:10px;border-color:var(--warm)}
+.bform h2{font-size:15px;font-weight:800}
+.bform textarea{min-height:160px;resize:vertical}
+.bform .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.bform label{font-size:13px;color:var(--muted);font-weight:600}
+.blist{display:flex;flex-direction:column;gap:10px}
+.bitem{padding:14px 18px}
+.bitem .top{display:flex;gap:10px;align-items:flex-start}
+.bitem .t{flex:1;min-width:0;background:none;border:0;text-align:left;cursor:pointer;font-weight:700;font-size:15px;line-height:1.5}
+.bitem .t:hover{color:var(--brand)}
+.bitem .meta{display:block;font-weight:400;color:var(--muted);font-size:12.5px;margin-top:2px}
+.bitem .pin{font-size:11px;font-weight:800;color:#fff;background:var(--stamp);border-radius:4px;padding:1px 6px;margin-right:6px;vertical-align:2px}
+.bitem .txt{white-space:pre-wrap;font-size:14.5px;margin-top:10px;background:var(--quote);border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow-wrap:anywhere}
+.bitem .sub{font-size:13px;color:var(--muted);margin-top:8px;white-space:pre-wrap}
+.bitem .acts{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.badge{display:inline-block;font-size:12px;font-weight:800;border-radius:999px;padding:2px 10px;background:var(--tint);color:var(--deep)}
+.badge.ok{background:#E3F1E6;color:#22643A}
+.badge.no{background:#F8E3E0;color:var(--stamp)}
+.leave{width:100%;border-collapse:collapse;font-size:14px}
+.leave th,.leave td{border-bottom:1px solid var(--line);padding:9px 8px;text-align:left;vertical-align:top}
+.leave th{font-size:12.5px;color:var(--muted);font-weight:700}
+.wrapx{overflow-x:auto}
+
 /* AI 정리 */
 .ai{padding:16px 18px;display:flex;flex-direction:column;gap:10px;border-color:var(--brand)}
 .ai .head{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -145,6 +179,16 @@ button,input,select,textarea{font:inherit;color:inherit}
   </form>
 </section>
 
+<nav class="tabs" id="tabs" role="tablist" aria-label="메뉴" hidden>
+  <button type="button" role="tab" data-tab="search" aria-selected="true">법령 검색</button>
+  <button type="button" role="tab" data-tab="faq" aria-selected="false">자주 묻는 질문</button>
+  <button type="button" role="tab" data-tab="tpl" aria-selected="false">안내문·템플릿</button>
+  <button type="button" role="tab" data-tab="notice" aria-selected="false">공지·매뉴얼</button>
+  <button type="button" role="tab" data-tab="leave" aria-selected="false">휴가 신청</button>
+</nav>
+
+<div class="cols one" id="boardView" hidden><div class="main" id="board"></div></div>
+
 <div class="cols" id="appView" hidden>
   <div class="main">
     <form class="card search" id="searchForm">
@@ -178,10 +222,10 @@ button,input,select,textarea{font:inherit;color:inherit}
 
     <section class="card ai" id="aiBox" hidden>
       <div class="head">
-        <h2>AI 정리</h2>
-        <button type="button" class="btn sm" id="aiBtn">AI로 정리하기</button>
+        <h2>AI 답변</h2>
+        <button type="button" class="btn sm" id="aiBtn">다시 정리하기</button>
       </div>
-      <p class="hint" id="aiHint">AI가 검색창의 질문으로 법령·해석·심판례를 직접 찾아 읽고 정리합니다. "담기"한 자료는 먼저 읽습니다. 고객 이름·주민번호 같은 개인정보는 질문에 넣지 마세요.</p>
+      <p class="hint" id="aiHint">검색하면 AI가 질문으로 법령·해석·심판례를 직접 찾아 읽고 답을 정리합니다. 아래 검색 결과에서 "담기"한 뒤 "다시 정리하기"를 누르면 그 자료를 먼저 읽습니다. 고객 이름·주민번호 같은 개인정보는 질문에 넣지 마세요.</p>
       <div id="aiOut"></div>
     </section>
 
@@ -226,7 +270,7 @@ async function api(action, data = {}){
 }
 
 // ── 로그인 ──
-function showApp(on){ $("#loginView").hidden = on; $("#appView").hidden = !on; $("#logout").hidden = !on; if(on) loadHist(); }
+function showApp(on){ $("#loginView").hidden = on; $("#tabs").hidden = !on; $("#logout").hidden = !on; if(on){ showTab(store.get("staff.tab") || "search"); loadHist(); } else { $("#appView").hidden = true; $("#boardView").hidden = true; } }
 function logout(){ token = null; store.set("staff.token", null); showApp(false); }
 $("#logout").onclick = logout;
 $("#loginForm").addEventListener("submit", async e => {
@@ -238,7 +282,6 @@ $("#loginForm").addEventListener("submit", async e => {
   }catch(x){ err.textContent = x.message; err.hidden = false; }
   finally{ btn.disabled = false; }
 });
-if(token && Number(token.split(".")[0]) > Date.now()) showApp(true); else logout();
 
 // ── 검색 ──
 $("#yr").value = new Date().getFullYear();
@@ -270,7 +313,7 @@ async function runSearch(q, page = 1, onlyKind){
       lastCounts = Object.fromEntries(r.groups.map(g => [g.kind, g.total]));
       drawKinds(lastCounts); renderResults();
       if(r.terms?.length) $("#results").insertAdjacentHTML("afterbegin", `<p class="hint" style="margin:0 4px 10px">문장 그대로는 결과가 없어 <b>${r.terms.map(esc).join(", ")}</b>(으)로 나눠 찾았습니다.</p>`);
-      $("#aiBox").hidden = false; $("#aiOut").innerHTML = "";
+      $("#aiBox").hidden = false; runAi();
     }
   }catch(x){ $("#searchErr").textContent = x.message; $("#searchErr").hidden = false; $("#results").innerHTML = ""; }
 }
@@ -372,14 +415,17 @@ function docHtml(data){
 
 // ── AI 정리 ──
 let lastAi = null;
-$("#aiBtn").onclick = async () => {
-  const out = $("#aiOut");
+let aiSeq = 0;
+$("#aiBtn").onclick = () => runAi();
+async function runAi(){
+  const out = $("#aiOut"), my = ++aiSeq;
   const question = lastQuery || $("#q").value.trim();
   if(!question){ out.innerHTML = `<p class="err">질문을 먼저 입력하세요.</p>`; return; }
   $("#aiBtn").disabled = true;
   out.innerHTML = `<p class="hint">AI가 법령·해석·심판례를 직접 찾아 읽고 있습니다. 1~2분 걸릴 수 있습니다…</p>`;
   try{
     const r = await api("summarize", { question, year: $("#yr").value, items: picks.slice(0, 8) });
+    if(my !== aiSeq) return; // 그 사이 다른 검색을 했으면 버린다
     lastAi = r;
     const who = x => `${esc(x.label)} · ${esc([x.number, x.title].filter(Boolean).join(" "))}`;
     out.innerHTML = `
@@ -392,10 +438,10 @@ $("#aiBtn").onclick = async () => {
         <ul>${r.searches.map(q => `<li>검색 ${esc(q)}</li>`).join("")}${r.read.map(x => `<li>읽음 ${who(x)}</li>`).join("")}</ul>
       </details>
       <p class="warn">AI(${esc(r.model)})가 국가법령정보센터 원문을 읽고 정리한 내용입니다. 신고·처분 전에는 근거 원문을 직접 확인하세요.</p>
-      <div><button type="button" class="btn ghost sm" id="aiToNote">질문 내역 메모로 옮기기</button></div>`;
-  }catch(x){ out.innerHTML = `<p class="err">${esc(x.message)}</p>`; }
-  $("#aiBtn").disabled = false;
-};
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn ghost sm" id="aiToNote">질문 내역 메모로 옮기기</button><button type="button" class="btn ghost sm" id="aiToFaq">자주 묻는 질문에 등록</button></div>`;
+  }catch(x){ if(my === aiSeq) out.innerHTML = `<p class="err">${esc(x.message)}</p>`; }
+  if(my === aiSeq) $("#aiBtn").disabled = false;
+}
 document.addEventListener("click", e => {
   if(!e.target.closest("#aiToNote") || !lastAi) return;
   const r = lastAi;
@@ -490,6 +536,190 @@ function showRec(it){
   v.scrollIntoView({ behavior:"smooth", block:"start" });
 }
 function alertInline(msg){ const e = $("#recErr") || $("#searchErr"); e.textContent = msg; e.hidden = false; }
+
+// ── 메뉴 탭 ──
+const BOARD_UI = {
+  faq: { title:"자주 묻는 질문", note:"사업자가 자주 묻는 질문과 사무소 답변입니다. AI 답변에서 \"자주 묻는 질문에 등록\"을 눌러 옮겨 올 수도 있습니다.", cat:"category", head:"question", body:"answer", sub:"basis",
+    form:[["category","분류","input","예: 부가가치세"],["question","질문","input",""],["answer","답변","textarea",""],["basis","근거 (조문·예규 번호)","textarea",""]] },
+  tpl: { title:"안내문·템플릿", note:"신고별 필요서류 안내문과 고객 안내 문구입니다. [ ] 부분을 바꿔 쓰세요.", cat:"category", head:"title", body:"body", copy:true,
+    form:[["category","분류","input","예: 부가가치세"],["title","제목","input",""],["body","내용","textarea",""]] },
+  notice: { title:"공지·업무 매뉴얼", note:"동감 세무회계 공지사항과 업무 매뉴얼입니다.", cat:"type", head:"title", body:"body",
+    form:[["type","종류","select",["공지","매뉴얼"]],["title","제목","input",""],["body","내용","textarea",""],["pinned","맨 위에 고정","check",""]] },
+};
+const LEAVE_TYPES = ["연차","오전 반차","오후 반차","병가","경조사","기타"];
+const boards = {}; // board → { items, q, cat, editing, open }
+function showTab(tab){
+  if(tab !== "search" && !BOARD_UI[tab] && tab !== "leave") tab = "search";
+  store.set("staff.tab", tab);
+  document.querySelectorAll("#tabs [data-tab]").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === tab));
+  $("#appView").hidden = tab !== "search";
+  $("#boardView").hidden = tab === "search";
+  if(tab !== "search") loadBoard(tab);
+}
+$("#tabs").addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if(b) showTab(b.dataset.tab); });
+
+async function loadBoard(key, keep){
+  const st = boards[key] ||= { items:[], q:"", cat:"전체", editing:null, open:{} };
+  st.key = key;
+  if(!keep){ st.loading = true; drawBoard(key); }
+  try{ st.items = (await api("board.list", { board:key })).items || []; st.err = ""; }
+  catch(x){ st.err = x.message; }
+  st.loading = false;
+  if(store.get("staff.tab") === key) drawBoard(key);
+}
+const fmtDay = iso => { const d = new Date(iso); return isNaN(d) ? "" : `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,"0")}.${String(d.getDate()).padStart(2,"0")}`; };
+
+function drawBoard(key){
+  if(key === "leave") return drawLeave();
+  const ui = BOARD_UI[key], st = boards[key];
+  const cats = ["전체", ...new Set(st.items.map(it => it[ui.cat]).filter(Boolean))];
+  const q = st.q.toLowerCase();
+  let list = st.items.filter(it => (st.cat === "전체" || it[ui.cat] === st.cat) && (!q || [it[ui.head], it[ui.body], it[ui.sub] || "", it[ui.cat]].join(" ").toLowerCase().includes(q)));
+  if(key === "notice") list = [...list].sort((a,b) => (b.pinned === "Y") - (a.pinned === "Y"));
+  $("#board").innerHTML = `
+    <section class="card bhead">
+      <h1>${ui.title}</h1>
+      <p class="note">${esc(ui.note)}</p>
+      <div class="row">
+        <input class="field" id="bq" type="search" placeholder="찾기" value="${esc(st.q)}" style="flex:1;min-width:200px">
+        <button type="button" class="btn" id="bnew">새로 쓰기</button>
+      </div>
+      <div class="kinds" id="bcats">${cats.map(c => `<button type="button" class="chip" data-cat="${esc(c)}" aria-pressed="${st.cat === c}">${esc(c)}</button>`).join("")}</div>
+    </section>
+    ${st.editing ? formHtml(key) : ""}
+    ${st.err ? `<p class="err">${esc(st.err)}</p>` : ""}
+    <div class="blist">${st.loading ? `<p class="hint">불러오는 중입니다…</p>` : list.length ? list.map(it => itemCard(key, it)).join("") : `<p class="empty card">아직 글이 없습니다. "새로 쓰기"로 추가하세요.</p>`}</div>`;
+  const bq = $("#bq"); bq.addEventListener("input", () => { st.q = bq.value; const pos = bq.selectionStart; drawBoard(key); const n = $("#bq"); n.focus(); n.setSelectionRange(pos, pos); });
+}
+function itemCard(key, it){
+  const ui = BOARD_UI[key], st = boards[key], open = st.open[it.id];
+  const meta = [it[ui.cat], it.author, fmtDay(it.updatedAt || it.createdAt)].filter(Boolean).join(" · ");
+  return `<article class="card bitem">
+    <div class="top">
+      <button type="button" class="t" data-bopen="${esc(it.id)}">${key === "notice" && it.pinned === "Y" ? `<span class="pin">고정</span>` : ""}${esc(it[ui.head])}<span class="meta">${esc(meta)}</span></button>
+      ${ui.copy ? `<button type="button" class="chip" data-bcopy="${esc(it.id)}">복사</button>` : ""}
+    </div>
+    ${open ? `<div class="txt">${esc(it[ui.body])}</div>${ui.sub && it[ui.sub] ? `<div class="sub"><b>근거</b>\n${esc(it[ui.sub])}</div>` : ""}
+      <div class="acts"><button type="button" class="btn ghost sm" data-bedit="${esc(it.id)}">수정</button><button type="button" class="btn ghost sm" data-bdel="${esc(it.id)}">삭제</button></div>` : ""}
+  </article>`;
+}
+function formHtml(key){
+  const ui = BOARD_UI[key], ed = boards[key].editing;
+  const who = ed.author || store.get("staff.who") || "";
+  return `<section class="card bform" id="bform">
+    <h2>${ed.id ? "글 수정" : "새 글"}</h2>
+    ${ui.form.map(([k,label,type,ph]) => type === "textarea" ? `<label>${label}<textarea class="field" data-f="${k}" placeholder="${esc(ph)}">${esc(ed[k] || "")}</textarea></label>`
+      : type === "select" ? `<label>${label} <select class="field" data-f="${k}" style="width:auto">${ph.map(o => `<option${(ed[k]||ph[0]) === o ? " selected" : ""}>${o}</option>`).join("")}</select></label>`
+      : type === "check" ? `<label><input type="checkbox" data-f="${k}"${ed[k] === "Y" ? " checked" : ""}> ${label}</label>`
+      : `<label>${label}<input class="field" data-f="${k}" placeholder="${esc(ph)}" value="${esc(ed[k] || "")}"></label>`).join("")}
+    <div class="row"><label>작성자 <select class="field" data-f="author" style="width:auto">${["",...PEOPLE,"대표"].map(p => `<option value="${p}"${who === p ? " selected" : ""}>${p || "선택 안 함"}</option>`).join("")}</select></label></div>
+    <div class="row"><button type="button" class="btn" id="bsave">저장</button><button type="button" class="btn ghost" id="bcancel">닫기</button></div>
+    <p class="err" id="berr" hidden></p>
+  </section>`;
+}
+document.addEventListener("click", async e => {
+  const key = store.get("staff.tab"), st = boards[key]; if(!st || !$("#board").contains(e.target)) return;
+  const t = e.target;
+  const cat = t.closest("[data-cat]"); if(cat){ st.cat = cat.dataset.cat; return drawBoard(key); }
+  if(t.closest("#bnew")){ st.editing = {}; drawBoard(key); $("#bform").scrollIntoView({behavior:"smooth"}); return; }
+  if(t.closest("#bcancel")){ st.editing = null; return drawBoard(key); }
+  const op = t.closest("[data-bopen]"); if(op){ st.open[op.dataset.bopen] = !st.open[op.dataset.bopen]; return drawBoard(key); }
+  const cp = t.closest("[data-bcopy]"); if(cp){
+    const it = st.items.find(x => x.id === cp.dataset.bcopy);
+    try{ await navigator.clipboard.writeText(it.body); cp.textContent = "복사됨"; }catch{ cp.textContent = "복사 실패"; }
+    setTimeout(() => { cp.textContent = "복사"; }, 1500); return;
+  }
+  const ed = t.closest("[data-bedit]"); if(ed){ st.editing = { ...st.items.find(x => x.id === ed.dataset.bedit) }; drawBoard(key); $("#bform").scrollIntoView({behavior:"smooth"}); return; }
+  const del = t.closest("[data-bdel]"); if(del){
+    if(del.dataset.armed !== "1"){ del.dataset.armed = "1"; del.textContent = "한 번 더 누르면 삭제"; return; }
+    del.disabled = true;
+    try{ await api("board.delete", { board:key, id: del.dataset.bdel }); st.items = st.items.filter(x => x.id !== del.dataset.bdel); drawBoard(key); }
+    catch(x){ alert(x.message); del.disabled = false; }
+    return;
+  }
+  if(t.closest("#bsave")){
+    const item = { ...st.editing };
+    document.querySelectorAll("#bform [data-f]").forEach(f => { item[f.dataset.f] = f.type === "checkbox" ? (f.checked ? "Y" : "") : f.value; });
+    if(item.author) store.set("staff.who", item.author);
+    const btn = t.closest("#bsave"); btn.disabled = true;
+    try{
+      const saved = await api("board.save", { board:key, item });
+      st.items = item.id ? st.items.map(x => x.id === saved.id ? saved : x) : [saved, ...st.items];
+      st.editing = null; st.open[saved.id] = true; drawBoard(key);
+    }catch(x){ $("#berr").textContent = x.message; $("#berr").hidden = false; btn.disabled = false; }
+  }
+});
+
+// AI 답변 → 자주 묻는 질문 등록
+document.addEventListener("click", e => {
+  if(!e.target.closest("#aiToFaq") || !lastAi) return;
+  const r = lastAi;
+  boards.faq ||= { items:[], q:"", cat:"전체", editing:null, open:{} };
+  boards.faq.editing = {
+    question: r.question,
+    answer: [r.conclusion, "", r.explanation, ...(r.checks.length ? ["", "[확인할 점]", ...r.checks.map(c => "- " + c)] : [])].join("\n"),
+    basis: r.sources.map(x => `${x.label} ${[x.number, x.title].filter(Boolean).join(" ")}: ${x.point}`).join("\n"),
+  };
+  showTab("faq");
+});
+
+// ── 휴가 신청 ──
+function drawLeave(){
+  const st = boards.leave;
+  const who = st.who || "전체";
+  const list = st.items.filter(it => who === "전체" || it.name === who).sort((a,b) => b.start.localeCompare(a.start));
+  const today = new Date(Date.now() + 9*3600e3).toISOString().slice(0,10);
+  const badge = s => `<span class="badge${s === "승인" ? " ok" : s === "반려" ? " no" : ""}">${esc(s || "대기")}</span>`;
+  const me = store.get("staff.who") || "";
+  $("#board").innerHTML = `
+    <section class="card bhead">
+      <h1>휴가 신청</h1>
+      <p class="note">신청하면 구글 시트 "휴가신청" 탭에 "대기"로 올라갑니다. 대표님이 시트의 상태 칸을 "승인" 또는 "반려"로 바꾸면 여기에 반영됩니다. 대기 중인 신청만 취소할 수 있습니다.</p>
+    </section>
+    <section class="card bform">
+      <h2>새 신청</h2>
+      <div class="row">
+        <label>이름 <select class="field" id="lvName" style="width:auto">${["",...PEOPLE].map(p => `<option value="${p}"${me === p ? " selected" : ""}>${p || "선택"}</option>`).join("")}</select></label>
+        <label>종류 <select class="field" id="lvType" style="width:auto">${LEAVE_TYPES.map(t => `<option>${t}</option>`).join("")}</select></label>
+        <label>시작 <input class="field" id="lvStart" type="date" value="${today}" style="width:auto"></label>
+        <label>끝 <input class="field" id="lvEnd" type="date" value="${today}" style="width:auto"></label>
+      </div>
+      <input class="field" id="lvReason" placeholder="사유 (선택)">
+      <div class="row"><button type="button" class="btn" id="lvSave">신청</button></div>
+      <p class="err" id="lvErr" hidden></p>
+    </section>
+    <section class="card bhead">
+      <div class="kinds">${["전체",...PEOPLE].map(p => `<button type="button" class="chip" data-lvwho="${p}" aria-pressed="${who === p}">${p}</button>`).join("")}</div>
+      ${st.err ? `<p class="err">${esc(st.err)}</p>` : ""}
+      <div class="wrapx">${st.loading ? `<p class="hint">불러오는 중입니다…</p>` : list.length ? `<table class="leave">
+        <thead><tr><th>이름</th><th>종류</th><th>기간</th><th>사유</th><th>상태</th><th></th></tr></thead>
+        <tbody>${list.map(it => `<tr><td>${esc(it.name)}</td><td>${esc(it.type)}</td><td>${esc(it.start)}${it.end !== it.start ? " ~ " + esc(it.end) : ""}</td><td>${esc(it.reason)}${it.memo ? `<div class="hint">${esc(it.memo)}</div>` : ""}</td><td>${badge(it.status)}</td>
+          <td>${(it.status || "대기") === "대기" ? `<button type="button" class="btn ghost sm" data-lvdel="${esc(it.id)}">취소</button>` : ""}</td></tr>`).join("")}</tbody></table>` : `<p class="empty">신청 내역이 없습니다.</p>`}</div>
+    </section>`;
+  $("#lvStart").addEventListener("change", () => { if($("#lvEnd").value < $("#lvStart").value) $("#lvEnd").value = $("#lvStart").value; });
+}
+document.addEventListener("click", async e => {
+  if(store.get("staff.tab") !== "leave" || !$("#board").contains(e.target)) return;
+  const st = boards.leave, t = e.target;
+  const w = t.closest("[data-lvwho]"); if(w){ st.who = w.dataset.lvwho; return drawLeave(); }
+  if(t.closest("#lvSave")){
+    const btn = t.closest("#lvSave"); btn.disabled = true;
+    const item = { name: $("#lvName").value, type: $("#lvType").value, start: $("#lvStart").value, end: $("#lvEnd").value, reason: $("#lvReason").value };
+    if(item.name) store.set("staff.who", item.name);
+    try{ const saved = await api("board.save", { board:"leave", item }); st.items = [saved, ...st.items]; drawLeave(); }
+    catch(x){ $("#lvErr").textContent = x.message; $("#lvErr").hidden = false; btn.disabled = false; }
+    return;
+  }
+  const d = t.closest("[data-lvdel]"); if(d){
+    if(d.dataset.armed !== "1"){ d.dataset.armed = "1"; d.textContent = "정말 취소"; return; }
+    d.disabled = true;
+    try{ await api("board.delete", { board:"leave", id: d.dataset.lvdel }); st.items = st.items.filter(x => x.id !== d.dataset.lvdel); drawLeave(); }
+    catch(x){ alert(x.message); d.disabled = false; }
+  }
+});
+
+// 저장된 로그인 확인은 모든 정의가 끝난 뒤에
+if(token && Number(token.split(".")[0]) > Date.now()) showApp(true); else logout();
 </script>
 </body>
 </html>
