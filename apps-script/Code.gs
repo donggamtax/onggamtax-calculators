@@ -488,7 +488,7 @@ function listHistory() {
   if (last < 2) return { items: [] };
   const start = Math.max(2, last - 499);
   const rows = sh.getRange(start, 1, last - start + 1, COLUMNS.length).getValues();
-  const items = rows.filter(r => r[0]).map(rowToItem);
+  const items = rows.filter(r => r[0]).map(rowToItem).reverse(); // 같은 시각이면 아래 줄(나중 저장)이 위로
   items.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   return { items: items };
 }
