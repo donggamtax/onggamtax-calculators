@@ -163,30 +163,57 @@ function search(req, p) {
   const empty = groups.filter(g => !g.error && !g.items.length);
   let terms = [];
   if (page === 1 && empty.length && /\s/.test(q)) {
-    terms = searchTerms(q, p);
-    const jobs = [];
+    const plan = searchPlan(q, p);
+    terms = plan.terms;
+    const fetchList = list => UrlFetchApp.fetchAll(list.map(j => ({ url: lawUrl("lawSearch.do", j.params, p), muteHttpExceptions: true })))
+      .map((r, i) => { try { return (findItems(parseLaw(r)) || []).map(it => normalize(list[i].kind, it)); } catch (e) { return []; } });
+
+    // 1차: 법령은 관련 법령 이름으로, 나머지는 가장 구체적인 핵심어 하나로 찾는다
+    const first = [];
     empty.forEach(g => {
-      if (g.kind === "law") jobs.push({ g: g, t: q }); // 법령은 문장 그대로 조문 내용에서도 찾아본다
-      terms.forEach(t => jobs.push({ g: g, t: t }));
+      if (g.kind === "law") {
+        plan.laws.forEach(name => first.push({ g: g, kind: "law", name: name, params: params("law", name, 10, false) }));
+        if (!plan.laws.length && terms[0]) first.push({ g: g, kind: "law", params: params("law", terms[0], 10, true) });
+      } else if (terms[0]) {
+        first.push({ g: g, kind: g.kind, params: params(g.kind, terms[0], display, false) });
+      }
     });
-    const rs = jobs.length ? UrlFetchApp.fetchAll(jobs.map(j => ({ url: lawUrl("lawSearch.do", params(j.g.kind, j.t, 10, true), p), muteHttpExceptions: true }))) : [];
-    jobs.forEach((j, i) => {
-      try {
-        const items = (findItems(parseLaw(rs[i])) || []).map(it => normalize(j.g.kind, it));
-        items.forEach(it => { if (!j.g.items.some(x => x.id === it.id)) j.g.items.push(it); });
-      } catch (e) {}
+    fetchList(first).forEach((items, i) => {
+      const j = first[i];
+      // 법령 이름 검색은 "법인세법" → 법인세법·시행령·시행규칙만 남긴다
+      if (j.name) items = items.filter(it => it.title.replace(/\s/g, "").indexOf(j.name.replace(/\s/g, "")) === 0);
+      items.forEach(it => { if (!j.g.items.some(x => x.id === it.id)) j.g.items.push(it); });
     });
+
+    // 2차: 결과가 적은 종류만 다음 핵심어를 더한다
+    const second = [];
     empty.forEach(g => {
+      if (g.kind !== "law" && g.items.length < 5) terms.slice(1).forEach(t => second.push({ g: g, kind: g.kind, params: params(g.kind, t, display, false) }));
+    });
+    if (second.length) fetchList(second).forEach((items, i) => {
+      const j = second[i];
+      // 1차에서 찾은 게 있으면 흔한 단어로 딸려 온 엉뚱한 자료는 빼고, 가장 구체적인 핵심어가 제목에 있는 것만 더한다
+      if (j.g.items.length) items = items.filter(it => it.title.indexOf(terms[0]) >= 0);
+      items.forEach(it => { if (!j.g.items.some(x => x.id === it.id)) j.g.items.push(it); });
+    });
+
+    // 제목에 핵심어가 많이 들어간 자료를 위로 (같으면 원래 순서)
+    empty.forEach(g => {
+      if (g.kind !== "law") {
+        const score = it => terms.reduce((n, t, k) => n + (it.title.indexOf(t) >= 0 ? (terms.length - k) * 2 : 0), 0);
+        g.items = g.items.map((it, i) => ({ it: it, s: score(it), i: i })).sort((x, y) => y.s - x.s || x.i - y.i).map(x => x.it);
+      }
       g.items = g.items.slice(0, display);
       g.total = g.items.length;
-      if (g.items.length) g.note = "핵심어로 나눠 찾은 결과";
+      if (g.items.length) g.note = "핵심어로 찾은 결과";
     });
+    terms = plan.laws.concat(terms);
   }
   return { q: q, page: page, groups: groups, terms: terms };
 }
 
-// 질문 문장에서 법제처 검색용 핵심어를 뽑는다. Gemini 키가 있으면 AI가, 없으면 단어 길이 순으로.
-function searchTerms(q, p) {
+// 질문 문장에서 관련 법령 이름과 검색 핵심어를 고른다. Gemini 키가 있으면 AI가, 없으면 단어 길이 순으로.
+function searchPlan(q, p) {
   if (p.GEMINI_API_KEY) {
     try {
       const res = UrlFetchApp.fetch(GEMINI_API + encodeURIComponent(p.GEMINI_MODEL || "gemini-flash-latest") + ":generateContent", {
@@ -194,23 +221,36 @@ function searchTerms(q, p) {
         contentType: "application/json",
         headers: { "x-goog-api-key": p.GEMINI_API_KEY },
         payload: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: "다음 세무 질문으로 국가법령정보센터(법령, 국세청 해석, 조세심판원 결정, 판례)를 검색하려고 한다. 법령·예규 원문에 실제로 쓰이는 용어로 된 짧은 검색어 2~4개를 중요한 순서로 골라라. 각 검색어는 1~2단어. (예: 주식등변동상황명세서, 가산세, 제척기간)\n\n질문: " + q }] }],
-          generationConfig: { temperature: 0, responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "STRING" } } },
+          contents: [{ role: "user", parts: [{ text: [
+            "다음 세무 질문으로 국가법령정보센터를 검색하려고 한다.",
+            "laws: 이 질문을 판단하는 데 직접 필요한 법률 이름 1~3개 (정식 명칭, 시행령·시행규칙 제외. 예: 법인세법, 국세기본법).",
+            "terms: 국세청 해석·조세심판원 결정·판례 제목에 실제로 쓰일 검색어 1~3개. 가장 구체적인 것(서식명·제도명)을 먼저, '가산세'처럼 흔한 단어는 뒤에. 각 1~2단어.",
+            "질문: " + q,
+          ].join("\n") }] }],
+          generationConfig: {
+            temperature: 0, responseMimeType: "application/json",
+            responseSchema: { type: "OBJECT", properties: { laws: { type: "ARRAY", items: { type: "STRING" } }, terms: { type: "ARRAY", items: { type: "STRING" } } }, required: ["laws", "terms"] },
+          },
         }),
         muteHttpExceptions: true,
       });
       if (res.getResponseCode() === 200) {
         const body = JSON.parse(res.getContentText("UTF-8"));
-        const text = body.candidates[0].content.parts.map(x => x.text || "").join("");
-        const list = JSON.parse(text).map(t => String(t).trim()).filter(t => t.length >= 2 && t.length <= 20);
-        if (list.length) return list.slice(0, 4);
+        const plan = JSON.parse(body.candidates[0].content.parts.map(x => x.text || "").join(""));
+        const ok = a => (Array.isArray(a) ? a : []).map(t => String(t).trim()).filter(t => t.length >= 2 && t.length <= 30);
+        const laws = ok(plan.laws).filter(t => /(법|령|규칙)$/.test(t)).slice(0, 3);
+        const terms = ok(plan.terms).slice(0, 3);
+        if (terms.length || laws.length) return { laws: laws, terms: terms };
       }
     } catch (e) {}
   }
   const stop = /^(리스크|위험|문제|경우|여부|관련|방법|어떻게|무엇|얼마|있는지|없는지|안하고|하고|했을|때|몇|년간|동안|방치|처리|법인|개인)$/;
   const verb = /(했|하|되|된|않|안|있|없)(을|는|고|때|면|서|다|지)|때$/;
   const seen = {};
-  return keywords(q).filter(w => !stop.test(w) && !verb.test(w) && !seen[w] && (seen[w] = 1)).sort((a, b) => b.length - a.length).slice(0, 3);
+  const terms = keywords(q).filter(w => !stop.test(w) && !verb.test(w) && !seen[w] && (seen[w] = 1)).sort((a, b) => b.length - a.length).slice(0, 3);
+  // 질문에 법령 이름이 그대로 들어 있으면 그것을 쓴다
+  const laws = keywords(q).filter(w => /[가-힣]{2,}(법|세법)$/.test(w)).slice(0, 2);
+  return { laws: laws, terms: terms.filter(t => laws.indexOf(t) < 0) };
 }
 
 function detail(req, p) {
