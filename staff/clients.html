@@ -290,10 +290,10 @@ function drawList(){
   $("#chips3").innerHTML=["전체"].concat(PEOPLE,["폐업/이탈"]).map(function(p){return chip("own",p,p,state.owner===p)}).join("");
   state.showOff=state.owner==="폐업/이탈";
   $("#addbox").innerHTML=state.adding?'<div class="addf"><input type="text" id="addName" placeholder="새 업체명" aria-label="새 업체명"><div class="ctl" style="margin:6px 0 0"><select id="addType" aria-label="구분"><option>개인</option><option>법인</option></select><select id="addSvc" aria-label="기장/신고">'+SVCS.map(function(p){return '<option>'+p+'</option>'}).join("")+'</select><select id="addOwner" aria-label="담당자">'+PEOPLE.map(function(p){return '<option>'+p+'</option>'}).join("")+'</select><button class="btn sm" type="button" data-addc="1">추가</button><button class="btn ghost sm" type="button" data-addno="1">취소</button></div></div>':'<button class="btn ghost sm" type="button" data-adding="1" style="margin-bottom:6px">+ 업체 추가</button>';
-  var rows=CLIENTS.filter(function(c){var off=stOf(c)!=="거래중";return off===state.showOff&&(state.filter==="전체"||c.type===state.filter)&&(state.svc==="전체"||c.svc===state.svc)&&(!state.tfo||c.tf)&&(state.showOff||state.owner==="전체"||c.owner===state.owner)&&c.name.indexOf(state.q)>=0});
+  var rows=CLIENTS.filter(function(c){var off=stOf(c)!=="거래중";return off===state.showOff&&(state.filter==="전체"||c.type===state.filter)&&(state.svc==="전체"||c.svc===state.svc)&&(!state.tfo||c.tf)&&(state.showOff||state.owner==="전체"||c.owner===state.owner)&&(c.name.indexOf(state.q)>=0||(c.rep||"").indexOf(state.q)>=0)});
   var offN=CLIENTS.filter(function(c){return stOf(c)!=="거래중"}).length;
   $("#count").textContent=(state.showOff?"폐업·이탈 ":"거래중 ")+rows.length+"곳"+(state.showOff?"":" · 숨긴 폐업·이탈 "+offN+"곳")+"";
-  $("#cl").innerHTML=rows.map(function(c){return '<li><button type="button" data-id="'+c.id+'" aria-current="'+(state.sel===c.id)+'"><span>'+esc(c.name||"(이름 없음)")+' <span class="tag">'+esc(c.svc||"기장")+'</span>'+(c.tf?' <span class="tag" style="background:var(--soft)">면세</span>':'')+(c.tier?' <span class="tag">'+esc(c.tier)+'</span>':'')+(stOf(c)!=="거래중"?' <span class="tag" style="background:var(--warn-bg);color:var(--warn)">'+stOf(c)+'</span>':'')+'</span><span class="sub">'+esc(c.owner||"미지정")+'</span></button></li>'}).join("")||'<li class="empty">'+(state.showOff?"폐업·이탈 처리한 업체가 없습니다":"검색 결과가 없습니다")+'</li>';
+  $("#cl").innerHTML=rows.map(function(c){return '<li><button type="button" data-id="'+c.id+'" aria-current="'+(state.sel===c.id)+'"><span>'+esc(c.name||"(이름 없음)")+' <span class="tag">'+esc(c.svc||"기장")+'</span>'+(c.tf?' <span class="tag" style="background:var(--soft)">면세</span>':'')+(c.tier?' <span class="tag">'+esc(c.tier)+'</span>':'')+(stOf(c)!=="거래중"?' <span class="tag" style="background:var(--warn-bg);color:var(--warn)">'+stOf(c)+'</span>':'')+'</span><span class="sub">'+(c.rep?esc(c.rep)+' · ':'')+esc(c.owner||"미지정")+'</span></button></li>'}).join("")||'<li class="empty">'+(state.showOff?"폐업·이탈 처리한 업체가 없습니다":"검색 결과가 없습니다")+'</li>';
 }
 /* 회차(신고 단위) 선택·이름 수정·삭제·추가 */
 function periodBar(kind,list,cur,addLabel){
@@ -321,8 +321,8 @@ function infoSel(k){
 function tabInfo(c){
   var D=d(c.id),nm=c.name||"",nsz=nm.length>22?12:nm.length>14?13.5:15;
   return '<div class="paper"><h2 class="ttl">거래처별 특이사항 등 체크리스트</h2>'+
-   '<table class="ht cover"><tr><th style="width:24%">회사명</th><th>업종</th><th>창업감면</th><th>중기특감</th><th>고용증대</th><th>성실신고</th></tr>'+
-   '<tr><td class="c nmc" style="font-size:'+nsz+'px">'+esc(nm)+'</td><td>'+inp("info|업종","업종")+'</td><td class="c">'+infoSel("창업감면")+'</td><td class="c">'+infoSel("중기특감")+'</td><td class="c">'+infoSel("고용증대")+'</td><td class="c">'+infoSel("성실신고")+'</td></tr></table>'+
+   '<table class="ht cover"><tr><th style="width:24%">회사명</th><th>대표자</th><th>업종</th><th>창업감면</th><th>중기특감</th><th>고용증대</th><th>성실신고</th></tr>'+
+   '<tr><td class="c nmc" style="font-size:'+nsz+'px">'+esc(nm)+'</td><td><input type="text" data-cl="rep" value="'+esc(c.rep||"")+'" placeholder="대표자 이름" aria-label="대표자 이름"></td><td>'+inp("info|업종","업종")+'</td><td class="c">'+infoSel("창업감면")+'</td><td class="c">'+infoSel("중기특감")+'</td><td class="c">'+infoSel("고용증대")+'</td><td class="c">'+infoSel("성실신고")+'</td></tr></table>'+
    '<details class="help"><summary>창업감면·중기특감 % 기준 보기</summary><div class="sub" style="line-height:1.65;padding:6px 2px">'+
    '<b>창업감면</b> — 조세특례제한법 제6조 (2026.9.18. 시행본 확인) · 최초 소득발생 과세연도부터 5년간<br>'+
    '<u>2026.1.1. 이후 창업</u> (제1항제1호 나목)<br>· 100%: 청년창업, 수도권 외 지역 또는 수도권 인구감소지역<br>· 75%: 청년창업, 수도권(과밀억제권역·인구감소지역 제외)<br>· 50%: 청년창업, 수도권과밀억제권역 / 청년 외 창업, 수도권 외 지역 또는 수도권 인구감소지역<br>· 25%: 청년 외 창업, 수도권(과밀억제권역·인구감소지역 제외)<br>'+
@@ -632,7 +632,7 @@ document.addEventListener("input",function(e){
   var D=d(state.sel);
   if(t.classList.contains("num"))applyNum(t);
   if(t.dataset.k!==undefined){D.v[t.dataset.k]=t.value;if(t.closest(".paper[data-taxp]"))refreshTax()}
-  else if(t.dataset.cl==="name"||t.dataset.cl==="reason"){var cc=CLIENTS.filter(function(x){return x.id===state.sel})[0];cc[t.dataset.cl]=t.value;drawList();if(t.dataset.cl==="name"){var h2=document.querySelector(".dh h2");if(h2)h2.textContent=t.value}}
+  else if(t.dataset.cl==="name"||t.dataset.cl==="reason"||t.dataset.cl==="rep"){var cc=CLIENTS.filter(function(x){return x.id===state.sel})[0];cc[t.dataset.cl]=t.value;drawList();if(t.dataset.cl==="name"){var h2=document.querySelector(".dh h2");if(h2)h2.textContent=t.value}}
   else if(t.dataset.pname){var list=LISTOF(D,t.dataset.pname),p=list.filter(function(x){return x.id===state[t.dataset.pname]})[0];if(p){p.name=t.value;
     var ttl=document.querySelector('.paper[data-pid="'+p.id+'"] h2.ttl');if(ttl)ttl.firstChild.textContent=t.value+(t.dataset.pname==="tp"?((CLIENTS.filter(function(x){return x.id===state.sel})[0].type==="법인")?" 법인세 산출액(추정)":" 종합소득세 산출액(추정)"):TITLE[t.dataset.pname]);if(t.dataset.pname==="tp"){var tp=document.querySelector('.paper[data-pid="'+p.id+'"]');if(tp)tp.dataset.yr=yearOf(t.value)};
     var chip=document.querySelector('[data-pick="'+t.dataset.pname+'"][data-pid="'+p.id+'"]');if(chip)chip.textContent=t.value||"(이름 없음)"}}
@@ -738,7 +738,7 @@ function buildData(c,rows){
 function clientById(id){return CLIENTS.filter(function(x){return x.id===+id})[0]}
 function groupOf(k){var a=k.split("|");if(a[0]==="info")return"info";if(/^(vat|inc|corp|tax)$/.test(a[0])&&a[1])return a[0]+"|"+a[1];return"etc"}
 function groupsOf(D){var g={};Object.keys(D.v).sort().forEach(function(k){var v=D.v[k];if(v===""||v==null)return;var n=groupOf(k);(g[n]=g[n]||{})[k]=v});return g}
-function metaOf(id){var c=clientById(id),D=state.data[id];return {name:c.name,type:c.type||"",owner:c.owner||"",svc:c.svc||"기장",status:c.status||"거래중",reason:c.reason||"",tier:c.tier||"",periods:{vps:D.vps,ips:D.ips,cps:D.cps,tps:D.tps,tf:c.tf?1:0}}}
+function metaOf(id){var c=clientById(id),D=state.data[id];return {name:c.name,type:c.type||"",owner:c.owner||"",svc:c.svc||"기장",status:c.status||"거래중",reason:c.reason||"",tier:c.tier||"",periods:{vps:D.vps,ips:D.ips,cps:D.cps,tps:D.tps,tf:c.tf?1:0,rep:c.rep||""}}}
 function snap(id){var g=groupsOf(state.data[id]),o={};Object.keys(g).forEach(function(k){o[k]=JSON.stringify(g[k])});return {meta:JSON.stringify(metaOf(id)),groups:o}}
 var saved={},pending={},timer=null,busy=false,again=false;
 function diffClient(id){
@@ -775,7 +775,7 @@ window.addEventListener("beforeunload",function(e){var dirty=busy||Object.keys(p
 function applyLoad(r,lazy){
   ["vat","inc","corp"].forEach(function(k){var t=r.templates&&r.templates[k];if(Array.isArray(t)&&t.length)TPL[k]=t});
   var by={};(r.data||[]).forEach(function(x){(by[x.id]=by[x.id]||[]).push(x)});
-  CLIENTS=(r.clients||[]).map(function(c){return {id:c.id,name:c.name,type:c.type||"개인",owner:c.owner,svc:c.svc,status:c.status==="거래중"?"":c.status,reason:c.reason,tier:c.tier,tf:c.periods&&c.periods.tf?1:0,by:c.by,at:c.at}});
+  CLIENTS=(r.clients||[]).map(function(c){return {id:c.id,name:c.name,type:c.type||"개인",owner:c.owner,svc:c.svc,status:c.status==="거래중"?"":c.status,reason:c.reason,tier:c.tier,tf:c.periods&&c.periods.tf?1:0,rep:(c.periods&&c.periods.rep)||"",by:c.by,at:c.at}});
   state.data={};
   (r.clients||[]).forEach(function(c){state.data[c.id]=buildData(c,by[c.id]);if(lazy)state.data[c.id].lazy=true;saved[c.id]=snap(c.id)});
 }
@@ -791,7 +791,7 @@ function refreshClient(id){
     if(!lz&&(pending[id]||busy||diffClient(id)))return;
     if(!clientById(id))return;
     var before=JSON.stringify(snap(id)),c=clientById(id);
-    c.name=r.client.name;c.type=r.client.type;c.owner=r.client.owner;c.svc=r.client.svc;c.status=r.client.status==="거래중"?"":r.client.status;c.reason=r.client.reason;c.tier=r.client.tier;c.tf=r.client.periods&&r.client.periods.tf?1:0;c.by=r.client.by;c.at=r.client.at;
+    c.name=r.client.name;c.type=r.client.type;c.owner=r.client.owner;c.svc=r.client.svc;c.status=r.client.status==="거래중"?"":r.client.status;c.reason=r.client.reason;c.tier=r.client.tier;c.tf=r.client.periods&&r.client.periods.tf?1:0;c.rep=(r.client.periods&&r.client.periods.rep)||"";c.by=r.client.by;c.at=r.client.at;
     state.data[id]=buildData(r.client,r.data);
     var after=JSON.stringify(snap(id));saved[id]=snap(id);
     if(lz){if(state.sel===id){drawList();drawDetail()}return}
@@ -804,7 +804,7 @@ function addClientRemote(){
   var nm0=$("#addName").value.trim();if(!nm0){$("#addName").focus();return}
   var meta={name:nm0,type:$("#addType").value,svc:$("#addSvc").value,owner:$("#addOwner").value,periods:defaultPeriods()};
   api("clients.add",{meta:meta}).then(function(r){
-    CLIENTS.push({id:r.id,name:nm0,type:meta.type,owner:meta.owner,svc:meta.svc,tf:0,by:r.by,at:r.at});
+    CLIENTS.push({id:r.id,name:nm0,type:meta.type,owner:meta.owner,svc:meta.svc,tf:0,rep:"",by:r.by,at:r.at});
     state.data[r.id]=buildData(meta,[]);saved[r.id]=snap(r.id);
     state.adding=false;state.owner="전체";state.filter="전체";state.svc="전체";state.q="";$("#q").value="";state.sel=r.id;state.tab="기본정보";state.vp=state.ip=state.cp=state.tp=null;state.cmp={};show();
   }).catch(function(e){alert("업체를 추가하지 못했습니다: "+e.message)});
@@ -819,6 +819,7 @@ function deleteClientRemote(){
 
 /* ===== 업체 한꺼번에 넣기 (엑셀에서 복사해 붙여넣기) ===== */
 function parseImport(text){
+  // 칸 순서: 업체명 · 대표자 · 면세(O/X) · 구분(법인/개인) · 담당 · 기장/신고 · 비고 (뒤쪽 칸은 비워도 됨)
   var out=[];
   String(text||"").split(/\r?\n/).forEach(function(line,i){
     if(!line.trim())return;
@@ -826,15 +827,16 @@ function parseImport(text){
     c=c.map(function(x){return x.trim()});
     if(i===0&&/^(업체명|거래처명|상호|회사명|업체)$/.test(c[0]))return;
     if(!c[0])return;
-    out.push({name:c[0],type:c[1]==="법인"?"법인":"개인",owner:PEOPLE.indexOf(c[2])>=0?c[2]:"",svc:c[3]==="신고"?"신고":"기장",tier:(c[4]||"").slice(0,40),periods:defaultPeriods()});
+    var per=defaultPeriods();per.rep=(c[1]||"").slice(0,40);per.tf=/^(o|ㅇ|면세|y|yes|1|true)$/i.test(c[2]||"")?1:0;
+    out.push({name:c[0],type:c[3]==="법인"?"법인":"개인",owner:PEOPLE.indexOf(c[4])>=0?c[4]:"",svc:c[5]==="신고"?"신고":"기장",tier:(c[6]||"").slice(0,40),periods:per});
   });
   return out;
 }
 function openImport(first){
   var m=document.createElement("div");m.className="picmodal";
   m.innerHTML='<div class="pm" style="width:min(640px,100%)"><b>업체 한꺼번에 넣기</b>'+
-   '<div class="sub">'+(first?'아직 등록된 업체가 없습니다. ':'')+'엑셀에서 아래 순서로 칸을 복사해 붙여넣으세요. 이미 있는 업체명은 건너뜁니다.<br>업체명 · 구분(법인/개인) · 담당 · 기장/신고 · 비고 (뒤쪽 칸은 비워도 됩니다)</div>'+
-   '<textarea id="impText" rows="10" style="width:100%;font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)" placeholder="예)\n㈜가나다\t법인\t이동희\t기장\n홍길동 사업장\t개인\t김유리\t신고"></textarea>'+
+   '<div class="sub">'+(first?'아직 등록된 업체가 없습니다. ':'')+'엑셀에서 아래 순서로 칸을 복사해 붙여넣으세요. 이미 있는 업체명은 건너뜁니다.<br>업체명 · 대표자 · 면세(O 또는 빈칸) · 구분(법인/개인) · 담당 · 기장/신고 · 비고 (뒤쪽 칸은 비워도 됩니다. 구분이 비면 개인)</div>'+
+   '<textarea id="impText" rows="10" style="width:100%;font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)" placeholder="예)\n㈜가나다\t홍길동\t\t법인\t이동희\t기장\n나다라 식당\t김영희\tO\t개인\t김유리\t기장"></textarea>'+
    '<div class="sub" id="impInfo"></div><div style="display:flex;gap:8px"><button class="btn" type="button" id="impGo">넣기</button><button class="btn ghost" type="button" data-picclose>닫기</button></div></div>';
   document.body.appendChild(m);
   var ta=m.querySelector("#impText"),info=m.querySelector("#impInfo");
@@ -920,8 +922,8 @@ function xlsxLib(cb){
   sc.onload=function(){cb(null)};sc.onerror=function(){cb("load")};document.head.appendChild(sc);
 }
 function exportBook(){
-  var base=function(c){return [c.name,c.type||"",c.tf?"면세":"",c.owner||"",c.svc||"기장",stOf(c)]};
-  var BH=["업체명","구분","면세","담당","기장/신고","상태"];
+  var base=function(c){return [c.name,c.rep||"",c.type||"",c.tf?"면세":"",c.owner||"",c.svc||"기장",stOf(c)]};
+  var BH=["업체명","대표자","구분","면세","담당","기장/신고","상태"];
   var sheets=[];
   // 1. 업체목록
   sheets.push(["업체목록",[BH.concat(["사유","비고","마지막 수정자","마지막 수정일시"])].concat(CLIENTS.map(function(c){return base(c).concat([c.reason||"",c.tier||"",c.by||"",c.at?hhmm(c.at):""])}))]);

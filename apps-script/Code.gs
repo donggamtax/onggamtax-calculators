@@ -259,7 +259,7 @@ function clMeta(m, cur) {
     status: STATUS.indexOf(m2.status) >= 0 ? m2.status : "거래중", reason: s(m2.reason, 200), tier: s(m2.tier, 40),
   };
   const per = m2.periods || {}, list = k => (Array.isArray(per[k]) ? per[k] : []).slice(0, 60).map(x => ({ id: s(x && x.id, 20).replace(/[^A-Za-z0-9_-]/g, ""), name: s(x && x.name, 60) })).filter(x => x.id);
-  o.periods = { vps: list("vps"), ips: list("ips"), cps: list("cps"), tps: list("tps"), tf: per.tf ? 1 : 0 }; // tf: 면세사업자 표시
+  o.periods = { vps: list("vps"), ips: list("ips"), cps: list("cps"), tps: list("tps"), tf: per.tf ? 1 : 0, rep: s(per.rep, 40).trim() }; // tf: 면세사업자 표시
   if (!o.name) throw fail("업체명을 입력하세요.");
   return o;
 }
