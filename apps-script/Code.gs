@@ -114,14 +114,21 @@ const BOARDS = {
   notice: { sheet: "공지매뉴얼", fields: [["type", "종류", 10], ["title", "제목", 200], ["body", "내용", 20000], ["pinned", "상단고정", 5], ["author", "작성자", 20]] },
 };
 // 로그인한 직원에게만 주는 설정. 휴가 신청 폼 주소는 공개 저장소에 두지 않고 스크립트 속성(LEAVE_FORM_URL)에 둔다.
+function leaveSheetId(p) {
+  const raw = String(p.LEAVE_SHEET_ID || "").trim(), m = raw.match(/\/d\/([A-Za-z0-9_-]+)/), id = m ? m[1] : raw;
+  return /^[A-Za-z0-9_-]{20,}$/.test(id) ? id : "";
+}
 function staffConfig(p) {
-  const u = String(p.LEAVE_FORM_URL || "").trim();
-  return { leaveFormUrl: /^https:\/\/(docs\.google\.com\/forms\/|forms\.gle\/)/.test(u) ? u : "" };
+  const u = String(p.LEAVE_FORM_URL || "").trim(), sid = leaveSheetId(p);
+  return {
+    leaveFormUrl: /^https:\/\/(docs\.google\.com\/forms\/|forms\.gle\/)/.test(u) ? u : "",
+    leaveSheetUrl: sid ? "https://docs.google.com/spreadsheets/d/" + sid + "/edit" : "", // 휴가대장 엑셀(구글 시트) 열기
+  };
 }
 // 휴가 현황: 휴가대장 스프레드시트(스크립트 속성 LEAVE_SHEET_ID)의 '연차현황' 탭을 읽어 보여준다. 읽기만 한다.
 function leaveStatus(p) {
-  const raw = String(p.LEAVE_SHEET_ID || "").trim(), m = raw.match(/\/d\/([A-Za-z0-9_-]+)/), id = m ? m[1] : raw;
-  if (!/^[A-Za-z0-9_-]{20,}$/.test(id)) return { configured: false };
+  const id = leaveSheetId(p);
+  if (!id) return { configured: false };
   let ss;
   try { ss = SpreadsheetApp.openById(id); } catch (e) { throw fail("휴가대장 시트를 열지 못했습니다. 스크립트 소유자 계정에 그 시트의 접근 권한이 있는지 확인하세요.", 502); }
   const sh = ss.getSheetByName("연차현황");
