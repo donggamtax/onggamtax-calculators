@@ -72,6 +72,7 @@ function route(req) {
     case "board.list": return boardList(req);
     case "board.save": return boardSave(req, who);
     case "board.delete": return boardDelete(req);
+    case "leave.status": return leaveStatus(p);
     case "clients.load": return clientsLoad();
     case "template.save": return templateSave(req, who);
     case "clients.get": return clientsGet(req);
@@ -116,6 +117,22 @@ const BOARDS = {
 function staffConfig(p) {
   const u = String(p.LEAVE_FORM_URL || "").trim();
   return { leaveFormUrl: /^https:\/\/(docs\.google\.com\/forms\/|forms\.gle\/)/.test(u) ? u : "" };
+}
+// 휴가 현황: 휴가대장 스프레드시트(스크립트 속성 LEAVE_SHEET_ID)의 '연차현황' 탭을 읽어 보여준다. 읽기만 한다.
+function leaveStatus(p) {
+  const raw = String(p.LEAVE_SHEET_ID || "").trim(), m = raw.match(/\/d\/([A-Za-z0-9_-]+)/), id = m ? m[1] : raw;
+  if (!/^[A-Za-z0-9_-]{20,}$/.test(id)) return { configured: false };
+  let ss;
+  try { ss = SpreadsheetApp.openById(id); } catch (e) { throw fail("휴가대장 시트를 열지 못했습니다. 스크립트 소유자 계정에 그 시트의 접근 권한이 있는지 확인하세요.", 502); }
+  const sh = ss.getSheetByName("연차현황");
+  if (!sh) throw fail("휴가대장 시트에 '연차현황' 탭이 없습니다.", 502);
+  const vals = sh.getDataRange().getDisplayValues();
+  let hi = -1, asof = "";
+  vals.forEach((r, i) => { if (r[0] === "기준일" && !asof) asof = String(r[1] || ""); if (hi < 0 && r[0] === "이름") hi = i; });
+  if (hi < 0) throw fail("'연차현황' 탭에서 '이름' 머리글 줄을 찾지 못했습니다.", 502);
+  const head = vals[hi].map(String), rows = [];
+  for (let i = hi + 1; i < vals.length && String(vals[i][0]).trim() !== ""; i++) rows.push(vals[i].map(String));
+  return { configured: true, asof: asof, head: head, rows: rows };
 }
 function boardOf(req) {
   const b = BOARDS[String(req.board || "")];

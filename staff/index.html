@@ -43,6 +43,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .btn.ghost{background:#fff;color:var(--brand);border:1px solid #C9D3D8}
 .btn.ghost:hover{border-color:var(--brand)}
 .btn.sm{padding:6px 12px;font-size:13px}
+.lvt{border-collapse:collapse;font-size:13px;min-width:100%}.lvt th,.lvt td{border:1px solid var(--line);padding:5px 8px;text-align:center;white-space:nowrap}.lvt th{background:var(--soft,#f3f1ea);font-weight:600}.lvt td.nm{font-weight:600}.lvt td.rem{font-weight:700}.lvt td.neg{color:var(--stamp)}
 .err{color:var(--stamp);font-size:14px;font-weight:600}
 
 /* 본문 */
@@ -267,8 +268,18 @@ document.addEventListener("click", async e => {
   }
 });
 
-// ── 휴가 신청: 기존 구글 폼으로 연결 (제출하면 시트·캘린더에 자동 반영) ──
+// ── 휴가 신청: 기존 구글 폼으로 연결 + 사람별 연차 현황(휴가대장 시트의 '연차현황' 탭) ──
 let leaveUrl = null;
+const LV_COLS = ["이름","연차기간 시작","연차기간 끝","발생연차","전년이월","연차 추가부여","사용연차","잔여연차","대체휴가 부여","대체휴가 사용","대체휴가 잔여","특별휴가 부여(올해)","특별휴가 사용(올해)","특별휴가 잔여"];
+function leaveTable(st){
+  if(!st || !st.configured) return `<p class="hint">연차 현황 시트가 아직 연결되지 않았습니다. 관리자가 Apps Script 스크립트 속성에 LEAVE_SHEET_ID를 넣으면 여기에 표시됩니다.</p>`;
+  const ix = LV_COLS.map(c => st.head.indexOf(c)), cols = LV_COLS.filter((c,i) => ix[i] >= 0), idx = ix.filter(i => i >= 0);
+  const live = st.rows.filter(r => { const j = st.head.indexOf("재직"); return j < 0 || r[j] !== "퇴직"; });
+  const num = c => /잔여/.test(c);
+  return `<p class="hint">기준일 ${esc(st.asof || "-")} · 휴가대장 시트의 '연차현황' 탭 그대로입니다(승인 대기·예정 휴가 포함, 반려 제외).</p>
+    <div style="overflow-x:auto"><table class="lvt"><thead><tr>${cols.map(c => `<th>${esc(c.replace("(올해)",""))}</th>`).join("")}</tr></thead>
+    <tbody>${live.map(r => `<tr>${idx.map((i,k) => `<td class="${k===0?"nm":""}${num(cols[k]) ? " rem" : ""}${num(cols[k]) && Number(r[i]) < 0 ? " neg" : ""}">${esc(r[i])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+}
 async function drawLeave(){
   const el = $("#board");
   el.innerHTML = `<section class="card bhead"><h1>휴가 신청</h1><p class="hint">불러오는 중입니다…</p></section>`;
@@ -282,7 +293,11 @@ async function drawLeave(){
     ${leaveUrl ? `<p class="note">아래 버튼으로 기존 휴가 신청 구글 폼을 엽니다. 제출하면 사무소 시트에 저장되고 캘린더에 반영됩니다.</p>
       <div class="row"><a class="btn" href="${esc(leaveUrl)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:inline-block">휴가 신청서 열기</a></div>`
     : `<p class="err">휴가 신청 폼 주소가 아직 설정되지 않았습니다. 관리자가 Apps Script 스크립트 속성에 LEAVE_FORM_URL을 넣어야 합니다.</p>`}
+    <h2 style="font-size:16px;margin:20px 0 6px">연차 현황 (부여·사용·잔여)</h2><div id="lvBox"><p class="hint">불러오는 중입니다…</p></div>
   </section>`;
+  let html;
+  try{ html = leaveTable(await api("leave.status")); }catch(x){ html = `<p class="err">${esc(x.message)}</p>`; }
+  const box = $("#lvBox"); if(box && store.get("staff.tab") === "leave") box.innerHTML = html;
 }
 
 // 저장된 로그인 확인은 모든 정의가 끝난 뒤에
