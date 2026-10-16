@@ -76,6 +76,7 @@ function route(req) {
     case "clients.load": return clientsLoad(req);
     case "template.save": return templateSave(req, who);
     case "clients.get": return clientsGet(req);
+    case "clients.getMany": return clientsGetMany(req);
     case "clients.save": return clientsSave(req, who);
     case "clients.add": return clientsAdd(req, who);
     case "clients.import": return clientsImport(req, who);
@@ -344,22 +345,39 @@ function templateSave(req, who) {
   });
 }
 // 업체자료에서 한 업체의 줄만 읽는다(전체 내용을 읽지 않는다)
-function clDataRows(cd, id) {
+// 업체 자료 행 읽기: id 열만 먼저 읽고, 연속된 행은 한 번에 읽는다(행마다 따로 읽으면 느리다)
+function clDataRowsFor(cd, idSet) {
   const last = cd.getLastRow();
   if (last < 2) return [];
-  const keys = cd.getRange(2, 1, last - 1, 1).getValues(), rows = [];
-  keys.forEach((k, i) => { if (Number(k[0]) === id) rows.push(cd.getRange(i + 2, 1, 1, CD_COLS.length).getValues()[0]); });
+  const keys = cd.getRange(2, 1, last - 1, 1).getValues(), runs = [];
+  keys.forEach((k, i) => {
+    if (!idSet[Number(k[0])]) return;
+    const r = runs[runs.length - 1];
+    if (r && r[1] === i + 1) r[1] = i + 2; else runs.push([i + 2, i + 2]);
+  });
+  let rows = [];
+  runs.forEach(r => { rows = rows.concat(cd.getRange(r[0], 1, r[1] - r[0] + 1, CD_COLS.length).getValues()); });
   return rows;
 }
+function clDataItem(r) {
+  let v = {}; try { v = JSON.parse(r[2] || "{}"); } catch (e) {}
+  return { id: Number(r[0]), g: String(r[1]), v: v, by: String(r[3] || ""), at: iso(r[4]) };
+}
+function clDataRows(cd, id) { const m = {}; m[id] = 1; return clDataRowsFor(cd, m); }
 function clientsGet(req) {
   const id = Number(req.id);
   const c = clAll(clSheet(CL_SHEET, CL_COLS), CL_COLS.length).filter(r => Number(r[0]) === id).map(clRowToItem)[0];
   if (!c) throw fail("없는 업체입니다.", 404);
-  const data = clDataRows(clSheet(CD_SHEET, CD_COLS), id).map(r => {
-    let v = {}; try { v = JSON.parse(r[2] || "{}"); } catch (e) {}
-    return { id: id, g: String(r[1]), v: v, by: String(r[3] || ""), at: iso(r[4]) };
-  });
-  return { client: c, data: data };
+  return { client: c, data: clDataRows(clSheet(CD_SHEET, CD_COLS), id).map(clDataItem) };
+}
+// 여러 업체를 한 번에: 화면이 열린 뒤 뒤에서 조금씩 받아 두어, 업체를 열 때 기다리지 않게 한다
+function clientsGetMany(req) {
+  const ids = (Array.isArray(req.ids) ? req.ids : []).slice(0, 40).map(Number).filter(n => n > 0), set = {};
+  ids.forEach(i => { set[i] = 1; });
+  const items = {}, cl = clAll(clSheet(CL_SHEET, CL_COLS), CL_COLS.length).filter(r => set[Number(r[0])]).map(clRowToItem);
+  cl.forEach(c => { items[c.id] = { client: c, data: [] }; });
+  clDataRowsFor(clSheet(CD_SHEET, CD_COLS), set).map(clDataItem).forEach(d => { if (items[d.id]) items[d.id].data.push(d); });
+  return { items: Object.keys(items).map(k => items[k]) };
 }
 
 function clientsAdd(req, who) {

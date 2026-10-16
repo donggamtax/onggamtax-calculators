@@ -122,6 +122,7 @@ body:has(.app[data-wide="1"]) .wrap{max-width:1700px}
 .box>div.bt{text-align:center;border-bottom:1px solid var(--rule);padding:3px;font-size:13px;background:var(--soft)}
 .box textarea{border:0;background:transparent;width:100%;min-height:120px;padding:8px;font:inherit;font-size:13.5px;color:var(--ink);resize:vertical;border-radius:0}
 .box textarea.tall{min-height:200px}
+.box textarea.ag{min-height:56px;height:auto;resize:none;overflow:hidden;line-height:1.5;field-sizing:content}
 .box textarea:focus{outline:2px solid var(--accent);outline-offset:-2px}
 .line{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13.5px;margin-bottom:8px;align-items:center}
 .line label{flex-direction:row;align-items:center;gap:6px;color:var(--ink);font-size:13.5px}
@@ -283,7 +284,7 @@ function ck(k,label){return '<input type="checkbox" data-ck="'+esc(k)+'"'+(val(k
 function sel(k,opts){return '<select data-k="'+esc(k)+'"><option value=""></option>'+opts.map(function(o){return '<option'+(val(k)===o?" selected":"")+'>'+o+'</option>'}).join("")+'</select>'}
 function wn(k,ph,def){return '<textarea class="wn" rows="1" data-k="'+esc(k)+'" placeholder="'+esc(ph||"")+'" aria-label="'+esc(ph||k)+'">'+esc(val(k,def))+'</textarea>'}
 function fitWn(el){el.style.height="auto";el.style.height=el.scrollHeight+"px"}
-function fitAllWn(){document.querySelectorAll("textarea.wn").forEach(fitWn)}
+function fitAllWn(){document.querySelectorAll("textarea.wn,textarea.ag").forEach(fitWn)}
 function ta(k,cls){return '<textarea class="'+(cls||"")+'" data-k="'+esc(k)+'" aria-label="'+esc(k)+'">'+esc(val(k))+'</textarea>'}
 
 function drawList(){
@@ -334,10 +335,10 @@ function tabInfo(c){
    '<u>대상 업종</u>은 제3항에 열거(제조업·음식점업·정보통신업 등, 세무업 등은 제외). 청년창업·소기업 등 정의, 인구감소지역 범위는 시행령 사항이라 이 안내에서 확인하지 못했습니다.<br>'+
    '<b>중기특감</b> — 조세특례제한법 제7조 제1항제2호 · 감면한도 연 1억원(상시근로자 감소 시 차감)<br>· 10%: 소기업, 도매·소매업·의료업<br>· 20%: 소기업, 수도권, 그 외 감면업종 / 30%: 소기업, 수도권 외<br>· 15%: 중기업, 수도권 외, 도매업등 제외 업종 / 5%: 중기업, 수도권 외, 도매·소매·의료업 / 10%: 중기업, 수도권, 일반 서적 출판업 등<br>· 10년 이상 영위·종합소득금액 1억원 이하·성실사업자 요건을 모두 갖추면 감면비율 ×110%(제2항) · 감면업종은 제1항제1호에 열거(조건이 붙은 의원·한의원 등 주의) · 소기업 정의는 시행령 사항이라 확인하지 못했습니다.<br>'+
    '<span style="color:var(--warn)">※ 참고용 안내입니다. 신고 전 해당 조문과 시행령을 직접 확인하세요.</span></div></details>'+
-   '<div class="box"><div class="bt">기본 사항</div>'+ta("info|basic")+'</div>'+
-   '<div class="box"><div class="bt">원천세</div>'+ta("info|wht")+'</div>'+
-   '<div class="box"><div class="bt">부가세 신고시 참고사항</div>'+ta("info|vatnote","tall")+'</div>'+
-   '<div class="box"><div class="bt">법인세/소득세 신고시 참고사항</div>'+ta("info|taxnote","tall")+'</div></div>';
+   '<div class="box"><div class="bt">기본 사항</div>'+ta("info|basic","ag")+'</div>'+
+   '<div class="box"><div class="bt">원천세</div>'+ta("info|wht","ag")+'</div>'+
+   '<div class="box"><div class="bt">부가세 신고시 참고사항</div>'+ta("info|vatnote","ag")+'</div>'+
+   '<div class="box"><div class="bt">법인세/소득세 신고시 참고사항</div>'+ta("info|taxnote","ag")+'</div></div>';
 }
 /* ② 부가세 신고 체크리스트 */
 function paperVat(id){
@@ -578,9 +579,9 @@ function drawDetail(){
   document.getElementById("app").dataset.wide=((tk&&state.cmp[tk])||state.tab==="세금예측")?"1":"";
   fitAllWn();
 }
-document.addEventListener("input",function(e){if(e.target.classList&&e.target.classList.contains("wn"))fitWn(e.target)});
+document.addEventListener("input",function(e){if(e.target.classList&&(e.target.classList.contains("wn")||e.target.classList.contains("ag")))fitWn(e.target)});
 // 업체 위에 마우스를 올리거나 손가락을 대면 자료를 미리 받아 둔다(누르는 순간 바로 열린다)
-["mouseover","touchstart"].forEach(function(ev){document.addEventListener(ev,function(e){var b=e.target.closest&&e.target.closest("#cl [data-id]");if(!b)return;var id=+b.dataset.id,D=state.data[id];if(D&&D.lazy)refreshClient(id)},{passive:true})});
+var pfT=null;["mouseover","touchstart"].forEach(function(ev){document.addEventListener(ev,function(e){var b=e.target.closest&&e.target.closest("#cl [data-id]");if(!b)return;var id=+b.dataset.id;clearTimeout(pfT);pfT=setTimeout(function(){var D=state.data[id];if(D&&D.lazy&&inflight<2)refreshClient(id)},250)},{passive:true})});
 window.addEventListener("resize",function(){fitAllWn()});
 document.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target.classList&&e.target.classList.contains("wn"))e.preventDefault()});
 function show(){document.getElementById("app").dataset.view=state.sel?"detail":"list";drawList();drawDetail()}
@@ -727,11 +728,24 @@ var API=(window.STAFF_API||"").replace(/\/$/,""),token=null,ME="";
 try{token=localStorage.getItem("staff.token");ME=localStorage.getItem("staff.who")||""}catch(e){}
 function goLogin(){try{sessionStorage.removeItem("staff.clients.light")}catch(e){}(window.top||window).location.href="index.html"}
 if(!token||Number(String(token).split(".")[0])<Date.now())goLogin();
+var READS={"clients.load":1,"clients.get":1,"clients.getMany":1,"config":1};
+var inflight=0,waitQ=[];
+function slot(fn){return new Promise(function(res){var go=function(){inflight++;res()};inflight<3?go():waitQ.push(go)}).then(fn).then(function(v){done();return v},function(e){done();throw e})}
+function done(){inflight--;var n=waitQ.shift();if(n)n()}
+function rawApi(action,data){
+  return fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(Object.assign({action:action,token:token},data||{}))})
+    .then(function(r){return r.json().catch(function(){var x=new Error("서버 응답을 읽지 못했습니다.");x.retry=1;throw x})})
+    .then(function(b){if(b.status===401){goLogin();throw new Error("다시 로그인해 주세요.")}if(b.error)throw new Error(b.error);return b},function(e){if(!e.retry&&e.name==="TypeError")e.retry=1;throw e});
+}
+// 동시에 3개까지만 보내고, 읽기 요청은 서버가 잠깐 못 받으면(구글 과부하) 자동으로 다시 시도한다
 function api(action,data){
   if(!API)return Promise.reject(new Error("서버 주소가 설정되지 않았습니다."));
-  return fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(Object.assign({action:action,token:token},data||{}))})
-    .then(function(r){return r.json().catch(function(){return {error:"서버 응답을 읽지 못했습니다."}})})
-    .then(function(b){if(b.status===401){goLogin();throw new Error("다시 로그인해 주세요.")}if(b.error)throw new Error(b.error);return b});
+  var tries=READS[action]?3:1;
+  return slot(function(){
+    var n=0;
+    function go(){return rawApi(action,data).catch(function(e){if(e.retry&&++n<tries)return new Promise(function(r){setTimeout(r,700*n)}).then(go);throw e})}
+    return go();
+  });
 }
 function defaultPeriods(){return {vps:[{id:"v1",name:"2026년 2기 예정"},{id:"v2",name:"2026년 1기 확정"}],ips:[{id:"i1",name:"2025년"}],cps:[{id:"c1",name:"2025년"}],tps:[{id:"t1",name:"2026년"}]}}
 function buildData(c,rows){
@@ -795,6 +809,7 @@ function boot(){
     writeLight(r);
     if(!state.sel&&!Object.keys(pending).length){applyLoad(r,true);setSt("저장됨","ok");show();if(!CLIENTS.length)openImport(true)}
     else{["vat","inc","corp"].forEach(function(k){var t=r.templates&&r.templates[k];if(Array.isArray(t)&&t.length)TPL[k]=t});setSt("저장됨","ok")}
+    setTimeout(bgPrefetch,800);
   })
     .catch(function(e){setSt("불러오지 못했습니다: "+e.message,"bad");$("#detail").innerHTML='<div class="empty">'+esc(e.message)+' <button class="btn sm" type="button" onclick="boot()">다시 불러오기</button></div>'});
 }
@@ -805,17 +820,36 @@ function refreshClient(id){
   if(fetching[id])return;fetching[id]=1;
   api("clients.get",{id:id}).then(function(r){
     delete fetching[id];
-    if(!lz&&(pending[id]||busy||diffClient(id)))return;
-    if(!clientById(id))return;
-    var before=JSON.stringify(snap(id)),c=clientById(id);
-    c.name=r.client.name;c.type=r.client.type;c.owner=r.client.owner;c.svc=r.client.svc;c.status=r.client.status==="거래중"?"":r.client.status;c.reason=r.client.reason;c.tier=r.client.tier;c.tf=r.client.periods&&r.client.periods.tf?1:0;c.rep=(r.client.periods&&r.client.periods.rep)||"";c.by=r.client.by;c.at=r.client.at;
-    state.data[id]=buildData(r.client,r.data);
-    var after=JSON.stringify(snap(id));saved[id]=snap(id);
-    if(lz){if(state.sel===id){drawList();drawDetail()}return}
-    var a=document.activeElement;
-    if(before!==after&&state.sel===id&&!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))){drawList();drawDetail()}
-    else showLast();
+    applyGet(id,r,lz);
   }).catch(function(e){delete fetching[id];if(lz&&state.sel===id)$("#detail").innerHTML='<button class="back" type="button" id="back">← 업체 목록</button><div class="empty">불러오지 못했습니다: '+esc(e.message)+' <button class="btn sm" type="button" onclick="refreshClient('+id+')">다시 불러오기</button></div>'});
+}
+function applyGet(id,r,lz){
+  if(!lz&&(pending[id]||busy||diffClient(id)))return;
+  if(!clientById(id))return;
+  var before=JSON.stringify(snap(id)),c=clientById(id);
+  c.name=r.client.name;c.type=r.client.type;c.owner=r.client.owner;c.svc=r.client.svc;c.status=r.client.status==="거래중"?"":r.client.status;c.reason=r.client.reason;c.tier=r.client.tier;c.tf=r.client.periods&&r.client.periods.tf?1:0;c.rep=(r.client.periods&&r.client.periods.rep)||"";c.by=r.client.by;c.at=r.client.at;
+  state.data[id]=buildData(r.client,r.data);
+  var after=JSON.stringify(snap(id));saved[id]=snap(id);
+  if(lz){if(state.sel===id){drawList();drawDetail()}return}
+  var a=document.activeElement;
+  if(before!==after&&state.sel===id&&!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))){drawList();drawDetail()}
+  else showLast();
+}
+/* 화면이 열린 뒤 뒤에서 업체 자료를 30곳씩 미리 받아 둔다: 업체를 열 때 서버를 기다리지 않는다 */
+var bgOn=false,skip={};
+function bgPrefetch(){
+  if(bgOn)return;bgOn=true;
+  (function next(){
+    var ids=CLIENTS.filter(function(c){var D=state.data[c.id];return D&&D.lazy&&!skip[c.id]}).slice(0,30).map(function(c){return c.id});
+    if(!ids.length){bgOn=false;return}
+    ids.forEach(function(i){skip[i]=1});
+    api("clients.getMany",{ids:ids}).then(function(r){
+      (r.items||[]).forEach(function(it){var id=it.client.id,D=state.data[id];if(D&&D.lazy)applyGet(id,it,true)});
+      // 서버가 돌려주지 않은 업체(삭제 등)는 다시 시도하지 않도록 표시한다
+      ids.forEach(function(i){var D=state.data[i];if(D&&D.lazy&&!(r.items||[]).some(function(it){return it.client.id===i}))D.lazy=false});
+      setTimeout(next,600);
+    }).catch(function(){ids.forEach(function(i){delete skip[i]});bgOn=false});
+  })();
 }
 function addClientRemote(){
   var nm0=$("#addName").value.trim();if(!nm0){$("#addName").focus();return}
