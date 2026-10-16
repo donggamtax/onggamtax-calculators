@@ -73,6 +73,7 @@ function route(req) {
     case "board.save": return boardSave(req, who);
     case "board.delete": return boardDelete(req);
     case "clients.load": return clientsLoad();
+    case "template.save": return templateSave(req, who);
     case "clients.get": return clientsGet(req);
     case "clients.save": return clientsSave(req, who);
     case "clients.add": return clientsAdd(req, who);
@@ -205,6 +206,8 @@ const CL_COLS = ["id", "업체명", "구분", "담당", "기장신고", "상태"
 const CD_COLS = ["업체id", "그룹", "내용", "수정자", "수정일시"];
 const LOG_COLS = ["일시", "수정자", "업체id", "업체명", "내용"];
 const STATUS = ["거래중", "폐업", "이탈"];
+const TPL_SHEET = "양식", TPL_COLS = ["종류", "내용", "수정자", "수정일시"];
+const TPL_KINDS = ["vat", "inc", "corp"];
 const GROUP_RE = /^(info|etc|(vat|inc|corp|tax)\|[A-Za-z0-9_-]{1,20})$/;
 const CELL_MAX = 45000; // 구글 시트 셀 한도(5만 자)보다 조금 작게
 
@@ -262,7 +265,45 @@ function clientsLoad() {
     let v = {}; try { v = JSON.parse(r[2] || "{}"); } catch (e) {}
     return { id: Number(r[0]), g: String(r[1]), v: v, by: String(r[3] || ""), at: iso(r[4]) };
   });
-  return { clients: clients, data: data };
+  const templates = {};
+  clAll(clSheet(TPL_SHEET, TPL_COLS), TPL_COLS.length).forEach(r => {
+    if (TPL_KINDS.indexOf(String(r[0])) < 0) return;
+    try { templates[String(r[0])] = JSON.parse(r[1] || "null"); } catch (e) {}
+  });
+  return { clients: clients, data: data, templates: templates };
+}
+
+// 기본 양식(체크리스트 항목) 저장: 모든 업체의 해당 양식이 한 번에 바뀐다
+function tplClean(kind, t) {
+  const s = (v, n) => String(v == null ? "" : v).slice(0, n);
+  const id = v => s(v, 20).replace(/[^A-Za-z0-9_-]/g, "");
+  if (!Array.isArray(t) || t.length > 200) throw fail("양식 형식이 올바르지 않습니다.");
+  if (kind === "vat") {
+    return t.map(x => ({ id: id(x && x.id), t: s(x && x.t, 300), h: s(x && x.h, 200), ph: s(x && x.ph, 40), k: ["deemed", "limit"].indexOf(x && x.k) >= 0 ? x.k : "" })).filter(x => x.id && x.t);
+  }
+  return t.map(g => ({
+    g: s(g && g.g, 40),
+    rows: (Array.isArray(g && g.rows) ? g.rows : []).slice(0, 200).map(r => ({ id: id(r && r.id), t: s(r && r.t, 300), n: s(r && r.n, 300) })).filter(r => r.id && r.t),
+  })).filter(g => g.g && g.rows.length);
+}
+function templateSave(req, who) {
+  const kind = String(req.kind || "");
+  if (TPL_KINDS.indexOf(kind) < 0) throw fail("알 수 없는 양식입니다.");
+  const tpl = tplClean(kind, req.tpl);
+  if (!tpl.length) throw fail("항목이 하나도 없습니다.");
+  const json = JSON.stringify(tpl);
+  if (json.length > CELL_MAX) throw fail("양식이 너무 깁니다.");
+  return withLock(() => {
+    const sh = clSheet(TPL_SHEET, TPL_COLS), now = new Date().toISOString();
+    const rows = clAll(sh, TPL_COLS.length);
+    let at = -1;
+    rows.forEach((r, i) => { if (String(r[0]) === kind) at = i; });
+    const row = [kind, json, who, now];
+    if (at >= 0) sh.getRange(at + 2, 1, 1, TPL_COLS.length).setValues([row]);
+    else sh.getRange(sh.getLastRow() + 1, 1, 1, TPL_COLS.length).setValues([row]);
+    clLog(who, "", "기본 양식", "양식 수정: " + ({ vat: "부가세", inc: "소득세", corp: "법인세" })[kind]);
+    return { ok: true, tpl: tpl };
+  });
 }
 function clientsGet(req) {
   const id = Number(req.id);
@@ -387,7 +428,7 @@ function checkToken(token, secret) {
 
 // 스크립트 편집기에서 한 번 실행하면 시트 탭을 만들고 권한 승인 창을 띄운다
 function setup() {
-  clSheet(CL_SHEET, CL_COLS); clSheet(CD_SHEET, CD_COLS); clSheet(LOG_SHEET, LOG_COLS);
+  clSheet(CL_SHEET, CL_COLS); clSheet(CD_SHEET, CD_COLS); clSheet(LOG_SHEET, LOG_COLS); clSheet(TPL_SHEET, TPL_COLS);
   const p = props();
   Logger.log("SESSION_SECRET: " + (p.SESSION_SECRET ? "있음" : "없음") + " / STAFF_PASSWORD: " + (p.STAFF_PASSWORD ? "있음" : "없음") + " / STAFF_USERS: " + Object.keys(parseUsers(p.STAFF_USERS)).length + "명");
 }
