@@ -73,7 +73,7 @@ function route(req) {
     case "board.save": return boardSave(req, who);
     case "board.delete": return boardDelete(req);
     case "leave.status": return leaveStatus(p);
-    case "clients.load": return clientsLoad();
+    case "clients.load": return clientsLoad(req);
     case "template.save": return templateSave(req, who);
     case "clients.get": return clientsGet(req);
     case "clients.save": return clientsSave(req, who);
@@ -259,7 +259,7 @@ function clMeta(m, cur) {
     status: STATUS.indexOf(m2.status) >= 0 ? m2.status : "거래중", reason: s(m2.reason, 200), tier: s(m2.tier, 40),
   };
   const per = m2.periods || {}, list = k => (Array.isArray(per[k]) ? per[k] : []).slice(0, 60).map(x => ({ id: s(x && x.id, 20).replace(/[^A-Za-z0-9_-]/g, ""), name: s(x && x.name, 60) })).filter(x => x.id);
-  o.periods = { vps: list("vps"), ips: list("ips"), cps: list("cps"), tps: list("tps") };
+  o.periods = { vps: list("vps"), ips: list("ips"), cps: list("cps"), tps: list("tps"), tf: per.tf ? 1 : 0 }; // tf: 면세사업자 표시
   if (!o.name) throw fail("업체명을 입력하세요.");
   return o;
 }
@@ -276,9 +276,10 @@ function groupLabel(g) {
   return ({ vat: "부가세", inc: "소득세", corp: "법인세", tax: "세금예측" }[k[0]] || "기타") + (k[1] ? "(" + k[1] + ")" : "");
 }
 
-function clientsLoad() {
+function clientsLoad(req) {
   const clients = clAll(clSheet(CL_SHEET, CL_COLS), CL_COLS.length).filter(r => r[0] !== "").map(clRowToItem);
-  const data = clAll(clSheet(CD_SHEET, CD_COLS), CD_COLS.length).filter(r => r[0] !== "").map(r => {
+  // light: 업체 목록과 양식만(빠름). 업체별 자료는 업체를 열 때 clients.get으로 받는다.
+  const data = (req && req.light) ? [] : clAll(clSheet(CD_SHEET, CD_COLS), CD_COLS.length).filter(r => r[0] !== "").map(r => {
     let v = {}; try { v = JSON.parse(r[2] || "{}"); } catch (e) {}
     return { id: Number(r[0]), g: String(r[1]), v: v, by: String(r[3] || ""), at: iso(r[4]) };
   });
@@ -324,10 +325,13 @@ function templateSave(req, who) {
 }
 function clientsGet(req) {
   const id = Number(req.id);
-  const all = clientsLoad();
-  const c = all.clients.find(x => x.id === id);
+  const c = clAll(clSheet(CL_SHEET, CL_COLS), CL_COLS.length).filter(r => Number(r[0]) === id).map(clRowToItem)[0];
   if (!c) throw fail("없는 업체입니다.", 404);
-  return { client: c, data: all.data.filter(x => x.id === id) };
+  const data = clAll(clSheet(CD_SHEET, CD_COLS), CD_COLS.length).filter(r => Number(r[0]) === id).map(r => {
+    let v = {}; try { v = JSON.parse(r[2] || "{}"); } catch (e) {}
+    return { id: id, g: String(r[1]), v: v, by: String(r[3] || ""), at: iso(r[4]) };
+  });
+  return { client: c, data: data };
 }
 
 function clientsAdd(req, who) {

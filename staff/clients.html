@@ -257,7 +257,7 @@ var TPL=defaultTpl();
 var TPLNAME={vat:"부가세",inc:"소득세",corp:"법인세"};
 function tplIds(kind){var a=[];if(kind==="vat")TPL.vat.forEach(function(it){if(!it.k)a.push(it.id)});else TPL[kind].forEach(function(g){g.rows.forEach(function(r){a.push(r.id)})});return a}
 
-var state={svc:"전체",showOff:false,owner:"전체",adding:false,askDel:null,cmp:{},sel:null,tab:"기본정보",filter:"전체",q:"",vp:null,ip:null,cp:null,ask:null,data:{}};
+var state={svc:"전체",tfo:false,showOff:false,owner:"전체",adding:false,askDel:null,cmp:{},sel:null,tab:"기본정보",filter:"전체",q:"",vp:null,ip:null,cp:null,ask:null,data:{}};
 var seq=10;
 function d(id){ if(!state.data[id]) state.data[id]=buildData({},[]); return state.data[id]; }
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -283,14 +283,14 @@ function ta(k,cls){return '<textarea class="'+(cls||"")+'" data-k="'+esc(k)+'" a
 function drawList(){
   var chip=function(attr,v,label,on){return '<button class="chip" type="button" data-'+attr+'="'+v+'" aria-pressed="'+on+'">'+label+'</button>'};
   $("#chips").innerHTML=["전체","법인","개인"].map(function(c){return chip("f",c,c,state.filter===c)}).join("");
-  $("#chips2").innerHTML=[["전체","전체"],["기장","기장만"],["신고","신고만"]].map(function(p){return chip("svc",p[0],p[1],state.svc===p[0])}).join("");
+  $("#chips2").innerHTML=[["전체","전체"],["기장","기장만"],["신고","신고만"]].map(function(p){return chip("svc",p[0],p[1],state.svc===p[0])}).join("")+chip("tfo","1","면세사업자만",state.tfo);
   $("#chips3").innerHTML=["전체"].concat(PEOPLE,["폐업/이탈"]).map(function(p){return chip("own",p,p,state.owner===p)}).join("");
   state.showOff=state.owner==="폐업/이탈";
   $("#addbox").innerHTML=state.adding?'<div class="addf"><input type="text" id="addName" placeholder="새 업체명" aria-label="새 업체명"><div class="ctl" style="margin:6px 0 0"><select id="addType" aria-label="구분"><option>법인</option><option>개인</option></select><select id="addSvc" aria-label="기장/신고">'+SVCS.map(function(p){return '<option>'+p+'</option>'}).join("")+'</select><select id="addOwner" aria-label="담당자">'+PEOPLE.map(function(p){return '<option>'+p+'</option>'}).join("")+'</select><button class="btn sm" type="button" data-addc="1">추가</button><button class="btn ghost sm" type="button" data-addno="1">취소</button></div></div>':'<button class="btn ghost sm" type="button" data-adding="1" style="margin-bottom:6px">+ 업체 추가</button>';
-  var rows=CLIENTS.filter(function(c){var off=stOf(c)!=="거래중";return off===state.showOff&&(state.filter==="전체"||c.type===state.filter)&&(state.svc==="전체"||c.svc===state.svc)&&(state.showOff||state.owner==="전체"||c.owner===state.owner)&&c.name.indexOf(state.q)>=0});
+  var rows=CLIENTS.filter(function(c){var off=stOf(c)!=="거래중";return off===state.showOff&&(state.filter==="전체"||c.type===state.filter)&&(state.svc==="전체"||c.svc===state.svc)&&(!state.tfo||c.tf)&&(state.showOff||state.owner==="전체"||c.owner===state.owner)&&c.name.indexOf(state.q)>=0});
   var offN=CLIENTS.filter(function(c){return stOf(c)!=="거래중"}).length;
   $("#count").textContent=(state.showOff?"폐업·이탈 ":"거래중 ")+rows.length+"곳"+(state.showOff?"":" · 숨긴 폐업·이탈 "+offN+"곳")+"";
-  $("#cl").innerHTML=rows.map(function(c){return '<li><button type="button" data-id="'+c.id+'" aria-current="'+(state.sel===c.id)+'"><span>'+esc(c.name||"(이름 없음)")+' <span class="tag">'+esc(c.svc||"기장")+'</span>'+(c.tier?' <span class="tag">'+esc(c.tier)+'</span>':'')+(stOf(c)!=="거래중"?' <span class="tag" style="background:var(--warn-bg);color:var(--warn)">'+stOf(c)+'</span>':'')+'</span><span class="sub">'+esc(c.owner||"미지정")+'</span></button></li>'}).join("")||'<li class="empty">'+(state.showOff?"폐업·이탈 처리한 업체가 없습니다":"검색 결과가 없습니다")+'</li>';
+  $("#cl").innerHTML=rows.map(function(c){return '<li><button type="button" data-id="'+c.id+'" aria-current="'+(state.sel===c.id)+'"><span>'+esc(c.name||"(이름 없음)")+' <span class="tag">'+esc(c.svc||"기장")+'</span>'+(c.tf?' <span class="tag" style="background:var(--soft)">면세</span>':'')+(c.tier?' <span class="tag">'+esc(c.tier)+'</span>':'')+(stOf(c)!=="거래중"?' <span class="tag" style="background:var(--warn-bg);color:var(--warn)">'+stOf(c)+'</span>':'')+'</span><span class="sub">'+esc(c.owner||"미지정")+'</span></button></li>'}).join("")||'<li class="empty">'+(state.showOff?"폐업·이탈 처리한 업체가 없습니다":"검색 결과가 없습니다")+'</li>';
 }
 /* 회차(신고 단위) 선택·이름 수정·삭제·추가 */
 function periodBar(kind,list,cur,addLabel){
@@ -552,6 +552,7 @@ function tabTax(){return periodTab("tp")}
 function drawDetail(){
   var c=CLIENTS.filter(function(x){return x.id===state.sel})[0], el=$("#detail");
   if(!c){document.getElementById("app").dataset.wide="";el.innerHTML='<div class="empty">왼쪽에서 업체를 선택하세요.</div>';return}
+  if(state.data[c.id]&&state.data[c.id].lazy){el.innerHTML='<button class="back" type="button" id="back">← 업체 목록</button><div class="empty">'+esc(c.name)+' 자료를 불러오는 중…</div>';return}
   var D=d(c.id), tabs=["기본정보","부가세","소득세","법인세","세금예측"], body=state.tab==="기본정보"?tabInfo(c):state.tab==="부가세"?tabVat():state.tab==="소득세"?tabInc():state.tab==="법인세"?tabCorp():tabTax();
   var last=lastOf(c);
   el.innerHTML='<button class="back" type="button" id="back">← 업체 목록</button>'+
@@ -559,7 +560,7 @@ function drawDetail(){
     (stOf(c)!=="거래중"?'<div class="offbanner">'+stOf(c)+' 처리된 업체입니다. 기본 목록에서는 숨겨져 있고, 자료는 그대로 보관됩니다.'+(c.reason?' ('+esc(c.reason)+')':'')+'</div>':'')+
         '<div class="ctl hdr"><label class="inl">구분 <select data-cl="type"><option value=""'+(!c.type?" selected":"")+'>(미정)</option><option'+(c.type==="법인"?" selected":"")+'>법인</option><option'+(c.type==="개인"?" selected":"")+'>개인</option></select></label>'+
       '<label class="inl">담당 <select data-cl="owner"><option value=""'+(!c.owner?" selected":"")+'>(미지정)</option>'+PEOPLE.map(function(p){return '<option'+(c.owner===p?" selected":"")+'>'+p+'</option>'}).join("")+'</select></label><label class="inl">기장/신고 <select data-cl="svc">'+SVCS.map(function(x){return '<option'+((c.svc||"기장")===x?" selected":"")+'>'+x+'</option>'}).join("")+'</select></label>'+
-      '<label class="inl">상태 <select data-cl="status">'+STATUS.map(function(x){return '<option'+(stOf(c)===x?" selected":"")+'>'+x+'</option>'}).join("")+'</select></label>'+
+      '<label class="inl"><input type="checkbox" data-cl="tf"'+(c.tf?' checked':'')+'> 면세사업자</label><label class="inl">상태 <select data-cl="status">'+STATUS.map(function(x){return '<option'+(stOf(c)===x?" selected":"")+'>'+x+'</option>'}).join("")+'</select></label>'+
       (c.tier?'<span class="tag">'+esc(c.tier)+'</span>':'')+(stOf(c)!=="거래중"?'<label class="inl">사유·일자 <input type="text" data-cl="reason" value="'+esc(c.reason||"")+'" placeholder="예: 2026.8 폐업 신고"></label>':'')+'</div>'+
     '<details class="cset"'+(state.askDel===c.id?' open':'')+'><summary>업체명 수정 · 삭제</summary><div class="ctl">'+
       '<label class="inl">업체명 <input type="text" data-cl="name" value="'+esc(c.name)+'"></label></div>'+
@@ -588,6 +589,7 @@ document.addEventListener("click",function(e){
   else if((t=e.target.closest("[data-tab]"))){state.tab=t.dataset.tab;state.ask=null;drawDetail()}
   else if((t=e.target.closest("[data-f]"))){state.filter=t.dataset.f;drawList()}
   else if((t=e.target.closest("[data-svc]"))){state.svc=t.dataset.svc;drawList()}
+  else if((t=e.target.closest("[data-tfo]"))){state.tfo=!state.tfo;drawList()}
   else if((t=e.target.closest("[data-own]"))){state.owner=t.dataset.own;drawList()}
   else if(e.target.closest("[data-adding]")){state.adding=true;drawList();var an=$("#addName");if(an)an.focus()}
   else if(e.target.closest("[data-addno]")){state.adding=false;drawList()}
@@ -630,6 +632,7 @@ document.addEventListener("input",function(e){
 });
 document.addEventListener("change",function(e){
   var t=e.target;
+  if(t.dataset.cl==="tf"){var c4=clientById(state.sel);c4.tf=t.checked?1:0;drawList();drawDetail();return}
   if(t.dataset.cl==="type"||t.dataset.cl==="status"||t.dataset.cl==="svc"||t.dataset.cl==="owner"){var c3=CLIENTS.filter(function(x){return x.id===state.sel})[0];c3[t.dataset.cl]=t.value;state.setOpen=true;drawList();drawDetail();return}
   if(t.dataset.cmp){state.cmp[t.dataset.cmp]=t.value||null;drawDetail();return}
   if(state.sel&&t.dataset.ck){d(state.sel).v[t.dataset.ck]=t.checked?"1":"";refreshProg()}
@@ -728,11 +731,11 @@ function buildData(c,rows){
 function clientById(id){return CLIENTS.filter(function(x){return x.id===+id})[0]}
 function groupOf(k){var a=k.split("|");if(a[0]==="info")return"info";if(/^(vat|inc|corp|tax)$/.test(a[0])&&a[1])return a[0]+"|"+a[1];return"etc"}
 function groupsOf(D){var g={};Object.keys(D.v).sort().forEach(function(k){var v=D.v[k];if(v===""||v==null)return;var n=groupOf(k);(g[n]=g[n]||{})[k]=v});return g}
-function metaOf(id){var c=clientById(id),D=state.data[id];return {name:c.name,type:c.type||"",owner:c.owner||"",svc:c.svc||"기장",status:c.status||"거래중",reason:c.reason||"",tier:c.tier||"",periods:{vps:D.vps,ips:D.ips,cps:D.cps,tps:D.tps}}}
+function metaOf(id){var c=clientById(id),D=state.data[id];return {name:c.name,type:c.type||"",owner:c.owner||"",svc:c.svc||"기장",status:c.status||"거래중",reason:c.reason||"",tier:c.tier||"",periods:{vps:D.vps,ips:D.ips,cps:D.cps,tps:D.tps,tf:c.tf?1:0}}}
 function snap(id){var g=groupsOf(state.data[id]),o={};Object.keys(g).forEach(function(k){o[k]=JSON.stringify(g[k])});return {meta:JSON.stringify(metaOf(id)),groups:o}}
 var saved={},pending={},timer=null,busy=false,again=false;
 function diffClient(id){
-  if(!state.data[id]||!clientById(id))return null;
+  if(!state.data[id]||state.data[id].lazy||!clientById(id))return null;
   var cur=snap(id),old=saved[id]||{meta:"",groups:{}},cg=groupsOf(state.data[id]),item={id:+id},gs={},ch=false;
   if(cur.meta!==old.meta){item.meta=JSON.parse(cur.meta);ch=true}
   Object.keys(cur.groups).forEach(function(g){if(cur.groups[g]!==old.groups[g]){gs[g]=cg[g];ch=true}});
@@ -741,7 +744,7 @@ function diffClient(id){
   return ch?{item:item,snap:cur}:null;
 }
 function setSt(t,cls){var e=document.getElementById("syncst");if(e){e.textContent=t;e.className="syncst "+(cls||"")}}
-function touch(){if(!state.sel||!state.data[state.sel])return;pending[state.sel]=1;clearTimeout(timer);timer=setTimeout(flush,1500)}
+function touch(){if(!state.sel||!state.data[state.sel]||state.data[state.sel].lazy)return;pending[state.sel]=1;clearTimeout(timer);timer=setTimeout(flush,1500)}
 function flush(){
   clearTimeout(timer);
   if(busy){again=true;return Promise.resolve()}
@@ -762,36 +765,39 @@ function showLast(){var h=document.querySelector("#detail .hist"),c=clientById(s
 document.addEventListener("visibilitychange",function(){if(document.hidden)flush()});
 window.addEventListener("beforeunload",function(e){var dirty=busy||Object.keys(pending).some(function(id){return diffClient(id)});if(dirty){e.preventDefault();e.returnValue=""}});
 
-function applyLoad(r){
+function applyLoad(r,lazy){
   ["vat","inc","corp"].forEach(function(k){var t=r.templates&&r.templates[k];if(Array.isArray(t)&&t.length)TPL[k]=t});
   var by={};(r.data||[]).forEach(function(x){(by[x.id]=by[x.id]||[]).push(x)});
-  CLIENTS=(r.clients||[]).map(function(c){return {id:c.id,name:c.name,type:c.type,owner:c.owner,svc:c.svc,status:c.status==="거래중"?"":c.status,reason:c.reason,tier:c.tier,by:c.by,at:c.at}});
+  CLIENTS=(r.clients||[]).map(function(c){return {id:c.id,name:c.name,type:c.type,owner:c.owner,svc:c.svc,status:c.status==="거래중"?"":c.status,reason:c.reason,tier:c.tier,tf:c.periods&&c.periods.tf?1:0,by:c.by,at:c.at}});
   state.data={};
-  (r.clients||[]).forEach(function(c){state.data[c.id]=buildData(c,by[c.id]);saved[c.id]=snap(c.id)});
+  (r.clients||[]).forEach(function(c){state.data[c.id]=buildData(c,by[c.id]);if(lazy)state.data[c.id].lazy=true;saved[c.id]=snap(c.id)});
 }
 function boot(){
   setSt("불러오는 중…");
-  return api("clients.load").then(function(r){applyLoad(r);setSt("저장됨","ok");show();if(!CLIENTS.length)openImport(true)})
+  return api("clients.load",{light:1}).then(function(r){applyLoad(r,true);setSt("저장됨","ok");show();if(!CLIENTS.length)openImport(true)})
     .catch(function(e){setSt("불러오지 못했습니다: "+e.message,"bad");$("#detail").innerHTML='<div class="empty">'+esc(e.message)+' <button class="btn sm" type="button" onclick="boot()">다시 불러오기</button></div>'});
 }
 function refreshClient(id){
-  if(pending[id]||busy)return;
+  var lz=state.data[id]&&state.data[id].lazy;
+  if(!lz&&(pending[id]||busy))return;
   api("clients.get",{id:id}).then(function(r){
-    if(pending[id]||busy||diffClient(id)||!clientById(id))return;
+    if(!lz&&(pending[id]||busy||diffClient(id)))return;
+    if(!clientById(id))return;
     var before=JSON.stringify(snap(id)),c=clientById(id);
-    c.name=r.client.name;c.type=r.client.type;c.owner=r.client.owner;c.svc=r.client.svc;c.status=r.client.status==="거래중"?"":r.client.status;c.reason=r.client.reason;c.tier=r.client.tier;c.by=r.client.by;c.at=r.client.at;
+    c.name=r.client.name;c.type=r.client.type;c.owner=r.client.owner;c.svc=r.client.svc;c.status=r.client.status==="거래중"?"":r.client.status;c.reason=r.client.reason;c.tier=r.client.tier;c.tf=r.client.periods&&r.client.periods.tf?1:0;c.by=r.client.by;c.at=r.client.at;
     state.data[id]=buildData(r.client,r.data);
     var after=JSON.stringify(snap(id));saved[id]=snap(id);
+    if(lz){if(state.sel===id){drawList();drawDetail()}return}
     var a=document.activeElement;
     if(before!==after&&state.sel===id&&!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))){drawList();drawDetail()}
     else showLast();
-  }).catch(function(){});
+  }).catch(function(e){if(lz&&state.sel===id)$("#detail").innerHTML='<button class="back" type="button" id="back">← 업체 목록</button><div class="empty">불러오지 못했습니다: '+esc(e.message)+' <button class="btn sm" type="button" onclick="refreshClient('+id+')">다시 불러오기</button></div>'});
 }
 function addClientRemote(){
   var nm0=$("#addName").value.trim();if(!nm0){$("#addName").focus();return}
   var meta={name:nm0,type:$("#addType").value,svc:$("#addSvc").value,owner:$("#addOwner").value,periods:defaultPeriods()};
   api("clients.add",{meta:meta}).then(function(r){
-    CLIENTS.push({id:r.id,name:nm0,type:meta.type,owner:meta.owner,svc:meta.svc,by:r.by,at:r.at});
+    CLIENTS.push({id:r.id,name:nm0,type:meta.type,owner:meta.owner,svc:meta.svc,tf:0,by:r.by,at:r.at});
     state.data[r.id]=buildData(meta,[]);saved[r.id]=snap(r.id);
     state.adding=false;state.owner="전체";state.filter="전체";state.svc="전체";state.q="";$("#q").value="";state.sel=r.id;state.tab="기본정보";state.vp=state.ip=state.cp=state.tp=null;state.cmp={};show();
   }).catch(function(e){alert("업체를 추가하지 못했습니다: "+e.message)});
@@ -830,7 +836,7 @@ function openImport(first){
   m.querySelector("#impGo").onclick=function(){
     var items=parseImport(ta.value);if(!items.length){info.textContent="넣을 업체가 없습니다.";return}
     var b=this;b.disabled=true;info.textContent="넣는 중…";
-    api("clients.import",{items:items}).then(function(r){m.remove();return api("clients.load").then(function(x){applyLoad(x);show();alert(r.added+"곳을 넣었습니다."+(r.skipped?" (이미 있어 건너뜀 "+r.skipped+"곳)":""))})})
+    api("clients.import",{items:items}).then(function(r){m.remove();return api("clients.load",{light:1}).then(function(x){applyLoad(x,true);show();alert(r.added+"곳을 넣었습니다."+(r.skipped?" (이미 있어 건너뜀 "+r.skipped+"곳)":""))})})
       .catch(function(e){b.disabled=false;info.textContent="실패: "+e.message});
   };
 }
@@ -907,8 +913,8 @@ function xlsxLib(cb){
   sc.onload=function(){cb(null)};sc.onerror=function(){cb("load")};document.head.appendChild(sc);
 }
 function exportBook(){
-  var base=function(c){return [c.name,c.type||"",c.owner||"",c.svc||"기장",stOf(c)]};
-  var BH=["업체명","구분","담당","기장/신고","상태"];
+  var base=function(c){return [c.name,c.type||"",c.tf?"면세":"",c.owner||"",c.svc||"기장",stOf(c)]};
+  var BH=["업체명","구분","면세","담당","기장/신고","상태"];
   var sheets=[];
   // 1. 업체목록
   sheets.push(["업체목록",[BH.concat(["사유","비고","마지막 수정자","마지막 수정일시"])].concat(CLIENTS.map(function(c){return base(c).concat([c.reason||"",c.tier||"",c.by||"",c.at?hhmm(c.at):""])}))]);
@@ -985,9 +991,16 @@ function exportBook(){
   sheets.push(["세금예측",[th].concat(trows)]);
   return sheets;
 }
+function loadAllData(){ // 아직 열어보지 않은 업체의 자료를 모두 받아온다(엑셀 내보내기용)
+  if(!Object.keys(state.data).some(function(id){return state.data[id].lazy}))return Promise.resolve();
+  return api("clients.load").then(function(r){
+    var by={};(r.data||[]).forEach(function(x){(by[x.id]=by[x.id]||[]).push(x)});
+    (r.clients||[]).forEach(function(c){var D=state.data[c.id];if(D&&D.lazy){state.data[c.id]=buildData(c,by[c.id]);saved[c.id]=snap(c.id)}});
+  });
+}
 function exportXlsx(){
   var btn=$("#xl");btn.disabled=true;var old=btn.textContent;btn.textContent="만드는 중…";
-  flush().then(function(){
+  flush().then(loadAllData).catch(function(e){alert("자료를 불러오지 못했습니다: "+e.message);btn.disabled=false;btn.textContent=old;throw e}).then(function(){
     xlsxLib(function(err){
       try{
         if(err||!window.XLSX)throw new Error("엑셀 기능을 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.");
