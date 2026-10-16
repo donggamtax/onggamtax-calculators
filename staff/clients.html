@@ -580,7 +580,7 @@ function drawDetail(){
 }
 document.addEventListener("input",function(e){if(e.target.classList&&e.target.classList.contains("wn"))fitWn(e.target)});
 // 업체 위에 마우스를 올리거나 손가락을 대면 자료를 미리 받아 둔다(누르는 순간 바로 열린다)
-["mouseover","touchstart"].forEach(function(ev){document.addEventListener(ev,function(e){var b=e.target.closest&&e.target.closest("#cl [data-id]");if(!b)return;var id=+b.dataset.id,D=state.data[id];if(D&&D.lazy)refreshClient(id)},{passive:true})});
+var pfT=null;["mouseover","touchstart"].forEach(function(ev){document.addEventListener(ev,function(e){var b=e.target.closest&&e.target.closest("#cl [data-id]");if(!b)return;var id=+b.dataset.id;clearTimeout(pfT);pfT=setTimeout(function(){var D=state.data[id];if(D&&D.lazy&&inflight<2)refreshClient(id)},250)},{passive:true})});
 window.addEventListener("resize",function(){fitAllWn()});
 document.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target.classList&&e.target.classList.contains("wn"))e.preventDefault()});
 function show(){document.getElementById("app").dataset.view=state.sel?"detail":"list";drawList();drawDetail()}
@@ -727,11 +727,24 @@ var API=(window.STAFF_API||"").replace(/\/$/,""),token=null,ME="";
 try{token=localStorage.getItem("staff.token");ME=localStorage.getItem("staff.who")||""}catch(e){}
 function goLogin(){try{sessionStorage.removeItem("staff.clients.light")}catch(e){}(window.top||window).location.href="index.html"}
 if(!token||Number(String(token).split(".")[0])<Date.now())goLogin();
+var READS={"clients.load":1,"clients.get":1,"config":1};
+var inflight=0,waitQ=[];
+function slot(fn){return new Promise(function(res){var go=function(){inflight++;res()};inflight<3?go():waitQ.push(go)}).then(fn).then(function(v){done();return v},function(e){done();throw e})}
+function done(){inflight--;var n=waitQ.shift();if(n)n()}
+function rawApi(action,data){
+  return fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(Object.assign({action:action,token:token},data||{}))})
+    .then(function(r){return r.json().catch(function(){var x=new Error("서버 응답을 읽지 못했습니다.");x.retry=1;throw x})})
+    .then(function(b){if(b.status===401){goLogin();throw new Error("다시 로그인해 주세요.")}if(b.error)throw new Error(b.error);return b},function(e){if(!e.retry&&e.name==="TypeError")e.retry=1;throw e});
+}
+// 동시에 3개까지만 보내고, 읽기 요청은 서버가 잠깐 못 받으면(구글 과부하) 자동으로 다시 시도한다
 function api(action,data){
   if(!API)return Promise.reject(new Error("서버 주소가 설정되지 않았습니다."));
-  return fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(Object.assign({action:action,token:token},data||{}))})
-    .then(function(r){return r.json().catch(function(){return {error:"서버 응답을 읽지 못했습니다."}})})
-    .then(function(b){if(b.status===401){goLogin();throw new Error("다시 로그인해 주세요.")}if(b.error)throw new Error(b.error);return b});
+  var tries=READS[action]?3:1;
+  return slot(function(){
+    var n=0;
+    function go(){return rawApi(action,data).catch(function(e){if(e.retry&&++n<tries)return new Promise(function(r){setTimeout(r,700*n)}).then(go);throw e})}
+    return go();
+  });
 }
 function defaultPeriods(){return {vps:[{id:"v1",name:"2026년 2기 예정"},{id:"v2",name:"2026년 1기 확정"}],ips:[{id:"i1",name:"2025년"}],cps:[{id:"c1",name:"2025년"}],tps:[{id:"t1",name:"2026년"}]}}
 function buildData(c,rows){
