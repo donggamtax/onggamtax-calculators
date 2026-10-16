@@ -248,13 +248,13 @@ function clAll(sh, n) {
 function clRowToItem(r) {
   let periods = {};
   try { periods = JSON.parse(r[8] || "{}"); } catch (e) {}
-  return { id: Number(r[0]), name: String(r[1] || ""), type: String(r[2] || ""), owner: String(r[3] || ""), svc: String(r[4] || "기장"), status: String(r[5] || "거래중"), reason: String(r[6] || ""), tier: String(r[7] || ""), periods: periods, by: String(r[9] || ""), at: iso(r[10]) };
+  return { id: Number(r[0]), name: String(r[1] || ""), type: String(r[2] || "개인"), owner: String(r[3] || ""), svc: String(r[4] || "기장"), status: String(r[5] || "거래중"), reason: String(r[6] || ""), tier: String(r[7] || ""), periods: periods, by: String(r[9] || ""), at: iso(r[10]) };
 }
 function clMeta(m, cur) {
   const s = (v, n) => String(v == null ? "" : v).slice(0, n);
   const m2 = Object.assign({}, cur || {}, m || {});
   const o = {
-    name: s(m2.name, 100).trim(), type: ["법인", "개인"].indexOf(m2.type) >= 0 ? m2.type : "",
+    name: s(m2.name, 100).trim(), type: m2.type === "법인" ? "법인" : "개인",
     owner: PEOPLE.indexOf(m2.owner) >= 0 ? m2.owner : "", svc: m2.svc === "신고" ? "신고" : "기장",
     status: STATUS.indexOf(m2.status) >= 0 ? m2.status : "거래중", reason: s(m2.reason, 200), tier: s(m2.tier, 40),
   };

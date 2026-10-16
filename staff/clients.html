@@ -286,7 +286,7 @@ function drawList(){
   $("#chips2").innerHTML=[["전체","전체"],["기장","기장만"],["신고","신고만"]].map(function(p){return chip("svc",p[0],p[1],state.svc===p[0])}).join("")+chip("tfo","1","면세사업자만",state.tfo);
   $("#chips3").innerHTML=["전체"].concat(PEOPLE,["폐업/이탈"]).map(function(p){return chip("own",p,p,state.owner===p)}).join("");
   state.showOff=state.owner==="폐업/이탈";
-  $("#addbox").innerHTML=state.adding?'<div class="addf"><input type="text" id="addName" placeholder="새 업체명" aria-label="새 업체명"><div class="ctl" style="margin:6px 0 0"><select id="addType" aria-label="구분"><option>법인</option><option>개인</option></select><select id="addSvc" aria-label="기장/신고">'+SVCS.map(function(p){return '<option>'+p+'</option>'}).join("")+'</select><select id="addOwner" aria-label="담당자">'+PEOPLE.map(function(p){return '<option>'+p+'</option>'}).join("")+'</select><button class="btn sm" type="button" data-addc="1">추가</button><button class="btn ghost sm" type="button" data-addno="1">취소</button></div></div>':'<button class="btn ghost sm" type="button" data-adding="1" style="margin-bottom:6px">+ 업체 추가</button>';
+  $("#addbox").innerHTML=state.adding?'<div class="addf"><input type="text" id="addName" placeholder="새 업체명" aria-label="새 업체명"><div class="ctl" style="margin:6px 0 0"><select id="addType" aria-label="구분"><option>개인</option><option>법인</option></select><select id="addSvc" aria-label="기장/신고">'+SVCS.map(function(p){return '<option>'+p+'</option>'}).join("")+'</select><select id="addOwner" aria-label="담당자">'+PEOPLE.map(function(p){return '<option>'+p+'</option>'}).join("")+'</select><button class="btn sm" type="button" data-addc="1">추가</button><button class="btn ghost sm" type="button" data-addno="1">취소</button></div></div>':'<button class="btn ghost sm" type="button" data-adding="1" style="margin-bottom:6px">+ 업체 추가</button>';
   var rows=CLIENTS.filter(function(c){var off=stOf(c)!=="거래중";return off===state.showOff&&(state.filter==="전체"||c.type===state.filter)&&(state.svc==="전체"||c.svc===state.svc)&&(!state.tfo||c.tf)&&(state.showOff||state.owner==="전체"||c.owner===state.owner)&&c.name.indexOf(state.q)>=0});
   var offN=CLIENTS.filter(function(c){return stOf(c)!=="거래중"}).length;
   $("#count").textContent=(state.showOff?"폐업·이탈 ":"거래중 ")+rows.length+"곳"+(state.showOff?"":" · 숨긴 폐업·이탈 "+offN+"곳")+"";
@@ -553,12 +553,12 @@ function drawDetail(){
   var c=CLIENTS.filter(function(x){return x.id===state.sel})[0], el=$("#detail");
   if(!c){document.getElementById("app").dataset.wide="";el.innerHTML='<div class="empty">왼쪽에서 업체를 선택하세요.</div>';return}
   if(state.data[c.id]&&state.data[c.id].lazy){el.innerHTML='<button class="back" type="button" id="back">← 업체 목록</button><div class="empty">'+esc(c.name)+' 자료를 불러오는 중…</div>';return}
-  var D=d(c.id), tabs=["기본정보","부가세","소득세","법인세","세금예측"], body=state.tab==="기본정보"?tabInfo(c):state.tab==="부가세"?tabVat():state.tab==="소득세"?tabInc():state.tab==="법인세"?tabCorp():tabTax();
+  var D=d(c.id), tabs=c.tf?["기본정보","소득세","법인세","세금예측"]:["기본정보","부가세","소득세","법인세","세금예측"];if(c.tf&&state.tab==="부가세")state.tab="기본정보";var body=state.tab==="기본정보"?tabInfo(c):state.tab==="부가세"?tabVat():state.tab==="소득세"?tabInc():state.tab==="법인세"?tabCorp():tabTax();
   var last=lastOf(c);
   el.innerHTML='<button class="back" type="button" id="back">← 업체 목록</button>'+
-    '<div class="dh"><h2>'+esc(c.name)+'</h2><span class="sub">'+esc(c.type||"구분 미정")+' · 담당 '+esc(c.owner||"미지정")+'</span></div>'+
+    '<div class="dh"><h2>'+esc(c.name)+'</h2><span class="sub">'+esc(c.type||"개인")+' · 담당 '+esc(c.owner||"미지정")+'</span></div>'+
     (stOf(c)!=="거래중"?'<div class="offbanner">'+stOf(c)+' 처리된 업체입니다. 기본 목록에서는 숨겨져 있고, 자료는 그대로 보관됩니다.'+(c.reason?' ('+esc(c.reason)+')':'')+'</div>':'')+
-        '<div class="ctl hdr"><label class="inl">구분 <select data-cl="type"><option value=""'+(!c.type?" selected":"")+'>(미정)</option><option'+(c.type==="법인"?" selected":"")+'>법인</option><option'+(c.type==="개인"?" selected":"")+'>개인</option></select></label>'+
+        '<div class="ctl hdr"><label class="inl">구분 <select data-cl="type"><option'+(c.type==="개인"?" selected":"")+'>개인</option><option'+(c.type==="법인"?" selected":"")+'>법인</option></select></label>'+
       '<label class="inl">담당 <select data-cl="owner"><option value=""'+(!c.owner?" selected":"")+'>(미지정)</option>'+PEOPLE.map(function(p){return '<option'+(c.owner===p?" selected":"")+'>'+p+'</option>'}).join("")+'</select></label><label class="inl">기장/신고 <select data-cl="svc">'+SVCS.map(function(x){return '<option'+((c.svc||"기장")===x?" selected":"")+'>'+x+'</option>'}).join("")+'</select></label>'+
       '<label class="inl"><input type="checkbox" data-cl="tf"'+(c.tf?' checked':'')+'> 면세사업자</label><label class="inl">상태 <select data-cl="status">'+STATUS.map(function(x){return '<option'+(stOf(c)===x?" selected":"")+'>'+x+'</option>'}).join("")+'</select></label>'+
       (c.tier?'<span class="tag">'+esc(c.tier)+'</span>':'')+(stOf(c)!=="거래중"?'<label class="inl">사유·일자 <input type="text" data-cl="reason" value="'+esc(c.reason||"")+'" placeholder="예: 2026.8 폐업 신고"></label>':'')+'</div>'+
@@ -768,7 +768,7 @@ window.addEventListener("beforeunload",function(e){var dirty=busy||Object.keys(p
 function applyLoad(r,lazy){
   ["vat","inc","corp"].forEach(function(k){var t=r.templates&&r.templates[k];if(Array.isArray(t)&&t.length)TPL[k]=t});
   var by={};(r.data||[]).forEach(function(x){(by[x.id]=by[x.id]||[]).push(x)});
-  CLIENTS=(r.clients||[]).map(function(c){return {id:c.id,name:c.name,type:c.type,owner:c.owner,svc:c.svc,status:c.status==="거래중"?"":c.status,reason:c.reason,tier:c.tier,tf:c.periods&&c.periods.tf?1:0,by:c.by,at:c.at}});
+  CLIENTS=(r.clients||[]).map(function(c){return {id:c.id,name:c.name,type:c.type||"개인",owner:c.owner,svc:c.svc,status:c.status==="거래중"?"":c.status,reason:c.reason,tier:c.tier,tf:c.periods&&c.periods.tf?1:0,by:c.by,at:c.at}});
   state.data={};
   (r.clients||[]).forEach(function(c){state.data[c.id]=buildData(c,by[c.id]);if(lazy)state.data[c.id].lazy=true;saved[c.id]=snap(c.id)});
 }
@@ -819,7 +819,7 @@ function parseImport(text){
     c=c.map(function(x){return x.trim()});
     if(i===0&&/^(업체명|거래처명|상호|회사명|업체)$/.test(c[0]))return;
     if(!c[0])return;
-    out.push({name:c[0],type:c[1]==="법인"||c[1]==="개인"?c[1]:"",owner:PEOPLE.indexOf(c[2])>=0?c[2]:"",svc:c[3]==="신고"?"신고":"기장",tier:(c[4]||"").slice(0,40),periods:defaultPeriods()});
+    out.push({name:c[0],type:c[1]==="법인"?"법인":"개인",owner:PEOPLE.indexOf(c[2])>=0?c[2]:"",svc:c[3]==="신고"?"신고":"기장",tier:(c[4]||"").slice(0,40),periods:defaultPeriods()});
   });
   return out;
 }
@@ -936,7 +936,7 @@ function exportBook(){
     else vh.push(it.t,it.t+" 비고");
   });
   vh.push("결재 작성자","결재 대표세무사");
-  CLIENTS.forEach(function(c){var D=state.data[c.id];if(!D)return;D.vps.forEach(function(p){inClient(c.id,function(){
+  CLIENTS.forEach(function(c){var D=state.data[c.id];if(!D)return;if(c.tf)return;D.vps.forEach(function(p){inClient(c.id,function(){
     var P="vat|"+p.id+"|",pc=+val(P+"pc","3"),defs=["2025년 2기","2026년 1기","2026년 2기"];
     var r=base(c).concat([p.name,val(P+"co",c.name),val(P+"date"),val(P+"owner"),val(P+"biz",val("info|업종")),val(P+"kind",c.type||"")]);
     for(var i=0;i<maxPc;i++){if(i<pc)r.push(val(P+"ph"+i,defs[i]||""),val(P+"pv"+i));else r.push("","")}
