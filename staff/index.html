@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>직원 전용 법령 검색 | 동감 세무회계</title>
+<title>직원 전용 | 동감 세무회계</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="icon" href="../logo.png">
 <style>
-/* 레이아웃: 위 머리글, 아래 두 단(왼쪽 검색·결과, 오른쪽 질문 내역). 휴대폰에서는 한 단 */
+/* 레이아웃: 위 머리글, 메뉴 탭, 아래 본문 */
 :root{
   --brand:#3D5F70; --deep:#2C4756; --tint:#EEF4F6; --warm:#B8945C; --stamp:#B23A2E;
   --ink:#18232B; --muted:#66737C; --line:#E1E7EA; --paper:#F6F8F9; --sheet:#fff; --quote:#F8FAFB;
@@ -50,41 +50,15 @@ button,input,select,textarea{font:inherit;color:inherit}
 @media (max-width:960px){.cols{grid-template-columns:minmax(0,1fr)}}
 .main{display:flex;flex-direction:column;gap:16px;min-width:0}
 .card{background:var(--sheet);border:1px solid var(--line);border-radius:14px}
-.search{padding:18px;display:flex;flex-direction:column;gap:12px}
-.search h1{font-size:22px;font-weight:800;letter-spacing:-.03em}
-.search .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.search .q{flex:1;min-width:220px}
-.search label{font-size:13px;font-weight:600;color:var(--muted)}
-.yr{width:90px;border:1px solid #C9D3D8;border-radius:10px;padding:9px 10px;font-variant-numeric:tabular-nums}
 .kinds{display:flex;flex-wrap:wrap;gap:6px}
 .chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 12px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:#fff}
 .chip .n{font-weight:500;margin-left:4px;opacity:.8;font-variant-numeric:tabular-nums}
 .hint{font-size:13px;color:var(--muted)}
 
-.group{padding:14px 18px}
-.group h2{font-size:15px;font-weight:800;display:flex;gap:8px;align-items:baseline;margin-bottom:6px}
-.group h2 small{font-weight:500;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
-.items{list-style:none;display:flex;flex-direction:column}
-.item{border-top:1px solid var(--line);padding:10px 0}
-.item:first-child{border-top:0}
-.item .top{display:flex;gap:10px;align-items:flex-start}
-.item .t{flex:1;min-width:0;background:none;border:0;text-align:left;cursor:pointer;font-weight:600;line-height:1.5}
-.item .t:hover{color:var(--brand)}
-.item .meta{display:block;font-weight:400;color:var(--muted);font-size:13px;margin-top:2px}
-.item .pick{flex:none}
-.item .pick[aria-pressed="true"]{background:var(--warm);border-color:var(--warm);color:#fff}
-.body{margin-top:10px;background:var(--quote);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:14px;line-height:1.8;max-height:520px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}
-.body h4{font-size:13px;color:var(--brand);margin:10px 0 2px;white-space:normal}
-.body h4:first-child{margin-top:0}
-.body .art{margin-bottom:10px}
-.body .art b{color:var(--deep)}
-.body mark{background:rgba(184,148,92,.3);border-radius:2px}
-.jo{display:flex;gap:6px;align-items:center;margin-top:8px;flex-wrap:wrap}
-.jo input{width:120px;border:1px solid #C9D3D8;border-radius:8px;padding:5px 8px;font-size:13px}
-.more{margin-top:8px}
 
 /* 메뉴 탭 */
+.who{font-size:13px;font-weight:700;color:var(--muted);margin-right:10px}
 .tabs{max-width:1280px;margin:14px auto 0;padding:0 20px;display:flex;gap:6px;flex-wrap:wrap}
 .tabs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 16px;font-weight:700;font-size:14px;color:var(--muted);cursor:pointer}
 .tabs button[aria-selected="true"]{background:var(--deep);border-color:var(--deep);color:#fff}
@@ -111,44 +85,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .bitem .sub{font-size:13px;color:var(--muted);margin-top:8px;white-space:pre-wrap}
 .bitem .acts{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
 
-/* AI 정리 */
-.ai{padding:16px 18px;display:flex;flex-direction:column;gap:10px;border-color:var(--brand)}
-.ai .head{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.ai h2{font-size:15px;font-weight:800;flex:1}
-.ai .concl{font-weight:700;font-size:16px;color:var(--deep);background:var(--tint);border-radius:10px;padding:12px 14px}
-.ai h3{font-size:13px;color:var(--brand);margin-top:4px}
-.ai .txt{white-space:pre-wrap;font-size:14.5px}
-.ai ul{padding-left:18px;font-size:14px}
-.ai .src li{margin-bottom:4px}
-.ai .warn{font-size:12.5px;color:var(--muted)}
-
-/* 저장 상자 */
-.save{padding:16px 18px;display:flex;flex-direction:column;gap:10px;border-color:var(--warm)}
-.save h2{font-size:15px;font-weight:800}
-.save textarea{min-height:120px;resize:vertical}
-.picks{list-style:none;display:flex;flex-wrap:wrap;gap:6px}
-.picks li{font-size:12.5px;background:var(--tint);color:var(--deep);border-radius:999px;padding:3px 10px;display:flex;gap:6px;align-items:center}
-.picks button{background:none;border:0;cursor:pointer;color:var(--muted)}
-
-/* 질문 내역 */
-.rail{position:sticky;top:70px;display:flex;flex-direction:column;max-height:calc(100vh - 90px);min-width:0}
-@media (max-width:960px){.rail{position:static;max-height:none}}
-.rail-h{padding:14px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
-.rail-h h2{font-size:16px;font-weight:800;display:flex;justify-content:space-between;align-items:baseline}
-.rail-h h2 small{font-size:12px;color:var(--muted);font-weight:500;font-variant-numeric:tabular-nums}
-.hist{list-style:none;overflow:auto;flex:1;padding:6px 0}
-.hist li{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 14px;border-left:3px solid transparent}
-.hist li.on{border-left-color:var(--warm);background:var(--tint)}
-.hist .open{flex:1;min-width:0;background:none;border:0;text-align:left;cursor:pointer;padding:4px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
-.hist .d{color:var(--muted);font-size:12px;margin-right:6px;font-variant-numeric:tabular-nums}
-.hist select{font-size:12px;border:1px solid var(--line);border-radius:6px;padding:1px 2px;max-width:70px;background:#fff;color:var(--brand)}
 .empty{color:var(--muted);font-size:14px;padding:12px 14px}
 
-.rec{padding:16px 18px;display:flex;flex-direction:column;gap:10px}
-.rec h2{font-size:17px;font-weight:800}
-.rec .who{font-size:13px;color:var(--muted)}
-.rec .note{white-space:pre-wrap;background:var(--quote);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
-.rec .acts{display:flex;gap:8px;flex-wrap:wrap}
 .foot{max-width:1280px;margin:0 auto 32px;padding:0 20px;font-size:12.5px;color:var(--muted)}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;scroll-behavior:auto!important}}
 </style>
@@ -158,14 +96,16 @@ button,input,select,textarea{font:inherit;color:inherit}
   <a class="logo" href="../" aria-label="동감 세무회계 첫 화면"><img src="../logo.png" alt="동감 세무회계" width="1010" height="151"></a>
   <span class="tag">직원 전용</span>
   <span class="sp"></span>
+  <span class="who" id="who" hidden></span>
   <button type="button" class="out" id="logout" hidden>로그아웃</button>
 </div></header>
 <div class="confid"><p>이 프로그램은 동감 세무회계 업무 용도로 제작된 것으로 외부 유출 및 공유를 금합니다.</p></div>
 
 <section class="login" id="loginView">
   <form id="loginForm">
-    <h1>직원 전용 법령 검색</h1>
-    <p>사무소에서 안내받은 비밀번호를 입력하세요.</p>
+    <h1>직원 전용</h1>
+    <p>이름을 고르고 사무소에서 안내받은 비밀번호를 입력하세요.</p>
+    <select class="field" id="user" required aria-label="이름"><option value="">이름 선택</option><option>이동희</option><option>김혜빈</option><option>김유리</option><option>이연서</option></select>
     <input class="field" id="pw" type="password" autocomplete="current-password" placeholder="비밀번호" required>
     <button class="btn" id="loginBtn">들어가기</button>
     <p class="err" id="loginErr" hidden></p>
@@ -173,7 +113,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 </section>
 
 <nav class="tabs" id="tabs" role="tablist" aria-label="메뉴" hidden>
-  <button type="button" role="tab" data-tab="search" aria-selected="true">법령 검색</button>
+  <button type="button" role="tab" data-tab="clients" aria-selected="false">업체별 기장</button>
   <button type="button" role="tab" data-tab="tpl" aria-selected="false">안내문·템플릿</button>
   <button type="button" role="tab" data-tab="notice" aria-selected="false">공지·매뉴얼</button>
   <button type="button" role="tab" data-tab="leave" aria-selected="false">휴가 신청</button>
@@ -181,74 +121,16 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 <div class="cols one" id="boardView" hidden><div class="main" id="board"></div></div>
 
-<div class="cols" id="appView" hidden>
-  <div class="main">
-    <form class="card search" id="searchForm">
-      <h1>법령·예규·심판례 검색</h1>
-      <div class="row">
-        <input class="field q" id="q" type="search" placeholder="예: 1세대 1주택 비과세, 상속주택 특례, 조세특례제한법 제69조" required>
-        <label for="yr">귀속연도</label>
-        <input class="yr" id="yr" type="number" min="1990" max="2100">
-        <button class="btn">검색</button>
-      </div>
-      <div class="kinds" id="kinds" role="group" aria-label="검색 대상"></div>
-      <p class="hint">결과 오른쪽 "담기"로 근거를 모은 뒤 "이 검색 저장"을 누르면 질문 내역에 남습니다. 법령은 귀속연도 12월 31일 시행 조문으로 보여 줍니다.</p>
-      <p class="err" id="searchErr" hidden></p>
-    </form>
-
-    <section class="card save" id="saveBox" hidden>
-      <h2>질문 내역에 저장</h2>
-      <input class="field" id="sq" placeholder="질문 내용">
-      <div class="row" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <label for="sp" class="hint">질문자</label>
-        <select class="field" id="sp" style="width:auto"></select>
-      </div>
-      <textarea class="field" id="sn" placeholder="검토 결과·결론 메모 (예: 비과세 해당. 시행령 제155조 일시적 2주택 특례 적용, 조심2023서1234 참고)"></textarea>
-      <ul class="picks" id="picks"></ul>
-      <div class="row" style="display:flex;gap:8px">
-        <button type="button" class="btn" id="saveBtn">저장</button>
-        <button type="button" class="btn ghost" id="saveCancel">닫기</button>
-      </div>
-      <p class="err" id="saveErr" hidden></p>
-    </section>
-
-    <section class="card ai" id="aiBox" hidden>
-      <div class="head">
-        <h2>AI 답변</h2>
-        <button type="button" class="btn sm" id="aiBtn">다시 정리하기</button>
-      </div>
-      <p class="hint" id="aiHint">검색하면 AI가 질문으로 법령·해석·심판례를 직접 찾아 읽고 답을 정리합니다. 아래 검색 결과에서 "담기"한 뒤 "다시 정리하기"를 누르면 그 자료를 먼저 읽습니다. 고객 이름·주민번호 같은 개인정보는 질문에 넣지 마세요.</p>
-      <div id="aiOut"></div>
-    </section>
-
-    <section class="card rec" id="recView" hidden></section>
-    <div id="results"></div>
-  </div>
-
-  <aside class="card rail" aria-label="질문 내역">
-    <div class="rail-h">
-      <h2>질문 내역 <small id="hCount"></small></h2>
-      <input class="field" id="hq" type="search" placeholder="질문·메모·근거로 찾기" style="padding:8px 12px;font-size:14px">
-      <div class="kinds" id="people" role="group" aria-label="질문자별 보기"></div>
-      <button type="button" class="btn ghost sm" id="openSave">이 검색 저장</button>
-    </div>
-    <ul class="hist" id="hist"></ul>
-  </aside>
-</div>
-<p class="foot">법령·해석례·심판례·판례는 법제처 국가법령정보센터 Open API에서 불러옵니다. 신고·처분 전에는 원문을 다시 확인하세요.</p>
 
 <script src="config.js"></script>
 <script>
 const API = (window.STAFF_API || "").replace(/\/$/, "");
 const PEOPLE = ["이동희","김혜빈","김유리","이연서"];
-const KINDS = [["law","법령"],["nts","국세청 해석"],["moef","기획재정부 해석"],["tt","조세심판원"],["expc","법제처 해석례"],["prec","판례"]];
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const store = { get(k){ try{ return localStorage.getItem(k); }catch{ return null; } }, set(k,v){ try{ v==null ? localStorage.removeItem(k) : localStorage.setItem(k,v); }catch{} } };
 
 let token = store.get("staff.token");
-let kinds = new Set(KINDS.map(k => k[0]));
-let picks = [], hist = [], hFilter = "전체", hQuery = "", currentRec = null, lastQuery = "";
 
 // ── 서버 호출 ──
 async function api(action, data = {}){
@@ -262,276 +144,18 @@ async function api(action, data = {}){
 }
 
 // ── 로그인 ──
-function showApp(on){ $("#loginView").hidden = on; $("#tabs").hidden = !on; $("#logout").hidden = !on; if(on){ showTab(store.get("staff.tab") || "search"); loadHist(); } else { $("#appView").hidden = true; $("#boardView").hidden = true; } }
+function showApp(on){ $("#loginView").hidden = on; $("#tabs").hidden = !on; $("#logout").hidden = !on; $("#who").hidden = !on; if(on){ $("#who").textContent = store.get("staff.who") ? store.get("staff.who") + " 님" : ""; showTab(new URLSearchParams(location.search).get("tab") || store.get("staff.tab") || "clients"); } else { $("#boardView").hidden = true; } }
 function logout(){ token = null; store.set("staff.token", null); showApp(false); }
 $("#logout").onclick = logout;
 $("#loginForm").addEventListener("submit", async e => {
   e.preventDefault();
   const btn = $("#loginBtn"), err = $("#loginErr"); btn.disabled = true; err.hidden = true;
   try{
-    const r = await api("login", { password: $("#pw").value });
-    token = r.token; store.set("staff.token", token); $("#pw").value = ""; showApp(true);
+    const r = await api("login", { user: $("#user").value, password: $("#pw").value });
+    token = r.token; store.set("staff.token", token); store.set("staff.who", r.user || $("#user").value); $("#pw").value = ""; showApp(true);
   }catch(x){ err.textContent = x.message; err.hidden = false; }
   finally{ btn.disabled = false; }
 });
-
-// ── 검색 ──
-$("#yr").value = new Date().getFullYear();
-function drawKinds(counts = {}){
-  $("#kinds").innerHTML = KINDS.map(([k,l]) => `<button type="button" class="chip" data-k="${k}" aria-pressed="${kinds.has(k)}">${l}${counts[k]!=null?`<span class="n">${counts[k].toLocaleString()}</span>`:""}</button>`).join("");
-}
-drawKinds();
-$("#kinds").addEventListener("click", e => {
-  const b = e.target.closest(".chip"); if(!b) return;
-  const k = b.dataset.k;
-  if(kinds.has(k) && kinds.size > 1) kinds.delete(k); else kinds.add(k);
-  drawKinds(lastCounts);
-});
-let lastCounts = {}, lastGroups = [];
-$("#searchForm").addEventListener("submit", e => { e.preventDefault(); runSearch($("#q").value.trim()); });
-
-async function runSearch(q, page = 1, onlyKind){
-  if(!q) return;
-  lastQuery = q; $("#searchErr").hidden = true; $("#recView").hidden = true; currentRec = null; drawHist();
-  const ks = onlyKind ? [onlyKind] : [...kinds];
-  if(page === 1 && !onlyKind) $("#results").innerHTML = `<div class="card group"><p class="hint">검색하는 중입니다…</p></div>`;
-  try{
-    const r = await api("search", { q, kinds: ks.join(","), page });
-    if(onlyKind){
-      const g = lastGroups.find(x => x.kind === onlyKind); const ng = r.groups[0];
-      g.items.push(...ng.items); g.page = page; renderResults();
-    } else {
-      lastGroups = r.groups.map(g => ({...g, page:1}));
-      lastCounts = Object.fromEntries(r.groups.map(g => [g.kind, g.total]));
-      drawKinds(lastCounts); renderResults();
-      if(r.terms?.length) $("#results").insertAdjacentHTML("afterbegin", `<p class="hint" style="margin:0 4px 10px">문장 그대로는 결과가 없어 <b>${r.terms.map(esc).join(", ")}</b>(으)로 나눠 찾았습니다.</p>`);
-      $("#aiBox").hidden = false; runAi();
-    }
-  }catch(x){ $("#searchErr").textContent = x.message; $("#searchErr").hidden = false; $("#results").innerHTML = ""; }
-}
-const keyOf = it => `${it.kind}:${it.id}`;
-function renderResults(){
-  const hl = lastQuery.split(/\s+/).filter(w => w.length > 1);
-  $("#results").innerHTML = lastGroups.map(g => `
-    <section class="card group" data-kind="${g.kind}">
-      <h2>${esc(g.label)} <small>${g.error ? esc(g.error) : `${g.total.toLocaleString()}건`}${g.note ? ` · ${esc(g.note)}` : ""}</small></h2>
-      ${g.items.length ? `<ul class="items">${g.items.map(it => itemHtml(it)).join("")}</ul>` : (g.error ? "" : `<p class="hint">검색 결과가 없습니다.</p>`)}
-      ${g.items.length < g.total ? `<button type="button" class="btn ghost sm more" data-more="${g.kind}">더 보기</button>` : ""}
-    </section>`).join("");
-}
-function itemHtml(it){
-  const meta = [it.number, it.org, fmtDate(it.date)].filter(Boolean).join(" · ");
-  const on = picks.some(p => keyOf(p) === keyOf(it));
-  return `<li class="item" data-key="${esc(keyOf(it))}">
-    <div class="top">
-      <button type="button" class="t" data-open="${esc(keyOf(it))}">${esc(it.title || "(제목 없음)")}<span class="meta">${esc(meta)}</span></button>
-      <button type="button" class="chip pick" data-pick="${esc(keyOf(it))}" aria-pressed="${on}">${on ? "담음" : "담기"}</button>
-    </div>
-    <div class="slot"></div>
-  </li>`;
-}
-function fmtDate(d){ d = String(d||"").replace(/\D/g,""); return d.length === 8 ? `${d.slice(0,4)}.${d.slice(4,6)}.${d.slice(6)}` : ""; }
-const findItem = key => { for(const g of lastGroups) for(const it of g.items) if(keyOf(it) === key) return it; return currentRec?.picks.find(p => keyOf(p) === key); };
-
-document.addEventListener("click", async e => {
-  const more = e.target.closest("[data-more]");
-  if(more){ const g = lastGroups.find(x => x.kind === more.dataset.more); more.disabled = true; runSearch(lastQuery, (g.page||1)+1, g.kind); return; }
-  const pk = e.target.closest("[data-pick]");
-  if(pk){
-    const it = findItem(pk.dataset.pick); if(!it) return;
-    const i = picks.findIndex(p => keyOf(p) === keyOf(it));
-    if(i >= 0) picks.splice(i,1); else picks.push({kind:it.kind, id:it.id, nid:it.nid || "", title:it.title, number:it.number});
-    pk.setAttribute("aria-pressed", i < 0); pk.textContent = i < 0 ? "담음" : "담기"; drawPicks(); return;
-  }
-  const op = e.target.closest("[data-open]");
-  if(op){ toggleDetail(op.closest(".item, li"), findItem(op.dataset.open)); return; }
-});
-
-// ── 본문 보기 ──
-async function toggleDetail(li, it){
-  const slot = li.querySelector(".slot"); if(!slot || !it) return;
-  if(slot.innerHTML){ slot.innerHTML = ""; return; }
-  slot.innerHTML = `<div class="body">본문을 불러오는 중입니다…</div>`;
-  try{
-    const efYd = it.kind === "law" ? String($("#yr").value || new Date().getFullYear()) + "1231" : "";
-    const r = await api("detail", { kind: it.kind, id: it.id, nid: it.nid || "", efYd });
-    slot.innerHTML = it.kind === "law" ? lawHtml(r.data) : docHtml(r.data);
-    const box = slot.querySelector(".jo input");
-    if(box) box.addEventListener("input", () => filterArticles(slot, box.value.trim()));
-  }catch(x){ slot.innerHTML = `<div class="body">${esc(x.message)}</div>`; }
-}
-const asArr = v => v == null ? [] : Array.isArray(v) ? v : [v];
-const clean = s => String(s ?? "").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&nbsp;/g," ").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&amp;/g,"&").trim();
-function findKey(o, key, depth = 0){
-  if(!o || typeof o !== "object" || depth > 5) return undefined;
-  if(key in o) return o[key];
-  for(const v of Object.values(o)){ const r = findKey(v, key, depth+1); if(r !== undefined) return r; }
-}
-function lawHtml(data){
-  const info = findKey(data, "기본정보") || {};
-  const units = asArr(findKey(data, "조문단위"));
-  if(!units.length) return docHtml(data);
-  const head = [info["법령명_한글"] || info["법령명한글"], info["시행일자"] ? `시행 ${fmtDate(info["시행일자"])}` : "", info["공포번호"] ? `공포 제${info["공포번호"]}호` : ""].filter(Boolean).join(" · ");
-  const arts = units.map(u => {
-    const lines = [clean(u["조문내용"])];
-    for(const h of asArr(u["항"])){
-      if(h["항내용"]) lines.push(clean(h["항내용"]));
-      for(const ho of asArr(h["호"])){
-        if(ho["호내용"]) lines.push("  " + clean(ho["호내용"]));
-        for(const mok of asArr(ho["목"])) if(mok["목내용"]) lines.push("    " + clean(asArr(mok["목내용"]).join("\n")));
-      }
-    }
-    const no = u["조문번호"] ? `제${u["조문번호"]}조${u["조문가지번호"] ? "의" + u["조문가지번호"] : ""}` : "";
-    return `<div class="art" data-no="${esc(no)}">${esc(lines.filter(Boolean).join("\n"))}</div>`;
-  }).join("");
-  return `<div class="body"><h4>${esc(head)}</h4>${arts}</div>
-    <div class="jo"><input type="search" placeholder="조문 찾기 (예: 제89조, 비과세)" aria-label="조문 찾기"><span class="hint">전체 ${units.length}개 조문</span></div>`;
-}
-function filterArticles(slot, q){
-  slot.querySelectorAll(".art").forEach(a => {
-    const t = a.textContent;
-    a.hidden = !!q && !(a.dataset.no === q || a.dataset.no.startsWith(q.replace(/조$/,"") + "조") || t.includes(q));
-  });
-}
-function docHtml(data){
-  // 판례·해석례·심판례: 글자 항목을 제목과 함께 차례로 보여 준다
-  let root = data; for(let i = 0; i < 3 && root && typeof root === "object" && Object.keys(root).length === 1; i++) root = Object.values(root)[0];
-  const parts = [];
-  for(const [k,v] of Object.entries(root || {})){
-    if(typeof v !== "string" || !v.trim() || /일련번호|ID$|코드$/.test(k)) continue;
-    const t = clean(v); if(!t) continue;
-    parts.push(`<h4>${esc(k)}</h4>${esc(t)}`);
-  }
-  return `<div class="body">${parts.join("\n") || "본문이 제공되지 않는 자료입니다."}</div>`;
-}
-
-// ── AI 정리 ──
-let lastAi = null;
-let aiSeq = 0;
-$("#aiBtn").onclick = () => runAi(true);
-async function runAi(fresh){
-  const out = $("#aiOut"), my = ++aiSeq;
-  const question = lastQuery || $("#q").value.trim();
-  if(!question){ out.innerHTML = `<p class="err">질문을 먼저 입력하세요.</p>`; return; }
-  $("#aiBtn").disabled = true;
-  const t0 = Date.now();
-  const draw = () => { if(my === aiSeq) out.innerHTML = `<p class="hint">AI가 법령·해석·심판례를 찾아 읽고 있습니다… ${Math.round((Date.now() - t0) / 1000)}초 (보통 30초~1분)</p>`; };
-  draw(); const tick = setInterval(draw, 1000);
-  try{
-    const r = await api("summarize", { question, year: $("#yr").value, items: picks.slice(0, 8), fresh: !!fresh });
-    clearInterval(tick);
-    if(my !== aiSeq) return; // 그 사이 다른 검색을 했으면 버린다
-    lastAi = r;
-    const who = x => `${esc(x.label)} · ${esc([x.number, x.title].filter(Boolean).join(" "))}`;
-    out.innerHTML = `
-      <div class="concl">${esc(r.conclusion)}</div>
-      <h3>설명</h3><div class="txt">${esc(r.explanation)}</div>
-      ${r.checks.length ? `<h3>확인할 점</h3><ul>${r.checks.map(c => `<li>${esc(c)}</li>`).join("")}</ul>` : ""}
-      <h3>근거 자료</h3>
-      <ul class="src">${r.sources.length ? r.sources.map(x => `<li><b>${who(x)}</b><br>${esc(x.point)}</li>`).join("") : "<li>확인된 근거 없음</li>"}</ul>
-      <details class="warn"><summary>AI가 찾아본 과정 (검색 ${r.searches.length}번 · 원문 ${r.read.length}건)</summary>
-        <ul>${r.searches.map(q => `<li>검색 ${esc(q)}</li>`).join("")}${r.read.map(x => `<li>읽음 ${who(x)}</li>`).join("")}</ul>
-      </details>
-      <p class="warn">AI(${esc(r.model)})가 국가법령정보센터 원문을 읽고 정리한 내용입니다.${r.cached ? " 최근에 같은 질문으로 정리해 둔 답을 불러왔습니다. 새로 만들려면 \"다시 정리하기\"를 누르세요." : (r.seconds ? ` (${esc(r.seconds)}초 걸림)` : "")} 신고·처분 전에는 근거 원문을 직접 확인하세요.</p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn ghost sm" id="aiToNote">질문 내역 메모로 옮기기</button></div>`;
-  }catch(x){ clearInterval(tick); if(my === aiSeq) out.innerHTML = `<p class="err">${esc(x.message)}</p>`; }
-  clearInterval(tick);
-  if(my === aiSeq) $("#aiBtn").disabled = false;
-}
-document.addEventListener("click", e => {
-  if(!e.target.closest("#aiToNote") || !lastAi) return;
-  const r = lastAi;
-  const note = [`[결론] ${r.conclusion}`, "", r.explanation, ...(r.checks.length ? ["", "[확인할 점]", ...r.checks.map(c => "- " + c)] : []), "", "[근거]", ...r.sources.map(x => `- ${x.label} ${[x.number, x.title].filter(Boolean).join(" ")}: ${x.point}`), "", `(AI 정리, ${r.year}년 귀속 기준)`].join("\n");
-  $("#saveBox").hidden = false; $("#sq").value = $("#sq").value || r.question; $("#sn").value = note; drawPicks(); $("#saveBox").scrollIntoView({behavior:"smooth", block:"start"});
-});
-
-// ── 저장 ──
-$("#sp").innerHTML = ["",...PEOPLE].map(p => `<option value="${p}">${p || "선택 안 함"}</option>`).join("");
-$("#sp").value = store.get("staff.who") || "";
-$("#sp").addEventListener("change", e => store.set("staff.who", e.target.value));
-function drawPicks(){
-  $("#picks").innerHTML = picks.length ? picks.map((p,i) => `<li>${esc(KINDS.find(k=>k[0]===p.kind)?.[1]||"")} · ${esc(p.number || p.title)}<button type="button" data-unpick="${i}" aria-label="빼기">×</button></li>`).join("") : `<li style="background:none;color:var(--muted)">검색 결과에서 "담기"를 누르면 근거로 함께 저장됩니다.</li>`;
-}
-$("#picks").addEventListener("click", e => { const b = e.target.closest("[data-unpick]"); if(b){ picks.splice(+b.dataset.unpick,1); drawPicks(); renderResults(); } });
-$("#openSave").onclick = () => { $("#saveBox").hidden = false; $("#sq").value = $("#sq").value || lastQuery || $("#q").value; drawPicks(); $("#sq").focus(); };
-$("#saveCancel").onclick = () => { $("#saveBox").hidden = true; };
-$("#saveBtn").onclick = async () => {
-  const err = $("#saveErr"); err.hidden = true;
-  const query = $("#sq").value.trim(); if(!query){ $("#sq").focus(); return; }
-  $("#saveBtn").disabled = true;
-  try{
-    await api("history.save", { query, person: $("#sp").value, note: $("#sn").value, picks });
-    $("#saveBox").hidden = true; $("#sq").value = ""; $("#sn").value = ""; picks = []; renderResults(); loadHist();
-  }catch(x){ err.textContent = x.message; err.hidden = false; }
-  finally{ $("#saveBtn").disabled = false; }
-};
-
-// ── 질문 내역 ──
-async function loadHist(){
-  try{ const r = await api("history.list"); hist = r.items || []; }
-  catch(x){ hist = []; $("#hist").innerHTML = `<li><p class="empty">${esc(x.message)}</p></li>`; return; }
-  drawHist();
-}
-function hMatch(it){
-  if(hFilter === "미분류" && it.person) return false;
-  if(PEOPLE.includes(hFilter) && it.person !== hFilter) return false;
-  if(!hQuery) return true;
-  const hay = [it.query, it.note, ...(it.picks||[]).map(p => `${p.title} ${p.number}`)].join(" ").toLowerCase();
-  return hQuery.split(/\s+/).every(w => hay.includes(w));
-}
-function drawHist(){
-  const cnt = f => hist.filter(it => f==="전체" ? true : f==="미분류" ? !it.person : it.person===f).length;
-  $("#people").innerHTML = ["전체",...PEOPLE,"미분류"].map(f => `<button type="button" class="chip" data-f="${f}" aria-pressed="${hFilter===f}">${f}<span class="n">${cnt(f)}</span></button>`).join("");
-  const list = hist.filter(hMatch);
-  $("#hCount").textContent = `${list.length}건`;
-  $("#hist").innerHTML = list.length ? list.map(it => `
-    <li class="${currentRec?.id === it.id ? "on" : ""}">
-      <button type="button" class="open" data-rec="${esc(it.id)}" title="${esc(it.query)}"><span class="d">${esc(mmdd(it.createdAt))}</span>${esc(it.query)}</button>
-      <select data-who="${esc(it.id)}" aria-label="질문자 지정">${["",...PEOPLE].map(p => `<option value="${p}" ${it.person===p?"selected":""}>${p||"미분류"}</option>`).join("")}</select>
-    </li>`).join("") : `<li><p class="empty">${hist.length ? "조건에 맞는 질문이 없습니다." : "아직 저장된 질문이 없습니다."}</p></li>`;
-}
-function mmdd(iso){ const d = new Date(iso); return isNaN(d) ? "" : `${String(d.getMonth()+1).padStart(2,"0")}.${String(d.getDate()).padStart(2,"0")}`; }
-$("#people").addEventListener("click", e => { const b = e.target.closest(".chip"); if(b){ hFilter = b.dataset.f; drawHist(); } });
-$("#hq").addEventListener("input", e => { hQuery = e.target.value.trim().toLowerCase(); drawHist(); });
-$("#hist").addEventListener("change", async e => {
-  const s = e.target.closest("[data-who]"); if(!s) return;
-  try{ const it = await api("history.update", { id: s.dataset.who, person: s.value }); hist = hist.map(x => x.id === it.id ? it : x); if(currentRec?.id === it.id){ currentRec = it; showRec(it); } drawHist(); }
-  catch(x){ alertInline(x.message); loadHist(); }
-});
-$("#hist").addEventListener("click", e => {
-  const b = e.target.closest("[data-rec]"); if(!b) return;
-  const it = hist.find(x => x.id === b.dataset.rec); if(it){ currentRec = it; showRec(it); drawHist(); }
-});
-function showRec(it){
-  const v = $("#recView"); v.hidden = false;
-  v.innerHTML = `
-    <h2>${esc(it.query)}</h2>
-    <p class="who">${esc(it.person || "미분류")} · ${esc(new Date(it.createdAt).toLocaleString("ko-KR"))}</p>
-    ${it.note ? `<div class="note">${esc(it.note)}</div>` : ""}
-    ${(it.picks||[]).length ? `<ul class="items">${it.picks.map(p => `<li class="item" data-key="${esc(keyOf(p))}"><div class="top"><button type="button" class="t" data-open="${esc(keyOf(p))}">${esc(p.title)}<span class="meta">${esc([KINDS.find(k=>k[0]===p.kind)?.[1], p.number].filter(Boolean).join(" · "))}</span></button></div><div class="slot"></div></li>`).join("")}</ul>` : ""}
-    <div class="acts">
-      <button type="button" class="btn ghost sm" id="reSearch">같은 검색 다시 하기</button>
-      <button type="button" class="btn ghost sm" id="editNote">메모 고치기</button>
-      <button type="button" class="btn ghost sm" id="delRec">삭제</button>
-    </div>
-    <div id="recEdit" hidden><textarea class="field" id="recNote" style="min-height:110px">${esc(it.note||"")}</textarea><div class="acts" style="margin-top:8px"><button type="button" class="btn sm" id="recSave">메모 저장</button></div></div>
-    <p class="err" id="recErr" hidden></p>`;
-  $("#results").innerHTML = "";
-  $("#reSearch").onclick = () => { $("#q").value = it.query; runSearch(it.query); };
-  $("#editNote").onclick = () => { $("#recEdit").hidden = !$("#recEdit").hidden; };
-  $("#recSave").onclick = async () => {
-    try{ const u = await api("history.update", { id: it.id, note: $("#recNote").value }); hist = hist.map(x => x.id === u.id ? u : x); currentRec = u; showRec(u); }
-    catch(x){ alertInline(x.message); }
-  };
-  let armed = false;
-  $("#delRec").onclick = async () => {
-    if(!armed){ armed = true; $("#delRec").textContent = "한 번 더 누르면 삭제"; return; }
-    try{ await api("history.delete", { id: it.id }); hist = hist.filter(x => x.id !== it.id); currentRec = null; v.hidden = true; drawHist(); }
-    catch(x){ alertInline(x.message); }
-  };
-  v.scrollIntoView({ behavior:"smooth", block:"start" });
-}
-function alertInline(msg){ const e = $("#recErr") || $("#searchErr"); e.textContent = msg; e.hidden = false; }
 
 // ── 메뉴 탭 ──
 const BOARD_UI = {
@@ -542,12 +166,12 @@ const BOARD_UI = {
 };
 const boards = {}; // board → { items, q, cat, editing, open }
 function showTab(tab){
-  if(tab !== "search" && !BOARD_UI[tab] && tab !== "leave") tab = "search";
+  if(tab === "clients"){ location.href = "clients.html"; return; }
+  if(!BOARD_UI[tab] && tab !== "leave") tab = "tpl";
   store.set("staff.tab", tab);
   document.querySelectorAll("#tabs [data-tab]").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === tab));
-  $("#appView").hidden = tab !== "search";
-  $("#boardView").hidden = tab === "search";
-  if(tab !== "search") loadBoard(tab);
+  $("#boardView").hidden = false;
+  loadBoard(tab);
 }
 $("#tabs").addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if(b) showTab(b.dataset.tab); });
 
