@@ -576,6 +576,8 @@ function drawDetail(){
   fitAllWn();
 }
 document.addEventListener("input",function(e){if(e.target.classList&&e.target.classList.contains("wn"))fitWn(e.target)});
+// 업체 위에 마우스를 올리거나 손가락을 대면 자료를 미리 받아 둔다(누르는 순간 바로 열린다)
+["mouseover","touchstart"].forEach(function(ev){document.addEventListener(ev,function(e){var b=e.target.closest&&e.target.closest("#cl [data-id]");if(!b)return;var id=+b.dataset.id,D=state.data[id];if(D&&D.lazy)refreshClient(id)},{passive:true})});
 window.addEventListener("resize",function(){fitAllWn()});
 document.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target.classList&&e.target.classList.contains("wn"))e.preventDefault()});
 function show(){document.getElementById("app").dataset.view=state.sel?"detail":"list";drawList();drawDetail()}
@@ -720,7 +722,7 @@ document.addEventListener("click",function(e){
 /* ===== 서버 연결 · 자동 저장 ===== */
 var API=(window.STAFF_API||"").replace(/\/$/,""),token=null,ME="";
 try{token=localStorage.getItem("staff.token");ME=localStorage.getItem("staff.who")||""}catch(e){}
-function goLogin(){location.href="index.html"}
+function goLogin(){try{sessionStorage.removeItem("staff.clients.light")}catch(e){}location.href="index.html"}
 if(!token||Number(String(token).split(".")[0])<Date.now())goLogin();
 function api(action,data){
   if(!API)return Promise.reject(new Error("서버 주소가 설정되지 않았습니다."));
@@ -779,15 +781,27 @@ function applyLoad(r,lazy){
   state.data={};
   (r.clients||[]).forEach(function(c){state.data[c.id]=buildData(c,by[c.id]);if(lazy)state.data[c.id].lazy=true;saved[c.id]=snap(c.id)});
 }
+var LCK="staff.clients.light";
+function readLight(){try{var j=sessionStorage.getItem(LCK);return j?JSON.parse(j):null}catch(e){return null}}
+function writeLight(r){try{sessionStorage.setItem(LCK,JSON.stringify({clients:r.clients,templates:r.templates,data:[]}))}catch(e){}}
 function boot(){
   setSt("불러오는 중…");
-  return api("clients.load",{light:1}).then(function(r){applyLoad(r,true);setSt("저장됨","ok");show();if(!CLIENTS.length)openImport(true)})
+  var cached=readLight();
+  if(cached&&cached.clients&&cached.clients.length){applyLoad(cached,true);show()} // 지난번 목록을 먼저 보여주고 뒤에서 새로 받는다
+  return api("clients.load",{light:1}).then(function(r){
+    writeLight(r);
+    if(!state.sel&&!Object.keys(pending).length){applyLoad(r,true);setSt("저장됨","ok");show();if(!CLIENTS.length)openImport(true)}
+    else{["vat","inc","corp"].forEach(function(k){var t=r.templates&&r.templates[k];if(Array.isArray(t)&&t.length)TPL[k]=t});setSt("저장됨","ok")}
+  })
     .catch(function(e){setSt("불러오지 못했습니다: "+e.message,"bad");$("#detail").innerHTML='<div class="empty">'+esc(e.message)+' <button class="btn sm" type="button" onclick="boot()">다시 불러오기</button></div>'});
 }
+var fetching={};
 function refreshClient(id){
   var lz=state.data[id]&&state.data[id].lazy;
   if(!lz&&(pending[id]||busy))return;
+  if(fetching[id])return;fetching[id]=1;
   api("clients.get",{id:id}).then(function(r){
+    delete fetching[id];
     if(!lz&&(pending[id]||busy||diffClient(id)))return;
     if(!clientById(id))return;
     var before=JSON.stringify(snap(id)),c=clientById(id);
@@ -798,7 +812,7 @@ function refreshClient(id){
     var a=document.activeElement;
     if(before!==after&&state.sel===id&&!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))){drawList();drawDetail()}
     else showLast();
-  }).catch(function(e){if(lz&&state.sel===id)$("#detail").innerHTML='<button class="back" type="button" id="back">← 업체 목록</button><div class="empty">불러오지 못했습니다: '+esc(e.message)+' <button class="btn sm" type="button" onclick="refreshClient('+id+')">다시 불러오기</button></div>'});
+  }).catch(function(e){delete fetching[id];if(lz&&state.sel===id)$("#detail").innerHTML='<button class="back" type="button" id="back">← 업체 목록</button><div class="empty">불러오지 못했습니다: '+esc(e.message)+' <button class="btn sm" type="button" onclick="refreshClient('+id+')">다시 불러오기</button></div>'});
 }
 function addClientRemote(){
   var nm0=$("#addName").value.trim();if(!nm0){$("#addName").focus();return}

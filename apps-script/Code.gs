@@ -276,7 +276,19 @@ function groupLabel(g) {
   return ({ vat: "부가세", inc: "소득세", corp: "법인세", tax: "세금예측" }[k[0]] || "기타") + (k[1] ? "(" + k[1] + ")" : "");
 }
 
+// 업체 목록·양식은 자주 읽고 드물게 바뀌므로 6시간 캐시한다. 업체/양식을 바꾸는 저장은 clCacheClear()로 비운다.
+const CL_CACHE_KEY = "cl_light_v1";
+function clCacheClear() { try { CacheService.getScriptCache().remove(CL_CACHE_KEY); } catch (e) {} }
 function clientsLoad(req) {
+  const light = !!(req && req.light);
+  if (light) {
+    try { const hit = CacheService.getScriptCache().get(CL_CACHE_KEY); if (hit) return JSON.parse(hit); } catch (e) {}
+  }
+  const res = clientsLoadRaw(req);
+  if (light) { try { const j = JSON.stringify(res); if (j.length < 90000) CacheService.getScriptCache().put(CL_CACHE_KEY, j, 21600); } catch (e) {} }
+  return res;
+}
+function clientsLoadRaw(req) {
   const clients = clAll(clSheet(CL_SHEET, CL_COLS), CL_COLS.length).filter(r => r[0] !== "").map(clRowToItem);
   // light: 업체 목록과 양식만(빠름). 업체별 자료는 업체를 열 때 clients.get으로 받는다.
   const data = (req && req.light) ? [] : clAll(clSheet(CD_SHEET, CD_COLS), CD_COLS.length).filter(r => r[0] !== "").map(r => {
@@ -319,15 +331,24 @@ function templateSave(req, who) {
     const row = [kind, json, who, now];
     if (at >= 0) sh.getRange(at + 2, 1, 1, TPL_COLS.length).setValues([row]);
     else sh.getRange(sh.getLastRow() + 1, 1, 1, TPL_COLS.length).setValues([row]);
+    clCacheClear();
     clLog(who, "", "기본 양식", "양식 수정: " + ({ vat: "부가세", inc: "소득세", corp: "법인세" })[kind]);
     return { ok: true, tpl: tpl };
   });
+}
+// 업체자료에서 한 업체의 줄만 읽는다(전체 내용을 읽지 않는다)
+function clDataRows(cd, id) {
+  const last = cd.getLastRow();
+  if (last < 2) return [];
+  const keys = cd.getRange(2, 1, last - 1, 1).getValues(), rows = [];
+  keys.forEach((k, i) => { if (Number(k[0]) === id) rows.push(cd.getRange(i + 2, 1, 1, CD_COLS.length).getValues()[0]); });
+  return rows;
 }
 function clientsGet(req) {
   const id = Number(req.id);
   const c = clAll(clSheet(CL_SHEET, CL_COLS), CL_COLS.length).filter(r => Number(r[0]) === id).map(clRowToItem)[0];
   if (!c) throw fail("없는 업체입니다.", 404);
-  const data = clAll(clSheet(CD_SHEET, CD_COLS), CD_COLS.length).filter(r => Number(r[0]) === id).map(r => {
+  const data = clDataRows(clSheet(CD_SHEET, CD_COLS), id).map(r => {
     let v = {}; try { v = JSON.parse(r[2] || "{}"); } catch (e) {}
     return { id: id, g: String(r[1]), v: v, by: String(r[3] || ""), at: iso(r[4]) };
   });
@@ -343,6 +364,7 @@ function clientsAdd(req, who) {
     const now = new Date().toISOString();
     sh.getRange(sh.getLastRow() + 1, 1, 1, CL_COLS.length).setValues([clRow(id, o, who, now)]);
     clLog(who, id, o.name, "업체 추가");
+    clCacheClear();
     return { id: id, by: who, at: now };
   });
 }
@@ -364,6 +386,7 @@ function clientsImport(req, who) {
       add.push(clRow(id, o, who, now));
     });
     if (add.length) sh.getRange(sh.getLastRow() + 1, 1, add.length, CL_COLS.length).setValues(add);
+    clCacheClear();
     clLog(who, "", "", "업체 " + add.length + "곳 불러오기" + (skipped ? " (중복 " + skipped + "곳 건너뜀)" : ""));
     return { added: add.length, skipped: skipped };
   });
@@ -377,8 +400,11 @@ function clientsSave(req, who) {
     const cl = clSheet(CL_SHEET, CL_COLS), cd = clSheet(CD_SHEET, CD_COLS);
     const now = new Date().toISOString();
     const clRows = clAll(cl, CL_COLS.length);
-    const cdRows = clAll(cd, CD_COLS.length);
+    const cdLast = cd.getLastRow();
+    const cdRows = cdLast < 2 ? [] : cd.getRange(2, 1, cdLast - 1, 2).getValues(); // 업체id, 그룹만 읽는다
     const where = {}; cdRows.forEach((r, i) => { where[r[0] + "|" + r[1]] = i + 2; });
+    const logs = [];
+    let metaChanged = false;
     const append = [], del = [];
     items.forEach(it => {
       const id = Number(it.id), ci = clRows.findIndex(r => Number(r[0]) === id);
@@ -386,7 +412,7 @@ function clientsSave(req, who) {
       const cur = clRowToItem(clRows[ci]);
       const changed = [];
       const o = clMeta(it.meta, cur);
-      if (it.meta) changed.push("업체 정보");
+      if (it.meta) { changed.push("업체 정보"); metaChanged = true; }
       Object.keys(it.groups || {}).forEach(g => {
         if (!GROUP_RE.test(g)) throw fail("저장할 수 없는 항목입니다.");
         const val = it.groups[g], key = id + "|" + g, row = where[key];
@@ -401,8 +427,10 @@ function clientsSave(req, who) {
       });
       cl.getRange(ci + 2, 1, 1, CL_COLS.length).setValues([clRow(id, o, who, now)]);
       clRows[ci] = clRow(id, o, who, now);
-      clLog(who, id, o.name, changed.join(", ") || "저장");
+      logs.push([now, who, id, o.name, changed.join(", ") || "저장"]);
     });
+    if (logs.length) { const ls = clSheet(LOG_SHEET, LOG_COLS); ls.getRange(ls.getLastRow() + 1, 1, logs.length, LOG_COLS.length).setValues(logs); }
+    if (metaChanged) clCacheClear();
     if (append.length) cd.getRange(cd.getLastRow() + 1, 1, append.length, CD_COLS.length).setValues(append);
     del.sort((a, b) => b - a).forEach(r => cd.deleteRow(r));
     return { ok: true, by: who, at: now };
@@ -420,6 +448,7 @@ function clientsDelete(req, who) {
     const dr = clAll(cd, CD_COLS.length);
     for (let j = dr.length - 1; j >= 0; j--) if (Number(dr[j][0]) === id) cd.deleteRow(j + 2);
     clLog(who, id, name, "업체 삭제");
+    clCacheClear();
     return { ok: true };
   });
 }

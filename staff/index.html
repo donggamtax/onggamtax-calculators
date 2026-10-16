@@ -146,7 +146,7 @@ async function api(action, data = {}){
 
 // ── 로그인 ──
 function showApp(on){ $("#loginView").hidden = on; $("#tabs").hidden = !on; $("#logout").hidden = !on; $("#who").hidden = !on; if(on){ $("#who").textContent = store.get("staff.who") ? store.get("staff.who") + " 님" : ""; showTab(new URLSearchParams(location.search).get("tab") || store.get("staff.tab") || "clients"); } else { $("#boardView").hidden = true; } }
-function logout(){ token = null; store.set("staff.token", null); showApp(false); }
+function logout(){ token = null; store.set("staff.token", null); try{ sessionStorage.removeItem("staff.clients.light"); }catch{} showApp(false); }
 $("#logout").onclick = logout;
 $("#loginForm").addEventListener("submit", async e => {
   e.preventDefault();
