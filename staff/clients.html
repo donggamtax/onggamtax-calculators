@@ -183,9 +183,12 @@ body:has(.app[data-wide="1"]) .wrap{max-width:1700px}
 .sig label{flex-direction:row;justify-content:center;gap:4px;color:var(--ink);font-size:12.5px}
 .smallx{border:0;background:none;color:var(--muted);cursor:pointer;font-size:12px;padding:0 2px}
 @media (max-width:1100px){.cmpgrid{grid-template-columns:minmax(0,1fr)}}
+html[data-embed="1"] header h1,html[data-embed="1"] header .nav2,html[data-embed="1"] .lead{display:none}
+html[data-embed="1"] .wrap{padding-top:6px}
 @media (max-width:760px){.two{grid-template-columns:1fr!important}.paper{padding:12px 8px;overflow-x:auto}.ht{min-width:560px}.paper h2.ttl{font-size:17px}}
 </style>
 <script src="config.js"></script>
+<script>if(/[?&]embed=1/.test(location.search))document.documentElement.dataset.embed="1"</script>
 </head>
 <body>
 <div class="wrap">
@@ -722,7 +725,7 @@ document.addEventListener("click",function(e){
 /* ===== 서버 연결 · 자동 저장 ===== */
 var API=(window.STAFF_API||"").replace(/\/$/,""),token=null,ME="";
 try{token=localStorage.getItem("staff.token");ME=localStorage.getItem("staff.who")||""}catch(e){}
-function goLogin(){try{sessionStorage.removeItem("staff.clients.light")}catch(e){}location.href="index.html"}
+function goLogin(){try{sessionStorage.removeItem("staff.clients.light")}catch(e){}(window.top||window).location.href="index.html"}
 if(!token||Number(String(token).split(".")[0])<Date.now())goLogin();
 function api(action,data){
   if(!API)return Promise.reject(new Error("서버 주소가 설정되지 않았습니다."));

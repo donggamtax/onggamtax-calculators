@@ -44,6 +44,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .btn.ghost:hover{border-color:var(--brand)}
 .btn.sm{padding:6px 12px;font-size:13px}
 .lvt{border-collapse:collapse;font-size:13px;min-width:100%}.lvt th,.lvt td{border:1px solid var(--line);padding:5px 8px;text-align:center;white-space:nowrap}.lvt th{background:var(--soft,#f3f1ea);font-weight:600}.lvt td.nm{font-weight:600}.lvt td.rem{font-weight:700}.lvt td.neg{color:var(--stamp)}
+#clientsFrame{display:block;width:100%;height:calc(100vh - 130px);min-height:560px;border:0;background:transparent}
+#clientsFrame[hidden]{display:none}
 .err{color:var(--stamp);font-size:14px;font-weight:600}
 
 /* 본문 */
@@ -121,6 +123,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 </nav>
 
 <div class="cols one" id="boardView" hidden><div class="main" id="board"></div></div>
+<iframe id="clientsFrame" title="업체별 기장" hidden></iframe>
 
 
 <script src="config.js"></script>
@@ -167,10 +170,17 @@ const BOARD_UI = {
 };
 const boards = {}; // board → { items, q, cat, editing, open }
 function showTab(tab){
-  if(tab === "clients"){ location.href = "clients.html"; return; }
-  if(!BOARD_UI[tab] && tab !== "leave") tab = "tpl";
+  if(!BOARD_UI[tab] && tab !== "leave" && tab !== "clients") tab = "clients";
   store.set("staff.tab", tab);
   document.querySelectorAll("#tabs [data-tab]").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === tab));
+  // 업체별 기장은 같은 화면 안에서 열고(처음 한 번만 불러옴), 다른 메뉴로 갔다 와도 입력 중이던 화면이 그대로 남는다
+  const fr = $("#clientsFrame");
+  fr.hidden = tab !== "clients";
+  if(tab === "clients"){
+    $("#boardView").hidden = true;
+    if(!fr.getAttribute("src")) fr.src = "clients.html?embed=1";
+    return;
+  }
   $("#boardView").hidden = false;
   loadBoard(tab);
 }
@@ -269,7 +279,7 @@ document.addEventListener("click", async e => {
 });
 
 // ── 휴가 신청: 기존 구글 폼으로 연결 + 사람별 연차 현황(휴가대장 시트의 '연차현황' 탭) ──
-let leaveUrl = null;
+let leaveUrl = null, leaveSheet = "";
 const LV_COLS = ["이름","연차기간 시작","연차기간 끝","발생연차","전년이월","연차 추가부여","사용연차","잔여연차","대체휴가 부여","대체휴가 사용","대체휴가 잔여","특별휴가 부여(올해)","특별휴가 사용(올해)","특별휴가 잔여"];
 function leaveTable(st){
   if(!st || !st.configured) return `<p class="hint">연차 현황 시트가 아직 연결되지 않았습니다. 관리자가 Apps Script 스크립트 속성에 LEAVE_SHEET_ID를 넣으면 여기에 표시됩니다.</p>`;
@@ -284,14 +294,14 @@ async function drawLeave(){
   const el = $("#board");
   el.innerHTML = `<section class="card bhead"><h1>휴가 신청</h1><p class="hint">불러오는 중입니다…</p></section>`;
   if(leaveUrl === null){
-    try{ leaveUrl = (await api("config")).leaveFormUrl || ""; }
+    try{ const cf = await api("config"); leaveUrl = cf.leaveFormUrl || ""; leaveSheet = cf.leaveSheetUrl || ""; }
     catch(x){ if(store.get("staff.tab") === "leave") el.innerHTML = `<section class="card bhead"><h1>휴가 신청</h1><p class="err">${esc(x.message)}</p></section>`; return; }
   }
   if(store.get("staff.tab") !== "leave") return;
   el.innerHTML = `<section class="card bhead">
     <h1>휴가 신청</h1>
     ${leaveUrl ? `<p class="note">아래 버튼으로 기존 휴가 신청 구글 폼을 엽니다. 제출하면 사무소 시트에 저장되고 캘린더에 반영됩니다.</p>
-      <div class="row"><a class="btn" href="${esc(leaveUrl)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:inline-block">휴가 신청서 열기</a></div>`
+      <div class="row"><a class="btn" href="${esc(leaveUrl)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:inline-block">휴가 신청서 열기</a>${leaveSheet ? ` <a class="btn" href="${esc(leaveSheet)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:inline-block">휴가대장 엑셀 열기</a>` : ""}</div>`
     : `<p class="err">휴가 신청 폼 주소가 아직 설정되지 않았습니다. 관리자가 Apps Script 스크립트 속성에 LEAVE_FORM_URL을 넣어야 합니다.</p>`}
     <h2 style="font-size:16px;margin:20px 0 6px">연차 현황 (부여·사용·잔여)</h2><div id="lvBox"><p class="hint">불러오는 중입니다…</p></div>
   </section>`;
