@@ -50,7 +50,12 @@ function route(req) {
     const name = String(req.user || "").trim();
     const pw = typeof req.password === "string" ? req.password : "";
     let who = "";
-    if (names.length) {
+    const stored = pwRecord(name);
+    if (stored) {
+      // 직원이 직접 정한 비밀번호가 있으면 그것으로만 확인한다 (스크립트 속성의 비밀번호는 더 쓰이지 않는다)
+      if (!pwCheck(stored, pw)) { Utilities.sleep(1000); throw fail("이름 또는 비밀번호가 맞지 않습니다.", 401); }
+      who = name;
+    } else if (names.length) {
       // 직원별 비밀번호: 이름과 비밀번호가 둘 다 맞아야 한다
       const ok = names.indexOf(name) >= 0 && safeEqual(pw, users[name]);
       if (!ok) { Utilities.sleep(1000); throw fail("이름 또는 비밀번호가 맞지 않습니다.", 401); }
@@ -69,6 +74,7 @@ function route(req) {
 
   switch (action) {
     case "config": return staffConfig(p);
+    case "password.change": return passwordChange(req, who, p);
     case "board.list": return boardList(req);
     case "board.save": return boardSave(req, who);
     case "board.delete": return boardDelete(req);
@@ -482,6 +488,44 @@ function clientsDelete(req, who) {
 
 function hmac(secret, msg) {
   return Utilities.base64EncodeWebSafe(Utilities.computeHmacSha256Signature(msg, secret, Utilities.Charset.UTF_8)).replace(/=+$/, "");
+}
+// ── 직원이 직접 정하는 비밀번호: "직원비밀번호" 탭에 솔트와 해시만 저장한다 (비밀번호 원문은 저장하지 않는다)
+const PW_SHEET = "직원비밀번호", PW_COLS = ["이름", "솔트", "해시", "변경일시"];
+function pwHash(salt, pw) {
+  let h = String(pw);
+  for (let i = 0; i < 300; i++) h = hmac(salt, h);
+  return h;
+}
+function pwRecord(name) {
+  if (!name) return null;
+  const sh = clSheet(PW_SHEET, PW_COLS), last = sh.getLastRow();
+  if (last < 2) return null;
+  const rows = sh.getRange(2, 1, last - 1, 3).getValues();
+  for (let i = 0; i < rows.length; i++) if (String(rows[i][0]) === name) return { row: i + 2, salt: String(rows[i][1]), hash: String(rows[i][2]) };
+  return null;
+}
+function pwCheck(rec, pw) { return !!rec && safeEqual(pwHash(rec.salt, pw), rec.hash); }
+// 현재 비밀번호(저장된 것이 있으면 그것, 없으면 스크립트 속성의 것)가 맞는지 확인
+function pwCurrentOk(name, pw, p) {
+  const rec = pwRecord(name);
+  if (rec) return pwCheck(rec, pw);
+  const users = parseUsers(p.STAFF_USERS);
+  if (Object.keys(users).length) return users[name] != null && safeEqual(pw, users[name]);
+  return !!p.STAFF_PASSWORD && safeEqual(pw, p.STAFF_PASSWORD);
+}
+function passwordChange(req, who, p) {
+  if (!who) throw fail("직원 이름으로 로그인한 경우에만 비밀번호를 바꿀 수 있습니다.");
+  const cur = typeof req.current === "string" ? req.current : "", next = typeof req.next === "string" ? req.next : "";
+  if (next.length < 6 || next.length > 64) throw fail("새 비밀번호는 6자 이상 64자 이하로 정해 주세요.");
+  if (next === cur) throw fail("새 비밀번호가 현재 비밀번호와 같습니다.");
+  if (!pwCurrentOk(who, cur, p)) { Utilities.sleep(1000); throw fail("현재 비밀번호가 맞지 않습니다.", 400); }
+  return withLock(() => {
+    const salt = Utilities.getUuid ? Utilities.getUuid() : String(Math.random()), hash = pwHash(salt, next), now = new Date().toISOString();
+    const sh = clSheet(PW_SHEET, PW_COLS), rec = pwRecord(who), vals = [[who, salt, hash, now]];
+    if (rec) sh.getRange(rec.row, 1, 1, PW_COLS.length).setValues(vals); else sh.getRange(sh.getLastRow() + 1, 1, 1, PW_COLS.length).setValues(vals);
+    clLog(who, "", "", "비밀번호 변경");
+    return { ok: true };
+  });
 }
 function safeEqual(a, b) {
   const x = hmac("cmp", a), y = hmac("cmp", b);
