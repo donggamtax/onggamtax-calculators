@@ -170,7 +170,7 @@ body:has(.app[data-wide="1"]) .wrap{max-width:1700px}
 .sbox .sh{font-weight:700;font-size:12px;margin-bottom:6px}
 .sm th,.sm td{font-size:11.5px;padding:2px 3px}
 .sm input{font-size:11.5px;padding:2px 3px;min-width:0;width:100%}
-.sm td.nm{min-width:96px}.sm td.x{width:22px;text-align:center}
+.sm td.nm{min-width:96px;width:36%}.sm textarea.wn{min-height:0;height:auto;resize:none;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.3;field-sizing:content}.sm td.x{width:22px;text-align:center}
 .bw{overflow-x:auto}.bw .sm{min-width:330px}
 .mini{border:1px solid var(--line);background:var(--panel);border-radius:5px;padding:0 6px;cursor:pointer;font-size:12px;line-height:18px}
 .mini.add{margin:6px 0 2px}
@@ -278,6 +278,9 @@ function applyNum(el){
 }
 function ck(k,label){return '<input type="checkbox" data-ck="'+esc(k)+'"'+(val(k)?" checked":"")+' aria-label="'+esc(label||"체크")+'">'}
 function sel(k,opts){return '<select data-k="'+esc(k)+'"><option value=""></option>'+opts.map(function(o){return '<option'+(val(k)===o?" selected":"")+'>'+o+'</option>'}).join("")+'</select>'}
+function wn(k,ph,def){return '<textarea class="wn" rows="1" data-k="'+esc(k)+'" placeholder="'+esc(ph||"")+'" aria-label="'+esc(ph||k)+'">'+esc(val(k,def))+'</textarea>'}
+function fitWn(el){el.style.height="auto";el.style.height=el.scrollHeight+"px"}
+function fitAllWn(){document.querySelectorAll("textarea.wn").forEach(fitWn)}
 function ta(k,cls){return '<textarea class="'+(cls||"")+'" data-k="'+esc(k)+'" aria-label="'+esc(k)+'">'+esc(val(k))+'</textarea>'}
 
 function drawList(){
@@ -502,14 +505,14 @@ function paperTax(id){
    }).join("")+'</table>'+
    '<div class="rowtools"><button type="button" class="mini add" data-txadd="x">+ 줄 추가(경비 항목)</button>'+(hiddenRows.length?'<span class="sub">뺀 줄 다시 넣기:</span>'+hiddenRows.map(function(r){return '<button type="button" class="mini add" data-txshow="'+r[0]+'">+ '+r[1]+'</button>'}).join(""):'')+'</div>'+
    '<div class="sub" style="margin-top:4px">빨간 테두리가 '+yr+'년 예측입니다. 칸에 숫자를 직접 적으면 그 값이 쓰이고(노란색), 지우면 다시 자동 계산됩니다. 예측의 수입금액·매출원가·판관비는 가결산 ÷ 개월수 × 12 입니다. 줄 끝 "−"로 뺀 줄은 계산에서도 0으로 빠집니다.</div></div>'+
-   '<div class="side"><div class="sbox"><div class="sh">세액공제·감면 입력</div><table class="ht tx sm"><tr><th>항목</th><th>예측</th><th>가결산</th><th>전년도</th><th></th></tr>'+
-   res.dl.map(function(i){return ny('<tr><td class="nm">'+inp(P+"dn"+i,"항목",DED_NAMES[i]||"")+'</td>'+taxCell(P,res,"I","d"+i,false)+taxCell(P,res,"J","d"+i,false)+taxCell(P,res,"K","d"+i,true)+'<td class="x"><button type="button" class="mini" data-txdel="d:'+i+'" title="이 줄 빼기">−</button></td></tr>')}).join("")+
+   '<div class="side"><div class="sbox"><div class="sh">세액공제·감면 입력</div><table class="ht tx sm"><tr><th style="width:38%">항목</th><th>예측</th><th>가결산</th><th>전년도</th><th></th></tr>'+
+   res.dl.map(function(i){return ny('<tr><td class="nm">'+wn(P+"dn"+i,"항목",DED_NAMES[i]||"")+'</td>'+taxCell(P,res,"I","d"+i,false)+taxCell(P,res,"J","d"+i,false)+taxCell(P,res,"K","d"+i,true)+'<td class="x"><button type="button" class="mini" data-txdel="d:'+i+'" title="이 줄 빼기">−</button></td></tr>')}).join("")+
    '<tr class="keyr"><th>합계</th>'+["I","J","K"].map(function(cc){return '<td class="c cc" data-dsum="'+cc+'">'+fmtI(res[cc].dsum)+'</td>'}).join("")+'<td></td></tr>'+
    ny('<tr><th>최저한세</th>'+taxCell(P,res,"I","min",false)+taxCell(P,res,"J","min",false)+taxCell(P,res,"K","min",true)+'<td></td></tr>')+'</table>'+
    '<button type="button" class="mini add" data-txadd="d">+ 항목 넣기</button><div class="sub">합계가 "세액공제 및 감면"에 들어갑니다. 가결산·예측은 전년도 금액을 따라갑니다.</div></div>'+
    (isCorp?'':'<div class="sbox"><div class="sh">사업자별 가결산 (사업자가 여러 개일 때)</div>'+
     (hasB?'<div class="bw"><table class="ht tx sm"><tr><th>사업자</th><th>매출</th><th>매출원가</th><th>판관비</th><th>사업소득</th><th></th></tr>'+
-     res.B.ids.map(function(i){var q="b"+i+"|";return '<tr><td class="nm">'+inp(P+q+"nm","사업자")+'</td>'+["rev","cogs","sga"].map(function(f){return '<td class="cc rawc"><input type="text" class="num" inputmode="decimal" autocomplete="off" data-k="'+esc(P+q+f)+'" value="'+esc(val(P+q+f))+'" placeholder="0" aria-label="'+f+'"></td>'}).join("")+
+     res.B.ids.map(function(i){var q="b"+i+"|";return '<tr><td class="nm">'+wn(P+q+"nm","사업자")+'</td>'+["rev","cogs","sga"].map(function(f){return '<td class="cc rawc"><input type="text" class="num" inputmode="decimal" autocomplete="off" data-k="'+esc(P+q+f)+'" value="'+esc(val(P+q+f))+'" placeholder="0" aria-label="'+f+'"></td>'}).join("")+
       '<td class="cc'+(val(P+q+"inc")!==""?" ov":"")+'"><input type="text" class="num" inputmode="decimal" autocomplete="off" data-k="'+esc(P+q+"inc")+'" data-calc="B|inc'+i+'" value="'+esc(val(P+q+"inc")!==""?val(P+q+"inc"):fmtI(res.B["inc"+i]))+'" aria-label="사업소득"></td><td class="x"><button type="button" class="mini" data-txdel="b:'+i+'" title="이 사업자 빼기">−</button></td></tr>'}).join("")+
      '<tr class="keyr"><th>합계</th><td class="c cc" data-bsum="rev">'+fmtI(res.B.rev)+'</td><td class="c cc" data-bsum="cogs">'+fmtI(res.B.cogs)+'</td><td class="c cc" data-bsum="sga">'+fmtI(res.B.sga)+'</td><td class="c cc" data-bsum="inc">'+fmtI(res.B.inc)+'</td><td></td></tr></table></div>':'')+
     '<button type="button" class="mini add" data-txadd="b">+ 사업자 넣기</button><div class="sub">사업자를 넣으면 이 합계가 가결산 수입금액·매출원가·판관비·사업소득금액에 자동으로 들어갑니다(가결산 칸을 직접 적으면 그 값이 우선).</div></div>')+
@@ -570,7 +573,11 @@ function drawDetail(){
     '<div class="hist">'+(last?'마지막 수정: '+last:'저장할 때마다 누가, 언제 고쳤는지 남습니다.')+'</div>';
   var tk=state.tab==="부가세"?"vp":state.tab==="소득세"?"ip":state.tab==="법인세"?"cp":state.tab==="세금예측"?"tp":null;
   document.getElementById("app").dataset.wide=((tk&&state.cmp[tk])||state.tab==="세금예측")?"1":"";
+  fitAllWn();
 }
+document.addEventListener("input",function(e){if(e.target.classList&&e.target.classList.contains("wn"))fitWn(e.target)});
+window.addEventListener("resize",function(){fitAllWn()});
+document.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target.classList&&e.target.classList.contains("wn"))e.preventDefault()});
 function show(){document.getElementById("app").dataset.view=state.sel?"detail":"list";drawList();drawDetail()}
 function refreshProg(){
   document.querySelectorAll("[data-prog]").forEach(function(el){
