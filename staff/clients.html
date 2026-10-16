@@ -67,7 +67,7 @@ h3{font-size:14px;margin:20px 0 8px}
 .chk .memo input[type=text]{margin-top:4px;padding:5px 8px;font-size:13px}
 .bar{height:6px;background:var(--soft);border-radius:99px;overflow:hidden;margin:4px 0 12px}
 .bar i{display:block;height:100%;background:var(--accent)}
-.hist{font-size:12.5px;color:var(--muted);margin-top:14px}
+.hist{font-size:12.5px;color:var(--muted);margin-top:14px;line-height:1.6}.hist b{color:var(--ink)}
 .empty{padding:50px 16px;text-align:center;color:var(--muted)}
 @media (max-width:760px){
   .app{grid-template-columns:minmax(0,1fr)}
@@ -338,7 +338,7 @@ function tabInfo(c){
    '<div class="box"><div class="bt">기본 사항</div>'+ta("info|basic","ag")+'</div>'+
    '<div class="box"><div class="bt">원천세</div>'+ta("info|wht","ag")+'</div>'+
    '<div class="box"><div class="bt">부가세 신고시 참고사항</div>'+ta("info|vatnote","ag")+'</div>'+
-   '<div class="box"><div class="bt">법인세/소득세 신고시 참고사항</div>'+ta("info|taxnote","ag")+'</div></div>';
+   '<div class="box"><div class="bt">'+(c.type==="법인"?"법인세":"소득세")+' 신고시 참고사항</div>'+ta("info|taxnote","ag")+'</div></div>';
 }
 /* ② 부가세 신고 체크리스트 */
 function paperVat(id){
@@ -574,7 +574,7 @@ function drawDetail(){
       '<div class="ctl">'+(state.askDel===c.id?'<span class="sub" style="color:var(--warn)">이 업체의 모든 자료가 영구히 사라집니다. 보관만 하려면 상태를 폐업/이탈로 바꾸세요.</span><button class="btn danger sm" type="button" data-delc="1">영구 삭제 확인</button><button class="btn ghost sm" type="button" data-delno="1">취소</button>':'<button class="btn ghost sm" type="button" data-askdelc="1">업체와 자료 영구 삭제…</button>')+'</div></details>'+
     '<div class="tabs" role="tablist">'+tabs.map(function(t){return '<button type="button" role="tab" data-tab="'+t+'" aria-selected="'+(state.tab===t)+'">'+t+'</button>'}).join("")+'</div>'+body+
     '<div class="row"><button class="btn" type="button" id="save">저장</button><span class="saved" id="saved" role="status"></span></div>'+
-    '<div class="hist">'+(last?'마지막 수정: '+last:'저장할 때마다 누가, 언제 고쳤는지 남습니다.')+'</div>';
+    '<div class="hist">'+histHtml(c)+'</div>';
   var tk=state.tab==="부가세"?"vp":state.tab==="소득세"?"ip":state.tab==="법인세"?"cp":state.tab==="세금예측"?"tp":null;
   document.getElementById("app").dataset.wide=((tk&&state.cmp[tk])||state.tab==="세금예측")?"1":"";
   fitAllWn();
@@ -779,14 +779,20 @@ function flush(){
   if(!batch.length){setSt("저장됨","ok");return Promise.resolve()}
   batch=batch.slice(0,20);busy=true;setSt("저장 중…");
   return api("clients.save",{items:batch.map(function(b){return b.item})}).then(function(r){
-    batch.forEach(function(b){saved[b.item.id]=b.snap;var c=clientById(b.item.id);if(c){c.by=r.by||ME;c.at=r.at}});
+    batch.forEach(function(b){saved[b.item.id]=b.snap;var c=clientById(b.item.id);if(c){c.by=r.by||ME;c.at=r.at;if(r.hist&&r.hist[b.item.id])c.hist=r.hist[b.item.id]}});
     busy=false;setSt("저장됨 · "+hhmm(r.at),"ok");showLast();
     if(again||Object.keys(pending).length){again=false;timer=setTimeout(flush,300)}
   }).catch(function(e){busy=false;setSt("저장하지 못했습니다: "+e.message+" — 다시 시도합니다","bad");timer=setTimeout(flush,6000)});
 }
 function hhmm(iso){var t=new Date(iso);return isNaN(t)?"":String(t.getMonth()+1)+"."+t.getDate()+" "+("0"+t.getHours()).slice(-2)+":"+("0"+t.getMinutes()).slice(-2)}
 function lastOf(c){return c&&c.at?((c.by?c.by+" · ":"")+hhmm(c.at)):""}
-function showLast(){var h=document.querySelector("#detail .hist"),c=clientById(state.sel);if(h&&c)h.textContent=lastOf(c)?"마지막 수정: "+lastOf(c):"저장할 때마다 누가, 언제 고쳤는지 남습니다."}
+/* 최근 수정 이력(최대 5개): 서버가 업체마다 이름·시각·고친 곳을 남긴다. 이력이 아직 없는 업체는 마지막 수정 한 줄만 보인다 */
+function histHtml(c){
+  var h=(c&&c.hist&&c.hist.length)?c.hist:(c&&c.at?[{at:c.at,by:c.by,t:""}]:[]);
+  if(!h.length)return '저장할 때마다 누가, 언제 고쳤는지 남습니다.';
+  return '<b>최근 수정 '+h.length+'개</b>'+h.slice(0,5).map(function(x){return '<div>'+esc((x.by||"")+" · "+hhmm(x.at)+(x.t?" · "+x.t:""))+'</div>'}).join("")
+}
+function showLast(){var h=document.querySelector("#detail .hist"),c=clientById(state.sel);if(h&&c)h.innerHTML=histHtml(c)}
 ["input","change","click","keydown"].forEach(function(ev){document.addEventListener(ev,touch,true)});
 document.addEventListener("visibilitychange",function(){if(document.hidden)flush()});
 window.addEventListener("beforeunload",function(e){var dirty=busy||Object.keys(pending).some(function(id){return diffClient(id)});if(dirty){e.preventDefault();e.returnValue=""}});
@@ -827,7 +833,7 @@ function applyGet(id,r,lz){
   if(!lz&&(pending[id]||busy||diffClient(id)))return;
   if(!clientById(id))return;
   var before=JSON.stringify(snap(id)),c=clientById(id);
-  c.name=r.client.name;c.type=r.client.type;c.owner=r.client.owner;c.svc=r.client.svc;c.status=r.client.status==="거래중"?"":r.client.status;c.reason=r.client.reason;c.tier=r.client.tier;c.tf=r.client.periods&&r.client.periods.tf?1:0;c.rep=(r.client.periods&&r.client.periods.rep)||"";c.by=r.client.by;c.at=r.client.at;
+  c.name=r.client.name;c.type=r.client.type;c.owner=r.client.owner;c.svc=r.client.svc;c.status=r.client.status==="거래중"?"":r.client.status;c.reason=r.client.reason;c.tier=r.client.tier;c.tf=r.client.periods&&r.client.periods.tf?1:0;c.rep=(r.client.periods&&r.client.periods.rep)||"";c.by=r.client.by;c.at=r.client.at;c.hist=(r.client.periods&&r.client.periods.hist)||[];
   state.data[id]=buildData(r.client,r.data);
   var after=JSON.stringify(snap(id));saved[id]=snap(id);
   if(lz){if(state.sel===id){drawList();drawDetail()}return}

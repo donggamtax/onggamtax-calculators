@@ -275,7 +275,21 @@ function clMeta(m, cur) {
   const per = m2.periods || {}, list = k => (Array.isArray(per[k]) ? per[k] : []).slice(0, 60).map(x => ({ id: s(x && x.id, 20).replace(/[^A-Za-z0-9_-]/g, ""), name: s(x && x.name, 60) })).filter(x => x.id);
   o.periods = { vps: list("vps"), ips: list("ips"), cps: list("cps"), tps: list("tps"), tf: per.tf ? 1 : 0, rep: s(per.rep, 40).trim() }; // tf: 면세사업자 표시
   if (!o.name) throw fail("업체명을 입력하세요.");
+  o.periods.hist = histClean(cur && cur.periods && cur.periods.hist); // 수정 이력은 서버가 쌓은 것만 이어받는다(화면에서 보낸 값은 쓰지 않음)
   return o;
+}
+// 업체별 최근 수정 이력 5개: {at 시각, by 이름, t 내용}. 같은 사람이 10분 안에 이어서 고치면 한 줄로 합친다(자동 저장이 이력을 도배하지 않게)
+const HIST_MAX = 5;
+function histClean(h) {
+  return (Array.isArray(h) ? h : []).slice(0, HIST_MAX).map(x => ({ at: String(x && x.at || "").slice(0, 30), by: String(x && x.by || "").slice(0, 20), t: String(x && x.t || "").slice(0, 120) })).filter(x => x.at);
+}
+function histPush(h, who, now, labels) {
+  const list = histClean(h), text = labels.filter((v, i) => v && labels.indexOf(v) === i).join(", ") || "저장", top = list[0];
+  if (top && top.by === who && new Date(now) - new Date(top.at) < 10 * 60e3) {
+    const merged = (top.t ? top.t.split(", ") : []).concat(text.split(", ")).filter((v, i, a) => v && a.indexOf(v) === i).join(", ");
+    list[0] = { at: now, by: who, t: merged.slice(0, 120) };
+  } else list.unshift({ at: now, by: who, t: text.slice(0, 120) });
+  return list.slice(0, HIST_MAX);
 }
 function clRow(id, o, who, now) {
   return [id, o.name, o.type, o.owner, o.svc, o.status, o.reason, o.tier, JSON.stringify(o.periods), who, now];
@@ -304,6 +318,7 @@ function clientsLoad(req) {
 }
 function clientsLoadRaw(req) {
   const clients = clAll(clSheet(CL_SHEET, CL_COLS), CL_COLS.length).filter(r => r[0] !== "").map(clRowToItem);
+  clients.forEach(c => { delete c.periods.hist; }); // 수정 이력은 업체를 열 때(get) 받는다: 목록을 가볍게
   // light: 업체 목록과 양식만(빠름). 업체별 자료는 업체를 열 때 clients.get으로 받는다.
   const data = (req && req.light) ? [] : clAll(clSheet(CD_SHEET, CD_COLS), CD_COLS.length).filter(r => r[0] !== "").map(r => {
     let v = {}; try { v = JSON.parse(r[2] || "{}"); } catch (e) {}
@@ -393,6 +408,7 @@ function clientsAdd(req, who) {
     const ids = clAll(sh, 1).map(r => Number(r[0]) || 0);
     const id = (ids.length ? Math.max.apply(null, ids) : 0) + 1;
     const now = new Date().toISOString();
+    o.periods.hist = [{ at: now, by: who, t: "업체 추가" }];
     sh.getRange(sh.getLastRow() + 1, 1, 1, CL_COLS.length).setValues([clRow(id, o, who, now)]);
     clLog(who, id, o.name, "업체 추가");
     clCacheClear();
@@ -436,7 +452,7 @@ function clientsSave(req, who) {
     const where = {}; cdRows.forEach((r, i) => { where[r[0] + "|" + r[1]] = i + 2; });
     const logs = [];
     let metaChanged = false;
-    const append = [], del = [];
+    const append = [], del = [], hist = {};
     items.forEach(it => {
       const id = Number(it.id), ci = clRows.findIndex(r => Number(r[0]) === id);
       if (ci < 0) throw fail("없는 업체입니다. 새로고침해 주세요.", 404);
@@ -456,6 +472,8 @@ function clientsSave(req, who) {
         if (row) cd.getRange(row, 1, 1, CD_COLS.length).setValues([values]); else append.push(values);
         changed.push(groupLabel(g));
       });
+      o.periods.hist = histPush(o.periods.hist, who, now, changed.length ? changed : ["저장"]);
+      hist[id] = o.periods.hist;
       cl.getRange(ci + 2, 1, 1, CL_COLS.length).setValues([clRow(id, o, who, now)]);
       clRows[ci] = clRow(id, o, who, now);
       logs.push([now, who, id, o.name, changed.join(", ") || "저장"]);
@@ -464,7 +482,7 @@ function clientsSave(req, who) {
     if (metaChanged) clCacheClear();
     if (append.length) cd.getRange(cd.getLastRow() + 1, 1, append.length, CD_COLS.length).setValues(append);
     del.sort((a, b) => b - a).forEach(r => cd.deleteRow(r));
-    return { ok: true, by: who, at: now };
+    return { ok: true, by: who, at: now, hist: hist };
   });
 }
 
