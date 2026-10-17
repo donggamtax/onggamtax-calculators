@@ -153,7 +153,7 @@ body:has(.app[data-wide="1"]) .wrap{max-width:1700px}
 .tx tr:last-child td.yr{border-bottom:4px solid #d62d2d!important}
 .tx td.exr input{color:#d62d2d;font-weight:800}
 .paper{position:relative}
-.cover{table-layout:auto}.cover td:nth-child(2),.cover th:nth-child(2){min-width:84px}.cover td.nmc{overflow-wrap:anywhere;word-break:keep-all;line-height:1.35;padding:6px 8px;min-width:120px}
+.cover{table-layout:auto}.cover td:nth-child(2),.cover th:nth-child(2){min-width:56px}.cover input.repi{width:auto;min-width:0;text-align:center;field-sizing:content}.cover td.nmc{overflow-wrap:anywhere;word-break:keep-all;line-height:1.35;padding:6px 8px;min-width:120px}
 .cover select.isel{width:100%;min-width:62px;font:inherit;font-size:13px;text-align:center;padding:4px 2px;border:0;background:transparent;color:var(--ink)}
 .help{margin:-4px 0 10px;font-size:12px}.help summary{cursor:pointer;color:var(--accent)}
 .tx th .rdel{float:right;margin-left:4px;opacity:.55}.tx th:hover .rdel{opacity:1}
@@ -283,6 +283,7 @@ function applyNum(el){
 function ck(k,label){return '<input type="checkbox" data-ck="'+esc(k)+'"'+(val(k)?" checked":"")+' aria-label="'+esc(label||"체크")+'">'}
 function sel(k,opts){return '<select data-k="'+esc(k)+'"><option value=""></option>'+opts.map(function(o){return '<option'+(val(k)===o?" selected":"")+'>'+o+'</option>'}).join("")+'</select>'}
 function wn(k,ph,def){return '<textarea class="wn" rows="1" data-k="'+esc(k)+'" placeholder="'+esc(ph||"")+'" aria-label="'+esc(ph||k)+'">'+esc(val(k,def))+'</textarea>'}
+function repSize(v){return Math.max(4,Math.ceil(String(v||"").length*1.8)+1)}
 function fitWn(el){el.style.height="auto";el.style.height=el.scrollHeight+"px"}
 function fitAllWn(){document.querySelectorAll("textarea.wn,textarea.ag").forEach(fitWn)}
 function ta(k,cls){return '<textarea class="'+(cls||"")+'" data-k="'+esc(k)+'" aria-label="'+esc(k)+'">'+esc(val(k))+'</textarea>'}
@@ -326,7 +327,7 @@ function tabInfo(c){
   var D=d(c.id),nm=c.name||"",nsz=nm.length>22?12:nm.length>14?13.5:15;
   return '<div class="paper"><h2 class="ttl">거래처별 특이사항 등 체크리스트</h2>'+
    '<table class="ht cover"><tr><th style="width:24%">회사명</th><th>대표자</th><th>업종</th><th>창업감면</th><th>중기특감</th><th>고용증대</th><th>성실신고</th></tr>'+
-   '<tr><td class="c nmc" style="font-size:'+nsz+'px">'+esc(nm)+'</td><td><input type="text" data-cl="rep" value="'+esc(c.rep||"")+'" placeholder="대표자 이름" aria-label="대표자 이름"></td><td>'+inp("info|업종","업종")+'</td><td class="c">'+infoSel("창업감면")+'</td><td class="c">'+infoSel("중기특감")+'</td><td class="c">'+infoSel("고용증대")+'</td><td class="c">'+infoSel("성실신고")+'</td></tr></table>'+
+   '<tr><td class="c nmc" style="font-size:'+nsz+'px">'+esc(nm)+'</td><td><input type="text" class="repi" data-cl="rep" size="'+repSize(c.rep)+'" value="'+esc(c.rep||"")+'" placeholder="대표자" aria-label="대표자 이름"></td><td>'+inp("info|업종","업종")+'</td><td class="c">'+infoSel("창업감면")+'</td><td class="c">'+infoSel("중기특감")+'</td><td class="c">'+infoSel("고용증대")+'</td><td class="c">'+infoSel("성실신고")+'</td></tr></table>'+
    '<details class="help"><summary>창업감면·중기특감 % 기준 보기</summary><div class="sub" style="line-height:1.65;padding:6px 2px">'+
    '<b>창업감면</b> — 조세특례제한법 제6조 (2026.9.18. 시행본 확인) · 최초 소득발생 과세연도부터 5년간<br>'+
    '<u>2026.1.1. 이후 창업</u> (제1항제1호 나목)<br>· 100%: 청년창업, 수도권 외 지역 또는 수도권 인구감소지역<br>· 75%: 청년창업, 수도권(과밀억제권역·인구감소지역 제외)<br>· 50%: 청년창업, 수도권과밀억제권역 / 청년 외 창업, 수도권 외 지역 또는 수도권 인구감소지역<br>· 25%: 청년 외 창업, 수도권(과밀억제권역·인구감소지역 제외)<br>'+
@@ -560,7 +561,7 @@ function drawDetail(){
   var c=CLIENTS.filter(function(x){return x.id===state.sel})[0], el=$("#detail");
   if(!c){document.getElementById("app").dataset.wide="";el.innerHTML='<div class="empty">왼쪽에서 업체를 선택하세요.</div>';return}
   if(state.data[c.id]&&state.data[c.id].lazy){el.innerHTML='<button class="back" type="button" id="back">← 업체 목록</button><div class="empty">'+esc(c.name)+' 자료를 불러오는 중…</div>';return}
-  var D=d(c.id), tabs=c.tf?["기본정보","소득세","법인세","세금예측"]:["기본정보","부가세","소득세","법인세","세금예측"];if(c.tf&&state.tab==="부가세")state.tab="기본정보";var body=state.tab==="기본정보"?tabInfo(c):state.tab==="부가세"?tabVat():state.tab==="소득세"?tabInc():state.tab==="법인세"?tabCorp():tabTax();
+  var D=d(c.id), tabs=["기본정보"].concat(c.tf?[]:["부가세"],[c.type==="법인"?"법인세":"소득세","세금예측"]);if(tabs.indexOf(state.tab)<0)state.tab="기본정보"; /* 개인은 소득세, 법인은 법인세 탭만 보인다 */ var body=state.tab==="기본정보"?tabInfo(c):state.tab==="부가세"?tabVat():state.tab==="소득세"?tabInc():state.tab==="법인세"?tabCorp():tabTax();
   var last=lastOf(c);
   el.innerHTML='<button class="back" type="button" id="back">← 업체 목록</button>'+
     '<div class="dh"><h2>'+esc(c.name)+'</h2><span class="sub">'+esc(c.type||"개인")+' · 담당 '+esc(c.owner||"미지정")+'</span></div>'+
@@ -573,13 +574,13 @@ function drawDetail(){
       '<label class="inl">업체명 <input type="text" data-cl="name" value="'+esc(c.name)+'"></label></div>'+
       '<div class="ctl">'+(state.askDel===c.id?'<span class="sub" style="color:var(--warn)">이 업체의 모든 자료가 영구히 사라집니다. 보관만 하려면 상태를 폐업/이탈로 바꾸세요.</span><button class="btn danger sm" type="button" data-delc="1">영구 삭제 확인</button><button class="btn ghost sm" type="button" data-delno="1">취소</button>':'<button class="btn ghost sm" type="button" data-askdelc="1">업체와 자료 영구 삭제…</button>')+'</div></details>'+
     '<div class="tabs" role="tablist">'+tabs.map(function(t){return '<button type="button" role="tab" data-tab="'+t+'" aria-selected="'+(state.tab===t)+'">'+t+'</button>'}).join("")+'</div>'+body+
-    '<div class="row"><button class="btn" type="button" id="save">저장</button><span class="saved" id="saved" role="status"></span></div>'+
+    '<div class="row"><button class="btn" type="button" id="save">지금 저장</button><span class="saved" id="saved" role="status"></span><span class="sub">입력하면 1~2초 뒤 자동으로 저장됩니다. 저장 버튼을 누르지 않아도 됩니다.</span></div>'+
     '<div class="hist">'+histHtml(c)+'</div>';
   var tk=state.tab==="부가세"?"vp":state.tab==="소득세"?"ip":state.tab==="법인세"?"cp":state.tab==="세금예측"?"tp":null;
   document.getElementById("app").dataset.wide=((tk&&state.cmp[tk])||state.tab==="세금예측")?"1":"";
   fitAllWn();
 }
-document.addEventListener("input",function(e){if(e.target.classList&&(e.target.classList.contains("wn")||e.target.classList.contains("ag")))fitWn(e.target)});
+document.addEventListener("input",function(e){if(e.target.classList&&e.target.classList.contains("repi"))e.target.size=repSize(e.target.value);if(e.target.classList&&(e.target.classList.contains("wn")||e.target.classList.contains("ag")))fitWn(e.target)});
 // 업체 위에 마우스를 올리거나 손가락을 대면 자료를 미리 받아 둔다(누르는 순간 바로 열린다)
 var pfT=null;["mouseover","touchstart"].forEach(function(ev){document.addEventListener(ev,function(e){var b=e.target.closest&&e.target.closest("#cl [data-id]");if(!b)return;var id=+b.dataset.id;clearTimeout(pfT);pfT=setTimeout(function(){var D=state.data[id];if(D&&D.lazy&&inflight<2)refreshClient(id)},250)},{passive:true})});
 window.addEventListener("resize",function(){fitAllWn()});
@@ -795,6 +796,7 @@ function histHtml(c){
 function showLast(){var h=document.querySelector("#detail .hist"),c=clientById(state.sel);if(h&&c)h.innerHTML=histHtml(c)}
 ["input","change","click","keydown"].forEach(function(ev){document.addEventListener(ev,touch,true)});
 document.addEventListener("visibilitychange",function(){if(document.hidden)flush()});
+window.addEventListener("pagehide",function(){flush()});
 window.addEventListener("beforeunload",function(e){var dirty=busy||Object.keys(pending).some(function(id){return diffClient(id)});if(dirty){e.preventDefault();e.returnValue=""}});
 
 function applyLoad(r,lazy){
