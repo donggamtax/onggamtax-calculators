@@ -130,6 +130,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 <nav class="tabs" id="tabs" role="tablist" aria-label="메뉴" hidden>
   <button type="button" role="tab" data-tab="clients" aria-selected="false">업체별 기장</button>
   <button type="button" role="tab" data-tab="tpl" aria-selected="false">안내문·템플릿</button>
+  <button type="button" role="tab" data-tab="guide" aria-selected="false">고객 안내</button>
   <button type="button" role="tab" data-tab="notice" aria-selected="false">공지·매뉴얼</button>
   <button type="button" role="tab" data-tab="leave" aria-selected="false">휴가 신청</button>
 </nav>
@@ -192,9 +193,12 @@ $("#loginForm").addEventListener("submit", async e => {
 const BOARD_UI = {
   tpl: { title:"안내문·템플릿", note:"신고별 필요서류 안내문과 고객 안내 문구입니다. [ ] 부분을 바꿔 쓰세요.", cat:"category", head:"title", body:"body", copy:true,
     form:[["category","분류","input","예: 부가가치세"],["title","제목","input",""],["body","내용","textarea",""]] },
+  guide: { title:"고객 안내 관리", note:"고객용 비밀 링크 페이지에 보이는 신고 안내·이용 매뉴얼입니다. '고객에게 공개'를 체크한 글만 고객에게 보입니다. 순서는 작은 숫자가 위입니다.", cat:"category", head:"title", body:"body",
+    form:[["category","분류","select",["신고안내","이용매뉴얼"]],["title","제목","input","예: 부가가치세 신고 안내"],["body","내용","textarea","줄바꿈은 그대로 보입니다. https:// 주소는 자동으로 링크가 됩니다."],["order","순서","input","예: 10"],["pub","고객에게 공개","check",""]] },
   notice: { title:"공지·업무 매뉴얼", note:"동감 세무회계 공지사항과 업무 매뉴얼입니다.", cat:"type", head:"title", body:"body",
     form:[["type","종류","select",["공지","매뉴얼"]],["title","제목","input",""],["body","내용","textarea",""],["pinned","맨 위에 고정","check",""]] },
 };
+let guideKey = null; // 고객용 링크 키(서버 설정). null=아직 안 불러옴
 const boards = {}; // board → { items, q, cat, editing, open }
 function showTab(tab){
   if(!BOARD_UI[tab] && tab !== "leave" && tab !== "clients") tab = "clients";
@@ -217,7 +221,10 @@ async function loadBoard(key, keep){
   const st = boards[key] ||= { items:[], q:"", cat:"전체", editing:null, open:{} };
   st.key = key;
   if(!keep){ st.loading = true; drawBoard(key); }
-  try{ st.items = (await api("board.list", { board:key })).items || []; st.err = ""; }
+  try{
+    if(key === "guide" && guideKey === null) guideKey = (await api("config")).guideKey || "";
+    st.items = (await api("board.list", { board:key })).items || []; st.err = "";
+  }
   catch(x){ st.err = x.message; }
   st.loading = false;
   if(store.get("staff.tab") === key) drawBoard(key);
@@ -241,17 +248,25 @@ function drawBoard(key){
       </div>
       <div class="kinds" id="bcats">${cats.map(c => `<button type="button" class="chip" data-cat="${esc(c)}" aria-pressed="${st.cat === c}">${esc(c)}</button>`).join("")}</div>
     </section>
+    ${key === "guide" ? guideLinkHtml() : ""}
     ${st.editing ? formHtml(key) : ""}
     ${st.err ? `<p class="err">${esc(st.err)}</p>` : ""}
     <div class="blist">${st.loading ? `<p class="hint">불러오는 중입니다…</p>` : list.length ? list.map(it => itemCard(key, it)).join("") : `<p class="empty card">아직 글이 없습니다. "새로 쓰기"로 추가하세요.</p>`}</div>`;
   const bq = $("#bq"); bq.addEventListener("input", () => { st.q = bq.value; const pos = bq.selectionStart; drawBoard(key); const n = $("#bq"); n.focus(); n.setSelectionRange(pos, pos); });
+}
+function guideLinkHtml(){
+  if(guideKey === null) return "";
+  if(!guideKey) return `<section class="card bform"><h2>고객용 링크</h2><p class="hint">아직 링크 키가 없습니다. Apps Script → 프로젝트 설정 → 스크립트 속성에 <b>GUIDE_KEY</b>(영문·숫자 16자 이상)를 추가하면 링크가 만들어집니다.</p></section>`;
+  const url = new URL("../guide/?k=" + guideKey, location.href).href;
+  return `<section class="card bform"><h2>고객용 링크</h2><p class="hint">이 주소를 아는 고객만 열 수 있습니다. 고객에게만 보내 주세요(블로그·홈페이지에 올리지 마세요).</p>
+    <div class="row"><input class="field" id="glink" readonly value="${esc(url)}" style="flex:1;min-width:200px"><button type="button" class="btn" id="gcopy">링크 복사</button><a class="btn ghost" href="${esc(url)}" target="_blank" rel="noopener noreferrer">미리 보기</a></div></section>`;
 }
 function itemCard(key, it){
   const ui = BOARD_UI[key], st = boards[key], open = st.open[it.id];
   const meta = [it[ui.cat], it.author, fmtDay(it.updatedAt || it.createdAt)].filter(Boolean).join(" · ");
   return `<article class="card bitem">
     <div class="top">
-      <button type="button" class="t" data-bopen="${esc(it.id)}">${key === "notice" && it.pinned === "Y" ? `<span class="pin">고정</span>` : ""}${esc(it[ui.head])}<span class="meta">${esc(meta)}</span></button>
+      <button type="button" class="t" data-bopen="${esc(it.id)}">${key === "notice" && it.pinned === "Y" ? `<span class="pin">고정</span>` : ""}${key === "guide" ? `<span class="pin"${it.pub === "Y" ? "" : ` style="background:#8a949b"`}>${it.pub === "Y" ? "공개" : "비공개"}</span>` : ""}${esc(it[ui.head])}<span class="meta">${esc(meta)}</span></button>
       ${ui.copy ? `<button type="button" class="chip" data-bcopy="${esc(it.id)}">복사</button>` : ""}
     </div>
     ${open ? `<div class="txt">${esc(it[ui.body])}</div>${ui.sub && it[ui.sub] ? `<div class="sub"><b>근거</b>\n${esc(it[ui.sub])}</div>` : ""}
@@ -275,6 +290,7 @@ function formHtml(key){
 document.addEventListener("click", async e => {
   const key = store.get("staff.tab"), st = boards[key]; if(!st || !$("#board").contains(e.target)) return;
   const t = e.target;
+  if(t.closest("#gcopy")){ const b = t.closest("#gcopy"); try{ await navigator.clipboard.writeText($("#glink").value); b.textContent = "복사됨"; }catch{ $("#glink").select(); b.textContent = "직접 복사하세요"; } setTimeout(() => { b.textContent = "링크 복사"; }, 1800); return; }
   const cat = t.closest("[data-cat]"); if(cat){ st.cat = cat.dataset.cat; return drawBoard(key); }
   if(t.closest("#bnew")){ st.editing = {}; drawBoard(key); $("#bform").scrollIntoView({behavior:"smooth"}); return; }
   if(t.closest("#bcancel")){ st.editing = null; return drawBoard(key); }
