@@ -212,7 +212,7 @@ html[data-embed="1"] .wrap{padding-top:6px}
 var CLIENTS=[];
 var STATUS=["거래중","폐업","이탈"],SVCS=["기장","신고"];
 function stOf(c){return c.status||"거래중"}
-var PEOPLE=["이동희","김혜빈","김유리","이연서"];
+var PEOPLE=[]; /* 직원 명단은 소스에 두지 않고 서버가 로그인한 사람에게만 알려준다 */
 // 부가세 체크 목록 (올려주신 순서 그대로). k: normal / deemed(의제매입 표) / limit(1기·2기 표)
 var VAT_ITEMS=[
  {t:"부가세 신고서 vs 통합조회서비스 대사하였는지?"},
@@ -800,6 +800,7 @@ window.addEventListener("pagehide",function(){flush()});
 window.addEventListener("beforeunload",function(e){var dirty=busy||Object.keys(pending).some(function(id){return diffClient(id)});if(dirty){e.preventDefault();e.returnValue=""}});
 
 function applyLoad(r,lazy){
+  if(r.people&&r.people.length)PEOPLE=r.people;
   ["vat","inc","corp"].forEach(function(k){var t=r.templates&&r.templates[k];if(Array.isArray(t)&&t.length)TPL[k]=t});
   var by={};(r.data||[]).forEach(function(x){(by[x.id]=by[x.id]||[]).push(x)});
   CLIENTS=(r.clients||[]).map(function(c){return {id:c.id,name:c.name,type:c.type||"개인",owner:c.owner,svc:c.svc,status:c.status==="거래중"?"":c.status,reason:c.reason,tier:c.tier,tf:c.periods&&c.periods.tf?1:0,rep:(c.periods&&c.periods.rep)||"",by:c.by,at:c.at}});
@@ -895,7 +896,7 @@ function openImport(first){
   var m=document.createElement("div");m.className="picmodal";
   m.innerHTML='<div class="pm" style="width:min(640px,100%)"><b>업체 한꺼번에 넣기</b>'+
    '<div class="sub">'+(first?'아직 등록된 업체가 없습니다. ':'')+'엑셀에서 아래 순서로 칸을 복사해 붙여넣으세요. 이미 있는 업체명은 건너뜁니다.<br>업체명 · 대표자 · 면세(O 또는 빈칸) · 구분(법인/개인) · 담당 · 기장/신고 · 비고 (뒤쪽 칸은 비워도 됩니다. 구분이 비면 개인)</div>'+
-   '<textarea id="impText" rows="10" style="width:100%;font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)" placeholder="예)\n㈜가나다\t홍길동\t\t법인\t이동희\t기장\n나다라 식당\t김영희\tO\t개인\t김유리\t기장"></textarea>'+
+   '<textarea id="impText" rows="10" style="width:100%;font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)" placeholder="예)\n㈜가나다\t홍길동\t\t법인\t담당자1\t기장\n나다라 식당\t김영희\tO\t개인\t담당자2\t기장"></textarea>'+
    '<div class="sub" id="impInfo"></div><div style="display:flex;gap:8px"><button class="btn" type="button" id="impGo">넣기</button><button class="btn ghost" type="button" data-picclose>닫기</button></div></div>';
   document.body.appendChild(m);
   var ta=m.querySelector("#impText"),info=m.querySelector("#impInfo");
