@@ -23,17 +23,27 @@ h1{font-size:clamp(24px,5vw,32px);font-weight:800;letter-spacing:-.04em;line-hei
 .lead{color:var(--muted);margin:8px 0 20px;font-size:15px}
 .q{width:100%;font:inherit;font-size:16px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
 .q:focus{outline:3px solid rgba(61,95,112,.25);border-color:var(--brand)}
-.tabs{display:flex;gap:8px;margin:14px 0 16px;flex-wrap:wrap}
-.chip{font:inherit;font-size:15px;font-weight:600;padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
-.chip[aria-pressed=true]{background:var(--brand);border-color:var(--brand);color:#fff}
-.item{background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
-.item>button{all:unset;box-sizing:border-box;display:flex;width:100%;align-items:center;gap:10px;padding:16px;cursor:pointer;font-weight:700;font-size:16px}
-.item>button:focus-visible{outline:3px solid var(--brand);outline-offset:-3px}
-.item .cat{font-size:12px;font-weight:700;color:var(--deep);background:var(--tint);border-radius:6px;padding:2px 8px;white-space:nowrap}
-.item .ar{margin-left:auto;color:var(--muted);transition:transform .15s}
-.item[data-open=true] .ar{transform:rotate(180deg)}
-.item .bd{display:none;padding:0 16px 18px;white-space:pre-wrap;font-size:15.5px;border-top:1px solid var(--line);padding-top:14px}
-.item[data-open=true] .bd{display:block}
+.crumb{font-size:14px;color:var(--muted);margin-bottom:10px}.crumb button{all:unset;cursor:pointer;color:var(--brand);font-weight:600}.crumb button:focus-visible{outline:3px solid var(--brand);border-radius:4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.card{all:unset;box-sizing:border-box;cursor:pointer;background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:6px;border-top:3px solid var(--brand)}
+.card.m{border-top-color:var(--warm)}.card:hover{border-color:var(--brand)}.card:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+.card .ic{width:40px;height:40px;border-radius:10px;background:var(--tint);display:grid;place-items:center;font-size:20px;margin-bottom:4px}
+.card b{font-size:18px;letter-spacing:-.03em}.card span{font-size:14px;color:var(--muted)}.card em{font-style:normal;font-size:13px;font-weight:700;color:var(--brand);margin-top:6px}
+.tbl{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:14px}
+.th,.tr{display:grid;grid-template-columns:56px 1fr 96px;gap:8px;padding:13px 16px;align-items:center;text-align:left}
+.th{background:var(--tint);font-size:13px;font-weight:700;color:var(--deep)}
+.tr{all:unset;box-sizing:border-box;display:grid;grid-template-columns:56px 1fr 96px;gap:8px;padding:13px 16px;align-items:center;width:100%;border-top:1px solid var(--line);font-size:15.5px;cursor:pointer}
+.tr:hover{background:var(--paper)}.tr:focus-visible{outline:3px solid var(--brand);outline-offset:-3px}
+.tr .n{color:var(--muted);font-size:14px}.tr .t{font-weight:600}.tr .d{color:var(--muted);font-size:13px;text-align:right}
+.new{display:inline-block;font-size:11px;font-weight:800;color:#fff;background:var(--warm);border-radius:4px;padding:0 6px;margin-left:6px;vertical-align:2px}
+.pin{display:inline-block;font-size:11px;font-weight:800;color:var(--deep);background:var(--tint);border-radius:4px;padding:0 6px}
+@media(max-width:520px){.th{display:none}.tr{grid-template-columns:1fr auto}.tr .n{display:none}}
+.post{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 18px;margin-top:6px}
+.post h2{font-size:clamp(20px,4.6vw,26px);letter-spacing:-.04em;line-height:1.35}.post .meta{font-size:13px;color:var(--muted);margin:6px 0 16px}
+.post .bd{white-space:pre-wrap;font-size:16px;border-top:1px solid var(--line);padding-top:16px}
+.btn{all:unset;box-sizing:border-box;cursor:pointer;display:inline-block;margin-top:16px;padding:10px 18px;border-radius:999px;background:var(--brand);color:#fff;font-weight:700;font-size:15px}.btn:focus-visible{outline:3px solid var(--deep);outline-offset:2px}
+.q{width:100%;font:inherit;font-size:16px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+.q:focus{outline:3px solid rgba(61,95,112,.25);border-color:var(--brand)}
 .msg{background:#fff;border:1px solid var(--line);border-radius:12px;padding:28px 20px;text-align:center;color:var(--muted)}
 .msg.err{color:#a33;border-color:#e8c4c4}
 .ft{margin-top:28px;padding-top:18px;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
@@ -43,8 +53,8 @@ h1{font-size:clamp(24px,5vw,32px);font-weight:800;letter-spacing:-.04em;line-hei
 <body>
 <header class="hd"><div class="in"><img src="../logo.png" alt="동감 세무회계" width="1010" height="151"><span class="tag">고객 안내</span></div></header>
 <main>
-  <h1>신고 안내 · 이용 매뉴얼</h1>
-  <p class="lead">동감 세무회계 고객님께 드리는 안내입니다. 궁금한 점은 담당자에게 편하게 문의해 주세요.</p>
+  <div id="top"><h1>신고 안내 · 이용 매뉴얼</h1>
+  <p class="lead">필요한 항목을 눌러 확인하세요. 궁금한 점은 담당자에게 편하게 문의해 주세요.</p></div>
   <div id="app"><div class="msg">불러오는 중입니다…</div></div>
   <div class="ft">문의 <a href="tel:01082781382">010-8278-1382</a> · 동감 세무회계<br>이 페이지는 고객님께만 드린 비공개 링크입니다. 다른 곳에 공유하지 말아 주세요.</div>
 </main>
@@ -52,27 +62,48 @@ h1{font-size:clamp(24px,5vw,32px);font-weight:800;letter-spacing:-.04em;line-hei
 <script>
 (function(){
   var $ = function(s){ return document.querySelector(s); };
-  var app = $("#app"), items = [], cat = "전체", q = "", openId = {};
-  var key = new URLSearchParams(location.search).get("k") || "";
-  try{ if(key) history.replaceState(null, "", location.pathname); }catch(e){} // 주소창·기록에 키가 남지 않게
+  var app = $("#app"), items = [], q = "";
+  var CATS = [["부가가치세","🧾","신고 일정, 준비 자료"],["종합소득세","👤","개인사업자 신고 안내"],["법인세","🏢","법인 결산·신고 안내"],["사업장현황신고","📋","면세사업자 신고 안내"],["기타","📌","그 밖의 신고·변경 안내"],["이용매뉴얼","📖","홈택스 카드등록 등 사용법"]];
+  var sp = new URLSearchParams(location.search), key = sp.get("k") || "", pid = sp.get("p") || "";
+  var view = pid ? {t:"post", id:pid} : {t:"home"};
+  try{ if(key || pid) history.replaceState(null, "", location.pathname); }catch(e){} // 주소창·기록에 키가 남지 않게
   function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
   function rich(s){ return esc(s).replace(/https:\/\/[^\s<]+/g, function(u){ var t = u.replace(/[.,)]+$/, ""), tail = u.slice(t.length); return '<a href="' + t + '" target="_blank" rel="noopener noreferrer">' + t + '</a>' + tail; }); }
+  function day(iso){ var d = new Date(iso); return isNaN(d) ? "" : d.getFullYear() + "." + ("0"+(d.getMonth()+1)).slice(-2) + "." + ("0"+d.getDate()).slice(-2); }
+  function isNew(iso){ var d = new Date(iso); return !isNaN(d) && Date.now() - d < 14*864e5; }
   function msg(t, err){ app.innerHTML = '<div class="msg' + (err ? " err" : "") + '">' + esc(t) + '</div>'; }
-  function draw(){
-    if(!items.length) return msg("안내 자료를 준비 중입니다. 조금만 기다려 주세요.");
-    var cats = ["전체"]; items.forEach(function(it){ if(it.category && cats.indexOf(it.category) < 0) cats.push(it.category); });
-    var ql = q.toLowerCase();
-    var list = items.filter(function(it){ return (cat === "전체" || it.category === cat) && (!ql || (it.title + " " + it.body).toLowerCase().indexOf(ql) >= 0); });
-    var focus = document.activeElement && document.activeElement.id === "q";
-    app.innerHTML = '<input class="q" id="q" type="search" placeholder="찾기 (예: 부가세, 카드등록)" value="' + esc(q) + '">'
-      + '<div class="tabs">' + cats.map(function(c){ return '<button type="button" class="chip" data-c="' + esc(c) + '" aria-pressed="' + (c === cat) + '">' + esc(c) + '</button>'; }).join("") + '</div>'
-      + (list.length ? list.map(function(it){ var o = !!openId[it.id]; return '<article class="item" data-open="' + o + '"><button type="button" data-i="' + esc(it.id) + '" aria-expanded="' + o + '">' + (it.category ? '<span class="cat">' + esc(it.category) + '</span>' : '') + '<span>' + esc(it.title) + '</span><span class="ar" aria-hidden="true">▾</span></button><div class="bd">' + rich(it.body) + '</div></article>'; }).join("") : '<div class="msg">찾는 내용이 없습니다.</div>');
-    if(focus){ var n = $("#q"); n.focus(); n.setSelectionRange(q.length, q.length); }
+  function go(v){ view = v; draw(); window.scrollTo(0, 0); }
+  function row(it, n){ return '<button type="button" class="tr" data-p="' + esc(it.id) + '"><span class="n">' + (it.pinned === "Y" ? '<span class="pin">필독</span>' : n) + '</span><span class="t">' + esc(it.title) + (isNew(it.updatedAt) ? '<span class="new">NEW</span>' : '') + '</span><span class="d">' + day(it.updatedAt) + '</span></button>'; }
+  function list(arr, head){
+    var n = arr.filter(function(i){ return i.pinned !== "Y"; }).length;
+    return '<div class="tbl"><div class="th"><span>번호</span><span>제목</span><span style="text-align:right">수정일</span></div>' + arr.map(function(it){ return row(it, it.pinned === "Y" ? 0 : n--); }).join("") + '</div>';
   }
-  app.addEventListener("input", function(e){ if(e.target.id === "q"){ q = e.target.value; draw(); } });
+  function draw(){
+    $("#top").hidden = view.t !== "home" || !!q;
+    if(!items.length) return msg("안내 자료를 준비 중입니다. 조금만 기다려 주세요.");
+    if(view.t === "post"){
+      var it = items.filter(function(i){ return i.id === view.id; })[0];
+      if(!it) { view = {t:"home"}; return draw(); }
+      return app.innerHTML = '<div class="crumb"><button type="button" data-h="1">‹ 전체 안내</button>' + (it.category ? ' / <button type="button" data-c="' + esc(it.category) + '">' + esc(it.category) + '</button>' : '') + '</div>'
+        + '<article class="post"><h2>' + esc(it.title) + '</h2><div class="meta">' + esc(it.category) + ' · ' + day(it.updatedAt) + '</div><div class="bd">' + rich(it.body) + '</div></article><button type="button" class="btn" data-h="1">다른 안내 보기</button>';
+    }
+    if(view.t === "cat"){
+      var arr = items.filter(function(i){ return i.category === view.c; });
+      return app.innerHTML = '<div class="crumb"><button type="button" data-h="1">‹ 전체 안내</button> / ' + esc(view.c) + '</div><h1>' + esc(view.c) + '</h1>' + (arr.length ? list(arr) : '<div class="msg" style="margin-top:14px">아직 올라온 글이 없습니다.</div>');
+    }
+    if(q){
+      var ql = q.toLowerCase(), r = items.filter(function(i){ return (i.title + " " + i.body).toLowerCase().indexOf(ql) >= 0; });
+      return app.innerHTML = searchBox() + (r.length ? list(r) : '<div class="msg" style="margin-top:14px">찾는 내용이 없습니다.</div>');
+    }
+    var cnt = {}; items.forEach(function(i){ cnt[i.category] = (cnt[i.category] || 0) + 1; });
+    app.innerHTML = searchBox() + '<div class="grid" style="margin-top:14px">' + CATS.map(function(c){ return '<button type="button" class="card' + (c[0] === "이용매뉴얼" ? " m" : "") + '" data-c="' + c[0] + '"><div class="ic">' + c[1] + '</div><b>' + c[0] + '</b><span>' + c[2] + '</span><em>글 ' + (cnt[c[0]] || 0) + '개 ›</em></button>'; }).join("") + '</div>';
+  }
+  function searchBox(){ return '<input class="q" id="q" type="search" placeholder="전체에서 찾기 (예: 부가세, 카드등록)" value="' + esc(q) + '">'; }
+  app.addEventListener("input", function(e){ if(e.target.id === "q"){ q = e.target.value; var n = q.length; draw(); var f = $("#q"); f.focus(); f.setSelectionRange(n, n); } });
   app.addEventListener("click", function(e){
-    var c = e.target.closest("[data-c]"); if(c){ cat = c.dataset.c; return draw(); }
-    var b = e.target.closest("[data-i]"); if(b){ openId[b.dataset.i] = !openId[b.dataset.i]; draw(); }
+    if(e.target.closest("[data-h]")){ q = ""; return go({t:"home"}); }
+    var c = e.target.closest("[data-c]"); if(c){ q = ""; return go({t:"cat", c:c.dataset.c}); }
+    var p = e.target.closest("[data-p]"); if(p) go({t:"post", id:p.dataset.p});
   });
   var ck = "guide.cache";
   if(!key){ try{ key = sessionStorage.getItem("guide.k") || ""; }catch(e){} }
@@ -82,7 +113,7 @@ h1{font-size:clamp(24px,5vw,32px);font-weight:800;letter-spacing:-.04em;line-hei
   fetch(window.STAFF_API, { method:"POST", headers:{ "Content-Type":"text/plain;charset=utf-8" }, referrerPolicy:"no-referrer", body: JSON.stringify({ action:"guide.list", key:key }) })
     .then(function(r){ return r.json(); })
     .then(function(b){
-      if(b.error){ try{ sessionStorage.removeItem("guide.k"); sessionStorage.removeItem(ck); }catch(e){} return msg(b.error, true); }
+      if(b.error){ try{ sessionStorage.removeItem("guide.k"); sessionStorage.removeItem(ck); }catch(e){} items = []; return msg(b.error, true); }
       items = b.items || []; try{ sessionStorage.setItem(ck, JSON.stringify(items)); }catch(e){} draw();
     })
     .catch(function(){ if(!items.length) msg("내용을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.", true); });

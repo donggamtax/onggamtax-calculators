@@ -109,7 +109,7 @@ function withLock(fn) {
 
 const BOARDS = {
   tpl: { sheet: "안내문템플릿", fields: [["category", "분류", 40], ["title", "제목", 200], ["body", "내용", 8000], ["author", "작성자", 20]] },
-  guide: { sheet: "고객안내", fields: [["category", "분류", 20], ["title", "제목", 200], ["body", "내용", 20000], ["pub", "공개", 5], ["order", "순서", 6], ["author", "작성자", 20]] },
+  guide: { sheet: "고객안내", fields: [["category", "분류", 20], ["title", "제목", 200], ["body", "내용", 20000], ["pub", "공개", 5], ["order", "순서", 6], ["pinned", "필독", 5], ["author", "작성자", 20]] },
   notice: { sheet: "공지매뉴얼", fields: [["type", "종류", 10], ["title", "제목", 200], ["body", "내용", 20000], ["pinned", "상단고정", 5], ["author", "작성자", 20]] },
 };
 // 로그인한 직원에게만 주는 설정. 휴가 신청 폼 주소는 공개 저장소에 두지 않고 스크립트 속성(LEAVE_FORM_URL)에 둔다.
@@ -143,7 +143,7 @@ function leaveStatus(p) {
   return { configured: true, asof: asof, head: head, rows: rows };
 }
 // ── 고객 안내 페이지(비밀 링크) ──────────────────────────────
-const GUIDE_CACHE_KEY = "guide_v1";
+const GUIDE_CACHE_KEY = "guide_v2";
 function guideKeyOf(p) { const k = String(p.GUIDE_KEY || "").trim(); return /^[A-Za-z0-9_-]{16,64}$/.test(k) ? k : ""; }
 function guideCacheClear() { try { CacheService.getScriptCache().remove(GUIDE_CACHE_KEY); } catch (e) {} }
 function guideList(req, p) {
@@ -155,8 +155,8 @@ function guideList(req, p) {
   if (last >= 2) {
     items = sh.getRange(2, 1, last - 1, b.fields.length + 3).getValues().filter(r => r[0]).map(r => boardRowToItem(b, r))
       .filter(it => it.pub === "Y")
-      .map((it, i) => ({ id: it.id, category: it.category, title: it.title, body: it.body, updatedAt: it.updatedAt || it.createdAt, o: Number(it.order) || 0, i: i }));
-    items.sort((a, c) => (a.o - c.o) || (a.i - c.i));
+      .map((it, i) => ({ id: it.id, category: it.category, title: it.title, body: it.body, updatedAt: it.updatedAt || it.createdAt, pinned: it.pinned === "Y" ? "Y" : "", o: Number(it.order) || 0, i: i }));
+    items.sort((a, c) => ((c.pinned === "Y") - (a.pinned === "Y")) || (a.o - c.o) || (a.i - c.i));
     items.forEach(it => { delete it.o; delete it.i; });
   }
   const res = { items: items };

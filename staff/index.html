@@ -194,7 +194,7 @@ const BOARD_UI = {
   tpl: { title:"안내문·템플릿", note:"신고별 필요서류 안내문과 고객 안내 문구입니다. [ ] 부분을 바꿔 쓰세요.", cat:"category", head:"title", body:"body", copy:true,
     form:[["category","분류","input","예: 부가가치세"],["title","제목","input",""],["body","내용","textarea",""]] },
   guide: { title:"고객 안내 관리", note:"고객용 비밀 링크 페이지에 보이는 신고 안내·이용 매뉴얼입니다. '고객에게 공개'를 체크한 글만 고객에게 보입니다. 순서는 작은 숫자가 위입니다.", cat:"category", head:"title", body:"body",
-    form:[["category","분류","select",["신고안내","이용매뉴얼"]],["title","제목","input","예: 부가가치세 신고 안내"],["body","내용","textarea","줄바꿈은 그대로 보입니다. https:// 주소는 자동으로 링크가 됩니다."],["order","순서","input","예: 10"],["pub","고객에게 공개","check",""]] },
+    form:[["category","분류","select",["부가가치세","종합소득세","법인세","사업장현황신고","기타","이용매뉴얼"]],["title","제목","input","예: 부가세 신고 기간과 준비 자료"],["body","내용","textarea","줄바꿈은 그대로 보입니다. https:// 주소는 자동으로 링크가 됩니다."],["order","순서","input","예: 10"],["pinned","맨 위 필독으로 고정","check",""],["pub","고객에게 공개","check",""]] },
   notice: { title:"공지·업무 매뉴얼", note:"동감 세무회계 공지사항과 업무 매뉴얼입니다.", cat:"type", head:"title", body:"body",
     form:[["type","종류","select",["공지","매뉴얼"]],["title","제목","input",""],["body","내용","textarea",""],["pinned","맨 위에 고정","check",""]] },
 };
@@ -266,8 +266,8 @@ function itemCard(key, it){
   const meta = [it[ui.cat], it.author, fmtDay(it.updatedAt || it.createdAt)].filter(Boolean).join(" · ");
   return `<article class="card bitem">
     <div class="top">
-      <button type="button" class="t" data-bopen="${esc(it.id)}">${key === "notice" && it.pinned === "Y" ? `<span class="pin">고정</span>` : ""}${key === "guide" ? `<span class="pin"${it.pub === "Y" ? "" : ` style="background:#8a949b"`}>${it.pub === "Y" ? "공개" : "비공개"}</span>` : ""}${esc(it[ui.head])}<span class="meta">${esc(meta)}</span></button>
-      ${ui.copy ? `<button type="button" class="chip" data-bcopy="${esc(it.id)}">복사</button>` : ""}
+      <button type="button" class="t" data-bopen="${esc(it.id)}">${key === "notice" && it.pinned === "Y" ? `<span class="pin">고정</span>` : ""}${key === "guide" && it.pinned === "Y" ? `<span class="pin">필독</span>` : ""}${key === "guide" ? `<span class="pin"${it.pub === "Y" ? "" : ` style="background:#8a949b"`}>${it.pub === "Y" ? "공개" : "비공개"}</span>` : ""}${esc(it[ui.head])}<span class="meta">${esc(meta)}</span></button>
+      ${ui.copy ? `<button type="button" class="chip" data-bcopy="${esc(it.id)}">복사</button>` : ""}${key === "guide" && it.pub === "Y" && guideKey ? `<button type="button" class="chip" data-glink="${esc(it.id)}">이 글 링크 복사</button>` : ""}
     </div>
     ${open ? `<div class="txt">${esc(it[ui.body])}</div>${ui.sub && it[ui.sub] ? `<div class="sub"><b>근거</b>\n${esc(it[ui.sub])}</div>` : ""}
       <div class="acts"><button type="button" class="btn ghost sm" data-bedit="${esc(it.id)}">수정</button><button type="button" class="btn ghost sm" data-bdel="${esc(it.id)}">삭제</button></div>` : ""}
@@ -291,6 +291,7 @@ document.addEventListener("click", async e => {
   const key = store.get("staff.tab"), st = boards[key]; if(!st || !$("#board").contains(e.target)) return;
   const t = e.target;
   if(t.closest("#gcopy")){ const b = t.closest("#gcopy"); try{ await navigator.clipboard.writeText($("#glink").value); b.textContent = "복사됨"; }catch{ $("#glink").select(); b.textContent = "직접 복사하세요"; } setTimeout(() => { b.textContent = "링크 복사"; }, 1800); return; }
+  const gl = t.closest("[data-glink]"); if(gl){ try{ await navigator.clipboard.writeText(new URL("../guide/?k=" + guideKey + "&p=" + gl.dataset.glink, location.href).href); gl.textContent = "복사됨"; }catch{ gl.textContent = "복사 실패"; } setTimeout(() => { gl.textContent = "이 글 링크 복사"; }, 1800); return; }
   const cat = t.closest("[data-cat]"); if(cat){ st.cat = cat.dataset.cat; return drawBoard(key); }
   if(t.closest("#bnew")){ st.editing = {}; drawBoard(key); $("#bform").scrollIntoView({behavior:"smooth"}); return; }
   if(t.closest("#bcancel")){ st.editing = null; return drawBoard(key); }
