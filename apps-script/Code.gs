@@ -58,6 +58,7 @@ function route(req) {
     const who = found[0];
     return { token: signToken(p.SESSION_SECRET, who), hours: TOKEN_HOURS, user: who, people: PEOPLE };
   }
+  if (action === "guide.list") return guideList(req, p); // 고객용 비밀 링크: 로그인 없이 키만 맞으면 공개 글만 내려준다
   const session = checkToken(req.token, p.SESSION_SECRET);
   if (!session) throw fail("다시 로그인해 주세요.", 401);
   const who = session.user;
@@ -68,6 +69,7 @@ function route(req) {
     case "board.list": return boardList(req);
     case "board.save": return boardSave(req, who);
     case "board.delete": return boardDelete(req);
+    case "guide.upload": return guideUpload(req, who);
     case "leave.status": return leaveStatus(p);
     case "clients.load": return clientsLoad(req);
     case "template.save": return templateSave(req, who);
@@ -108,6 +110,7 @@ function withLock(fn) {
 
 const BOARDS = {
   tpl: { sheet: "안내문템플릿", fields: [["category", "분류", 40], ["title", "제목", 200], ["body", "내용", 8000], ["author", "작성자", 20]] },
+  guide: { sheet: "고객안내", fields: [["category", "분류", 20], ["title", "제목", 200], ["body", "내용", 20000], ["pub", "공개", 5], ["order", "순서", 6], ["pinned", "필독", 5], ["author", "작성자", 20]] },
   notice: { sheet: "공지매뉴얼", fields: [["type", "종류", 10], ["title", "제목", 200], ["body", "내용", 20000], ["pinned", "상단고정", 5], ["author", "작성자", 20]] },
 };
 // 로그인한 직원에게만 주는 설정. 휴가 신청 폼 주소는 공개 저장소에 두지 않고 스크립트 속성(LEAVE_FORM_URL)에 둔다.
@@ -118,6 +121,7 @@ function leaveSheetId(p) {
 function staffConfig(p) {
   const u = String(p.LEAVE_FORM_URL || "").trim(), sid = leaveSheetId(p);
   return {
+    guideKey: guideKeyOf(p), // 고객용 링크 주소 끝에 붙는 비밀 키(스크립트 속성 GUIDE_KEY)
     people: PEOPLE, // 직원 명단은 로그인한 사람에게만 알려준다(공개 소스에는 없음)
     leaveFormUrl: /^https:\/\/(docs\.google\.com\/forms\/|forms\.gle\/)/.test(u) ? u : "",
     leaveSheetUrl: sid ? "https://docs.google.com/spreadsheets/d/" + sid + "/edit" : "", // 휴가대장 엑셀(구글 시트) 열기
@@ -138,6 +142,48 @@ function leaveStatus(p) {
   const head = vals[hi].map(String), rows = [];
   for (let i = hi + 1; i < vals.length && String(vals[i][0]).trim() !== ""; i++) rows.push(vals[i].map(String));
   return { configured: true, asof: asof, head: head, rows: rows };
+}
+// ── 고객 안내 페이지(비밀 링크) ──────────────────────────────
+const GUIDE_CACHE_KEY = "guide_v2";
+function guideKeyOf(p) { const k = String(p.GUIDE_KEY || "").trim(); return /^[A-Za-z0-9_-]{16,64}$/.test(k) ? k : ""; }
+function guideCacheClear() { try { CacheService.getScriptCache().remove(GUIDE_CACHE_KEY); } catch (e) {} }
+function guideList(req, p) {
+  const gk = guideKeyOf(p), k = typeof req.key === "string" ? req.key : "";
+  if (!gk || !safeEqual(k, gk)) { loginDelay(); throw fail("링크가 올바르지 않습니다. 동감 세무회계로 문의해 주세요.", 403); }
+  try { const hit = CacheService.getScriptCache().get(GUIDE_CACHE_KEY); if (hit) return JSON.parse(hit); } catch (e) {}
+  const b = BOARDS.guide, sh = boardSheet(b, "guide"), last = sh.getLastRow();
+  let items = [];
+  if (last >= 2) {
+    items = sh.getRange(2, 1, last - 1, b.fields.length + 3).getValues().filter(r => r[0]).map(r => boardRowToItem(b, r))
+      .filter(it => it.pub === "Y")
+      .map((it, i) => ({ id: it.id, category: it.category, title: it.title, body: it.body, updatedAt: it.updatedAt || it.createdAt, pinned: it.pinned === "Y" ? "Y" : "", o: Number(it.order) || 0, i: i }));
+    items.sort((a, c) => ((c.pinned === "Y") - (a.pinned === "Y")) || (a.o - c.o) || (a.i - c.i));
+    items.forEach(it => { delete it.o; delete it.i; });
+  }
+  const res = { items: items };
+  try { const j = JSON.stringify(res); if (j.length < 90000) CacheService.getScriptCache().put(GUIDE_CACHE_KEY, j, 21600); } catch (e) {}
+  return res;
+}
+// 그림 첨부: 직원 화면에서 줄여 보낸 JPEG/PNG를 구글 드라이브 폴더에 저장하고(링크를 아는 사람만 보기), 글 본문에는 [그림:파일ID]로 적는다.
+// 드라이브 권한이 필요하므로 이 함수를 처음 쓸 때 스크립트 소유자가 권한을 한 번 허용해야 한다.
+function guideFolder() {
+  const sp = PropertiesService.getScriptProperties(), id = sp.getProperty("GUIDE_FOLDER");
+  if (id) { try { return DriveApp.getFolderById(id); } catch (e) {} }
+  const it = DriveApp.getFoldersByName("동감_고객안내_그림"), f = it.hasNext() ? it.next() : DriveApp.createFolder("동감_고객안내_그림");
+  sp.setProperty("GUIDE_FOLDER", f.getId());
+  return f;
+}
+function guideUpload(req, who) {
+  const mime = String(req.mime || "");
+  if (!/^image\/(jpeg|png)$/.test(mime)) throw fail("JPG 또는 PNG 그림만 올릴 수 있습니다.");
+  const b64 = typeof req.data === "string" ? req.data : "";
+  if (!b64 || b64.length > 2200000) throw fail("그림이 너무 큽니다. 더 작은 그림을 올려 주세요.");
+  const bytes = Utilities.base64Decode(b64);
+  if (!bytes.length || bytes.length > 1600000) throw fail("그림이 너무 큽니다. 더 작은 그림을 올려 주세요.");
+  const ext = mime === "image/png" ? "png" : "jpg";
+  const file = guideFolder().createFile(Utilities.newBlob(bytes, mime, "guide-" + Date.now() + "." + ext));
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  return { id: file.getId() };
 }
 function boardOf(req) {
   const b = BOARDS[String(req.board || "")];
@@ -169,7 +215,7 @@ function boardList(req) {
   if (last < 2) return { items: [] };
   const rows = sh.getRange(2, 1, last - 1, b.fields.length + 3).getValues();
   const items = rows.filter(r => r[0]).map(r => boardRowToItem(b, r));
-  return { items: req.board === "tpl" ? items : items.reverse() }; // 템플릿은 시트 순서대로, 나머지는 최신 글이 위로
+  return { items: (req.board === "tpl" || req.board === "guide") ? items : items.reverse() }; // 템플릿은 시트 순서대로, 나머지는 최신 글이 위로
 }
 function boardSave(req, who) {
   const b = boardOf(req), key = String(req.board);
@@ -189,6 +235,7 @@ function boardSave(req, who) {
     const values = [it.id].concat(b.fields.map(f => it[f[0]]), [row ? cur.createdAt : now, row ? now : ""]);
     const at = row || sh.getLastRow() + 1;
     sh.getRange(at, 1, 1, values.length).setValues([values]);
+    if (key === "guide") guideCacheClear();
     return boardRowToItem(b, values);
   });
 }
@@ -199,6 +246,7 @@ function boardDelete(req) {
     const row = findRow(sh, String(req.id || ""));
     if (!row) return;
     sh.deleteRow(row);
+    if (key === "guide") guideCacheClear();
   });
   return { ok: true };
 }
