@@ -6,18 +6,19 @@
 // 스크립트 속성(프로젝트 설정 → 스크립트 속성)에 넣을 값:
 //   SESSION_SECRET  아무 긴 문자열(30자 이상)
 //   STAFF_PASSWORD  모두가 같이 쓰는 비밀번호 (STAFF_USERS가 없을 때만 쓰임)
-//   STAFF_USERS     직원별 비밀번호. 한 줄에 "이름:비밀번호" (예: 이동희:abc123). 있으면 이 방식만 허용
+//   STAFF_USERS     직원별 비밀번호. 한 줄에 "이름:비밀번호" (예: 홍길동:abc123). 직원마다 서로 다른 비밀번호여야 한다.
+//                  로그인 화면에는 이름 칸이 없다: 비밀번호만 입력하면 그 비밀번호의 주인으로 들어간다.
 // 이 파일에는 비밀 값을 적지 마세요.
 
 const TOKEN_HOURS = 12;
-const PEOPLE = ["이동희", "김혜빈", "김유리", "이연서"];
+// 직원 이름은 이 파일(공개 저장소)에 적지 않는다. 스크립트 속성 STAFF_USERS의 이름들이 곧 직원 명단이며, 요청마다 route()에서 채운다.
+let PEOPLE = [];
 const TZ = "Asia/Seoul";
 
 // ── 입구 ─────────────────────────────────────────────────────
 
 function doGet() {
-  const p = props();
-  return out({ ok: true, password: !!p.STAFF_PASSWORD, users: Object.keys(parseUsers(p.STAFF_USERS)).length, secret: !!p.SESSION_SECRET });
+  return out({ ok: true }); // 직원 수 등 내부 정보는 알려주지 않는다
 }
 
 // 화면은 모든 요청을 text/plain POST 한 번으로 보낸다 (브라우저 사전 확인 요청을 피하려고)
@@ -43,30 +44,19 @@ function parseUsers(text) {
 
 function route(req) {
   const p = props();
+  PEOPLE = Object.keys(parseUsers(p.STAFF_USERS));
   const action = String(req.action || "");
   if (action === "login") {
     if (!p.SESSION_SECRET) throw fail("서버 비밀번호가 아직 설정되지 않았습니다.", 503);
-    const users = parseUsers(p.STAFF_USERS), names = Object.keys(users);
-    const name = String(req.user || "").trim();
     const pw = typeof req.password === "string" ? req.password : "";
-    let who = "";
-    const stored = pwRecord(name);
-    if (stored) {
-      // 직원이 직접 정한 비밀번호가 있으면 그것으로만 확인한다 (스크립트 속성의 비밀번호는 더 쓰이지 않는다)
-      if (!pwCheck(stored, pw)) { Utilities.sleep(1000); throw fail("이름 또는 비밀번호가 맞지 않습니다.", 401); }
-      who = name;
-    } else if (names.length) {
-      // 직원별 비밀번호: 이름과 비밀번호가 둘 다 맞아야 한다
-      const ok = names.indexOf(name) >= 0 && safeEqual(pw, users[name]);
-      if (!ok) { Utilities.sleep(1000); throw fail("이름 또는 비밀번호가 맞지 않습니다.", 401); }
-      who = name;
-    } else {
-      // 공용 비밀번호: 고른 이름은 기록용으로만 쓴다
-      if (!p.STAFF_PASSWORD) throw fail("서버 비밀번호가 아직 설정되지 않았습니다.", 503);
-      if (!safeEqual(pw, p.STAFF_PASSWORD)) { Utilities.sleep(1000); throw fail("비밀번호가 맞지 않습니다.", 401); }
-      who = PEOPLE.indexOf(name) >= 0 ? name : "";
+    const found = pw ? pwMatches(pw, p) : [];
+    if (found.length !== 1) {
+      loginDelay();
+      if (found.length > 1) throw fail("같은 비밀번호를 쓰는 직원이 있어 구분할 수 없습니다. 관리자에게 문의하세요.", 409);
+      throw fail("비밀번호가 맞지 않습니다.", 401);
     }
-    return { token: signToken(p.SESSION_SECRET, who), hours: TOKEN_HOURS, user: who };
+    const who = found[0];
+    return { token: signToken(p.SESSION_SECRET, who), hours: TOKEN_HOURS, user: who, people: PEOPLE };
   }
   const session = checkToken(req.token, p.SESSION_SECRET);
   if (!session) throw fail("다시 로그인해 주세요.", 401);
@@ -128,6 +118,7 @@ function leaveSheetId(p) {
 function staffConfig(p) {
   const u = String(p.LEAVE_FORM_URL || "").trim(), sid = leaveSheetId(p);
   return {
+    people: PEOPLE, // 직원 명단은 로그인한 사람에게만 알려준다(공개 소스에는 없음)
     leaveFormUrl: /^https:\/\/(docs\.google\.com\/forms\/|forms\.gle\/)/.test(u) ? u : "",
     leaveSheetUrl: sid ? "https://docs.google.com/spreadsheets/d/" + sid + "/edit" : "", // 휴가대장 엑셀(구글 시트) 열기
   };
@@ -310,10 +301,11 @@ function clCacheClear() { try { CacheService.getScriptCache().remove(CL_CACHE_KE
 function clientsLoad(req) {
   const light = !!(req && req.light);
   if (light) {
-    try { const hit = CacheService.getScriptCache().get(CL_CACHE_KEY); if (hit) return JSON.parse(hit); } catch (e) {}
+    try { const hit = CacheService.getScriptCache().get(CL_CACHE_KEY); if (hit) { const r = JSON.parse(hit); r.people = PEOPLE; return r; } } catch (e) {}
   }
   const res = clientsLoadRaw(req);
   if (light) { try { const j = JSON.stringify(res); if (j.length < 90000) CacheService.getScriptCache().put(CL_CACHE_KEY, j, 21600); } catch (e) {} }
+  res.people = PEOPLE;
   return res;
 }
 function clientsLoadRaw(req) {
@@ -523,20 +515,35 @@ function pwRecord(name) {
   return null;
 }
 function pwCheck(rec, pw) { return !!rec && safeEqual(pwHash(rec.salt, pw), rec.hash); }
-// 현재 비밀번호(저장된 것이 있으면 그것, 없으면 스크립트 속성의 것)가 맞는지 확인
-function pwCurrentOk(name, pw, p) {
-  const rec = pwRecord(name);
-  if (rec) return pwCheck(rec, pw);
-  const users = parseUsers(p.STAFF_USERS);
-  if (Object.keys(users).length) return users[name] != null && safeEqual(pw, users[name]);
-  return !!p.STAFF_PASSWORD && safeEqual(pw, p.STAFF_PASSWORD);
+// 이 비밀번호를 쓰는 직원들의 이름 목록(정상이면 한 명). 직원이 직접 정한 비밀번호(시트)가 있으면 그것만, 없으면 스크립트 속성의 것을 본다.
+// 직원이 없고 공용 비밀번호(STAFF_PASSWORD)만 있으면 이름 없는 로그인("")이 된다.
+function pwMatches(pw, p) {
+  const users = parseUsers(p.STAFF_USERS), names = Object.keys(users), hit = [], rec = {};
+  const sh = clSheet(PW_SHEET, PW_COLS), last = sh.getLastRow();
+  (last < 2 ? [] : sh.getRange(2, 1, last - 1, 3).getValues()).forEach(r => {
+    const n = String(r[0]);
+    if (names.indexOf(n) < 0) return; // 명단에 없는 이름의 기록은 무시한다
+    rec[n] = 1;
+    if (safeEqual(pwHash(String(r[1]), pw), String(r[2]))) hit.push(n);
+  });
+  names.forEach(n => { if (!rec[n] && safeEqual(pw, users[n])) hit.push(n); });
+  if (!names.length && p.STAFF_PASSWORD && safeEqual(pw, p.STAFF_PASSWORD)) hit.push("");
+  return hit;
 }
+// 비밀번호만으로 들어오므로 틀릴 때마다 조금씩 더 기다리게 한다(10분 동안의 실패 횟수 기준, 최대 6초)
+function loginDelay() {
+  let n = 1;
+  try { const c = CacheService.getScriptCache(); n = Number(c.get("lf") || 0) + 1; c.put("lf", String(n), 600); } catch (e) {}
+  Utilities.sleep(Math.min(1000 + n * 300, 6000));
+}
+function pwCurrentOk(name, pw, p) { return pwMatches(pw, p).indexOf(name) >= 0; }
 function passwordChange(req, who, p) {
   if (!who) throw fail("직원 이름으로 로그인한 경우에만 비밀번호를 바꿀 수 있습니다.");
   const cur = typeof req.current === "string" ? req.current : "", next = typeof req.next === "string" ? req.next : "";
-  if (next.length < 6 || next.length > 64) throw fail("새 비밀번호는 6자 이상 64자 이하로 정해 주세요.");
+  if (next.length < 8 || next.length > 64) throw fail("새 비밀번호는 8자 이상 64자 이하로 정해 주세요.");
   if (next === cur) throw fail("새 비밀번호가 현재 비밀번호와 같습니다.");
-  if (!pwCurrentOk(who, cur, p)) { Utilities.sleep(1000); throw fail("현재 비밀번호가 맞지 않습니다.", 400); }
+  if (!pwCurrentOk(who, cur, p)) { loginDelay(); throw fail("현재 비밀번호가 맞지 않습니다.", 400); }
+  if (pwMatches(next, p).length) throw fail("다른 비밀번호로 정해 주세요. 이 비밀번호는 쓸 수 없습니다."); // 비밀번호만으로 로그인하므로 서로 달라야 한다
   return withLock(() => {
     const salt = Utilities.getUuid ? Utilities.getUuid() : String(Math.random()), hash = pwHash(salt, next), now = new Date().toISOString();
     const sh = clSheet(PW_SHEET, PW_COLS), rec = pwRecord(who), vals = [[who, salt, hash, now]];
@@ -551,16 +558,19 @@ function safeEqual(a, b) {
   for (let i = 0; i < Math.min(x.length, y.length); i++) d |= x.charCodeAt(i) ^ y.charCodeAt(i);
   return d === 0;
 }
-// 토큰 모양: 만료시각.직원번호.서명 (직원번호는 PEOPLE 순서, 모르면 x)
+// 토큰 모양: 만료시각.직원이름(URL 인코딩).서명  (직원 명단이 바뀌어 이름이 없어지면 그 토큰은 무효)
 function signToken(secret, user) {
-  const exp = String(Date.now() + TOKEN_HOURS * 3600e3), n = PEOPLE.indexOf(user) >= 0 ? String(PEOPLE.indexOf(user)) : "x";
+  const exp = String(Date.now() + TOKEN_HOURS * 3600e3), n = encodeURIComponent(user || "").replace(/\./g, "%2E");
   return exp + "." + n + "." + hmac(secret, exp + "." + n);
 }
 function checkToken(token, secret) {
   const parts = String(token || "").split(".");
   if (parts.length !== 3 || !secret || Number(parts[0]) < Date.now()) return null;
   if (!safeEqual(parts[2], hmac(secret, parts[0] + "." + parts[1]))) return null;
-  return { user: PEOPLE[Number(parts[1])] || "" };
+  let name = "";
+  try { name = decodeURIComponent(parts[1]); } catch (e) { return null; }
+  if (name && PEOPLE.indexOf(name) < 0) return null;
+  return { user: name };
 }
 
 // 스크립트 편집기에서 한 번 실행하면 시트 탭을 만들고 권한 승인 창을 띄운다

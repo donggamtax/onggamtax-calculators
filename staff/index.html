@@ -120,8 +120,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 <section class="login" id="loginView">
   <form id="loginForm">
     <h1>직원 전용</h1>
-    <p>이름을 고르고 사무소에서 안내받은 비밀번호를 입력하세요.</p>
-    <select class="field" id="user" required aria-label="이름"><option value="">이름 선택</option><option>이동희</option><option>김혜빈</option><option>김유리</option><option>이연서</option></select>
+    <p>사무소에서 안내받은 비밀번호를 입력하세요.</p>
     <input class="field" id="pw" type="password" autocomplete="current-password" placeholder="비밀번호" required>
     <button class="btn" id="loginBtn">들어가기</button>
     <p class="err" id="loginErr" hidden></p>
@@ -142,7 +141,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 <script src="config.js"></script>
 <script>
 const API = (window.STAFF_API || "").replace(/\/$/, "");
-const PEOPLE = ["이동희","김혜빈","김유리","이연서"];
+let PEOPLE = []; // 직원 명단은 소스에 두지 않고, 로그인한 뒤 서버(config)에서 받는다
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const store = { get(k){ try{ return localStorage.getItem(k); }catch{ return null; } }, set(k,v){ try{ v==null ? localStorage.removeItem(k) : localStorage.setItem(k,v); }catch{} } };
@@ -161,7 +160,7 @@ async function api(action, data = {}){
 }
 
 // ── 로그인 ──
-function showApp(on){ $("#loginView").hidden = on; $("#tabs").hidden = !on; $("#logout").hidden = !on; $("#pwBtn").hidden = !on; $("#who").hidden = !on; if(on){ $("#who").textContent = store.get("staff.who") ? store.get("staff.who") + " 님" : ""; showTab(new URLSearchParams(location.search).get("tab") || store.get("staff.tab") || "clients"); } else { $("#boardView").hidden = true; } }
+function showApp(on){ $("#loginView").hidden = on; $("#tabs").hidden = !on; $("#logout").hidden = !on; $("#pwBtn").hidden = !on; $("#who").hidden = !on; if(on){ if(!PEOPLE.length) api("config").then(cf => { PEOPLE = cf.people || []; }).catch(() => {}); $("#who").textContent = store.get("staff.who") ? store.get("staff.who") + " 님" : ""; showTab(new URLSearchParams(location.search).get("tab") || store.get("staff.tab") || "clients"); } else { $("#boardView").hidden = true; } }
 function logout(){ token = null; store.set("staff.token", null); try{ sessionStorage.removeItem("staff.clients.light"); }catch{} showApp(false); }
 $("#logout").onclick = logout;
 $("#pwBtn").onclick = () => { ["#pwCur","#pwNew","#pwNew2"].forEach(i => $(i).value = ""); $("#pwErr").hidden = true; $("#pwOk").hidden = true; $("#pwDlg").showModal(); $("#pwCur").focus(); };
@@ -183,8 +182,8 @@ $("#loginForm").addEventListener("submit", async e => {
   e.preventDefault();
   const btn = $("#loginBtn"), err = $("#loginErr"); btn.disabled = true; err.hidden = true;
   try{
-    const r = await api("login", { user: $("#user").value, password: $("#pw").value });
-    token = r.token; store.set("staff.token", token); store.set("staff.who", r.user || $("#user").value); $("#pw").value = ""; showApp(true);
+    const r = await api("login", { password: $("#pw").value });
+    token = r.token; store.set("staff.token", token); store.set("staff.who", r.user || ""); PEOPLE = r.people || []; $("#pw").value = ""; showApp(true);
   }catch(x){ err.textContent = x.message; err.hidden = false; }
   finally{ btn.disabled = false; }
 });
