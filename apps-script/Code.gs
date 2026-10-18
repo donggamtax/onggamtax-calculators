@@ -69,6 +69,7 @@ function route(req) {
     case "board.list": return boardList(req);
     case "board.save": return boardSave(req, who);
     case "board.delete": return boardDelete(req);
+    case "guide.upload": return guideUpload(req, who);
     case "leave.status": return leaveStatus(p);
     case "clients.load": return clientsLoad(req);
     case "template.save": return templateSave(req, who);
@@ -162,6 +163,27 @@ function guideList(req, p) {
   const res = { items: items };
   try { const j = JSON.stringify(res); if (j.length < 90000) CacheService.getScriptCache().put(GUIDE_CACHE_KEY, j, 21600); } catch (e) {}
   return res;
+}
+// 그림 첨부: 직원 화면에서 줄여 보낸 JPEG/PNG를 구글 드라이브 폴더에 저장하고(링크를 아는 사람만 보기), 글 본문에는 [그림:파일ID]로 적는다.
+// 드라이브 권한이 필요하므로 이 함수를 처음 쓸 때 스크립트 소유자가 권한을 한 번 허용해야 한다.
+function guideFolder() {
+  const sp = PropertiesService.getScriptProperties(), id = sp.getProperty("GUIDE_FOLDER");
+  if (id) { try { return DriveApp.getFolderById(id); } catch (e) {} }
+  const it = DriveApp.getFoldersByName("동감_고객안내_그림"), f = it.hasNext() ? it.next() : DriveApp.createFolder("동감_고객안내_그림");
+  sp.setProperty("GUIDE_FOLDER", f.getId());
+  return f;
+}
+function guideUpload(req, who) {
+  const mime = String(req.mime || "");
+  if (!/^image\/(jpeg|png)$/.test(mime)) throw fail("JPG 또는 PNG 그림만 올릴 수 있습니다.");
+  const b64 = typeof req.data === "string" ? req.data : "";
+  if (!b64 || b64.length > 2200000) throw fail("그림이 너무 큽니다. 더 작은 그림을 올려 주세요.");
+  const bytes = Utilities.base64Decode(b64);
+  if (!bytes.length || bytes.length > 1600000) throw fail("그림이 너무 큽니다. 더 작은 그림을 올려 주세요.");
+  const ext = mime === "image/png" ? "png" : "jpg";
+  const file = guideFolder().createFile(Utilities.newBlob(bytes, mime, "guide-" + Date.now() + "." + ext));
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  return { id: file.getId() };
 }
 function boardOf(req) {
   const b = BOARDS[String(req.board || "")];

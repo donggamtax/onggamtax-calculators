@@ -254,6 +254,8 @@ function drawBoard(key){
     <div class="blist">${st.loading ? `<p class="hint">불러오는 중입니다…</p>` : list.length ? list.map(it => itemCard(key, it)).join("") : `<p class="empty card">아직 글이 없습니다. "새로 쓰기"로 추가하세요.</p>`}</div>`;
   const bq = $("#bq"); bq.addEventListener("input", () => { st.q = bq.value; const pos = bq.selectionStart; drawBoard(key); const n = $("#bq"); n.focus(); n.setSelectionRange(pos, pos); });
 }
+const gImg = id => "https://drive.google.com/thumbnail?id=" + id + "&sz=w1000";
+function guideHtml(t){ return esc(t).replace(/\[그림:([A-Za-z0-9_-]{20,60})\]/g, (m, id) => `<img src="${gImg(id)}" alt="첨부 그림" style="max-width:100%;border-radius:8px;display:block;margin:8px 0" loading="lazy">`); }
 function guideLinkHtml(){
   if(guideKey === null) return "";
   if(!guideKey) return `<section class="card bform"><h2>고객용 링크</h2><p class="hint">아직 링크 키가 없습니다. Apps Script → 프로젝트 설정 → 스크립트 속성에 <b>GUIDE_KEY</b>(영문·숫자 16자 이상)를 추가하면 링크가 만들어집니다.</p></section>`;
@@ -269,7 +271,7 @@ function itemCard(key, it){
       <button type="button" class="t" data-bopen="${esc(it.id)}">${key === "notice" && it.pinned === "Y" ? `<span class="pin">고정</span>` : ""}${key === "guide" && it.pinned === "Y" ? `<span class="pin">필독</span>` : ""}${key === "guide" ? `<span class="pin"${it.pub === "Y" ? "" : ` style="background:#8a949b"`}>${it.pub === "Y" ? "공개" : "비공개"}</span>` : ""}${esc(it[ui.head])}<span class="meta">${esc(meta)}</span></button>
       ${ui.copy ? `<button type="button" class="chip" data-bcopy="${esc(it.id)}">복사</button>` : ""}${key === "guide" && it.pub === "Y" && guideKey ? `<button type="button" class="chip" data-glink="${esc(it.id)}">이 글 링크 복사</button>` : ""}
     </div>
-    ${open ? `<div class="txt">${esc(it[ui.body])}</div>${ui.sub && it[ui.sub] ? `<div class="sub"><b>근거</b>\n${esc(it[ui.sub])}</div>` : ""}
+    ${open ? `<div class="txt">${key === "guide" ? guideHtml(it[ui.body]) : esc(it[ui.body])}</div>${ui.sub && it[ui.sub] ? `<div class="sub"><b>근거</b>\n${esc(it[ui.sub])}</div>` : ""}
       <div class="acts"><button type="button" class="btn ghost sm" data-bedit="${esc(it.id)}">수정</button><button type="button" class="btn ghost sm" data-bdel="${esc(it.id)}">삭제</button></div>` : ""}
   </article>`;
 }
@@ -278,7 +280,7 @@ function formHtml(key){
   const who = ed.author || store.get("staff.who") || "";
   return `<section class="card bform" id="bform">
     <h2>${ed.id ? "글 수정" : "새 글"}</h2>
-    ${ui.form.map(([k,label,type,ph]) => type === "textarea" ? `<label>${label}<textarea class="field" data-f="${k}" placeholder="${esc(ph)}">${esc(ed[k] || "")}</textarea></label>`
+    ${ui.form.map(([k,label,type,ph]) => type === "textarea" ? `<label>${label}<textarea class="field" data-f="${k}" placeholder="${esc(ph)}">${esc(ed[k] || "")}</textarea></label>${key === "guide" ? `<div class="row"><button type="button" class="btn ghost sm" id="gimg">그림 넣기</button><input type="file" id="gfile" accept="image/jpeg,image/png" hidden><span class="hint" id="gimgmsg">커서 위치에 그림이 들어갑니다. 본문의 [그림:…] 줄은 지우지 마세요.</span></div>` : ""}`
       : type === "select" ? `<label>${label} <select class="field" data-f="${k}" style="width:auto">${ph.map(o => `<option${(ed[k]||ph[0]) === o ? " selected" : ""}>${o}</option>`).join("")}</select></label>`
       : type === "check" ? `<label><input type="checkbox" data-f="${k}"${ed[k] === "Y" ? " checked" : ""}> ${label}</label>`
       : `<label>${label}<input class="field" data-f="${k}" placeholder="${esc(ph)}" value="${esc(ed[k] || "")}"></label>`).join("")}
@@ -291,6 +293,7 @@ document.addEventListener("click", async e => {
   const key = store.get("staff.tab"), st = boards[key]; if(!st || !$("#board").contains(e.target)) return;
   const t = e.target;
   if(t.closest("#gcopy")){ const b = t.closest("#gcopy"); try{ await navigator.clipboard.writeText($("#glink").value); b.textContent = "복사됨"; }catch{ $("#glink").select(); b.textContent = "직접 복사하세요"; } setTimeout(() => { b.textContent = "링크 복사"; }, 1800); return; }
+  if(t.closest("#gimg")){ $("#gfile").click(); return; }
   const gl = t.closest("[data-glink]"); if(gl){ try{ await navigator.clipboard.writeText(new URL("../guide/?k=" + guideKey + "&p=" + gl.dataset.glink, location.href).href); gl.textContent = "복사됨"; }catch{ gl.textContent = "복사 실패"; } setTimeout(() => { gl.textContent = "이 글 링크 복사"; }, 1800); return; }
   const cat = t.closest("[data-cat]"); if(cat){ st.cat = cat.dataset.cat; return drawBoard(key); }
   if(t.closest("#bnew")){ st.editing = {}; drawBoard(key); $("#bform").scrollIntoView({behavior:"smooth"}); return; }
@@ -320,6 +323,29 @@ document.addEventListener("click", async e => {
       st.editing = null; st.open[saved.id] = true; drawBoard(key);
     }catch(x){ $("#berr").textContent = x.message; $("#berr").hidden = false; btn.disabled = false; }
   }
+});
+
+// 그림 첨부: 가로 1280px 이하 JPEG로 줄인 뒤 서버(드라이브)에 올리고, 본문 커서 위치에 [그림:파일ID]를 넣는다
+async function shrinkImage(file){
+  const url = URL.createObjectURL(file);
+  try{
+    const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(new Error("그림을 읽지 못했습니다.")); i.src = url; });
+    const sc = Math.min(1, 1280 / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement("canvas");
+    c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+    const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+    return c.toDataURL("image/jpeg", 0.82).split(",")[1];
+  } finally { URL.revokeObjectURL(url); }
+}
+document.addEventListener("change", async e => {
+  if(e.target.id !== "gfile" || !e.target.files[0]) return;
+  const f = e.target.files[0], msg = $("#gimgmsg"), btn = $("#gimg"), ta = document.querySelector('#bform [data-f="body"]');
+  e.target.value = ""; btn.disabled = true; msg.textContent = "그림을 올리는 중입니다…";
+  try{
+    const r = await api("guide.upload", { mime:"image/jpeg", data: await shrinkImage(f) });
+    const tag = "\n[그림:" + r.id + "]\n", p = ta.selectionStart == null ? ta.value.length : ta.selectionStart;
+    ta.value = ta.value.slice(0, p) + tag + ta.value.slice(p); msg.textContent = "그림을 넣었습니다. 저장해야 글에 반영됩니다.";
+  }catch(x){ msg.textContent = x.message; }
+  finally{ btn.disabled = false; }
 });
 
 // ── 휴가 신청: 기존 구글 폼으로 연결 + 사람별 연차 현황(휴가대장 시트의 '연차현황' 탭) ──

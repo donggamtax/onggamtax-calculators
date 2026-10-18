@@ -41,6 +41,7 @@ h1{font-size:clamp(24px,5vw,32px);font-weight:800;letter-spacing:-.04em;line-hei
 .post{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 18px;margin-top:6px}
 .post h2{font-size:clamp(20px,4.6vw,26px);letter-spacing:-.04em;line-height:1.35}.post .meta{font-size:13px;color:var(--muted);margin:6px 0 16px}
 .post .bd{white-space:pre-wrap;font-size:16px;border-top:1px solid var(--line);padding-top:16px}
+.post .bd img{max-width:100%;height:auto;border-radius:10px;display:block;margin:10px 0;border:1px solid var(--line)}
 .btn{all:unset;box-sizing:border-box;cursor:pointer;display:inline-block;margin-top:16px;padding:10px 18px;border-radius:999px;background:var(--brand);color:#fff;font-weight:700;font-size:15px}.btn:focus-visible{outline:3px solid var(--deep);outline-offset:2px}
 .q{width:100%;font:inherit;font-size:16px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
 .q:focus{outline:3px solid rgba(61,95,112,.25);border-color:var(--brand)}
@@ -68,7 +69,7 @@ h1{font-size:clamp(24px,5vw,32px);font-weight:800;letter-spacing:-.04em;line-hei
   var view = pid ? {t:"post", id:pid} : {t:"home"};
   try{ if(key || pid) history.replaceState(null, "", location.pathname); }catch(e){} // 주소창·기록에 키가 남지 않게
   function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
-  function rich(s){ return esc(s).replace(/https:\/\/[^\s<]+/g, function(u){ var t = u.replace(/[.,)]+$/, ""), tail = u.slice(t.length); return '<a href="' + t + '" target="_blank" rel="noopener noreferrer">' + t + '</a>' + tail; }); }
+  function rich(s){ return esc(s).replace(/https:\/\/[^\s<]+/g, function(u){ var t = u.replace(/[.,)]+$/, ""), tail = u.slice(t.length); return '<a href="' + t + '" target="_blank" rel="noopener noreferrer">' + t + '</a>' + tail; }).replace(/\[그림:([A-Za-z0-9_-]{20,60})\]/g, function(m, id){ return '<img src="https://drive.google.com/thumbnail?id=' + id + '&sz=w1000" alt="첨부 그림" loading="lazy" referrerpolicy="no-referrer">'; }); }
   function day(iso){ var d = new Date(iso); return isNaN(d) ? "" : d.getFullYear() + "." + ("0"+(d.getMonth()+1)).slice(-2) + "." + ("0"+d.getDate()).slice(-2); }
   function isNew(iso){ var d = new Date(iso); return !isNaN(d) && Date.now() - d < 14*864e5; }
   function msg(t, err){ app.innerHTML = '<div class="msg' + (err ? " err" : "") + '">' + esc(t) + '</div>'; }
