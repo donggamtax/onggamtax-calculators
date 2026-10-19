@@ -827,8 +827,64 @@ document.addEventListener("mouseup",function(){drag=null});
 document.addEventListener("keydown",function(e){
   if(!selCells.length||(e.key!=="Delete"&&e.key!=="Backspace"))return;
   e.preventDefault();var D=d(state.sel),tax=false;
-  selCells.forEach(function(c){c.querySelectorAll("input[data-k]").forEach(function(i){delete D.v[i.dataset.k];i.value="";if(i.closest(".paper[data-taxp]"))tax=true})});
+  var dl=[];selCells.forEach(function(c){c.querySelectorAll("input[data-k]").forEach(function(i){dl.push({k:i.dataset.k,v:""});i.value="";if(i.closest(".paper[data-taxp]"))tax=true})});setBatch(D,dl);
   clearSel();if(tax)refreshTax();
+});
+/* ===== 되돌리기(Ctrl+Z / Ctrl+Y)와 엑셀 여러 칸 붙여넣기 ===== */
+var UNDO={},txn=null;
+function ust(cid){return UNDO[cid]||(UNDO[cid]={u:[],r:[]})}
+function pushChg(cid,list){list=list.filter(function(c){return c.before!==c.after});if(!list.length)return;var st=ust(cid);st.u.push(list);if(st.u.length>200)st.u.shift();st.r=[]}
+function endTxn(){if(!txn)return;var D=state.data[txn.cid];if(D&&D.v)pushChg(txn.cid,[{k:txn.k,before:txn.before,after:D.v[txn.k]}]);txn=null}
+function redrawAfter(){drawDetail();refreshTax();refreshVat();touch()}
+function undoRedo(redo){
+  endTxn();var st=ust(state.sel),from=redo?st.r:st.u,to=redo?st.u:st.r,e=from.pop();if(!e)return false;
+  var D=d(state.sel);
+  (redo?e:e.slice().reverse()).forEach(function(c){var v=redo?c.after:c.before;if(v===undefined)delete D.v[c.k];else D.v[c.k]=v});
+  to.push(e);redrawAfter();return true;
+}
+document.addEventListener("input",function(e){
+  var t=e.target;if(!state.sel||!t||t.dataset===undefined||t.dataset.k===undefined||!t.closest(".paper"))return;
+  var D=state.data[state.sel];if(!D||!D.v)return;
+  if(!txn||txn.k!==t.dataset.k||txn.cid!==state.sel){endTxn();txn={cid:state.sel,k:t.dataset.k,before:D.v[t.dataset.k]}}
+},true);
+document.addEventListener("focusout",function(e){if(txn&&e.target&&e.target.dataset&&e.target.dataset.k===txn.k)endTxn()},true);
+document.addEventListener("change",function(e){
+  var t=e.target;if(!state.sel||!t||t.tagName!=="SELECT"||!t.dataset||t.dataset.k===undefined||!t.closest(".paper"))return;
+  var D=state.data[state.sel];if(D&&D.v)pushChg(state.sel,[{k:t.dataset.k,before:D.v[t.dataset.k],after:t.value}]);
+},true);
+document.addEventListener("keydown",function(e){
+  if(!(e.ctrlKey||e.metaKey)||e.altKey)return;
+  var key=e.key.toLowerCase(),redo=key==="y"||(key==="z"&&e.shiftKey);
+  if(key!=="z"&&key!=="y")return;
+  var a=document.activeElement,inPaper=a&&a.closest&&a.closest(".paper"),none=!a||a===document.body;
+  if(!inPaper&&!(none&&state.sel))return;
+  if(undoRedo(redo))e.preventDefault();
+});
+function setBatch(D,list){ /* list: [{k,v,el}] — 값을 한꺼번에 넣고 되돌리기 기록 */
+  var chg=[];list.forEach(function(x){var b=D.v[x.k];if(x.v===""&&b===undefined)return;if(x.v==="")delete D.v[x.k];else D.v[x.k]=x.v;chg.push({k:x.k,before:b,after:x.v===""?undefined:x.v})});
+  endTxn();pushChg(state.sel,chg);return chg.length;
+}
+document.addEventListener("paste",function(e){
+  var t=e.target,td=null;
+  if(t&&t.tagName==="INPUT"&&t.closest&&t.closest(".paper"))td=t.closest("td");
+  else if(selCells.length&&(!t||t===document.body))td=selCells[0];
+  if(!td||!state.sel)return;
+  var txt=(e.clipboardData||window.clipboardData).getData("text");
+  if(!txt||!/[\t\n]/.test(txt.replace(/\r?\n$/,"")))return; /* 한 칸 값은 기본 붙여넣기 */
+  var grid=txt.replace(/\r/g,"").replace(/\n$/,"").split("\n").map(function(r){return r.split("\t")});
+  e.preventDefault();
+  var D=d(state.sel),tbl=td.closest("table"),rows=[].slice.call(tbl.rows),r0=rows.indexOf(td.parentNode),c0=td.cellIndex,list=[];
+  grid.forEach(function(line,ri){
+    var tr=rows[r0+ri];if(!tr)return;
+    line.forEach(function(v,ci){
+      var cell=tr.cells[c0+ci];if(!cell)return;
+      var el=cell.querySelector("input[data-k],select[data-k]");if(!el||el.type==="checkbox")return;
+      v=v.trim();
+      if(el.tagName==="SELECT"){var ok=[].some.call(el.options,function(o){return o.value===v||o.text===v});if(!ok&&v!=="")return}
+      list.push({k:el.dataset.k,v:v});
+    });
+  });
+  if(setBatch(D,list))redrawAfter();
 });
 var capLib=null;
 function loadCap(cb){
