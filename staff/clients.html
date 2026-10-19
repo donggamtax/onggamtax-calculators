@@ -188,7 +188,9 @@ html[data-embed="1"] header h1,html[data-embed="1"] header .nav2,html[data-embed
 html[data-embed="1"] .wrap{padding-top:6px}
 .paper.taxp .tx{width:100%;table-layout:fixed}.paper.taxp .tx td.cc input{min-width:0;width:100%;text-align:right}.paper.taxp .tx td.c.cc{text-align:right;padding-right:8px}
 .paper.taxp .tx th.xn input{width:calc(100% - 24px)}.paper.taxp .tx:not(.sm) tr:first-child th:first-child{width:150px}.paper.taxp .tx:not(.sm) tr:first-child th:last-child{width:15%}
-.paper.taxp .taxgrid{grid-template-columns:minmax(0,1fr) 380px;gap:12px 18px}
+.paper.taxp .taxgrid{grid-template-columns:minmax(0,1fr) 380px;gap:12px 18px}.paper.taxp .taxgrid>div:first-child{overflow-x:auto}
+.paper.taxp .tx td.cc{text-align:right}.paper.taxp .tx td.cc input{text-align:right!important;padding-right:6px}
+.paper.taxp .tx th{position:relative}.rz{position:absolute;top:0;right:-3px;width:7px;height:100%;cursor:col-resize;z-index:2}.rz:hover{background:rgba(42,111,219,.35)}
 body:has(.app[data-tax="1"]) .wrap{max-width:1700px}
 @media (max-width:1500px){.paper.taxp .taxgrid{grid-template-columns:minmax(0,1fr)}}
 .paper.taxp .tx th{padding:3px 5px}.paper.taxp .tx td{padding:2px 4px}
@@ -612,6 +614,39 @@ function paperTax(id){
 }
 function fitTaxIn(){}
 function fitAllTax(){}
+/* 세금예측 표 칸 너비: 머리글 경계를 끌어 조정(브라우저에 저장), 더블클릭하면 초기화 */
+var TXW_KEY="tax.cw";
+function txWidths(){try{var a=JSON.parse(localStorage.getItem(TXW_KEY)||"null");return a&&a.length===5&&a.every(function(n){return n>=40})?a:null}catch(e){return null}}
+function applyTaxW(){
+  var w=txWidths();
+  document.querySelectorAll(".paper[data-taxp] table.tx:not(.sm)").forEach(function(t){
+    var ths=t.rows[0].cells;
+    for(var i=0;i<ths.length;i++){
+      if(!ths[i].querySelector(".rz")){var h=document.createElement("i");h.className="rz";h.dataset.i=i;h.title="끌어서 칸 너비 조정 (더블클릭: 처음 크기)";ths[i].appendChild(h)}
+      ths[i].style.width=w?w[i]+"px":"";
+    }
+    t.style.width=w?w.reduce(function(a,b){return a+b},0)+"px":"";
+    t.style.maxWidth=w?"none":"";
+  });
+}
+var rzDrag=null;
+document.addEventListener("mousedown",function(e){
+  var h=e.target.closest&&e.target.closest(".paper[data-taxp] .rz");if(!h||e.button!==0)return;
+  e.preventDefault();e.stopPropagation();
+  var t=h.closest("table"),ths=[].slice.call(t.rows[0].cells);
+  rzDrag={i:+h.dataset.i,x:e.clientX,w:ths.map(function(c){return c.getBoundingClientRect().width})};
+},true);
+document.addEventListener("mousemove",function(e){
+  if(!rzDrag)return;
+  var w=rzDrag.w.slice();w[rzDrag.i]=Math.max(40,rzDrag.w[rzDrag.i]+e.clientX-rzDrag.x);
+  try{localStorage.setItem(TXW_KEY,JSON.stringify(w.map(Math.round)))}catch(x){}
+  applyTaxW();
+});
+document.addEventListener("mouseup",function(){rzDrag=null});
+document.addEventListener("dblclick",function(e){
+  if(!(e.target.closest&&e.target.closest(".paper[data-taxp] .rz")))return;
+  try{localStorage.removeItem(TXW_KEY)}catch(x){}applyTaxW();
+});
 function refreshTax(){
   document.querySelectorAll(".paper[data-taxp]").forEach(function(p){
     var P=p.dataset.taxp,isCorp=p.dataset.corp==="1",res=taxCompute(P,+p.dataset.yr,isCorp);
@@ -666,7 +701,7 @@ function drawDetail(){
     '<div class="hist">'+histHtml(c)+'</div>';
   var tk=state.tab==="부가세"?"vp":state.tab==="소득세"?"ip":state.tab==="법인세"?"cp":state.tab==="세금예측"?"tp":null;
   document.getElementById("app").dataset.wide=(tk&&state.cmp[tk])?"1":"";document.getElementById("app").dataset.tax=state.tab==="세금예측"?"1":"";
-  fitAllWn();fitAllTax();
+  fitAllWn();fitAllTax();applyTaxW();
 }
 document.addEventListener("input",function(e){if(e.target.classList&&e.target.classList.contains("repi"))e.target.size=repSize(e.target.value);if(e.target.classList&&(e.target.classList.contains("wn")||e.target.classList.contains("ag")))fitWn(e.target)});
 // 업체 위에 마우스를 올리거나 손가락을 대면 자료를 미리 받아 둔다(누르는 순간 바로 열린다)
