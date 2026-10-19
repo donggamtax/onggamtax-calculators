@@ -138,7 +138,7 @@ function eligible(l){
 /* ── 신고리스트 화면 ── */
 function joined(){
   var m=S.rows[S.cur]||{},out=[];
-  Object.keys(m).forEach(function(id){var c=cById(id);if(c)out.push({c:c,d:m[id]})});
+  Object.keys(m).forEach(function(id){var c=+id<0?{id:+id,name:m[id].xn||"(이름 없음)",type:m[id].xt||"개인",owner:m[id].xo||"",extra:true}:cById(id);if(c)out.push({c:c,d:m[id]})});
   var po={"상":0,"중":1,"하":2};
   out.sort(function(a,b){return String(a.c.owner||"~").localeCompare(String(b.c.owner||"~"),"ko")||((po[a.d.prio]==null?3:po[a.d.prio])-(po[b.d.prio]==null?3:po[b.d.prio]))||a.c.name.localeCompare(b.c.name,"ko")});
   return out;
@@ -159,6 +159,9 @@ function summary(rows){
 function fmtM(v){var n=String(v||"").replace(/[^\d]/g,"");return n?Number(n).toLocaleString("ko-KR"):""}
 function cell(r,col){
   var k=col.k,t=col.t,d=r.d,v=d[k]||"",id=r.c.id,al=esc(col.l);
+  if(r.c.extra&&k==="type")return '<td><select data-f="xt" data-id="'+id+'" aria-label="구분">'+["개인","법인"].map(function(x){return '<option'+(x===(r.c.type||"개인")?" selected":"")+'>'+x+'</option>'}).join("")+'</select></td>';
+  if(r.c.extra&&k==="owner"){var op=[""].concat(S.people);if(r.c.owner&&op.indexOf(r.c.owner)<0)op.push(r.c.owner);return '<td><select data-f="xo" data-id="'+id+'" aria-label="담당자">'+op.map(function(x){return '<option'+(x===(r.c.owner||"")?" selected":"")+'>'+esc(x)+'</option>'}).join("")+'</select></td>'}
+  if(r.c.extra&&k==="name")return '<td class="nmc"><input type="text" class="nt" data-f="xn" data-id="'+id+'" value="'+esc(r.c.name)+'" aria-label="상호" title="기장 업체 명단에 없는 업체">'+'</td>';
   if(k==="type")return '<td>'+esc(r.c.type||"개인")+'</td>';
   if(k==="name")return '<td class="nmc">'+esc(r.c.name)+'</td>';
   if(k==="owner")return '<td>'+esc(r.c.owner||"")+'</td>';
@@ -203,8 +206,9 @@ function drawList(){
     '</tbody></table></div>';
   h+='<div class="row"><label>업체 추가 <input id="addn" list="addl" placeholder="업체명" autocomplete="off"></label><datalist id="addl">'+
     S.clients.filter(function(c){return (c.status||"거래중")==="거래중"&&!(S.rows[S.cur]||{})[c.id]}).map(function(c){return '<option value="'+esc(c.name)+'">'}).join("")+'</datalist>'+
-    '<button class="btn sm" id="addb">추가</button><button class="btn ghost sm" id="auto">대상 업체 자동으로 채우기</button><button class="btn ghost sm" id="imp">엑셀에서 붙여넣기</button><button class="btn ghost sm" id="cedit">열 편집</button>'+
+    '<button class="btn sm" id="addb">추가</button><button class="btn ghost sm" id="xopen">명단에 없는 업체 추가</button><button class="btn ghost sm" id="auto">대상 업체 자동으로 채우기</button><button class="btn ghost sm" id="imp">엑셀에서 붙여넣기</button><button class="btn ghost sm" id="cedit">열 편집</button>'+
     (!S.canDelete?'':S.confirmDel?'<span class="err">이 신고리스트와 기록이 모두 사라집니다.</span><button class="btn danger sm" id="delyes">삭제 확인</button><button class="btn ghost sm" id="delno">취소</button>':'<button class="btn ghost sm" id="del">이 신고리스트 삭제…</button>')+'</div>';
+  if(S.xform)h+='<div class="panel"><div class="row"><b>명단에 없는 업체 추가</b><span class="sub">업체별 기장 명단에 없어도 이 신고리스트에만 넣을 수 있습니다.</span></div><div class="row"><input type="text" id="xn" placeholder="상호" maxlength="40"><select id="xt"><option>개인</option><option>법인</option></select><select id="xo">'+[""].concat(S.people).map(function(x){return '<option>'+esc(x)+'</option>'}).join("")+'</select><button class="btn sm" id="xgo">추가</button><button class="btn ghost sm" id="xno">닫기</button></div></div>';
   if(l.kind==="vat")h+='<p class="sub">업체별 기장의 부가세 신고 체크리스트에서 <b>작성자 결재</b>를 체크하면 작업일이, <b>대표세무사 결재</b>를 체크하면 결재완료 날짜가 이 표에 자동으로 찍힙니다(체크리스트 이름이 "'+l.year+'년 '+l.ki+'기 '+esc(l.sub)+'"으로 시작해야 합니다). 날짜는 여기서 직접 고쳐도 됩니다.</p>';
   h+='</div>';
   if(S.err)h+='<p class="err">'+esc(S.err)+'</p>';
@@ -215,7 +219,7 @@ function say(t,bad){S.msg=t;var e=$("#st");if(e){e.textContent=t;e.className="st
 function refreshCounts(){var l=curList();if(!l)return;var m=S.rows[l.id]||{},ids=Object.keys(m);l.n=ids.length;l.work=ids.filter(function(i){return m[i].work}).length;l.appr=ids.filter(function(i){return m[i].appr}).length;l.deliv=ids.filter(function(i){return m[i].deliv}).length}
 
 function openList(id){
-  S.cur=id;S.own="전체";S.stf="전체";S.sort=null;S.err="";S.msg="";S.confirmDel=false;
+  S.cur=id;S.own="전체";S.stf="전체";S.sort=null;S.xform=false;S.err="";S.msg="";S.confirmDel=false;
   $("#view").innerHTML='<p class="sub">불러오는 중입니다…</p>';
   loadRows(id).then(draw,function(e){S.err=e.message;draw()});
 }
@@ -288,11 +292,12 @@ function parsePaste(text){
   var head=lines[hi].map(function(x){return x.trim()}),ix=function(n){return head.indexOf(n)};
   var map={};cols().forEach(function(c){if(c.t==="auto")return;var i=ix(c.l);if(i<0&&c.k==="done")i=ix("완료여부");if(i>=0)map[c.k]=i});var ni=ix("상호");
   var byName={};S.clients.forEach(function(c){byName[normName(c.name)]=c});
-  var items=[],miss=[],baddate=0;
+  joined().forEach(function(r){if(r.c.extra)byName[normName(r.c.name)]=r.c});
+  var ti=ix("개인/법인");if(ti<0)ti=ix("구분");var oi=ix("담당자");
+  var items=[],miss=[],extra=[],seenX={},baddate=0;
   lines.slice(hi+1).forEach(function(r){
     var nm=(r[ni]||"").trim();if(!nm)return;
-    var c=byName[normName(nm)];if(!c){miss.push(nm);return}
-    var d={};
+    var c=byName[normName(nm)],d={};
     Object.keys(map).forEach(function(k){
       var v=(r[map[k]]||"").trim();if(!v)return;var t=colOf(k).t;
       if(t==="check")d[k]=/^(x|n|no|false|0|미완료)$/i.test(v)?"":"1";
@@ -300,16 +305,19 @@ function parsePaste(text){
       else if(t==="num"){var fm=String(v).replace(/[^\d]/g,"");if(fm)d[k]=fm}
       else d[k]=v;
     });
-    items.push({clientId:c.id,data:d});
+    if(c)items.push({clientId:c.id,data:d});
+    else{var xk=normName(nm);if(seenX[xk])return;seenX[xk]=1;miss.push(nm);extra.push({name:nm,type:ti>=0&&/법인/.test(r[ti]||"")?"법인":"개인",owner:oi>=0?(r[oi]||"").trim():"",data:d})}
   });
-  return {items:items,miss:miss,baddate:baddate};
+  return {items:items,miss:miss,extra:extra,baddate:baddate};
 }
 function importDlg(){
   var m=document.createElement("div");m.className="dlg";
-  m.innerHTML='<div><h2>엑셀에서 붙여넣기</h2><p class="sub">엑셀의 표를 머리글 줄(완료여부, 우선순위, 상호, 담당자 …)부터 복사해 아래에 붙여넣으세요. 상호가 업체 목록과 같은 줄만 들어가고, 이미 있는 업체는 붙여넣은 내용으로 덮어씁니다(빈 칸은 그대로 둡니다). 담당자와 구분은 업체 정보를 따릅니다.</p><textarea id="pt" placeholder="여기에 붙여넣기"></textarea><p class="sub">머리글은 이 표의 열 이름과 같게 적으세요(<b id="phn"></b>). 필요한 열만 있으면 되고 상호는 꼭 필요합니다. 날짜는 6/11 형식, 금액은 숫자, 체크 열은 O(또는 아무 글자)를 적으면 체크됩니다. 구분·담당자는 업체 정보를 따르니 열이 있어도 무시합니다.</p><p class="sub" id="pi"></p><div class="row"><button class="btn ghost" id="ptpl">양식 받기(CSV)</button><button class="btn" id="pgo">넣기</button><button class="btn ghost" id="pno">닫기</button></div></div>';
+  m.innerHTML='<div><h2>엑셀에서 붙여넣기</h2><p class="sub">엑셀의 표를 머리글 줄(완료여부, 우선순위, 상호, 담당자 …)부터 복사해 아래에 붙여넣으세요. 이미 있는 업체는 붙여넣은 내용으로 덮어씁니다(빈 칸은 그대로 둡니다). 업체별 기장 명단에 있는 업체의 구분과 담당자는 명단을 따르고, 명단에 없는 업체는 붙여넣은 구분(개인/법인)과 담당자로 새로 추가됩니다.</p><textarea id="pt" placeholder="여기에 붙여넣기"></textarea><p class="sub">머리글은 이 표의 열 이름과 같게 적으세요(<b id="phn"></b>). 필요한 열만 있으면 되고 상호는 꼭 필요합니다. 날짜는 6/11 형식, 금액은 숫자, 체크 열은 O(또는 아무 글자)를 적으면 체크됩니다. 구분·담당자는 업체 정보를 따르니 열이 있어도 무시합니다.</p><label class="sub"><input type="checkbox" id="pxtra" checked> 명단에 없는 업체도 새로 추가</label><p class="sub" id="pi"></p><div class="row"><button class="btn ghost" id="ptpl">양식 받기(CSV)</button><button class="btn" id="pgo">넣기</button><button class="btn ghost" id="pno">닫기</button></div></div>';
   document.body.appendChild(m);
   m.querySelector("#phn").textContent=cols().filter(function(c){return c.t!=="auto"||c.k==="name"}).map(function(c){return c.l}).join(", ");var ta=m.querySelector("#pt"),pi=m.querySelector("#pi"),res=null;
-  ta.addEventListener("input",function(){res=parsePaste(ta.value);pi.className=res.error?"err":"sub";pi.textContent=res.error?res.error:res.items.length+"곳을 넣습니다."+(res.miss.length?" 업체 목록에서 못 찾은 상호 "+res.miss.length+"곳: "+res.miss.slice(0,6).join(", ")+(res.miss.length>6?" …":""):"")+(res.baddate?" (읽지 못한 날짜 "+res.baddate+"칸은 건너뜀)":"")});
+  var px=m.querySelector("#pxtra"),upd=function(){res=parsePaste(ta.value);pi.className=res.error?"err":"sub";if(res.error){pi.textContent=res.error;return}
+    var x=px.checked?res.extra.length:0;pi.textContent=(res.items.length+x)+"곳을 넣습니다."+(x?" (명단에 없어 새로 추가 "+x+"곳: "+res.miss.slice(0,6).join(", ")+(res.miss.length>6?" …":"")+")":res.miss.length?" 명단에 없는 "+res.miss.length+"곳은 건너뜀: "+res.miss.slice(0,6).join(", ")+(res.miss.length>6?" …":""):"")+(res.baddate?" (읽지 못한 날짜 "+res.baddate+"칸은 건너뜀)":"")};
+  ta.addEventListener("input",upd);px.addEventListener("change",function(){if(res&&!res.error)upd()});
   m.addEventListener("click",function(e){
     if(e.target===m||e.target.id==="pno")return m.remove();
     if(e.target.id==="ptpl"){
@@ -318,10 +326,11 @@ function importDlg(){
       var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="신고리스트_업로드양식.csv";document.body.appendChild(a);a.click();a.remove();return;
     }
     if(e.target.id==="pgo"){
-      if(!res||res.error||!res.items.length)return;
+      var ex=px.checked?res&&res.extra||[]:[];
+      if(!res||res.error||!(res.items.length+ex.length))return;
       e.target.disabled=true;pi.textContent="넣는 중입니다…";
-      api("progress.add",{list:S.cur,ids:res.items.map(function(x){return x.clientId})}).then(function(){return api("progress.import",{list:S.cur,items:res.items})})
-        .then(function(){m.remove();return loadRows(S.cur)}).then(function(){refreshCounts();S.msg="붙여넣은 "+res.items.length+"곳을 반영했습니다.";draw()},function(x){pi.className="err";pi.textContent=x.message;e.target.disabled=false});
+      api("progress.add",{list:S.cur,ids:res.items.map(function(x){return x.clientId}).filter(function(i){return i>0})}).then(function(){return api("progress.import",{list:S.cur,items:res.items,extra:ex})})
+        .then(function(){m.remove();return loadRows(S.cur)}).then(function(){refreshCounts();S.msg="붙여넣은 "+(res.items.length+ex.length)+"곳을 반영했습니다.";draw()},function(x){pi.className="err";pi.textContent=x.message;e.target.disabled=false});
     }
   });
 }
@@ -359,6 +368,16 @@ document.addEventListener("click",function(e){
     var nm=$("#addn").value.trim(),c=S.clients.filter(function(x){return normName(x.name)===normName(nm)})[0];
     if(!c)return say("업체명을 목록에서 골라 주세요.",true);
     api("progress.add",{list:S.cur,ids:[c.id]}).then(function(){S.rows[S.cur][c.id]=S.rows[S.cur][c.id]||{};refreshCounts();draw()},function(x){say(x.message,true)});
+    return;
+  }
+  if(t.id==="xopen"){S.xform=!S.xform;return draw()}
+  if(t.id==="xno"){S.xform=false;return draw()}
+  if(t.id==="xgo"){
+    var xn=$("#xn").value.trim();if(!xn)return say("상호를 적어 주세요.",true);
+    if(S.clients.some(function(x){return normName(x.name)===normName(xn)}))return say("업체별 기장 명단에 있는 업체입니다. 위의 업체 추가에서 골라 주세요.",true);
+    if(joined().some(function(r){return normName(r.c.name)===normName(xn)}))return say("이미 이 신고리스트에 있습니다.",true);
+    t.disabled=true;
+    api("progress.import",{list:S.cur,items:[],extra:[{name:xn,type:$("#xt").value,owner:$("#xo").value,data:{}}]}).then(function(){S.xform=false;return loadRows(S.cur)}).then(function(){refreshCounts();S.msg=xn+" 을(를) 추가했습니다.";draw()},function(x){t.disabled=false;say(x.message,true)});
     return;
   }
   if(t.id==="auto"){
