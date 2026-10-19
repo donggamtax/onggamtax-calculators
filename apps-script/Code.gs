@@ -156,7 +156,7 @@ function leaveStatus(p) {
 // ── 진도체크: 신고 종류별 신고리스트(예: 2026년 2기 예정 부가세)와 업체별 진행 기록 ──────────
 // 시트 '진도목록' = 신고리스트 정의, 시트 '진도체크' = (리스트ID, 업체ID, 진행 기록 JSON). 업체명·구분·담당자는 업체 시트에서 화면이 실시간으로 가져온다.
 const PL_SHEET = "진도목록", PR_SHEET = "진도체크";
-const PR_FIELDS = { done: 1, prio: 1, diff: 1, work: 1, file: 1, appr: 1, deliv: 1, note: 1, mail: 1, fee: 1, paid: 1, tinv: 1 };
+const PR_FIELDS = { xn: 1, xt: 1, xo: 1, done: 1, prio: 1, diff: 1, work: 1, file: 1, appr: 1, deliv: 1, note: 1, mail: 1, fee: 1, paid: 1, tinv: 1 };
 const PR_DATES = { work: 1, file: 1, appr: 1, deliv: 1, mail: 1, paid: 1, tinv: 1 };
 function progSheet(name, head) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -268,6 +268,8 @@ function prClean(patch) {
     if (!PR_FIELDS[k] && !/^c\d{1,3}$/.test(k)) return;
     let v = String(patch[k] == null ? "" : patch[k]).slice(0, 500);
     if (PR_DATES[k] && v && !/^\d{4}-\d{2}-\d{2}$/.test(v)) throw fail("날짜 형식이 올바르지 않습니다.");
+    if (k === "xn" || k === "xo") v = v.trim().slice(0, 40);
+    if (k === "xt") v = v === "법인" ? "법인" : "개인";
     out[k] = v; // JSON 문자열 안에 저장되므로(셀이 { 로 시작) 수식으로 해석되지 않는다
   });
   return out;
@@ -283,7 +285,7 @@ function prUpsert(listId, clientId, patch) {
 function prCheckList(id) { if (!plRows().some(l => l.id === id)) throw fail("없는 신고리스트입니다. 새로고침해 주세요.", 404); }
 function progressSave(req) {
   const id = String(req.list || ""), cid = Math.round(Number(req.clientId));
-  if (!(cid > 0)) throw fail("업체를 확인하세요.");
+  if (!cid || cid !== cid) throw fail("업체를 확인하세요.");
   const patch = prClean(req.patch);
   return withLock(() => { prCheckList(id); return { data: prUpsert(id, cid, patch) }; });
 }
@@ -302,12 +304,39 @@ function progressRemove(req) {
   const id = String(req.list || ""), cid = Math.round(Number(req.clientId));
   return withLock(() => { const sh = prSheet(), row = prFind(sh, id, cid); if (row) sh.deleteRow(row); return { ok: true }; });
 }
+// 업체별 기장 명단에 없는 업체도 신고리스트에 넣을 수 있다. 업체 번호를 음수(-1, -2 …)로 주고 이름·구분·담당자는 기록 안(xn, xt, xo)에 둔다.
+function prExtras(listId) {
+  const sh = prSheet(), last = sh.getLastRow(), byName = {};
+  let min = 0;
+  if (last >= 2) sh.getRange(2, 1, last - 1, 3).getValues().forEach(r => {
+    if (String(r[0]) !== listId) return;
+    const cid = Number(r[1]); if (cid >= 0) return;
+    if (cid < min) min = cid;
+    let d = {}; try { d = JSON.parse(String(r[2] || "{}")); } catch (e) {}
+    if (d.xn) byName[String(d.xn).replace(/\s+/g, "").toLowerCase()] = cid;
+  });
+  return { byName: byName, min: min };
+}
 function progressImport(req) {
   const id = String(req.list || ""), items = (Array.isArray(req.items) ? req.items : []).slice(0, 500);
+  const extra = (Array.isArray(req.extra) ? req.extra : []).slice(0, 300);
   return withLock(() => {
     prCheckList(id);
     let n = 0;
-    items.forEach(it => { const cid = Math.round(Number(it && it.clientId)); if (cid > 0) { prUpsert(id, cid, prClean(it.data)); n++; } });
+    items.forEach(it => { const cid = Math.round(Number(it && it.clientId)); if (cid !== 0 && cid === cid) { prUpsert(id, cid, prClean(it.data)); n++; } });
+    if (extra.length) {
+      const ex = prExtras(id);
+      extra.forEach(it => {
+        const name = String(it && it.name || "").trim().slice(0, 40); if (!name) return;
+        const key = name.replace(/\s+/g, "").toLowerCase();
+        let cid = ex.byName[key];
+        if (!cid) { cid = --ex.min; ex.byName[key] = cid; }
+        const d = prClean(it.data); d.xn = name;
+        if (it.type != null) d.xt = prClean({ xt: it.type }).xt;
+        if (it.owner) d.xo = String(it.owner).trim().slice(0, 40);
+        prUpsert(id, cid, d); n++;
+      });
+    }
     return { saved: n };
   });
 }
