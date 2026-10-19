@@ -515,6 +515,7 @@ function paperCorp(id){
 var CORP_NEW=[[2e8,.10,0],[2e10,.20,2e7],[3e11,.22,4.2e8],[Infinity,.25,9.02e9]];
 var CORP_OLD=[[2e8,.09,0],[2e10,.19,2e7],[3e11,.21,4.2e8],[Infinity,.24,9.42e9]];
 var IND_TBL=[[14e6,.06,0],[50e6,.15,1.26e6],[88e6,.24,5.76e6],[150e6,.35,15.44e6],[300e6,.38,19.94e6],[500e6,.40,25.94e6],[1e9,.42,35.94e6],[Infinity,.45,65.94e6]];
+var OPT_ROWS=["oexp","dona"]; /* 기본으로는 숨겨 두고 "+"로 넣는 줄: 타소득경비, 이월기부금 */
 var DED_NAMES=["통합고용세액공제","창업감면","중소기업특별세액감면","기타 공제·감면"];
 function calcTax(base,tbl){if(!(base>0))return 0;for(var i=0;i<tbl.length;i++){if(base<=tbl[i][0])return base*tbl[i][1]-tbl[i][2]}return 0}
 function nvk(P,k){var x=val(P+k);if(x===""||x==null)return null;var n=Number(String(x).replace(/,/g,""));return isNaN(n)?null:n}
@@ -526,6 +527,7 @@ function taxCompute(P,yr,isCorp){
   var tbl=function(y){return isCorp?(y>=2026?CORP_NEW:CORP_OLD):IND_TBL};
   var bz=(val(P+"bl")||"").split(",").filter(Boolean),dl=(val(P+"dl","0,1,2,3")||"").split(",").filter(Boolean);
   var hid={};(val(P+"hid")||"").split(",").forEach(function(h){if(h)hid[h]=1});
+  OPT_ROWS.forEach(function(o){if((val(P+"opt")||"").split(",").indexOf(o)<0)hid[o]=1});
   var xl=(val(P+"xl")||"").split(",").filter(Boolean),z=function(id,v){return hid[id]?0:v};
   var B={ids:bz,rev:0,cogs:0,sga:0,inc:0};
   bz.forEach(function(i){var r=R("b"+i+"|rev"),g=R("b"+i+"|cogs"),a=R("b"+i+"|sga"),n=O("b"+i+"|inc",r-g-a);B["inc"+i]=n;B.rev+=r;B.cogs+=g;B.sga+=a;B.inc+=n});
@@ -539,9 +541,11 @@ function taxCompute(P,yr,isCorp){
     x.income=O(k("income"),((hb&&nvk(P,k("rev"))===null&&nvk(P,k("cogs"))===null&&nvk(P,k("sga"))===null)?B.inc:x.rev-x.cogs-x.sga)-x.extra-x.xs);
     x.adj=z("adj",rawMain?R(k("adj")):O(k("adj"),mp.adj));
     x.other=isCorp?0:z("other",rawMain?R(k("other")):O(k("other"),mp.other));
+    x.oexp=isCorp?0:z("oexp",rawMain?R(k("oexp")):O(k("oexp"),mp.oexp));
     x.loss=z("loss",rawMain?R(k("loss")):O(k("loss"),mp.loss));
+    x.dona=z("dona",rawMain?R(k("dona")):O(k("dona"),mp.dona));
     x.ded=isCorp?0:z("ded",rawMain?R(k("ded")):O(k("ded"),mp.ded));
-    x.base=O(k("base"),x.income+x.adj+x.other-x.loss-x.ded);
+    x.base=O(k("base"),x.income+x.adj+x.other-x.oexp-x.loss-x.dona-x.ded);
     x.tax=O(k("tax"),calcTax(x.base,tbl(y)));
     x.dsum=0;
     dl.forEach(function(i){var v=dp?O(k("d"+i),dp["d"+i]||0):R(k("d"+i));x["d"+i]=v;x.dsum+=v});
@@ -572,11 +576,11 @@ function paperTax(id){
   var D=d(state.sel),c=CLIENTS.filter(function(x){return x.id===state.sel})[0],P="tax|"+id+"|",name=D.tps.filter(function(x){return x.id===id})[0].name;
   var isCorp=c.type==="법인",yr=yearOf(name),res=taxCompute(P,yr,isCorp),yy=function(n){return String(n).slice(2)+"년"};
   var rows=isCorp?
-   [["ratio","소득율"],["rev","수입금액"],["cogs","매출원가"],["sga","판매관리비 등"],["extra","추가경비"],["income","당기순이익"],["adj","세무조정"],["loss","이월결손금"],["base","과세표준"],["tax","산출세액"],["credit","세액공제 및 감면"],["dec","결정세액"],["local","지방소득세"],["paid","기납부세액"],["nong","농특세(고용증대)"],["pay","납부할세액"]]:
-   [["ratio","소득율"],["rev","수입금액"],["cogs","매출원가"],["sga","판매관리비 등"],["extra","추가경비"],["income","사업소득금액"],["adj","세무조정"],["other","다른 종합소득금액"],["loss","이월결손금"],["ded","종합소득공제"],["base","과세표준"],["tax","산출세액"],["credit","세액공제 및 감면"],["dec","결정세액"],["local","지방소득세"],["paid","기납부세액"],["nong","농특세(고용증대)"],["pay","납부할세액"]];
-  var RAWIDS={rev:1,cogs:1,sga:1,extra:1,adj:1,other:1,loss:1,ded:1,paid:1,nong:1};
+   [["ratio","소득율"],["rev","수입금액"],["cogs","매출원가"],["sga","판매관리비 등"],["extra","추가경비"],["income","당기순이익"],["adj","세무조정"],["loss","이월결손금"],["dona","이월기부금"],["base","과세표준"],["tax","산출세액"],["credit","세액공제 및 감면"],["dec","결정세액"],["local","지방소득세"],["paid","기납부세액"],["nong","농특세(고용증대)"],["pay","납부할세액"]]:
+   [["ratio","소득율"],["rev","수입금액"],["cogs","매출원가"],["sga","판매관리비 등"],["extra","추가경비"],["income","사업소득금액"],["adj","세무조정"],["other","다른 종합소득금액"],["oexp","타소득경비"],["loss","이월결손금"],["dona","이월기부금"],["ded","종합소득공제"],["base","과세표준"],["tax","산출세액"],["credit","세액공제 및 감면"],["dec","결정세액"],["local","지방소득세"],["paid","기납부세액"],["nong","농특세(고용증대)"],["pay","납부할세액"]];
+  var RAWIDS={oexp:1,dona:1,rev:1,cogs:1,sga:1,extra:1,adj:1,other:1,loss:1,ded:1,paid:1,nong:1};
   var hasB=res.B.ids.length>0;
-  var DELOK={ratio:1,cogs:1,sga:1,extra:1,adj:1,other:1,loss:1,ded:1,credit:1,local:1,paid:1,nong:1};
+  var DELOK={oexp:1,dona:1,ratio:1,cogs:1,sga:1,extra:1,adj:1,other:1,loss:1,ded:1,credit:1,local:1,paid:1,nong:1};
   var hiddenRows=rows.filter(function(r){return res.hid[r[0]]}),mainRows=rows.filter(function(r){return !res.hid[r[0]]});
   var ii=mainRows.map(function(r){return r[0]}).indexOf("income");
   mainRows.splice.apply(mainRows,[ii<0?mainRows.length:ii,0].concat(res.xl.map(function(i){return ["x"+i,"",1]})));
@@ -744,9 +748,9 @@ document.addEventListener("click",function(e){
   else if((t=e.target.closest("[data-txadd],[data-txdel],[data-txshow]"))){var holder=t.closest(".paper[data-taxp]");if(holder){var TP=holder.dataset.taxp,V=D.v,LK={d:["dl","0,1,2,3"],b:["bl",""],x:["xl",""]};
     var gl=function(key,def){return (V[key]!==undefined?V[key]:def).split(",").filter(Boolean)};
     if(t.dataset.txadd){var cf=LK[t.dataset.txadd],ls=gl(TP+cf[0],cf[1]),nx=ls.reduce(function(m,x){return Math.max(m,+x+1)},0);ls.push(String(nx));V[TP+cf[0]]=ls.join(",")}
-    else if(t.dataset.txshow){V[TP+"hid"]=gl(TP+"hid","").filter(function(x){return x!==t.dataset.txshow}).join(",")}
+    else if(t.dataset.txshow){var sh=t.dataset.txshow;V[TP+"hid"]=gl(TP+"hid","").filter(function(x){return x!==sh}).join(",");if(OPT_ROWS.indexOf(sh)>=0){var ol=gl(TP+"opt","");if(ol.indexOf(sh)<0)ol.push(sh);V[TP+"opt"]=ol.join(",")}}
     else{var pp=t.dataset.txdel.split(":");
-      if(pp[0]==="r"){var hl=gl(TP+"hid","");if(hl.indexOf(pp[1])<0)hl.push(pp[1]);V[TP+"hid"]=hl.join(",")}
+      if(pp[0]==="r"){if(OPT_ROWS.indexOf(pp[1])>=0)V[TP+"opt"]=gl(TP+"opt","").filter(function(x){return x!==pp[1]}).join(",");else{var hl=gl(TP+"hid","");if(hl.indexOf(pp[1])<0)hl.push(pp[1]);V[TP+"hid"]=hl.join(",")}}
       else{var cf2=LK[pp[0]];V[TP+cf2[0]]=gl(TP+cf2[0],cf2[1]).filter(function(x){return x!==pp[1]}).join(",");
         Object.keys(V).forEach(function(key){var del=pp[0]==="b"?key.indexOf(TP+"b"+pp[1]+"|")===0:(key===TP+pp[0]+(pp[0]==="d"?"n":"n")+pp[1]||["I","J","K"].some(function(c){return key===TP+c+"|"+pp[0]+pp[1]||key===TP+"note|"+pp[0]+pp[1]}));if(del)delete V[key]})}}
     drawDetail()}}
@@ -1170,7 +1174,7 @@ function exportBook(){
   })})});
   sheets.push(["법인세",[ch].concat(crows)]);
   // 6. 세금예측
-  var TR=[["rev","수입금액"],["cogs","매출원가"],["sga","판매관리비 등"],["extra","추가경비"],["income","사업소득금액(법인은 당기순이익)"],["adj","세무조정"],["other","다른 종합소득금액"],["loss","이월결손금"],["ded","종합소득공제"],["base","과세표준"],["tax","산출세액"],["credit","세액공제 및 감면"],["dec","결정세액"],["local","지방소득세"],["paid","기납부세액"],["nong","농특세(고용증대)"],["pay","납부할세액"]];
+  var TR=[["rev","수입금액"],["cogs","매출원가"],["sga","판매관리비 등"],["extra","추가경비"],["income","사업소득금액(법인은 당기순이익)"],["adj","세무조정"],["other","다른 종합소득금액"],["oexp","타소득경비"],["loss","이월결손금"],["dona","이월기부금"],["ded","종합소득공제"],["base","과세표준"],["tax","산출세액"],["credit","세액공제 및 감면"],["dec","결정세액"],["local","지방소득세"],["paid","기납부세액"],["nong","농특세(고용증대)"],["pay","납부할세액"]];
   var th=BH.concat(["연도","가결산 개월수"]);
   TR.forEach(function(r){th.push(r[1]+" 예측",r[1]+" 가결산",r[1]+" 전년도")});
   th.push("공제·감면 입력 (항목: 예측/가결산/전년도)","추가한 경비 줄 (항목: 예측/가결산/전년도)","사업자별 가결산 (사업자: 매출/매출원가/판관비/사업소득)","뺀 줄","상담 메모");
@@ -1178,7 +1182,7 @@ function exportBook(){
   var RN={rev:"수입금액",cogs:"매출원가",sga:"판매관리비 등",extra:"추가경비",adj:"세무조정",other:"다른 종합소득금액",loss:"이월결손금",ded:"종합소득공제",credit:"세액공제 및 감면",local:"지방소득세",paid:"기납부세액",nong:"농특세"};
   CLIENTS.forEach(function(c){var D=state.data[c.id];if(!D)return;D.tps.forEach(function(p){inClient(c.id,function(){
     var P="tax|"+p.id+"|",isCorp=c.type==="법인",res=taxCompute(P,yearOf(p.name),isCorp),r=base(c).concat([p.name,res.months]);
-    TR.forEach(function(x){var k=x[0],skip=isCorp&&(k==="other"||k==="ded");["I","J","K"].forEach(function(cc){r.push(skip?"":Math.round(res[cc][k]||0))})});
+    TR.forEach(function(x){var k=x[0],skip=isCorp&&(k==="other"||k==="ded"||k==="oexp");["I","J","K"].forEach(function(cc){r.push(skip?"":Math.round(res[cc][k]||0))})});
     r.push(res.dl.map(function(i){return val(P+"dn"+i,DED_NAMES[i]||"")+": "+Math.round(res.I["d"+i])+"/"+Math.round(res.J["d"+i])+"/"+Math.round(res.K["d"+i])}).join("; "));
     r.push(res.xl.map(function(i){return (val(P+"xn"+i)||"(이름 없음)")+": "+Math.round(res.I["x"+i])+"/"+Math.round(res.J["x"+i])+"/"+Math.round(res.K["x"+i])}).join("; "));
     r.push(res.B.ids.map(function(i){var q="b"+i+"|";return (val(P+q+"nm")||"(이름 없음)")+": "+(nvk(P,q+"rev")||0)+"/"+(nvk(P,q+"cogs")||0)+"/"+(nvk(P,q+"sga")||0)+"/"+Math.round(res.B["inc"+i])}).join("; "));
