@@ -190,6 +190,9 @@ html[data-embed="1"] .wrap{padding-top:6px}
 .paper.taxp .tx th.xn input{width:calc(100% - 24px)}.paper.taxp .tx:not(.sm) tr:first-child th:first-child{width:150px}.paper.taxp .tx:not(.sm) tr:first-child th:last-child{width:15%}
 .paper.taxp .taxgrid{grid-template-columns:minmax(0,1fr) 380px;gap:12px 18px}.paper.taxp .taxgrid>div:first-child{overflow-x:auto}
 .paper.taxp .tx td.cc{text-align:right}.paper.taxp .tx td.cc input{text-align:right!important;padding-right:6px}
+.paper.taxp .tx tr.ratr td{font-weight:700}
+.paper.taxp .tx tr.credr th,.paper.taxp .tx tr.credr td,.paper.taxp .tx tr.credr input{color:#a40e0e!important;font-weight:700}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .paper.taxp .tx tr.credr th,:root:not([data-theme="light"]) .paper.taxp .tx tr.credr td,:root:not([data-theme="light"]) .paper.taxp .tx tr.credr input{color:#ff7a7a!important}}
 .paper.taxp .tx th{position:relative}.rz{position:absolute;top:0;right:-3px;width:7px;height:100%;cursor:col-resize;z-index:2}.rz:hover{background:rgba(42,111,219,.35)}
 body:has(.app[data-tax="1"]) .wrap{max-width:1700px}
 @media (max-width:1500px){.paper.taxp .taxgrid{grid-template-columns:minmax(0,1fr)}}
@@ -576,8 +579,8 @@ function paperTax(id){
   var D=d(state.sel),c=CLIENTS.filter(function(x){return x.id===state.sel})[0],P="tax|"+id+"|",name=D.tps.filter(function(x){return x.id===id})[0].name;
   var isCorp=c.type==="법인",yr=yearOf(name),res=taxCompute(P,yr,isCorp),yy=function(n){return String(n).slice(2)+"년"};
   var rows=isCorp?
-   [["ratio","소득율"],["rev","수입금액"],["cogs","매출원가"],["sga","판매관리비 등"],["extra","추가경비"],["income","당기순이익"],["adj","세무조정"],["loss","이월결손금"],["dona","이월기부금"],["base","과세표준"],["tax","산출세액"],["credit","세액공제 및 감면"],["dec","결정세액"],["local","지방소득세"],["paid","기납부세액"],["nong","농특세(고용증대)"],["pay","납부할세액"]]:
-   [["ratio","소득율"],["rev","수입금액"],["cogs","매출원가"],["sga","판매관리비 등"],["extra","추가경비"],["income","사업소득금액"],["adj","세무조정"],["other","타소득금액"],["oexp","타소득경비"],["loss","이월결손금"],["dona","이월기부금"],["ded","종합소득공제"],["base","과세표준"],["tax","산출세액"],["credit","세액공제 및 감면"],["dec","결정세액"],["local","지방소득세"],["paid","기납부세액"],["nong","농특세(고용증대)"],["pay","납부할세액"]];
+   [["ratio","소득률"],["rev","수입금액"],["cogs","매출원가"],["sga","판매관리비 등"],["extra","추가경비"],["income","당기순이익"],["adj","세무조정"],["loss","이월결손금"],["dona","이월기부금"],["base","과세표준"],["tax","산출세액"],["credit","세액공제 및 감면"],["dec","결정세액"],["local","지방소득세"],["paid","기납부세액"],["nong","농특세(고용증대)"],["pay","납부할세액"]]:
+   [["ratio","소득률"],["rev","수입금액"],["cogs","매출원가"],["sga","판매관리비 등"],["extra","추가경비"],["income","사업소득금액"],["adj","세무조정"],["other","타소득금액"],["oexp","타소득경비"],["loss","이월결손금"],["dona","이월기부금"],["ded","종합소득공제"],["base","과세표준"],["tax","산출세액"],["credit","세액공제 및 감면"],["dec","결정세액"],["local","지방소득세"],["paid","기납부세액"],["nong","농특세(고용증대)"],["pay","납부할세액"]];
   var RAWIDS={oexp:1,dona:1,rev:1,cogs:1,sga:1,extra:1,adj:1,other:1,loss:1,ded:1,paid:1,nong:1};
   var hasB=res.B.ids.length>0;
   var DELOK={oexp:1,dona:1,ratio:1,cogs:1,sga:1,extra:1,adj:1,other:1,loss:1,ded:1,credit:1,local:1,paid:1,nong:1};
@@ -595,10 +598,10 @@ function paperTax(id){
    mainRows.map(function(r){
      var id2=r[0],kc=KEYR[id2]?' class="keyr"':'';
      var delb=DELOK[id2]?'<button type="button" class="mini rdel" data-txdel="r:'+id2+'" title="이 줄 빼기">−</button>':'';
-     if(id2==="ratio")return '<tr><th>'+r[1]+delb+'</th>'+["I","J","K"].map(function(cc){return taxCell(P,res,cc,"ratio",false,true)}).join("")+'<td></td></tr>';
+     if(id2==="ratio")return '<tr class="ratr"><th>'+r[1]+delb+'</th>'+["I","J","K"].map(function(cc){return taxCell(P,res,cc,"ratio",false,true)}).join("")+'<td></td></tr>';
      if(r[2]){var xi=id2.slice(1);return '<tr><th class="xn"><input type="text" data-k="'+esc(P+"xn"+xi)+'" value="'+esc(val(P+"xn"+xi))+'" placeholder="항목명 (경비)" aria-label="항목명"><button type="button" class="mini rdel" data-txdel="x:'+xi+'" title="이 줄 빼기">−</button></th>'+taxCell(P,res,"I",id2,false)+taxCell(P,res,"J",id2,true)+taxCell(P,res,"K",id2,true)+'<td>'+inp(P+"note|"+id2,"")+'</td></tr>'}
      var raw=RAWIDS[id2],rawJ=raw&&!(hasB&&(id2==="rev"||id2==="cogs"||id2==="sga"));
-     return '<tr'+kc+'><th>'+r[1]+delb+'</th>'+taxCell(P,res,"I",id2,false)+taxCell(P,res,"J",id2,!!rawJ)+taxCell(P,res,"K",id2,!!raw)+'<td>'+inp(P+"note|"+id2,"",defNote[id2]||"")+'</td></tr>';
+     return '<tr'+(id2==="credit"?' class="credr"':kc)+'><th>'+r[1]+delb+'</th>'+taxCell(P,res,"I",id2,false)+taxCell(P,res,"J",id2,!!rawJ)+taxCell(P,res,"K",id2,!!raw)+'<td>'+inp(P+"note|"+id2,"",defNote[id2]||"")+'</td></tr>';
    }).join("")+'</table>'+
    '<div class="rowtools"><button type="button" class="mini add" data-txadd="x">+ 줄 추가(경비 항목)</button>'+(hiddenRows.length?'<span class="sub">뺀 줄 다시 넣기:</span>'+hiddenRows.map(function(r){return '<button type="button" class="mini add" data-txshow="'+r[0]+'">+ '+r[1]+'</button>'}).join(""):'')+'</div>'+
    '<div class="sub" style="margin-top:4px">빨간 테두리가 '+yr+'년 예측입니다. 칸에 숫자를 직접 적으면 그 값이 쓰이고(노란색), 지우면 다시 자동 계산됩니다. 예측의 수입금액·매출원가·판관비는 가결산 ÷ 개월수 × 12 입니다. 줄 끝 "−"로 뺀 줄은 계산에서도 0으로 빠집니다.</div></div>'+
@@ -664,7 +667,7 @@ function refreshTax(){
     p.querySelectorAll('input[data-k$="|extra"]').forEach(function(el){var td=el.closest("td");if(td)td.classList.toggle("exr",(Number(String(el.value).replace(/,/g,""))||0)!==0)});
     p.querySelectorAll("[data-bsum]").forEach(function(td){td.textContent=fmtI(res.B[td.dataset.bsum])});
     p.querySelectorAll("td[data-krev]").forEach(function(td){td.textContent=fmtI(res.I.rev+res.I.other)});
-    p.querySelectorAll(".tx tr").forEach(function(tr){var th=tr.querySelector("th");if(th&&th.textContent==="소득율"){var tds=tr.querySelectorAll("td.cc");["I","J","K"].forEach(function(cc,i){if(tds[i])tds[i].textContent=(res[cc].ratio*100).toFixed(1)+"%"})}});
+    p.querySelectorAll(".tx tr.ratr").forEach(function(tr){{var tds=tr.querySelectorAll("td.cc");["I","J","K"].forEach(function(cc,i){if(tds[i])tds[i].textContent=(res[cc].ratio*100).toFixed(1)+"%"})}});
   });
 }
 
