@@ -183,6 +183,8 @@ function plRows() {
 function plTitle(kind, year, ki, sub) {
   if (kind === "vat") return year + "년 " + ki + "기 " + sub + " 부가세 신고리스트";
   if (kind === "corp") return year + "년 법인세 신고리스트";
+  if (kind === "tax") return year + "년 세금 예측";
+  if (kind === "biz") return year + "년 사업장 현황신고";
   return year + "년 종합소득세 신고리스트";
 }
 function progressLists() {
@@ -217,7 +219,7 @@ function progressCols(req) {
 }
 function progressListSave(req) {
   const kind = String(req.kind || ""), year = Math.round(Number(req.year)), ki = Math.round(Number(req.ki) || 0), sub = String(req.sub || "");
-  if (!/^(vat|corp|inc)$/.test(kind)) throw fail("신고 종류가 올바르지 않습니다.");
+  if (!/^(vat|corp|inc|tax|biz)$/.test(kind)) throw fail("신고 종류가 올바르지 않습니다.");
   if (!(year >= 2000 && year <= 2100)) throw fail("연도를 확인하세요.");
   if (kind === "vat" && !((ki === 1 || ki === 2) && /^(예정|확정)$/.test(sub))) throw fail("부가세는 1기/2기와 예정/확정을 고르세요.");
   return withLock(() => {
