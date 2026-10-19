@@ -73,6 +73,7 @@ function route(req) {
     case "progress.lists": return progressLists(who);
     case "progress.listSave": return progressListSave(req);
     case "progress.cols": return progressCols(req);
+    case "progress.notes": return progressNotes(req);
     case "progress.listDelete": return progressListDelete(req, who);
     case "progress.get": return progressGet(req, who);
     case "progress.save": return progressSave(req, who);
@@ -166,8 +167,9 @@ function progSheet(name, head) {
   return sh;
 }
 function plSheet() {
-  const sh = progSheet(PL_SHEET, ["id", "제목", "종류", "연도", "기", "구분", "생성일시", "열설정"]);
+  const sh = progSheet(PL_SHEET, ["id", "제목", "종류", "연도", "기", "구분", "생성일시", "열설정", "안내문구"]);
   if (sh.getLastColumn() < 8) sh.getRange(1, 8, 1, 1).setValues([["열설정"]]);
+  if (sh.getLastColumn() < 9) sh.getRange(1, 9, 1, 1).setValues([["안내문구"]]);
   return sh;
 }
 function prSheet() { return progSheet(PR_SHEET, ["목록ID", "업체ID", "진행기록", "수정일시"]); }
@@ -175,15 +177,19 @@ function todayKst() { return Utilities.formatDate(new Date(), "Asia/Seoul", "yyy
 function plRows() {
   const sh = plSheet(), last = sh.getLastRow();
   if (last < 2) return [];
-  return sh.getRange(2, 1, last - 1, 8).getValues().filter(r => r[0]).map(r => {
+  return sh.getRange(2, 1, last - 1, 9).getValues().filter(r => r[0]).map(r => {
     let cols = null; try { const j = JSON.parse(String(r[7] || "")); if (Array.isArray(j)) cols = j; } catch (e) {}
-    return { id: String(r[0]), title: String(r[1]), kind: String(r[2]), year: Number(r[3]) || 0, ki: Number(r[4]) || 0, sub: String(r[5] || ""), cols: cols };
+    let notes = null; try { const j = JSON.parse(String(r[8] || "")); if (Array.isArray(j)) notes = j.map(x => String(x)); } catch (e) {}
+    const kind = String(r[2]), year = Number(r[3]) || 0, ki = Number(r[4]) || 0, sub = String(r[5] || "");
+    // 세금 예측·사업장 현황신고는 이름을 항상 현재 규칙으로 만든다(이름을 바꿔도 예전 리스트에 반영)
+    const title = (kind === "tax" || kind === "biz") ? plTitle(kind, year, ki, sub) : String(r[1]);
+    return { id: String(r[0]), title: title, kind: kind, year: year, ki: ki, sub: sub, cols: cols, notes: notes };
   });
 }
 function plTitle(kind, year, ki, sub) {
   if (kind === "vat") return year + "년 " + ki + "기 " + sub + " 부가세 신고리스트";
   if (kind === "corp") return year + "년 법인세 신고리스트";
-  if (kind === "tax") return year + "년 세금 예측";
+  if (kind === "tax") return year + "년 소득세/법인세 예측";
   if (kind === "biz") return year + "년 사업장 현황신고";
   return year + "년 종합소득세 신고리스트";
 }
@@ -240,6 +246,17 @@ function progressListSave(req) {
     const k2 = kind === "vat" ? ki : 0, s2 = kind === "vat" ? sub : "";
     plSheet().appendRow([id, plTitle(kind, year, k2, s2), kind, year, k2, s2, new Date().toISOString()]);
     return { id: id, title: plTitle(kind, year, k2, s2), kind: kind, year: year, ki: k2, sub: s2 };
+  });
+}
+function progressNotes(req) {
+  const id = String(req.id || ""), src = Array.isArray(req.notes) ? req.notes : null;
+  if (!src || src.length > 30) throw fail("안내 문구가 올바르지 않습니다.");
+  const notes = src.map(x => String(x == null ? "" : x).trim().slice(0, 300)).filter(Boolean);
+  return withLock(() => {
+    prCheckList(id);
+    const sh = plSheet(), last = sh.getLastRow(), ids = sh.getRange(2, 1, last - 1, 1).getValues();
+    for (let i = 0; i < ids.length; i++) if (String(ids[i][0]) === id) { sh.getRange(i + 2, 9, 1, 1).setValues([[JSON.stringify(notes)]]); return { notes: notes }; }
+    throw fail("없는 신고리스트입니다. 새로고침해 주세요.", 404);
   });
 }
 function progressListDelete(req, who) {
