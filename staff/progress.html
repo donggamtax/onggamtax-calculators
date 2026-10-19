@@ -21,6 +21,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15p
 h1{font-size:21px;margin:6px 0 4px}h2{font-size:17px;margin:0 0 8px}
 .sub{color:var(--muted);font-size:12.5px}
 .ced .ce input[type=text]{width:180px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:12px}
+.nts{margin:4px 0 0;padding-left:22px}.nts li{margin:2px 0}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
 .btn{border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:6px;padding:7px 14px;font:inherit;font-size:14px;cursor:pointer}
 .btn.ghost{background:none;color:var(--accent)}.btn.sm{padding:3px 9px;font-size:12.5px}.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}
@@ -81,11 +82,17 @@ var $=function(s){return document.querySelector(s)};
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 var S={lists:[],clients:[],people:[],cur:null,rows:{},own:"전체",stf:"전체",err:"",msg:"",adding:false,confirmDel:false};
 var G={a:null,f:null,drag:false,moved:false};
-var KIND={vat:"부가세",corp:"법인세",inc:"종합소득세",tax:"세금 예측",biz:"사업장 현황신고"};
+var KIND={vat:"부가세",corp:"법인세",inc:"종합소득세",tax:"소득세/법인세 예측",biz:"사업장 현황신고"};
 var DEF_COLS=[["done","완료","check"],["prio","우선순위","sel"],["type","구분","auto"],["name","상호","auto"],["owner","담당자","auto"],["diff","난도","sel"],["work","작업일","date"],["file","신고일","date"],["appr","결재완료","date"],["deliv","전달일","date"],["note","특이사항","text"],["mail","메일발송","date"],["fee","수수료","num"],["paid","입금여부","date"],["tinv","세금계산서","date"]].map(function(c){return {k:c[0],l:c[1],t:c[2]}});
+var TAX_COLS=[["prio","중요도","sel"],["name","업체명","auto"],["owner","담당자","auto"],["work","추정완료","date"],["c1","상담완료","date"]].map(function(c){return {k:c[0],l:c[1],t:c[2]}});
+var TAX_NOTES=["정확하지 않아도 됨","1~8월 매출액 기준, 단 판매대행 있는 경우 1~9월 기준으로 예측","인건비는 전표입력, 매출과 매출원가, 감가상각비는 전표입력 안 해도 됨. 예측 자료에는 반영","매출/매입 확인해서 세금 많이 나올 곳을 우선 작업"];
+function isTax(){var l=curList();return !!l&&l.kind==="tax"}
+function defCols(){return isTax()?TAX_COLS:DEF_COLS}
+/* 소득세/법인세 예측은 추정완료(날짜)가 끝난 표시, 다른 리스트는 완료 체크·전달일 */
+function isDone(d){return isTax()?!!d.work:!!(d.deliv||d.done)}
 var PRIV={fee:1,paid:1,tinv:1};
 function isAdmin(){return !!S.canDelete}
-function rawCols(){var l=curList();return (l&&l.cols&&l.cols.length)?l.cols:DEF_COLS}
+function rawCols(){var l=curList();return (l&&l.cols&&l.cols.length)?l.cols:defCols()}
 function cols(){var r=rawCols();return isAdmin()?r:r.filter(function(c){return !PRIV[c.k]})}
 /* 수수료 등을 못 보는 사람이 열을 고쳐도 숨은 열은 그대로 유지한다 */
 function keepPriv(next){
@@ -127,7 +134,7 @@ function drawLists(){
   if(S.err)h+='<p class="err">'+esc(S.err)+'</p>';
   h+=S.lists.length?'<table class="lst">'+S.lists.map(function(l){
     var p=l.n?Math.round(l.work*100/l.n):0;
-    return '<tr><td><button class="t" data-open="'+esc(l.id)+'">'+esc(l.title)+'</button></td><td><span class="bar"><i style="width:'+p+'%"></i></span>작업 '+l.work+'/'+l.n+' ('+pct(l.work,l.n)+')</td><td>결재 '+l.appr+'</td><td>전달 '+l.deliv+'</td></tr>';
+    return '<tr><td><button class="t" data-open="'+esc(l.id)+'">'+esc(l.title)+'</button></td><td><span class="bar"><i style="width:'+p+'%"></i></span>'+(l.kind==="tax"?'추정완료 ':'작업 ')+l.work+'/'+l.n+' ('+pct(l.work,l.n)+')</td>'+(l.kind==="tax"?'':'<td>결재 '+l.appr+'</td><td>전달 '+l.deliv+'</td>')+'</tr>';
   }).join("")+'</table>':'<p class="sub">아직 신고리스트가 없습니다. "+ 새 신고리스트"로 만드세요.</p>';
   h+='</div>';
   $("#view").innerHTML=h;
@@ -135,11 +142,11 @@ function drawLists(){
 function newForm(){
   var y=new Date().getFullYear();
   return '<div class="row" style="padding:8px;border:1px solid var(--line);border-radius:8px">'+
-    '<label>종류 <select id="nk"><option value="vat">부가세</option><option value="corp">법인세</option><option value="inc">종합소득세</option><option value="tax">세금 예측</option><option value="biz">사업장 현황신고</option></select></label>'+
+    '<label>종류 <select id="nk"><option value="vat">부가세</option><option value="corp">법인세</option><option value="inc">종합소득세</option><option value="tax">소득세/법인세 예측</option><option value="biz">사업장 현황신고</option></select></label>'+
     '<label>연도 <input id="ny" type="number" value="'+y+'" min="2000" max="2100" style="width:84px"></label>'+
     '<span id="nvat"><label>기 <select id="nki"><option>1</option><option selected>2</option></select></label> <label>구분 <select id="nsub"><option>예정</option><option>확정</option></select></label></span>'+
     '<button class="btn" id="mk">만들기</button><button class="btn ghost" id="mkno">취소</button>'+
-    '<span class="sub">빈 리스트로 만들어지고, 엑셀에서 붙여넣기로 업체를 넣습니다. 세금 예측과 사업장 현황신고는 연도만 고르면 됩니다.</span></div>';
+    '<span class="sub">빈 리스트로 만들어지고, 엑셀에서 붙여넣기로 업체를 넣습니다. 소득세/법인세 예측은 연도만 고르면 대상 업체가 모두 들어가고, 사업장 현황신고는 연도만 고르면 됩니다.</span></div>';
 }
 function eligible(l){
   return S.clients.filter(function(c){
@@ -161,6 +168,7 @@ function joined(){
   return out;
 }
 function summary(rows){
+  if(isTax())return summaryTax(rows);
   var ps=S.people.slice(),extra={};rows.forEach(function(r){var o=r.c.owner||"(미지정)";if(S.people.indexOf(o)<0)extra[o]=1});
   ps=ps.concat(Object.keys(extra));
   var tot={n:0,w:0,a:0,d:0},h='<table class="sm"><tr><th>담당자</th><th>개수</th><th>작업완료</th><th>진행률</th><th>결재완료</th><th>전달완료</th><th>잔여</th></tr>';
@@ -172,6 +180,36 @@ function summary(rows){
   });
   h+='<tr><th>합계</th><th>'+tot.n+'</th><th>'+tot.w+'</th><th>'+pct(tot.w,tot.n)+'</th><th>'+tot.a+'</th><th>'+tot.d+'</th><th>'+(tot.n-tot.w)+'</th></tr></table>';
   return h;
+}
+function summaryTax(rows){
+  var cc=cols().filter(function(c){return c.l==="상담완료"})[0],ck=cc?cc.k:"c1",wl=(cols().filter(function(c){return c.k==="work"})[0]||{l:"추정완료"}).l;
+  var ps=S.people.slice(),extra={};rows.forEach(function(r){var o=r.c.owner||"(미지정)";if(S.people.indexOf(o)<0)extra[o]=1});
+  ps=ps.concat(Object.keys(extra));
+  var tot={n:0,w:0,c:0},h='<table class="sm"><tr><th>담당자</th><th>개수</th><th>'+esc(wl)+'</th><th>진행률</th><th>상담완료</th><th>잔여</th></tr>';
+  ps.forEach(function(p){
+    var rs=rows.filter(function(r){return (r.c.owner||"(미지정)")===p});if(!rs.length)return;
+    var w=rs.filter(function(r){return r.d.work}).length,c=rs.filter(function(r){return r.d[ck]}).length;
+    tot.n+=rs.length;tot.w+=w;tot.c+=c;
+    h+='<tr><td class="l">'+esc(p)+'</td><td>'+rs.length+'</td><td>'+w+'</td><td class="pb">'+pct(w,rs.length)+'</td><td>'+c+'</td><td>'+(rs.length-w)+'</td></tr>';
+  });
+  h+='<tr><th>합계</th><th>'+tot.n+'</th><th>'+tot.w+'</th><th>'+pct(tot.w,tot.n)+'</th><th>'+tot.c+'</th><th>'+(tot.n-tot.w)+'</th></tr></table>';
+  return h;
+}
+/* 안내 문구: 신고리스트 위에 보이는 메모. 직원이 줄을 더하거나 지우거나 고칠 수 있다. 소득세/법인세 예측은 처음에 기본 문구가 들어 있다 */
+function notesOf(l){return l.notes!=null?l.notes:(l.kind==="tax"?TAX_NOTES:[])}
+function notesBox(l){
+  var ns=notesOf(l);
+  if(S.nedit){
+    var h='<div class="panel ced"><div class="row"><b>안내 문구 편집</b><span class="sub">줄을 고치면 바로 저장됩니다. 줄을 지우거나 더할 수 있습니다.</span></div>';
+    ns.forEach(function(t,i){h+='<div class="row ce"><span class="sub">'+(i+1)+'.</span><input type="text" data-nt="'+i+'" value="'+esc(t)+'" maxlength="300" style="flex:1;min-width:260px" aria-label="안내 문구"><button class="btn ghost sm" data-ndel="'+i+'">지우기</button></div>'});
+    return h+'<div class="row"><input type="text" id="nnew" placeholder="새 안내 문구" maxlength="300" style="flex:1;min-width:260px"><button class="btn sm" id="nadd">줄 추가</button><button class="btn ghost sm" id="ndone">편집 끝</button></div></div>';
+  }
+  if(!ns.length)return '<div class="row"><button class="btn ghost sm" id="nedit">안내 문구 추가</button></div>';
+  return '<div class="panel"><div class="row"><b>안내</b><button class="btn ghost sm" id="nedit">안내 문구 편집</button></div><ol class="nts">'+ns.map(function(t){return '<li>'+esc(t)+'</li>'}).join("")+'</ol></div>';
+}
+function saveNotes(next){
+  var l=curList();if(!l)return;var old=l.notes;l.notes=next;S.err="";say("저장 중…");
+  api("progress.notes",{id:l.id,notes:next}).then(function(r){l.notes=r.notes;say("안내 문구를 저장했습니다.");if(!S.nedit)draw()},function(e){l.notes=old;draw();say(e.message,true)});
 }
 function fmtM(v){var n=String(v||"").replace(/[^\d]/g,"");return n?Number(n).toLocaleString("ko-KR"):""}
 function cell(r,col){
@@ -219,13 +257,13 @@ function drawList(){
   var l=curList();if(!l){S.cur=null;return drawLists()}
   var all=joined(),shown=shownRows();
   var owners=["전체"].concat(S.people);
-  var h='<div class="row"><button class="btn ghost sm" id="back">← 신고리스트 목록</button><span class="st" id="st">'+esc(S.msg)+'</span></div><h1>'+esc(l.title)+'</h1>';
+  var h='<div class="row"><button class="btn ghost sm" id="back">← 신고리스트 목록</button><span class="st" id="st">'+esc(S.msg)+'</span></div><h1>'+esc(l.title)+'</h1>'+notesBox(l);
   h+='<div class="panel">'+summary(all)+'</div>'+(S.edit?colEditor():"");
   h+='<div class="panel"><div class="row">'+owners.map(function(o){return '<button class="chip" data-own="'+esc(o)+'" aria-pressed="'+(S.own===o)+'">'+esc(o)+'</button>'}).join("")+
      '<span class="sub">|</span>'+["전체","미완료","완료"].map(function(o){return '<button class="chip" data-stf="'+o+'" aria-pressed="'+(S.stf===o)+'">'+o+'</button>'}).join("")+
      '<span class="sub">'+shown.length+'곳'+(isAdmin()?' · 수수료 합계 '+fmtM(shown.reduce(function(a,r){return a+(Number(r.d.fee)||0)},0)||"0")+'원':'')+'</span></div>';
   h+='<div class="scroll"><table class="tb" style="width:'+tableW()+'px"><colgroup>'+cols().map(function(c){return '<col style="width:'+cw(c)+'px">'}).join("")+'<col style="width:66px"></colgroup><thead><tr>'+cols().map(function(c){var on=S.sort&&S.sort.k===c.k,b='<button class="srt" data-sort="'+c.k+'" title="누를 때마다 오름차순/내림차순">'+esc(c.l)+'<span>'+(on?(S.sort.dir>0?" ▲":" ▼"):"")+'</span></button>';var rz='<span class="rz" data-rz="'+c.k+'" title="끌어서 너비 조절"></span>';return c.k==="done"?'<th><label class="alld" title="보이는 업체 전체 체크/해제"><input type="checkbox" id="alldone"'+(shown.length&&shown.every(function(r){return r.d.done})?" checked":"")+' aria-label="전체 완료 체크"></label>'+b+rz+'</th>':'<th>'+b+rz+'</th>'}).join("")+'<th></th></tr></thead><tbody>'+
-    (shown.length?shown.map(function(r){return '<tr data-id="'+r.c.id+'" class="'+(r.d.deliv||r.d.done?"done":"")+'">'+cols().map(function(c,ci){return cell(r,c).replace("<td",'<td data-ci="'+ci+'" tabindex="-1"')}).join("")+'<td><button class="btn ghost sm" data-rm="'+r.c.id+'" title="이 신고리스트에서 빼기">빼기</button></td></tr>'}).join(""):'<tr><td colspan="'+(cols().length+1)+'" class="sub" style="padding:16px">해당하는 업체가 없습니다. 아래의 "엑셀에서 붙여넣기"로 업체를 넣어 주세요.</td></tr>')+
+    (shown.length?shown.map(function(r){return '<tr data-id="'+r.c.id+'" class="'+(isDone(r.d)?"done":"")+'">'+cols().map(function(c,ci){return cell(r,c).replace("<td",'<td data-ci="'+ci+'" tabindex="-1"')}).join("")+'<td><button class="btn ghost sm" data-rm="'+r.c.id+'" title="이 신고리스트에서 빼기">빼기</button></td></tr>'}).join(""):'<tr><td colspan="'+(cols().length+1)+'" class="sub" style="padding:16px">해당하는 업체가 없습니다. 아래의 "엑셀에서 붙여넣기"로 업체를 넣어 주세요.</td></tr>')+
     '</tbody></table></div>';
   h+='<div class="row"><label>업체 추가 <input id="addn" list="addl" placeholder="업체명" autocomplete="off"></label><datalist id="addl">'+
     S.clients.filter(function(c){return (c.status||"거래중")==="거래중"&&!(S.rows[S.cur]||{})[c.id]}).map(function(c){return '<option value="'+esc(c.name)+'">'}).join("")+'</datalist>'+
@@ -242,7 +280,7 @@ function say(t,bad){S.msg=t;var e=$("#st");if(e){e.textContent=t;e.className="st
 function refreshCounts(){var l=curList();if(!l)return;var m=S.rows[l.id]||{},ids=Object.keys(m);l.n=ids.length;l.work=ids.filter(function(i){return m[i].work}).length;l.appr=ids.filter(function(i){return m[i].appr}).length;l.deliv=ids.filter(function(i){return m[i].deliv}).length}
 
 function openList(id){
-  S.cur=id;S.own="전체";S.stf="전체";S.sort=null;S.xform=false;S.cw=null;G.a=G.f=null;S.err="";S.msg="";S.confirmDel=false;
+  S.cur=id;S.nedit=false;S.own="전체";S.stf="전체";S.sort=null;S.xform=false;S.cw=null;G.a=G.f=null;S.err="";S.msg="";S.confirmDel=false;
   $("#view").innerHTML='<p class="sub">불러오는 중입니다…</p>';
   loadRows(id).then(draw,function(e){S.err=e.message;draw()});
 }
@@ -252,9 +290,9 @@ function save(id,field,value,el){
   say("저장 중…");
   api("progress.save",{list:S.cur,clientId:+id,patch:patch}).then(function(r){m[id]=r.data||m[id];refreshCounts();say("저장했습니다.");var keep=document.activeElement;var st=$(".scroll");var top=st?st.scrollTop:0;var ae=keep&&keep.dataset?keep.dataset.id+"|"+keep.dataset.f:null;
     /* 요약과 줄 색만 다시 그린다: 입력 중인 칸을 건드리지 않도록 전체를 다시 그리지 않는다 */
-    var l=curList(),all=joined();var sm=$(".panel .sm");if(sm)sm.outerHTML=summary(all);
+    var l=curList(),all=joined();var sm=$(".panel table.sm");if(sm)sm.outerHTML=summary(all);
     var ad=$("#alldone");if(ad){var sid=shownIds();ad.checked=sid.length>0&&sid.every(function(x){return !!(m[x]||{}).done})}
-    var tr=el&&el.closest("tr");if(tr)tr.className=(m[id].deliv||m[id].done)?"done":"";
+    var tr=el&&el.closest("tr");if(tr)tr.className=isDone(m[id])?"done":"";
   },function(e){if(m[id]){if(old)m[id][field]=old;else delete m[id][field]}if(el){if(el.type==="checkbox")el.checked=!!old;else el.value=el.dataset.date?fmtD(old):el.dataset.money?fmtM(old):old}say(e.message,true)});
 }
 
@@ -273,8 +311,8 @@ function sortVal(r,col){
 function shownRows(){
   var rows=joined().filter(function(r){
     if(S.own!=="전체"&&(r.c.owner||"(미지정)")!==S.own)return false;
-    if(S.stf==="미완료")return !r.d.done&&!r.d.deliv;
-    if(S.stf==="완료")return !!(r.d.done||r.d.deliv);
+    if(S.stf==="미완료")return !isDone(r.d);
+    if(S.stf==="완료")return isDone(r.d);
     return true;
   });
   if(S.sort){
@@ -310,10 +348,10 @@ function parseDate(s){
 }
 function parsePaste(text){
   var lines=text.replace(/\r/g,"").split("\n").filter(function(x){return x.trim()!==""}).map(function(x){return x.split("\t")});
-  var hi=-1;lines.forEach(function(r,i){if(hi<0&&r.some(function(c){return c.trim()==="상호"}))hi=i});
+  var hi=-1;lines.forEach(function(r,i){if(hi<0&&r.some(function(c){return c.trim()==="상호"||c.trim()==="업체명"}))hi=i});
   if(hi<0)return {error:'머리글 줄(상호, 담당자, 작업일 …)이 함께 붙여넣어져야 합니다. 엑셀에서 "완료여부 / 우선순위 … " 머리글 줄부터 복사하세요.'};
   var head=lines[hi].map(function(x){return x.trim()}),ix=function(n){return head.indexOf(n)};
-  var map={};cols().forEach(function(c){if(c.t==="auto")return;var i=ix(c.l);if(i<0&&c.k==="done")i=ix("완료여부");if(i>=0)map[c.k]=i});var ni=ix("상호");
+  var map={};cols().forEach(function(c){if(c.t==="auto")return;var i=ix(c.l);if(i<0&&c.k==="done")i=ix("완료여부");if(i>=0)map[c.k]=i});var ni=ix("상호");if(ni<0)ni=ix("업체명");
   var byName={};S.clients.forEach(function(c){byName[normName(c.name)]=c});
   joined().forEach(function(r){if(r.c.extra)byName[normName(r.c.name)]=r.c});
   var ti=ix("개인/법인");if(ti<0)ti=ix("구분");var oi=ix("담당자");
@@ -527,7 +565,11 @@ document.addEventListener("click",function(e){
   if(t.id==="mk"){
     var kind=$("#nk").value,year=+$("#ny").value,ki=+$("#nki").value,sub=$("#nsub").value;t.disabled=true;
     api("progress.listSave",{kind:kind,year:year,ki:ki,sub:sub}).then(function(l){
-      S.adding=false;return loadAll().then(function(){openList(l.id)});
+      S.adding=false;return loadAll().then(function(){
+        var nl=S.lists.filter(function(x){return x.id===l.id})[0];
+        if(nl&&nl.kind==="tax"){var ids=eligible(nl).map(function(c){return c.id});if(ids.length)return api("progress.add",{list:l.id,ids:ids}).then(function(){openList(l.id)})}
+        openList(l.id);
+      });
     }).catch(function(x){S.err=x.message;drawLists()});
     return;
   }
@@ -540,7 +582,11 @@ document.addEventListener("click",function(e){
   if((b=t.closest("[data-cdel]"))){var n2=cols().slice();n2.splice(+b.dataset.cdel,1);return saveCols(n2)}
   if(t.id==="cadd"){var nm=($("#cnn").value||"").trim();if(!nm)return say("새 열 이름을 적어 주세요.",true);return saveCols(cols().concat([{k:nextCk(),l:nm,t:$("#cnt").value}]))}
   if(t.id==="cwreset"){S.cw={};try{localStorage.removeItem(cwKey())}catch(x){}return draw()}
-  if(t.id==="creset"){return saveCols(DEF_COLS.slice())}
+  if(t.id==="nedit"){S.nedit=true;return draw()}
+  if(t.id==="ndone"){S.nedit=false;return draw()}
+  if(t.id==="nadd"){var tx=($("#nnew").value||"").trim();if(!tx)return say("추가할 문구를 적어 주세요.",true);var l0=curList();S.nedit=true;return saveNotes(notesOf(l0).concat([tx]).slice())}
+  if((b=t.closest("[data-ndel]"))){var l1=curList(),n5=notesOf(l1).slice();n5.splice(+b.dataset.ndel,1);S.nedit=true;return saveNotes(n5)}
+  if(t.id==="creset"){return saveCols(defCols().slice())}
   if((b=t.closest("[data-own]"))){S.own=b.dataset.own;return draw()}
   if((b=t.closest("[data-stf]"))){S.stf=b.dataset.stf;return draw()}
   if((b=t.closest("[data-rm]"))){
@@ -582,6 +628,7 @@ document.addEventListener("click",function(e){
 });
 document.addEventListener("change",function(e){
   var t=e.target;
+  if(t.dataset&&t.dataset.nt!==undefined){var l2=curList(),n6=notesOf(l2).slice(),ni2=+t.dataset.nt,tv=t.value.trim();if(tv===n6[ni2])return;if(tv)n6[ni2]=tv;else n6.splice(ni2,1);S.nedit=true;return saveNotes(n6)}
   if(t.dataset&&t.dataset.cl!==undefined){var nm2=t.value.trim(),n3=cols().map(function(c){return {k:c.k,l:c.l,t:c.t}}),ci=+t.dataset.cl;if(!nm2){t.value=n3[ci].l;return}if(nm2===n3[ci].l)return;n3[ci].l=nm2;return saveCols(n3)}
   if(t.id==="alldone"){bulkDone(shownIds(),t.checked);return}
   if(t.dataset&&t.dataset.f==="done"&&t.dataset.id){
