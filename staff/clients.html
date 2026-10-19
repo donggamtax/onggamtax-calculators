@@ -371,8 +371,8 @@ function vatPrev(D,id){var o=vatSorted(D),i=o.indexOf(id);return i>0?o[i-1]:null
 function vatName(D,id){var p=D.vps.filter(function(x){return x.id===id})[0];return p?p.name:""}
 function vN(x){var n=Number(String(x==null?"":x).replace(/,/g,""));return isNaN(n)?0:n}
 function vRaw(D,id,k){var v=D.v["vat|"+id+"|"+k];return v===undefined||v===null?"":v}
-var VCAL=["sales","buyti","buyetc","card","deemed","paid"];
-var VROWS=[["매출","sales"],["매입Ti","buyti"],["매입기타","buyetc"],["카드세액공제","card"],["의제매입세액공제","deemed"],["기납부","paid"],["세금","tax"]];
+var VCAL=["sales","buyti","buyetc","bulgong","card","deemed","paid"];
+var VROWS=[["매출","sales"],["매입Ti","buyti"],["매입기타","buyetc"],["불공제","bulgong"],["카드세액공제","card"],["의제매입세액공제","deemed"],["기납부","paid"],["세금","tax"]];
 function vKind(D,id){var c=clientById(state.sel);return vRaw(D,id,"kind")||(c&&c.type)||"개인"}
 function vOn(D,id,f){if(f==="card")return vKind(D,id)!=="법인";if(f==="deemed")return vRaw(D,id,"deemoff")!=="1";return true}
 function vNum(D,id,f,col){
@@ -381,11 +381,11 @@ function vNum(D,id,f,col){
   if(col==="a"){var pv=vatPrev(D,id);return pv?vNum(D,pv,f,"b"):0}
   return 0;
 }
-/* 세금 = (매출 − 매입Ti − 매입기타) ÷ 10 − 기납부 − 의제매입세액공제 − 카드세액공제 */
+/* 세금 = (매출 − 매입Ti − 매입기타 + 불공제) ÷ 10 − 기납부 − 의제매입세액공제 − 카드세액공제 */
 function vTax(D,id,col){
   if(col==="a"&&!VCAL.some(function(f){return vRaw(D,id,f+"a")!==""})){var pv=vatPrev(D,id);return pv?vNum(D,pv,"tax","b"):0}
   var g=function(f){return vOn(D,id,f)?vNum(D,id,f,col):0};
-  return Math.round((g("sales")-g("buyti")-g("buyetc"))/10-g("paid")-g("deemed")-g("card"));
+  return Math.round((g("sales")-g("buyti")-g("buyetc")+g("bulgong"))/10-g("paid")-g("deemed")-g("card"));
 }
 function vTxt(D,id,f){var r=vRaw(D,id,f);if(r!=="")return r;var pv=vatPrev(D,id);return pv?vTxt(D,pv,f):""}
 function vPc(D,id){var n=+vRaw(D,id,"pc");return n>=1&&n<=8?n:3}
@@ -453,7 +453,7 @@ function paperVat(id){
    '<div><table class="ht"><tr><th>계산서</th><th>전기</th><th>당기</th><th>비고</th></tr>'+
    VROWS.filter(function(r){return vOn(D,id,r[1])}).map(function(r){return '<tr><th>'+r[0]+(r[1]==="deemed"?' <button type="button" class="mini" data-vdeem="1" data-pid="'+id+'" title="이 줄 빼기">−</button>':'')+'</th><td>'+vcNum(D,id,r[1],"a")+'</td><td>'+vcNum(D,id,r[1],"b")+'</td><td>'+inp(P+r[1]+"n")+'</td></tr>'}).join("")+'</table>'+
    (vOn(D,id,"deemed")?'':'<button type="button" class="mini add" data-vdeem="1" data-pid="'+id+'">+ 의제매입세액공제 줄 넣기</button>')+
-   '<div class="sub" style="margin-top:4px">세금 = (매출 − 매입Ti − 매입기타) ÷ 10 − 기납부 − 의제매입 − 카드세액공제'+(vOn(D,id,"card")?'':' (법인은 카드세액공제 없음)')+'. 회색 글씨는 자동으로 채워진 값이고, 칸에 직접 적으면 그 값이 쓰입니다. 전기는 앞 기수의 당기가 자동으로 들어옵니다.</div></div></div>';
+   '<div class="sub" style="margin-top:4px">세금 = (매출 − 매입Ti − 매입기타 + 불공제) ÷ 10 − 기납부 − 의제매입 − 카드세액공제'+(vOn(D,id,"card")?'':' (법인은 카드세액공제 없음)')+'. 회색 글씨는 자동으로 채워진 값이고, 칸에 직접 적으면 그 값이 쓰입니다. 전기는 앞 기수의 당기가 자동으로 들어옵니다.</div></div></div>';
   h+='<table class="ht"><tr><th rowspan="2" style="width:84px">세금계산서 체크</th>'+["임차료","관리비","전력비","통신비","기장료","조정료"].map(function(x){return '<th>'+x+'</th>'}).join("")+'<th style="width:20%">비고</th></tr><tr>'+
    ["rent","mgmt","power","tel","fee","adj","note"].map(function(k){return '<td>'+(k==="note"?inp(P+"inv|"+k):oxCell(P+"inv|"+k))+'</td>'}).join("")+'</tr></table>';
   // 체크 목록
