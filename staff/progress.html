@@ -42,7 +42,7 @@ table.tb{min-width:100%}
 table.tb thead th{position:sticky;top:0;z-index:1}
 table.tb td{padding:2px 4px}table.tb tr.done td{background:var(--ok-bg)}
 table.tb input[type=text],table.tb select{border:0;background:transparent;padding:3px 2px;width:100%}
-table.tb input.dt{min-width:92px;width:92px;text-align:center}table.tb label.alld{cursor:pointer;white-space:nowrap}table.tb input.fe{min-width:90px;width:90px;text-align:right}table.tb input.nt{min-width:170px}table.tb select{min-width:52px}
+table.tb input.dt{min-width:92px;width:92px;text-align:center}button.srt{border:0;background:none;color:inherit;font:inherit;font-weight:inherit;cursor:pointer;padding:0 2px;white-space:nowrap}button.srt:hover{text-decoration:underline}table.tb label.alld{cursor:pointer;white-space:nowrap}table.tb input.fe{min-width:90px;width:90px;text-align:right}table.tb input.nt{min-width:170px}table.tb select{min-width:52px}
 table.tb input:focus,table.tb select:focus{outline:2px solid var(--accent);outline-offset:-2px;background:var(--bg)}
 table.tb .nmc{text-align:left;font-weight:500;min-width:150px;white-space:normal}
 .scroll{overflow:auto;max-height:68vh}
@@ -91,7 +91,7 @@ function sortLists(a,b){return (b.year-a.year)||(b.ki-a.ki)||((b.sub==="확정")
 
 function loadAll(){
   return Promise.all([api("progress.lists"),api("clients.load",{light:1})]).then(function(r){
-    S.lists=(r[0].lists||[]).sort(sortLists);S.clients=r[1].clients||[];S.people=r[1].people||[];
+    S.lists=(r[0].lists||[]).sort(sortLists);S.canDelete=!!r[0].canDelete;S.clients=r[1].clients||[];S.people=r[1].people||[];
   });
 }
 function loadRows(id){
@@ -191,25 +191,20 @@ function nextCk(){
 }
 function drawList(){
   var l=curList();if(!l){S.cur=null;return drawLists()}
-  var all=joined(),shown=all.filter(function(r){
-    if(S.own!=="전체"&&(r.c.owner||"(미지정)")!==S.own)return false;
-    if(S.stf==="미완료")return !r.d.done&&!r.d.deliv;
-    if(S.stf==="완료")return !!(r.d.done||r.d.deliv);
-    return true;
-  });
+  var all=joined(),shown=shownRows();
   var owners=["전체"].concat(S.people);
   var h='<div class="row"><button class="btn ghost sm" id="back">← 신고리스트 목록</button><span class="st" id="st">'+esc(S.msg)+'</span></div><h1>'+esc(l.title)+'</h1>';
   h+='<div class="panel">'+summary(all)+'</div>'+(S.edit?colEditor():"");
   h+='<div class="panel"><div class="row">'+owners.map(function(o){return '<button class="chip" data-own="'+esc(o)+'" aria-pressed="'+(S.own===o)+'">'+esc(o)+'</button>'}).join("")+
      '<span class="sub">|</span>'+["전체","미완료","완료"].map(function(o){return '<button class="chip" data-stf="'+o+'" aria-pressed="'+(S.stf===o)+'">'+o+'</button>'}).join("")+
      '<span class="sub">'+shown.length+'곳 · 수수료 합계 '+fmtM(shown.reduce(function(a,r){return a+(Number(r.d.fee)||0)},0)||"0")+'원</span></div>';
-  h+='<div class="scroll"><table class="tb"><thead><tr>'+cols().map(function(c){return c.k==="done"?'<th><label class="alld" title="보이는 업체 전체 체크/해제"><input type="checkbox" id="alldone"'+(shown.length&&shown.every(function(r){return r.d.done})?" checked":"")+' aria-label="전체 완료 체크"> '+esc(c.l)+'</label></th>':'<th>'+esc(c.l)+'</th>'}).join("")+'<th></th></tr></thead><tbody>'+
+  h+='<div class="scroll"><table class="tb"><thead><tr>'+cols().map(function(c){var on=S.sort&&S.sort.k===c.k,b='<button class="srt" data-sort="'+c.k+'" title="누를 때마다 오름차순/내림차순">'+esc(c.l)+'<span>'+(on?(S.sort.dir>0?" ▲":" ▼"):"")+'</span></button>';return c.k==="done"?'<th><label class="alld" title="보이는 업체 전체 체크/해제"><input type="checkbox" id="alldone"'+(shown.length&&shown.every(function(r){return r.d.done})?" checked":"")+' aria-label="전체 완료 체크"></label>'+b+'</th>':'<th>'+b+'</th>'}).join("")+'<th></th></tr></thead><tbody>'+
     (shown.length?shown.map(function(r){return '<tr class="'+(r.d.deliv||r.d.done?"done":"")+'">'+cols().map(function(c){return cell(r,c)}).join("")+'<td><button class="btn ghost sm" data-rm="'+r.c.id+'" title="이 신고리스트에서 빼기">빼기</button></td></tr>'}).join(""):'<tr><td colspan="'+(cols().length+1)+'" class="sub" style="padding:16px">해당하는 업체가 없습니다. 아래의 "엑셀에서 붙여넣기"로 업체를 넣어 주세요.</td></tr>')+
     '</tbody></table></div>';
   h+='<div class="row"><label>업체 추가 <input id="addn" list="addl" placeholder="업체명" autocomplete="off"></label><datalist id="addl">'+
     S.clients.filter(function(c){return (c.status||"거래중")==="거래중"&&!(S.rows[S.cur]||{})[c.id]}).map(function(c){return '<option value="'+esc(c.name)+'">'}).join("")+'</datalist>'+
     '<button class="btn sm" id="addb">추가</button><button class="btn ghost sm" id="auto">대상 업체 자동으로 채우기</button><button class="btn ghost sm" id="imp">엑셀에서 붙여넣기</button><button class="btn ghost sm" id="cedit">열 편집</button>'+
-    (S.confirmDel?'<span class="err">이 신고리스트와 기록이 모두 사라집니다.</span><button class="btn danger sm" id="delyes">삭제 확인</button><button class="btn ghost sm" id="delno">취소</button>':'<button class="btn ghost sm" id="del">이 신고리스트 삭제…</button>')+'</div>';
+    (!S.canDelete?'':S.confirmDel?'<span class="err">이 신고리스트와 기록이 모두 사라집니다.</span><button class="btn danger sm" id="delyes">삭제 확인</button><button class="btn ghost sm" id="delno">취소</button>':'<button class="btn ghost sm" id="del">이 신고리스트 삭제…</button>')+'</div>';
   if(l.kind==="vat")h+='<p class="sub">업체별 기장의 부가세 신고 체크리스트에서 <b>작성자 결재</b>를 체크하면 작업일이, <b>대표세무사 결재</b>를 체크하면 결재완료 날짜가 이 표에 자동으로 찍힙니다(체크리스트 이름이 "'+l.year+'년 '+l.ki+'기 '+esc(l.sub)+'"으로 시작해야 합니다). 날짜는 여기서 직접 고쳐도 됩니다.</p>';
   h+='</div>';
   if(S.err)h+='<p class="err">'+esc(S.err)+'</p>';
@@ -220,7 +215,7 @@ function say(t,bad){S.msg=t;var e=$("#st");if(e){e.textContent=t;e.className="st
 function refreshCounts(){var l=curList();if(!l)return;var m=S.rows[l.id]||{},ids=Object.keys(m);l.n=ids.length;l.work=ids.filter(function(i){return m[i].work}).length;l.appr=ids.filter(function(i){return m[i].appr}).length;l.deliv=ids.filter(function(i){return m[i].deliv}).length}
 
 function openList(id){
-  S.cur=id;S.own="전체";S.stf="전체";S.err="";S.msg="";S.confirmDel=false;
+  S.cur=id;S.own="전체";S.stf="전체";S.sort=null;S.err="";S.msg="";S.confirmDel=false;
   $("#view").innerHTML='<p class="sub">불러오는 중입니다…</p>';
   loadRows(id).then(draw,function(e){S.err=e.message;draw()});
 }
@@ -236,14 +231,37 @@ function save(id,field,value,el){
   },function(e){if(m[id]){if(old)m[id][field]=old;else delete m[id][field]}if(el){if(el.type==="checkbox")el.checked=!!old;else el.value=el.dataset.date?fmtD(old):el.dataset.money?fmtM(old):old}say(e.message,true)});
 }
 
-function shownIds(){
-  return joined().filter(function(r){
+var PR_ORD={"상":1,"중":2,"하":3};
+function sortVal(r,col){
+  var k=col.k,t=col.t;
+  if(k==="type")return r.c.type||"개인";
+  if(k==="name")return r.c.name||"";
+  if(k==="owner")return r.c.owner||"";
+  var v=r.d[k]||"";
+  if(t==="check")return v?1:0;
+  if(t==="sel")return PR_ORD[v]||(v?9:"");
+  if(t==="num")return v===""?"":Number(v)||0;
+  return v;
+}
+function shownRows(){
+  var rows=joined().filter(function(r){
     if(S.own!=="전체"&&(r.c.owner||"(미지정)")!==S.own)return false;
     if(S.stf==="미완료")return !r.d.done&&!r.d.deliv;
     if(S.stf==="완료")return !!(r.d.done||r.d.deliv);
     return true;
-  }).map(function(r){return String(r.c.id)});
+  });
+  if(S.sort){
+    var col=cols().filter(function(c){return c.k===S.sort.k})[0],dir=S.sort.dir;
+    if(col)rows=rows.map(function(r,i){return {r:r,i:i,v:sortVal(r,col)}}).sort(function(x,y){
+      var xe=x.v===""||x.v===undefined,ye=y.v===""||y.v===undefined;
+      if(xe||ye)return xe&&ye?x.i-y.i:(xe?1:-1);
+      var c=typeof x.v==="number"&&typeof y.v==="number"?x.v-y.v:String(x.v).localeCompare(String(y.v),"ko");
+      return c?c*dir:x.i-y.i;
+    }).map(function(o){return o.r});
+  }
+  return rows;
 }
+function shownIds(){return shownRows().map(function(r){return String(r.c.id)})}
 function bulkDone(ids,on){
   var m=S.rows[S.cur]||(S.rows[S.cur]={}),old={};
   ids=ids.filter(function(id){return !!(m[id]||{}).done!==on});if(!ids.length)return;
@@ -322,6 +340,7 @@ document.addEventListener("click",function(e){
   }
   if((b=t.closest("[data-open]")))return openList(b.dataset.open);
   if(t.id==="back"){S.cur=null;S.err="";loadAll().then(draw,draw);draw();return}
+  if((b=t.closest("[data-sort]"))){var sk=b.dataset.sort;S.sort=(S.sort&&S.sort.k===sk)?{k:sk,dir:-S.sort.dir}:{k:sk,dir:1};return draw()}
   if(t.id==="cedit"){S.edit=!S.edit;return draw()}
   if(t.id==="cdone"){S.edit=false;return draw()}
   if((b=t.closest("[data-cmv]"))){var i=+b.dataset.cmv,dd=+b.dataset.d,n=cols().slice(),x=n[i];n.splice(i,1);n.splice(i+dd,0,x);return saveCols(n)}
