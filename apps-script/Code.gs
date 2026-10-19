@@ -74,12 +74,12 @@ function route(req) {
     case "progress.listSave": return progressListSave(req);
     case "progress.cols": return progressCols(req);
     case "progress.listDelete": return progressListDelete(req, who);
-    case "progress.get": return progressGet(req);
-    case "progress.save": return progressSave(req);
+    case "progress.get": return progressGet(req, who);
+    case "progress.save": return progressSave(req, who);
     case "progress.add": return progressAdd(req);
     case "progress.remove": return progressRemove(req);
-    case "progress.import": return progressImport(req);
-    case "progress.sync": return progressSync(req);
+    case "progress.import": return progressImport(req, who);
+    case "progress.sync": return progressSync(req, who);
     case "leave.status": return leaveStatus(p);
     case "clients.load": return clientsLoad(req);
     case "template.save": return templateSave(req, who);
@@ -188,6 +188,13 @@ function plTitle(kind, year, ki, sub) {
   return year + "년 종합소득세 신고리스트";
 }
 // 신고리스트 삭제 권한: 스크립트 속성 PROGRESS_ADMINS(쉼표나 줄바꿈으로 이름 구분)에 적힌 사람만. 비어 있으면 아무도 지울 수 없다.
+// 수수료·입금여부·세금계산서는 PROGRESS_ADMINS 에 적힌 사람만 보고 고친다. 다른 사람에게는 서버가 값을 내려주지도, 받아주지도 않는다.
+const PR_PRIVATE = { fee: 1, paid: 1, tinv: 1 };
+function prHide(d, who) {
+  if (progressAdmin(who)) return d;
+  const o = {}; Object.keys(d).forEach(k => { if (!PR_PRIVATE[k]) o[k] = d[k]; });
+  return o;
+}
 function progressAdmin(who) {
   return String(props().PROGRESS_ADMINS || "").split(/[,\n]/).map(s => s.trim()).filter(Boolean).indexOf(who) >= 0;
 }
@@ -246,12 +253,12 @@ function progressListDelete(req, who) {
     return { ok: true };
   });
 }
-function progressGet(req) {
+function progressGet(req, who) {
   const id = String(req.list || ""), sh = prSheet(), last = sh.getLastRow(), rows = [];
   if (last >= 2) sh.getRange(2, 1, last - 1, 4).getValues().forEach(r => {
     if (String(r[0]) !== id) return;
     let d = {}; try { d = JSON.parse(String(r[2] || "{}")); } catch (e) {}
-    rows.push({ clientId: Number(r[1]), data: d });
+    rows.push({ clientId: Number(r[1]), data: prHide(d, who) });
   });
   return { rows: rows };
 }
@@ -283,11 +290,11 @@ function prUpsert(listId, clientId, patch) {
   return d;
 }
 function prCheckList(id) { if (!plRows().some(l => l.id === id)) throw fail("없는 신고리스트입니다. 새로고침해 주세요.", 404); }
-function progressSave(req) {
+function progressSave(req, who) {
   const id = String(req.list || ""), cid = Math.round(Number(req.clientId));
   if (!cid || cid !== cid) throw fail("업체를 확인하세요.");
-  const patch = prClean(req.patch);
-  return withLock(() => { prCheckList(id); return { data: prUpsert(id, cid, patch) }; });
+  const patch = prHide(prClean(req.patch), who);
+  return withLock(() => { prCheckList(id); return { data: prHide(prUpsert(id, cid, patch), who) }; });
 }
 function progressAdd(req) {
   const id = String(req.list || ""), ids = (Array.isArray(req.ids) ? req.ids : []).slice(0, 1000).map(Number).filter(n => n > 0);
@@ -317,13 +324,13 @@ function prExtras(listId) {
   });
   return { byName: byName, min: min };
 }
-function progressImport(req) {
+function progressImport(req, who) {
   const id = String(req.list || ""), items = (Array.isArray(req.items) ? req.items : []).slice(0, 500);
   const extra = (Array.isArray(req.extra) ? req.extra : []).slice(0, 300);
   return withLock(() => {
     prCheckList(id);
     let n = 0;
-    items.forEach(it => { const cid = Math.round(Number(it && it.clientId)); if (cid !== 0 && cid === cid) { prUpsert(id, cid, prClean(it.data)); n++; } });
+    items.forEach(it => { const cid = Math.round(Number(it && it.clientId)); if (cid !== 0 && cid === cid) { prUpsert(id, cid, prHide(prClean(it.data), who)); n++; } });
     if (extra.length) {
       const ex = prExtras(id);
       extra.forEach(it => {
@@ -331,7 +338,7 @@ function progressImport(req) {
         const key = name.replace(/\s+/g, "").toLowerCase();
         let cid = ex.byName[key];
         if (!cid) { cid = --ex.min; ex.byName[key] = cid; }
-        const d = prClean(it.data); d.xn = name;
+        const d = prHide(prClean(it.data), who); d.xn = name;
         if (it.type != null) d.xt = prClean({ xt: it.type }).xt;
         if (it.owner) d.xo = String(it.owner).trim().slice(0, 40);
         prUpsert(id, cid, d); n++;
@@ -342,7 +349,7 @@ function progressImport(req) {
 }
 // 업체별 기장의 신고 체크리스트(부가세) 결재란을 체크하면 같은 기수의 신고리스트에 날짜가 찍힌다.
 // 작성자 결재 → 작업일, 대표세무사 결재 → 결재완료. 체크를 풀면 날짜도 지운다. 맞는 신고리스트가 없으면 아무것도 하지 않는다.
-function progressSync(req) {
+function progressSync(req, who) {
   const kind = String(req.kind || "vat"), year = Math.round(Number(req.year)), ki = Math.round(Number(req.ki) || 0), sub = String(req.sub || "");
   const cid = Math.round(Number(req.clientId)), field = req.which === "appr" ? "appr" : req.which === "work" ? "work" : "";
   if (!field || !(cid > 0)) throw fail("요청이 올바르지 않습니다.");
@@ -350,7 +357,7 @@ function progressSync(req) {
     const l = plRows().filter(x => x.kind === kind && x.year === year && x.ki === (kind === "vat" ? ki : 0) && x.sub === (kind === "vat" ? sub : ""))[0];
     if (!l) return { matched: false };
     const d = {}; d[field] = req.on ? todayKst() : "";
-    return { matched: true, list: l.title, data: prUpsert(l.id, cid, d) };
+    return { matched: true, list: l.title, data: prHide(prUpsert(l.id, cid, d), who) };
   });
 }
 
