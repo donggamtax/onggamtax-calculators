@@ -72,6 +72,7 @@ function route(req) {
     case "guide.upload": return guideUpload(req, who);
     case "progress.lists": return progressLists();
     case "progress.listSave": return progressListSave(req);
+    case "progress.cols": return progressCols(req);
     case "progress.listDelete": return progressListDelete(req);
     case "progress.get": return progressGet(req);
     case "progress.save": return progressSave(req);
@@ -155,8 +156,8 @@ function leaveStatus(p) {
 // ── 진도체크: 신고 종류별 신고리스트(예: 2026년 2기 예정 부가세)와 업체별 진행 기록 ──────────
 // 시트 '진도목록' = 신고리스트 정의, 시트 '진도체크' = (리스트ID, 업체ID, 진행 기록 JSON). 업체명·구분·담당자는 업체 시트에서 화면이 실시간으로 가져온다.
 const PL_SHEET = "진도목록", PR_SHEET = "진도체크";
-const PR_FIELDS = { done: 1, prio: 1, diff: 1, work: 1, file: 1, appr: 1, deliv: 1, note: 1, mail: 1 };
-const PR_DATES = { work: 1, file: 1, appr: 1, deliv: 1, mail: 1 };
+const PR_FIELDS = { done: 1, prio: 1, diff: 1, work: 1, file: 1, appr: 1, deliv: 1, note: 1, mail: 1, fee: 1, paid: 1, tinv: 1 };
+const PR_DATES = { work: 1, file: 1, appr: 1, deliv: 1, mail: 1, paid: 1, tinv: 1 };
 function progSheet(name, head) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   if (!ss) throw fail("이 스크립트는 구글 시트의 확장 프로그램 → Apps Script에서 만들어야 합니다.", 503);
@@ -164,13 +165,20 @@ function progSheet(name, head) {
   if (!sh) { sh = ss.insertSheet(name); sh.appendRow(head); sh.setFrozenRows(1); }
   return sh;
 }
-function plSheet() { return progSheet(PL_SHEET, ["id", "제목", "종류", "연도", "기", "구분", "생성일시"]); }
+function plSheet() {
+  const sh = progSheet(PL_SHEET, ["id", "제목", "종류", "연도", "기", "구분", "생성일시", "열설정"]);
+  if (sh.getLastColumn() < 8) sh.getRange(1, 8, 1, 1).setValues([["열설정"]]);
+  return sh;
+}
 function prSheet() { return progSheet(PR_SHEET, ["목록ID", "업체ID", "진행기록", "수정일시"]); }
 function todayKst() { return Utilities.formatDate(new Date(), "Asia/Seoul", "yyyy-MM-dd"); }
 function plRows() {
   const sh = plSheet(), last = sh.getLastRow();
   if (last < 2) return [];
-  return sh.getRange(2, 1, last - 1, 7).getValues().filter(r => r[0]).map(r => ({ id: String(r[0]), title: String(r[1]), kind: String(r[2]), year: Number(r[3]) || 0, ki: Number(r[4]) || 0, sub: String(r[5] || "") }));
+  return sh.getRange(2, 1, last - 1, 8).getValues().filter(r => r[0]).map(r => {
+    let cols = null; try { const j = JSON.parse(String(r[7] || "")); if (Array.isArray(j)) cols = j; } catch (e) {}
+    return { id: String(r[0]), title: String(r[1]), kind: String(r[2]), year: Number(r[3]) || 0, ki: Number(r[4]) || 0, sub: String(r[5] || ""), cols: cols };
+  });
 }
 function plTitle(kind, year, ki, sub) {
   if (kind === "vat") return year + "년 " + ki + "기 " + sub + " 부가세 신고리스트";
@@ -186,6 +194,26 @@ function progressLists() {
     c.n++; if (d.work) c.work++; if (d.appr) c.appr++; if (d.deliv) c.deliv++;
   });
   return { lists: lists.map(l => Object.assign(l, cnt[l.id] || { n: 0, work: 0, appr: 0, deliv: 0 })) };
+}
+// 신고리스트별 열 구성(이름·순서·삭제·추가). 기록은 열 키로 저장되므로 열을 지워도 입력한 값은 남고, 다시 추가하면 보인다.
+const PC_TYPES = { check: 1, sel: 1, text: 1, date: 1, num: 1, auto: 1 };
+function progressCols(req) {
+  const id = String(req.id || ""), src = Array.isArray(req.cols) ? req.cols : null;
+  if (!src || src.length > 40) throw fail("열 구성이 올바르지 않습니다.");
+  const seen = {}, cols = [];
+  src.forEach(c => {
+    const k = String(c && c.k || ""), l = String(c && c.l || "").trim().slice(0, 20), tp = String(c && c.t || "text");
+    if (!(PR_FIELDS[k] || /^c\d{1,3}$/.test(k) || k === "type" || k === "name" || k === "owner") || seen[k]) return;
+    if (!l || !PC_TYPES[tp]) throw fail("열 이름을 확인하세요.");
+    seen[k] = 1; cols.push({ k: k, l: l, t: tp });
+  });
+  if (!seen.name) throw fail("상호 열은 지울 수 없습니다.");
+  return withLock(() => {
+    prCheckList(id);
+    const sh = plSheet(), last = sh.getLastRow(), ids = sh.getRange(2, 1, last - 1, 1).getValues();
+    for (let i = 0; i < ids.length; i++) if (String(ids[i][0]) === id) { sh.getRange(i + 2, 8, 1, 1).setValues([[JSON.stringify(cols)]]); return { cols: cols }; }
+    throw fail("없는 신고리스트입니다. 새로고침해 주세요.", 404);
+  });
 }
 function progressListSave(req) {
   const kind = String(req.kind || ""), year = Math.round(Number(req.year)), ki = Math.round(Number(req.ki) || 0), sub = String(req.sub || "");
@@ -230,7 +258,7 @@ function prFind(sh, listId, clientId) {
 function prClean(patch) {
   const out = {};
   Object.keys(patch || {}).forEach(k => {
-    if (!PR_FIELDS[k]) return;
+    if (!PR_FIELDS[k] && !/^c\d{1,3}$/.test(k)) return;
     let v = String(patch[k] == null ? "" : patch[k]).slice(0, 500);
     if (PR_DATES[k] && v && !/^\d{4}-\d{2}-\d{2}$/.test(v)) throw fail("날짜 형식이 올바르지 않습니다.");
     out[k] = v; // JSON 문자열 안에 저장되므로(셀이 { 로 시작) 수식으로 해석되지 않는다
