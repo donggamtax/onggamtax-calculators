@@ -80,7 +80,7 @@ function api(action,data){
 var $=function(s){return document.querySelector(s)};
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 var S={lists:[],clients:[],people:[],cur:null,rows:{},own:"전체",stf:"전체",err:"",msg:"",adding:false,confirmDel:false};
-var KIND={vat:"부가세",corp:"법인세",inc:"종합소득세"};
+var KIND={vat:"부가세",corp:"법인세",inc:"종합소득세",tax:"세금 예측",biz:"사업장 현황신고"};
 var DEF_COLS=[["done","완료","check"],["prio","우선순위","sel"],["type","구분","auto"],["name","상호","auto"],["owner","담당자","auto"],["diff","난도","sel"],["work","작업일","date"],["file","신고일","date"],["appr","결재완료","date"],["deliv","전달일","date"],["note","특이사항","text"],["mail","메일발송","date"],["fee","수수료","num"],["paid","입금여부","date"],["tinv","세금계산서","date"]].map(function(c){return {k:c[0],l:c[1],t:c[2]}});
 function cols(){var l=curList();return (l&&l.cols&&l.cols.length)?l.cols:DEF_COLS}
 function colOf(k){return cols().filter(function(c){return c.k===k})[0]||{l:k,t:"text"}}
@@ -98,7 +98,8 @@ function loadRows(id){
   return api("progress.get",{list:id}).then(function(r){var m={};(r.rows||[]).forEach(function(x){m[x.clientId]=x.data||{}});S.rows[id]=m});
 }
 /* 날짜는 저장은 2026-01-01, 화면은 2026-1-1 로 보이고 입력한다 */
-function fmtD(iso){var m=String(iso||"").match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);return m?m[1]+"-"+(+m[2])+"-"+(+m[3]):""}
+function fmtD(iso){var m=String(iso||"").match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);return m?(+m[2])+"/"+(+m[3]):""}
+function fullD(iso){var m=String(iso||"").match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);return m?m[1]+"-"+(+m[2])+"-"+(+m[3]):""}
 function pct(a,b){return b?Math.round(a*100/b)+"%":"-"}
 
 /* ── 목록 화면 ── */
@@ -117,17 +118,19 @@ function drawLists(){
 function newForm(){
   var y=new Date().getFullYear();
   return '<div class="row" style="padding:8px;border:1px solid var(--line);border-radius:8px">'+
-    '<label>종류 <select id="nk"><option value="vat">부가세</option><option value="corp">법인세</option><option value="inc">종합소득세</option></select></label>'+
+    '<label>종류 <select id="nk"><option value="vat">부가세</option><option value="corp">법인세</option><option value="inc">종합소득세</option><option value="tax">세금 예측</option><option value="biz">사업장 현황신고</option></select></label>'+
     '<label>연도 <input id="ny" type="number" value="'+y+'" min="2000" max="2100" style="width:84px"></label>'+
     '<span id="nvat"><label>기 <select id="nki"><option>1</option><option selected>2</option></select></label> <label>구분 <select id="nsub"><option>예정</option><option>확정</option></select></label></span>'+
     '<button class="btn" id="mk">만들기</button><button class="btn ghost" id="mkno">취소</button>'+
-    '<span class="sub">만들면 해당 업체가 자동으로 들어갑니다(부가세 예정=법인, 부가세 확정=면세 제외 전체, 법인세=법인, 종합소득세=개인). 이후 업체는 직접 더하고 뺄 수 있습니다.</span></div>';
+    '<span class="sub">빈 리스트로 만들어지고, 엑셀에서 붙여넣기로 업체를 넣습니다. 세금 예측과 사업장 현황신고는 연도만 고르면 됩니다.</span></div>';
 }
 function eligible(l){
   return S.clients.filter(function(c){
     if((c.status||"거래중")!=="거래중")return false;
     if(l.kind==="vat")return !c.tf&&(l.sub==="확정"||c.type==="법인");
     if(l.kind==="corp")return c.type==="법인";
+    if(l.kind==="tax")return true;
+    if(l.kind==="biz")return !!c.tf&&c.type!=="법인";
     return c.type!=="법인";
   });
 }
@@ -162,7 +165,7 @@ function cell(r,col){
   if(t==="check")return '<td><input type="checkbox" data-f="'+k+'" data-id="'+id+'"'+(v?" checked":"")+' aria-label="'+al+'"></td>';
   if(t==="sel"){var o=["","상","중","하"];if(v&&o.indexOf(v)<0)o.push(v);return '<td><select data-f="'+k+'" data-id="'+id+'" aria-label="'+al+'">'+o.map(function(x){return '<option'+(x===v?" selected":"")+'>'+esc(x)+'</option>'}).join("")+'</select></td>'}
   if(t==="num")return '<td><input type="text" class="fe" inputmode="numeric" autocomplete="off" placeholder="금액" data-money="1" data-f="'+k+'" data-id="'+id+'" value="'+esc(fmtM(v))+'" aria-label="'+al+'"></td>';
-  if(t==="date")return '<td><input type="text" class="dt" inputmode="numeric" autocomplete="off" placeholder="2026-1-1" data-date="1" data-f="'+k+'" data-id="'+id+'" value="'+esc(fmtD(v))+'" aria-label="'+al+'"></td>';
+  if(t==="date")return '<td><input type="text" class="dt" inputmode="numeric" autocomplete="off" data-date="1" data-f="'+k+'" data-id="'+id+'" title="'+esc(fullD(v))+'" value="'+esc(fmtD(v))+'" aria-label="'+al+'"></td>';
   return '<td><input type="text" class="nt" data-f="'+k+'" data-id="'+id+'" value="'+esc(v)+'" aria-label="'+al+'"></td>';
 }
 function colEditor(){
@@ -255,7 +258,7 @@ function parseDate(s){
   s=String(s||"").trim();if(!s)return "";
   var m=s.match(/^(\d{4})[-./]\s*(\d{1,2})[-./]\s*(\d{1,2})/);
   if(!m){var m2=s.match(/^(\d{2})[-./]\s*(\d{1,2})[-./]\s*(\d{1,2})$/);if(m2)m=[0,"20"+m2[1],m2[2],m2[3]]}
-  if(!m){var m3=s.match(/^(\d{1,2})[./월]\s*(\d{1,2})일?$/);if(m3)m=[0,String(new Date().getFullYear()),m3[1],m3[2]]}
+  if(!m){var m3=s.match(/^(\d{1,2})[-./월]\s*(\d{1,2})일?$/);if(m3)m=[0,String(new Date().getFullYear()),m3[1],m3[2]]}
   if(!m)return null;
   var y=+m[1],mo=+m[2],d=+m[3];if(mo<1||mo>12||d<1||d>31)return null;
   return y+"-"+("0"+mo).slice(-2)+"-"+("0"+d).slice(-2);
@@ -285,7 +288,7 @@ function parsePaste(text){
 }
 function importDlg(){
   var m=document.createElement("div");m.className="dlg";
-  m.innerHTML='<div><h2>엑셀에서 붙여넣기</h2><p class="sub">엑셀의 표를 머리글 줄(완료여부, 우선순위, 상호, 담당자 …)부터 복사해 아래에 붙여넣으세요. 상호가 업체 목록과 같은 줄만 들어가고, 이미 있는 업체는 붙여넣은 내용으로 덮어씁니다(빈 칸은 그대로 둡니다). 담당자와 구분은 업체 정보를 따릅니다.</p><textarea id="pt" placeholder="여기에 붙여넣기"></textarea><p class="sub">머리글은 이 표의 열 이름과 같게 적으세요(<b id="phn"></b>). 필요한 열만 있으면 되고 상호는 꼭 필요합니다. 날짜는 2026-1-1 형식, 금액은 숫자, 체크 열은 O(또는 아무 글자)를 적으면 체크됩니다. 구분·담당자는 업체 정보를 따르니 열이 있어도 무시합니다.</p><p class="sub" id="pi"></p><div class="row"><button class="btn ghost" id="ptpl">양식 받기(CSV)</button><button class="btn" id="pgo">넣기</button><button class="btn ghost" id="pno">닫기</button></div></div>';
+  m.innerHTML='<div><h2>엑셀에서 붙여넣기</h2><p class="sub">엑셀의 표를 머리글 줄(완료여부, 우선순위, 상호, 담당자 …)부터 복사해 아래에 붙여넣으세요. 상호가 업체 목록과 같은 줄만 들어가고, 이미 있는 업체는 붙여넣은 내용으로 덮어씁니다(빈 칸은 그대로 둡니다). 담당자와 구분은 업체 정보를 따릅니다.</p><textarea id="pt" placeholder="여기에 붙여넣기"></textarea><p class="sub">머리글은 이 표의 열 이름과 같게 적으세요(<b id="phn"></b>). 필요한 열만 있으면 되고 상호는 꼭 필요합니다. 날짜는 6/11 형식, 금액은 숫자, 체크 열은 O(또는 아무 글자)를 적으면 체크됩니다. 구분·담당자는 업체 정보를 따르니 열이 있어도 무시합니다.</p><p class="sub" id="pi"></p><div class="row"><button class="btn ghost" id="ptpl">양식 받기(CSV)</button><button class="btn" id="pgo">넣기</button><button class="btn ghost" id="pno">닫기</button></div></div>';
   document.body.appendChild(m);
   m.querySelector("#phn").textContent=cols().filter(function(c){return c.t!=="auto"||c.k==="name"}).map(function(c){return c.l}).join(", ");var ta=m.querySelector("#pt"),pi=m.querySelector("#pi"),res=null;
   ta.addEventListener("input",function(){res=parsePaste(ta.value);pi.className=res.error?"err":"sub";pi.textContent=res.error?res.error:res.items.length+"곳을 넣습니다."+(res.miss.length?" 업체 목록에서 못 찾은 상호 "+res.miss.length+"곳: "+res.miss.slice(0,6).join(", ")+(res.miss.length>6?" …":""):"")+(res.baddate?" (읽지 못한 날짜 "+res.baddate+"칸은 건너뜀)":"")});
@@ -369,8 +372,8 @@ document.addEventListener("change",function(e){
     if(t.dataset.money){v=v.replace(/[^\d]/g,"");if(v)v=String(Number(v));t.value=fmtM(v)}
     if(t.dataset.date){
       var dv=parseDate(v);
-      if(dv===null){say('날짜는 2026-1-1 처럼 적어 주세요.',true);t.value=fmtD(((S.rows[S.cur]||{})[t.dataset.id]||{})[t.dataset.f]);return}
-      v=dv;t.value=fmtD(dv);
+      if(dv===null){say('날짜는 6/11 처럼 적어 주세요(연도까지 쓰려면 2026-6-11).',true);t.value=fmtD(((S.rows[S.cur]||{})[t.dataset.id]||{})[t.dataset.f]);return}
+      v=dv;t.value=fmtD(dv);t.title=fullD(dv);
     }
     save(t.dataset.id,t.dataset.f,v,t);
   }
