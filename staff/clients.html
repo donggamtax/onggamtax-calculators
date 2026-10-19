@@ -541,12 +541,13 @@ function taxCompute(P,yr,isCorp){
     x.extra=z("extra",rawMain?R(k("extra")):O(k("extra"),mp.extra*12/months));
     x.xs=0;xl.forEach(function(i){var v=rawMain?R(k("x"+i)):O(k("x"+i),mp["x"+i]*12/months);x["x"+i]=v;x.xs+=v});
     x.income=O(k("income"),((hb&&nvk(P,k("rev"))===null&&nvk(P,k("cogs"))===null&&nvk(P,k("sga"))===null)?B.inc:x.rev-x.cogs-x.sga)-x.extra-x.xs);
-    x.adj=z("adj",rawMain?R(k("adj")):O(k("adj"),mp.adj));
-    x.other=isCorp?0:z("other",rawMain?R(k("other")):O(k("other"),mp.other));
-    x.oexp=isCorp?0:z("oexp",rawMain?R(k("oexp")):O(k("oexp"),mp.oexp));
+    var CF=function(id){return c==="K"?R(k(id)):O(k(id),c==="J"?dp[id]:mp[id])}; /* 세무조정·타소득금액·타소득경비·종합소득공제: 기본은 전년도 → 가결산 → 예측 순으로 그대로 이어받고, 직접 적으면 그 값 */
+    x.adj=z("adj",CF("adj"));
+    x.other=isCorp?0:z("other",CF("other"));
+    x.oexp=isCorp?0:z("oexp",CF("oexp"));
     x.loss=z("loss",rawMain?R(k("loss")):O(k("loss"),mp.loss));
     x.dona=z("dona",rawMain?R(k("dona")):O(k("dona"),mp.dona));
-    x.ded=isCorp?0:z("ded",rawMain?R(k("ded")):O(k("ded"),mp.ded));
+    x.ded=isCorp?0:z("ded",CF("ded"));
     x.base=O(k("base"),x.income+x.adj+x.other-x.oexp-x.loss-x.dona-x.ded);
     x.tax=O(k("tax"),calcTax(x.base,tbl(y)));
     x.dsum=0;
@@ -599,7 +600,7 @@ function paperTax(id){
      var delb=DELOK[id2]?'<button type="button" class="mini rdel" data-txdel="r:'+id2+'" title="이 줄 빼기">−</button>':'';
      if(id2==="ratio")return '<tr class="ratr"><th>'+r[1]+delb+'</th>'+["I","J","K"].map(function(cc){return taxCell(P,res,cc,"ratio",false,true)}).join("")+'<td></td></tr>';
      if(r[2]){var xi=id2.slice(1);return '<tr><th class="xn"><input type="text" data-k="'+esc(P+"xn"+xi)+'" value="'+esc(val(P+"xn"+xi))+'" placeholder="항목명 (경비)" aria-label="항목명"><button type="button" class="mini rdel" data-txdel="x:'+xi+'" title="이 줄 빼기">−</button></th>'+taxCell(P,res,"I",id2,false)+taxCell(P,res,"J",id2,true)+taxCell(P,res,"K",id2,true)+'<td>'+inp(P+"note|"+id2,"")+'</td></tr>'}
-     var raw=RAWIDS[id2],rawJ=raw&&!(hasB&&(id2==="rev"||id2==="cogs"||id2==="sga"));
+     var raw=RAWIDS[id2],rawJ=raw&&!(hasB&&(id2==="rev"||id2==="cogs"||id2==="sga"))&&!({adj:1,other:1,oexp:1,ded:1})[id2];
      return '<tr'+(id2==="credit"?' class="credr"':kc)+'><th>'+r[1]+delb+'</th>'+taxCell(P,res,"I",id2,false)+taxCell(P,res,"J",id2,!!rawJ)+taxCell(P,res,"K",id2,!!raw)+'<td>'+inp(P+"note|"+id2,"",defNote[id2]||"")+'</td></tr>';
    }).join("")+'</table>'+
    '<div class="rowtools"><button type="button" class="mini add" data-txadd="x">+ 줄 추가(경비 항목)</button>'+(hiddenRows.length?'<span class="sub">뺀 줄 다시 넣기:</span>'+hiddenRows.map(function(r){return '<button type="button" class="mini add" data-txshow="'+r[0]+'">+ '+r[1]+'</button>'}).join(""):'')+'</div>'+
