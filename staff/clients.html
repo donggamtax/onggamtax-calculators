@@ -472,7 +472,7 @@ function paperVat(id){
     }
   });
   h+='</table>'+signBox(P)+'<div class="sub" data-signnote style="text-align:right;margin-top:4px"></div></div>';
-  return h;
+  return h.replace(/ placeholder="[^"]*"/g,"");
 }
 /* ③ 종합소득세 신고 체크리스트 */
 function paperInc(id){
