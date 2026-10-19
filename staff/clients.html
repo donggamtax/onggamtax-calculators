@@ -191,9 +191,8 @@ html[data-embed="1"] .wrap{padding-top:6px}
 .paper.taxp .taxgrid{grid-template-columns:minmax(0,1fr) 380px;gap:12px 18px}.paper.taxp .taxgrid>div:first-child{overflow-x:auto}
 .paper.taxp .tx td.cc{text-align:right}.paper.taxp .tx td.cc input{text-align:right!important;padding-right:6px}
 .paper.taxp .tx tr.ratr td{font-weight:700}
-.paper.taxp .tx tr.credr th,.paper.taxp .tx tr.credr td,.paper.taxp .tx tr.credr input{color:#a40e0e!important;font-weight:700}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .paper.taxp .tx tr.credr th,:root:not([data-theme="light"]) .paper.taxp .tx tr.credr td,:root:not([data-theme="light"]) .paper.taxp .tx tr.credr input{color:#ff7a7a!important}}
-.paper.taxp .tx th{position:relative}.rz{position:absolute;top:0;right:-3px;width:7px;height:100%;cursor:col-resize;z-index:2}.rz:hover{background:rgba(42,111,219,.35)}
+.paper.taxp .tx tr.credr td.cc,.paper.taxp .tx tr.credr td.cc input{color:#d62d2d!important;font-weight:700}
+.paper .ht tr:first-child>*{position:relative}.paper:not(.taxp){overflow-x:auto}.two>*{min-width:0;overflow-x:auto}.paper.taxp .tx th{position:relative}.rz{position:absolute;top:0;right:-3px;width:7px;height:100%;cursor:col-resize;z-index:2}.rz:hover{background:rgba(42,111,219,.35)}
 body:has(.app[data-tax="1"]) .wrap{max-width:1700px}
 @media (max-width:1500px){.paper.taxp .taxgrid{grid-template-columns:minmax(0,1fr)}}
 .paper.taxp .tx th{padding:3px 5px}.paper.taxp .tx td{padding:2px 4px}
@@ -356,9 +355,9 @@ function tabInfo(c){
    '<div class="box"><div class="bt">'+(c.type==="법인"?"법인세":"소득세")+' 신고시 참고사항</div>'+ta("info|taxnote","ag")+'</div></div>';
 }
 /* ===== 부가세: O/X 칸 · 이전 기수 값 이월 · 세액 자동계산 ===== */
-function oxCell(k){
+function oxCell(k,only){
   var o=val(k+"|ox");
-  return '<div class="oxc"><select class="ox'+(o==="O"?" ox-o":o==="X"?" ox-x":"")+'" data-k="'+esc(k+"|ox")+'" aria-label="O/X"><option value=""></option><option'+(o==="O"?" selected":"")+'>O</option><option'+(o==="X"?" selected":"")+'>X</option></select><input type="text" data-k="'+esc(k)+'" value="'+esc(val(k))+'" aria-label="메모"></div>';
+  return '<div class="oxc"><select class="ox'+(o==="O"?" ox-o":o==="X"?" ox-x":"")+'" data-k="'+esc(k+"|ox")+'" aria-label="O/X"><option value=""></option><option'+(o==="O"?" selected":"")+'>O</option><option'+(o==="X"?" selected":"")+'>X</option></select>'+(only?'':'<input type="text" data-k="'+esc(k)+'" value="'+esc(val(k))+'" aria-label="메모">')+'</div>';
 }
 /* 이름에서 연도·기·예정/확정을 읽어 시간순으로 놓는다(못 읽으면 만든 순서). 앞 기수의 당기가 다음 기수의 전기가 된다. */
 function vatInfo(name){
@@ -450,7 +449,7 @@ function paperVat(id){
    '<tr><th>신용카드</th><td>'+nm(P+"cc0")+'</td><td>'+nm(P+"cc1")+'</td></tr>'+
    '<tr><th>현금영수증</th><td>'+nm(P+"cr0")+'</td><td>'+nm(P+"cr1")+'</td></tr>'+
    '<tr><th>과다공제 경고</th><th>차량명</th><th>공제여부</th></tr>'+
-   '<tr><td>'+oxCell(P+"warn")+'</td><td>'+vcTxt(D,id,"car")+'</td><td>'+vcTxt(D,id,"cared")+'</td></tr></table>'+
+   '<tr><td>'+oxCell(P+"warn",1)+'</td><td>'+vcTxt(D,id,"car")+'</td><td>'+vcTxt(D,id,"cared")+'</td></tr></table>'+
    '<div><table class="ht"><tr><th>계산서</th><th>전기</th><th>당기</th><th>비고</th></tr>'+
    VROWS.filter(function(r){return vOn(D,id,r[1])}).map(function(r){return '<tr><th>'+r[0]+(r[1]==="deemed"?' <button type="button" class="mini" data-vdeem="1" data-pid="'+id+'" title="이 줄 빼기">−</button>':'')+'</th><td>'+vcNum(D,id,r[1],"a")+'</td><td>'+vcNum(D,id,r[1],"b")+'</td><td>'+inp(P+r[1]+"n")+'</td></tr>'}).join("")+'</table>'+
    (vOn(D,id,"deemed")?'':'<button type="button" class="mini add" data-vdeem="1" data-pid="'+id+'">+ 의제매입세액공제 줄 넣기</button>')+
@@ -592,7 +591,7 @@ function paperTax(id){
   var h='<div class="paper taxp" data-pid="'+id+'" data-taxp="'+esc(P)+'" data-corp="'+(isCorp?1:0)+'" data-yr="'+yr+'"><h2 class="ttl">'+esc(name)+(isCorp?' 법인세 산출액(추정)':' 종합소득세 산출액(추정)')+'</h2>'+
    '<div class="sub" style="text-align:center;margin:-8px 0 10px">'+(isCorp?(yr>=2026?'(2026년 이후 법인세 세율 변경 적용)':'(2025년 이전 법인세 세율 적용)'):'(종합소득세 기본세율 적용)')+'</div>'+
    '<table class="ht"><tr><th style="width:15%">사업자명</th><td>'+inp(P+"co","사업자명",c.name)+'</td><th style="width:20%">'+yr+'년 수입금액'+(isCorp?'':'<br><span class="sub">(수입금액+타소득금액)</span>')+'</th><td class="c" data-krev>'+fmtI(res.I.rev+res.I.other)+'</td></tr>'+
-   '<tr><th>성명</th><td>'+inp(P+"rep","성명")+'</td><th>추계신고시</th><td>'+inp(P+"est","추계신고시",isCorp?"법인":"")+'</td></tr>'+
+   '<tr><th>성명</th><td>'+inp(P+"rep","성명",c.rep||"")+'</td><th>추계신고시</th><td>'+inp(P+"est","추계신고시",isCorp?"법인":"")+'</td></tr>'+
    '<tr><th>업태/종목</th><td>'+inp(P+"biz","업태/종목",val("info|업종"))+'</td><th>기장의무구분</th><td>'+inp(P+"duty","기장의무구분",isCorp?"법인":"")+'</td></tr></table>'+
    '<div class="taxgrid"><div><table class="ht tx"><tr><th style="width:116px">구 분</th><th class="yr">'+yr+'년(e) 예측</th><th><span>'+yy(yr)+' 1~</span><input type="text" class="mo" inputmode="numeric" data-k="'+esc(P)+'months" value="'+esc(val(P+"months","9"))+'" aria-label="가결산 개월수">월</th><th>'+(yr-1)+'년</th><th style="width:15%">비고</th></tr>'+
    mainRows.map(function(r){
@@ -621,13 +620,21 @@ function paperTax(id){
 }
 function fitTaxIn(){}
 function fitAllTax(){}
-/* 세금예측 표 칸 너비: 머리글 경계를 끌어 조정(브라우저에 저장), 더블클릭하면 초기화 */
+/* 표 칸 너비: 머리글 경계를 끌어 조정(브라우저에 저장), 더블클릭하면 처음 크기. 세금예측·부가세·소득세·법인세 표 공통 */
 var TXW_KEY="tax.cw";
-function txWidths(){try{var a=JSON.parse(localStorage.getItem(TXW_KEY)||"null");return a&&a.length===5&&a.every(function(n){return n>=40})?a:null}catch(e){return null}}
+function rzTables(){return [].slice.call(document.querySelectorAll(".paper table.ht")).filter(function(t){
+  if(t.classList.contains("in")||t.classList.contains("sm")||!t.rows.length)return false;
+  return [].every.call(t.rows[0].cells,function(c){return c.colSpan===1&&c.rowSpan===1})})}
+function rzKey(t){
+  var p=t.closest(".paper");if(p.dataset.taxp!==undefined)return TXW_KEY;
+  var kind=p.dataset.vp!==undefined?"vp":state.tab,idx=rzTables().filter(function(x){return x.closest(".paper")===p}).indexOf(t);
+  return "tbl.cw."+kind+"."+idx;
+}
+function rzGet(t){try{var a=JSON.parse(localStorage.getItem(rzKey(t))||"null");return a&&a.length===t.rows[0].cells.length&&a.every(function(n){return n>=40})?a:null}catch(e){return null}}
 function applyTaxW(){
-  var w=txWidths();
-  document.querySelectorAll(".paper[data-taxp] table.tx:not(.sm)").forEach(function(t){
-    var ths=t.rows[0].cells;
+  rzTables().forEach(function(t){
+    if(t.closest(".paper").dataset.taxp!==undefined&&t.classList.contains("sm"))return;
+    var ths=t.rows[0].cells,w=rzGet(t);
     for(var i=0;i<ths.length;i++){
       if(!ths[i].querySelector(".rz")){var h=document.createElement("i");h.className="rz";h.dataset.i=i;h.title="끌어서 칸 너비 조정 (더블클릭: 처음 크기)";ths[i].appendChild(h)}
       ths[i].style.width=w?w[i]+"px":"";
@@ -638,21 +645,21 @@ function applyTaxW(){
 }
 var rzDrag=null;
 document.addEventListener("mousedown",function(e){
-  var h=e.target.closest&&e.target.closest(".paper[data-taxp] .rz");if(!h||e.button!==0)return;
+  var h=e.target.closest&&e.target.closest(".paper .rz");if(!h||e.button!==0)return;
   e.preventDefault();e.stopPropagation();
   var t=h.closest("table"),ths=[].slice.call(t.rows[0].cells);
-  rzDrag={i:+h.dataset.i,x:e.clientX,w:ths.map(function(c){return c.getBoundingClientRect().width})};
+  rzDrag={key:rzKey(t),i:+h.dataset.i,x:e.clientX,w:ths.map(function(c){return c.getBoundingClientRect().width})};
 },true);
 document.addEventListener("mousemove",function(e){
   if(!rzDrag)return;
   var w=rzDrag.w.slice();w[rzDrag.i]=Math.max(40,rzDrag.w[rzDrag.i]+e.clientX-rzDrag.x);
-  try{localStorage.setItem(TXW_KEY,JSON.stringify(w.map(Math.round)))}catch(x){}
+  try{localStorage.setItem(rzDrag.key,JSON.stringify(w.map(Math.round)))}catch(x){}
   applyTaxW();
 });
 document.addEventListener("mouseup",function(){rzDrag=null});
 document.addEventListener("dblclick",function(e){
-  if(!(e.target.closest&&e.target.closest(".paper[data-taxp] .rz")))return;
-  try{localStorage.removeItem(TXW_KEY)}catch(x){}applyTaxW();
+  var h=e.target.closest&&e.target.closest(".paper .rz");if(!h)return;
+  try{localStorage.removeItem(rzKey(h.closest("table")))}catch(x){}applyTaxW();
 });
 function refreshTax(){
   document.querySelectorAll(".paper[data-taxp]").forEach(function(p){
