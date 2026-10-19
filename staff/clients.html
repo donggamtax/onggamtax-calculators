@@ -374,7 +374,7 @@ function vRaw(D,id,k){var v=D.v["vat|"+id+"|"+k];return v===undefined||v===null?
 var VCAL=["sales","buyti","buyetc","bulgong","card","deemed","paid"];
 var VROWS=[["매출","sales"],["매입Ti","buyti"],["매입기타","buyetc"],["불공제","bulgong"],["카드세액공제","card"],["의제매입세액공제","deemed"],["기납부","paid"],["세금","tax"]];
 function vKind(D,id){var c=clientById(state.sel);return vRaw(D,id,"kind")||(c&&c.type)||"개인"}
-function vOn(D,id,f){if(f==="card")return vKind(D,id)!=="법인";if(f==="deemed")return vRaw(D,id,"deemoff")!=="1";return true}
+function vOn(D,id,f){if(f==="card")return vKind(D,id)!=="법인";if(f==="deemed")return vRaw(D,id,"deemoff")!=="1";if(f==="bulgong")return vRaw(D,id,"bulgoff")!=="1";return true}
 function vNum(D,id,f,col){
   var raw=vRaw(D,id,f+col);if(raw!=="")return vN(raw);
   if(f==="tax")return vTax(D,id,col);
@@ -451,11 +451,11 @@ function paperVat(id){
    '<tr><th>과다공제 경고</th><th>차량명</th><th>공제여부</th></tr>'+
    '<tr><td>'+oxCell(P+"warn",1)+'</td><td>'+vcTxt(D,id,"car")+'</td><td>'+vcTxt(D,id,"cared")+'</td></tr></table>'+
    '<div><table class="ht"><tr><th>계산서</th><th>전기</th><th>당기</th><th>비고</th></tr>'+
-   VROWS.filter(function(r){return vOn(D,id,r[1])}).map(function(r){return '<tr><th>'+r[0]+(r[1]==="deemed"?' <button type="button" class="mini" data-vdeem="1" data-pid="'+id+'" title="이 줄 빼기">−</button>':'')+'</th><td>'+vcNum(D,id,r[1],"a")+'</td><td>'+vcNum(D,id,r[1],"b")+'</td><td>'+inp(P+r[1]+"n")+'</td></tr>'}).join("")+'</table>'+
-   (vOn(D,id,"deemed")?'':'<button type="button" class="mini add" data-vdeem="1" data-pid="'+id+'">+ 의제매입세액공제 줄 넣기</button>')+
+   VROWS.filter(function(r){return vOn(D,id,r[1])}).map(function(r){return '<tr><th>'+r[0]+(r[1]==="deemed"?' <button type="button" class="mini" data-vdeem="deemoff" data-pid="'+id+'" title="이 줄 빼기">−</button>':r[1]==="bulgong"?' <button type="button" class="mini" data-vdeem="bulgoff" data-pid="'+id+'" title="이 줄 빼기">−</button>':'')+'</th><td>'+vcNum(D,id,r[1],"a")+'</td><td>'+vcNum(D,id,r[1],"b")+'</td><td>'+inp(P+r[1]+"n")+'</td></tr>'}).join("")+'</table>'+
+   (vOn(D,id,"deemed")?'':'<button type="button" class="mini add" data-vdeem="deemoff" data-pid="'+id+'">+ 의제매입세액공제 줄 넣기</button>')+(vOn(D,id,"bulgong")?'':'<button type="button" class="mini add" data-vdeem="bulgoff" data-pid="'+id+'">+ 불공제 줄 넣기</button>')+
    '<div class="sub" style="margin-top:4px">세금 = (매출 − 매입Ti − 매입기타 + 불공제) ÷ 10 − 기납부 − 의제매입 − 카드세액공제'+(vOn(D,id,"card")?'':' (법인은 카드세액공제 없음)')+'. 회색 글씨는 자동으로 채워진 값이고, 칸에 직접 적으면 그 값이 쓰입니다. 전기는 앞 기수의 당기가 자동으로 들어옵니다.</div></div></div>';
   h+='<table class="ht"><tr><th rowspan="2" style="width:84px">세금계산서 체크</th>'+["임차료","관리비","전력비","통신비","기장료","조정료"].map(function(x){return '<th>'+x+'</th>'}).join("")+'<th style="width:20%">비고</th></tr><tr>'+
-   ["rent","mgmt","power","tel","fee","adj","note"].map(function(k){return '<td>'+(k==="note"?inp(P+"inv|"+k):oxCell(P+"inv|"+k))+'</td>'}).join("")+'</tr></table>';
+   ["rent","mgmt","power","tel","fee","adj","note"].map(function(k){return '<td>'+(k==="note"?inp(P+"inv|"+k):oxCell(P+"inv|"+k,1))+'</td>'}).join("")+'</tr></table>';
   // 체크 목록
   var ids=tplIds("vat"),total=ids.length,n=0;ids.forEach(function(x){if(val(P+"c"+x))n++});
   h+='<div class="count" data-prog="'+P+'" data-ids="'+ids.join(",")+'" style="text-align:right">'+n+' / '+total+' 체크</div>';
@@ -472,7 +472,7 @@ function paperVat(id){
     }
   });
   h+='</table>'+signBox(P)+'<div class="sub" data-signnote style="text-align:right;margin-top:4px"></div></div>';
-  return h;
+  return h.replace(/ placeholder="[^"]*"/g,"");
 }
 /* ③ 종합소득세 신고 체크리스트 */
 function paperInc(id){
@@ -765,7 +765,7 @@ document.addEventListener("click",function(e){
       else{var cf2=LK[pp[0]];V[TP+cf2[0]]=gl(TP+cf2[0],cf2[1]).filter(function(x){return x!==pp[1]}).join(",");
         Object.keys(V).forEach(function(key){var del=pp[0]==="b"?key.indexOf(TP+"b"+pp[1]+"|")===0:(key===TP+pp[0]+(pp[0]==="d"?"n":"n")+pp[1]||["I","J","K"].some(function(c){return key===TP+c+"|"+pp[0]+pp[1]||key===TP+"note|"+pp[0]+pp[1]}));if(del)delete V[key]})}}
     drawDetail()}}
-  else if((t=e.target.closest("[data-vdeem]"))){var vk="vat|"+t.dataset.pid+"|deemoff";D.v[vk]=D.v[vk]==="1"?"":"1";drawDetail()}
+  else if((t=e.target.closest("[data-vdeem]"))){var vk="vat|"+t.dataset.pid+"|"+(t.dataset.vdeem==="bulgoff"?"bulgoff":"deemoff");D.v[vk]=D.v[vk]==="1"?"":"1";drawDetail()}
   else if((t=e.target.closest("[data-pcol]"))){var P="vat|"+t.dataset.pid+"|",pc=+(D.v[P+"pc"]||3)+ +t.dataset.pcol;if(pc>=1&&pc<=8){if(+t.dataset.pcol<0){delete D.v[P+"ph"+(pc)];delete D.v[P+"pv"+(pc)]}D.v[P+"pc"]=String(pc)}drawDetail()}
   else if(e.target.closest("#back")){state.sel=null;show()}
   else if(e.target.closest("#save")){flush().then(function(){var sv=$("#saved");if(sv)sv.textContent=document.getElementById("syncst").textContent})
