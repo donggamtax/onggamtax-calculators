@@ -577,7 +577,7 @@ function paperTax(id){
   var isCorp=c.type==="법인",yr=yearOf(name),res=taxCompute(P,yr,isCorp),yy=function(n){return String(n).slice(2)+"년"};
   var rows=isCorp?
    [["ratio","소득율"],["rev","수입금액"],["cogs","매출원가"],["sga","판매관리비 등"],["extra","추가경비"],["income","당기순이익"],["adj","세무조정"],["loss","이월결손금"],["dona","이월기부금"],["base","과세표준"],["tax","산출세액"],["credit","세액공제 및 감면"],["dec","결정세액"],["local","지방소득세"],["paid","기납부세액"],["nong","농특세(고용증대)"],["pay","납부할세액"]]:
-   [["ratio","소득율"],["rev","수입금액"],["cogs","매출원가"],["sga","판매관리비 등"],["extra","추가경비"],["income","사업소득금액"],["adj","세무조정"],["other","다른 종합소득금액"],["oexp","타소득경비"],["loss","이월결손금"],["dona","이월기부금"],["ded","종합소득공제"],["base","과세표준"],["tax","산출세액"],["credit","세액공제 및 감면"],["dec","결정세액"],["local","지방소득세"],["paid","기납부세액"],["nong","농특세(고용증대)"],["pay","납부할세액"]];
+   [["ratio","소득율"],["rev","수입금액"],["cogs","매출원가"],["sga","판매관리비 등"],["extra","추가경비"],["income","사업소득금액"],["adj","세무조정"],["other","타소득금액"],["oexp","타소득경비"],["loss","이월결손금"],["dona","이월기부금"],["ded","종합소득공제"],["base","과세표준"],["tax","산출세액"],["credit","세액공제 및 감면"],["dec","결정세액"],["local","지방소득세"],["paid","기납부세액"],["nong","농특세(고용증대)"],["pay","납부할세액"]];
   var RAWIDS={oexp:1,dona:1,rev:1,cogs:1,sga:1,extra:1,adj:1,other:1,loss:1,ded:1,paid:1,nong:1};
   var hasB=res.B.ids.length>0;
   var DELOK={oexp:1,dona:1,ratio:1,cogs:1,sga:1,extra:1,adj:1,other:1,loss:1,ded:1,credit:1,local:1,paid:1,nong:1};
@@ -588,7 +588,7 @@ function paperTax(id){
   var KEYR={rev:1,income:1,pay:1};
   var h='<div class="paper taxp" data-pid="'+id+'" data-taxp="'+esc(P)+'" data-corp="'+(isCorp?1:0)+'" data-yr="'+yr+'"><h2 class="ttl">'+esc(name)+(isCorp?' 법인세 산출액(추정)':' 종합소득세 산출액(추정)')+'</h2>'+
    '<div class="sub" style="text-align:center;margin:-8px 0 10px">'+(isCorp?(yr>=2026?'(2026년 이후 법인세 세율 변경 적용)':'(2025년 이전 법인세 세율 적용)'):'(종합소득세 기본세율 적용)')+'</div>'+
-   '<table class="ht"><tr><th style="width:15%">사업자명</th><td>'+inp(P+"co","사업자명",c.name)+'</td><th style="width:20%">'+yr+'년 수입금액'+(isCorp?'':'<br><span class="sub">(수입금액+다른 종합소득금액)</span>')+'</th><td class="c" data-krev>'+fmtI(res.I.rev+res.I.other)+'</td></tr>'+
+   '<table class="ht"><tr><th style="width:15%">사업자명</th><td>'+inp(P+"co","사업자명",c.name)+'</td><th style="width:20%">'+yr+'년 수입금액'+(isCorp?'':'<br><span class="sub">(수입금액+타소득금액)</span>')+'</th><td class="c" data-krev>'+fmtI(res.I.rev+res.I.other)+'</td></tr>'+
    '<tr><th>성명</th><td>'+inp(P+"rep","성명")+'</td><th>추계신고시</th><td>'+inp(P+"est","추계신고시",isCorp?"법인":"")+'</td></tr>'+
    '<tr><th>업태/종목</th><td>'+inp(P+"biz","업태/종목",val("info|업종"))+'</td><th>기장의무구분</th><td>'+inp(P+"duty","기장의무구분",isCorp?"법인":"")+'</td></tr></table>'+
    '<div class="taxgrid"><div><table class="ht tx"><tr><th style="width:116px">구 분</th><th class="yr">'+yr+'년(e) 예측</th><th><span>'+yy(yr)+' 1~</span><input type="text" class="mo" inputmode="numeric" data-k="'+esc(P)+'months" value="'+esc(val(P+"months","9"))+'" aria-label="가결산 개월수">월</th><th>'+(yr-1)+'년</th><th style="width:15%">비고</th></tr>'+
@@ -602,11 +602,11 @@ function paperTax(id){
    }).join("")+'</table>'+
    '<div class="rowtools"><button type="button" class="mini add" data-txadd="x">+ 줄 추가(경비 항목)</button>'+(hiddenRows.length?'<span class="sub">뺀 줄 다시 넣기:</span>'+hiddenRows.map(function(r){return '<button type="button" class="mini add" data-txshow="'+r[0]+'">+ '+r[1]+'</button>'}).join(""):'')+'</div>'+
    '<div class="sub" style="margin-top:4px">빨간 테두리가 '+yr+'년 예측입니다. 칸에 숫자를 직접 적으면 그 값이 쓰이고(노란색), 지우면 다시 자동 계산됩니다. 예측의 수입금액·매출원가·판관비는 가결산 ÷ 개월수 × 12 입니다. 줄 끝 "−"로 뺀 줄은 계산에서도 0으로 빠집니다.</div></div>'+
-   '<div class="side"><div class="sbox"><div class="sh">세액공제·감면 입력</div><table class="ht tx sm"><tr><th style="width:38%">항목</th><th>예측</th><th>가결산</th><th>전년도</th><th></th></tr>'+
-   res.dl.map(function(i){return ny('<tr><td class="nm">'+wn(P+"dn"+i,"항목",DED_NAMES[i]||"")+'</td>'+taxCell(P,res,"I","d"+i,false)+taxCell(P,res,"J","d"+i,false)+taxCell(P,res,"K","d"+i,true)+'<td class="x"><button type="button" class="mini" data-txdel="d:'+i+'" title="이 줄 빼기">−</button></td></tr>')}).join("")+
-   '<tr class="keyr"><th>합계</th>'+["I","J","K"].map(function(cc){return '<td class="c cc" data-dsum="'+cc+'">'+fmtI(res[cc].dsum)+'</td>'}).join("")+'<td></td></tr>'+
-   ny('<tr><th>최저한세</th>'+taxCell(P,res,"I","min",false)+taxCell(P,res,"J","min",false)+taxCell(P,res,"K","min",true)+'<td></td></tr>')+'</table>'+
-   '<button type="button" class="mini add" data-txadd="d">+ 항목 넣기</button><div class="sub">합계가 "세액공제 및 감면"에 들어갑니다. 가결산·예측은 전년도 금액을 따라갑니다.</div></div>'+
+   '<div class="side"><div class="sbox"><div class="sh">세액공제·감면 입력</div><table class="ht tx sm"><tr><th style="width:38%">항목</th><th>예측</th><th>전년도</th><th></th></tr>'+
+   res.dl.map(function(i){return ny('<tr><td class="nm">'+wn(P+"dn"+i,"항목",DED_NAMES[i]||"")+'</td>'+taxCell(P,res,"I","d"+i,false)+taxCell(P,res,"K","d"+i,true)+'<td class="x"><button type="button" class="mini" data-txdel="d:'+i+'" title="이 줄 빼기">−</button></td></tr>')}).join("")+
+   '<tr class="keyr"><th>합계</th>'+["I","K"].map(function(cc){return '<td class="c cc" data-dsum="'+cc+'">'+fmtI(res[cc].dsum)+'</td>'}).join("")+'<td></td></tr>'+
+   ny('<tr><th>최저한세</th>'+taxCell(P,res,"I","min",false)+taxCell(P,res,"K","min",true)+'<td></td></tr>')+'</table>'+
+   '<button type="button" class="mini add" data-txadd="d">+ 항목 넣기</button><div class="sub">합계가 "세액공제 및 감면"에 들어갑니다. 예측은 전년도 금액을 따라갑니다.</div></div>'+
    (isCorp?'':'<div class="sbox"><div class="sh">사업자별 가결산 (사업자가 여러 개일 때)</div>'+
     (hasB?'<div class="bw"><table class="ht tx sm"><tr><th>사업자</th><th>매출</th><th>매출원가</th><th>판관비</th><th>사업소득</th><th></th></tr>'+
      res.B.ids.map(function(i){var q="b"+i+"|";return '<tr><td class="nm">'+wn(P+q+"nm","사업자")+'</td>'+["rev","cogs","sga"].map(function(f){return '<td class="cc rawc"><input type="text" class="num" inputmode="decimal" autocomplete="off" data-k="'+esc(P+q+f)+'" value="'+esc(val(P+q+f))+'" placeholder="0" aria-label="'+f+'"></td>'}).join("")+
@@ -1174,12 +1174,12 @@ function exportBook(){
   })})});
   sheets.push(["법인세",[ch].concat(crows)]);
   // 6. 세금예측
-  var TR=[["rev","수입금액"],["cogs","매출원가"],["sga","판매관리비 등"],["extra","추가경비"],["income","사업소득금액(법인은 당기순이익)"],["adj","세무조정"],["other","다른 종합소득금액"],["oexp","타소득경비"],["loss","이월결손금"],["dona","이월기부금"],["ded","종합소득공제"],["base","과세표준"],["tax","산출세액"],["credit","세액공제 및 감면"],["dec","결정세액"],["local","지방소득세"],["paid","기납부세액"],["nong","농특세(고용증대)"],["pay","납부할세액"]];
+  var TR=[["rev","수입금액"],["cogs","매출원가"],["sga","판매관리비 등"],["extra","추가경비"],["income","사업소득금액(법인은 당기순이익)"],["adj","세무조정"],["other","타소득금액"],["oexp","타소득경비"],["loss","이월결손금"],["dona","이월기부금"],["ded","종합소득공제"],["base","과세표준"],["tax","산출세액"],["credit","세액공제 및 감면"],["dec","결정세액"],["local","지방소득세"],["paid","기납부세액"],["nong","농특세(고용증대)"],["pay","납부할세액"]];
   var th=BH.concat(["연도","가결산 개월수"]);
   TR.forEach(function(r){th.push(r[1]+" 예측",r[1]+" 가결산",r[1]+" 전년도")});
   th.push("공제·감면 입력 (항목: 예측/가결산/전년도)","추가한 경비 줄 (항목: 예측/가결산/전년도)","사업자별 가결산 (사업자: 매출/매출원가/판관비/사업소득)","뺀 줄","상담 메모");
   var trows=[];
-  var RN={rev:"수입금액",cogs:"매출원가",sga:"판매관리비 등",extra:"추가경비",adj:"세무조정",other:"다른 종합소득금액",loss:"이월결손금",ded:"종합소득공제",credit:"세액공제 및 감면",local:"지방소득세",paid:"기납부세액",nong:"농특세"};
+  var RN={rev:"수입금액",cogs:"매출원가",sga:"판매관리비 등",extra:"추가경비",adj:"세무조정",other:"타소득금액",loss:"이월결손금",ded:"종합소득공제",credit:"세액공제 및 감면",local:"지방소득세",paid:"기납부세액",nong:"농특세"};
   CLIENTS.forEach(function(c){var D=state.data[c.id];if(!D)return;D.tps.forEach(function(p){inClient(c.id,function(){
     var P="tax|"+p.id+"|",isCorp=c.type==="법인",res=taxCompute(P,yearOf(p.name),isCorp),r=base(c).concat([p.name,res.months]);
     TR.forEach(function(x){var k=x[0],skip=isCorp&&(k==="other"||k==="ded"||k==="oexp");["I","J","K"].forEach(function(cc){r.push(skip?"":Math.round(res[cc][k]||0))})});
