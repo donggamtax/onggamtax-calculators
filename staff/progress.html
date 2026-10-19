@@ -20,7 +20,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15p
 .wrap{max-width:1250px;margin:0 auto}
 h1{font-size:21px;margin:6px 0 4px}h2{font-size:17px;margin:0 0 8px}
 .sub{color:var(--muted);font-size:12.5px}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:12px}
+.ced .ce input[type=text]{width:180px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:12px}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
 .btn{border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:6px;padding:7px 14px;font:inherit;font-size:14px;cursor:pointer}
 .btn.ghost{background:none;color:var(--accent)}.btn.sm{padding:3px 9px;font-size:12.5px}.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}
@@ -81,7 +81,9 @@ var $=function(s){return document.querySelector(s)};
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 var S={lists:[],clients:[],people:[],cur:null,rows:{},own:"전체",stf:"전체",err:"",msg:"",adding:false,confirmDel:false};
 var KIND={vat:"부가세",corp:"법인세",inc:"종합소득세"};
-var COLS=[["done","완료"],["prio","우선순위"],["type","구분"],["name","상호"],["owner","담당자"],["diff","난도"],["work","작업일"],["file","신고일"],["appr","결재완료"],["deliv","전달일"],["note","특이사항"],["mail","메일발송"],["fee","수수료"],["paid","입금여부"],["tinv","세금계산서"]];
+var DEF_COLS=[["done","완료","check"],["prio","우선순위","sel"],["type","구분","auto"],["name","상호","auto"],["owner","담당자","auto"],["diff","난도","sel"],["work","작업일","date"],["file","신고일","date"],["appr","결재완료","date"],["deliv","전달일","date"],["note","특이사항","text"],["mail","메일발송","date"],["fee","수수료","num"],["paid","입금여부","date"],["tinv","세금계산서","date"]].map(function(c){return {k:c[0],l:c[1],t:c[2]}});
+function cols(){var l=curList();return (l&&l.cols&&l.cols.length)?l.cols:DEF_COLS}
+function colOf(k){return cols().filter(function(c){return c.k===k})[0]||{l:k,t:"text"}}
 
 function cById(id){return S.clients.filter(function(c){return c.id===+id})[0]}
 function curList(){return S.lists.filter(function(l){return l.id===S.cur})[0]}
@@ -152,16 +154,37 @@ function summary(rows){
   return h;
 }
 function fmtM(v){var n=String(v||"").replace(/[^\d]/g,"");return n?Number(n).toLocaleString("ko-KR"):""}
-function cell(r,k){
-  var d=r.d,v=d[k]||"";
-  if(k==="done")return '<td><input type="checkbox" data-f="done" data-id="'+r.c.id+'"'+(v?" checked":"")+' aria-label="완료"></td>';
+function cell(r,col){
+  var k=col.k,t=col.t,d=r.d,v=d[k]||"",id=r.c.id,al=esc(col.l);
   if(k==="type")return '<td>'+esc(r.c.type||"개인")+'</td>';
   if(k==="name")return '<td class="nmc">'+esc(r.c.name)+'</td>';
   if(k==="owner")return '<td>'+esc(r.c.owner||"")+'</td>';
-  if(k==="prio"||k==="diff"){var o=["","상","중","하"];if(v&&o.indexOf(v)<0)o.push(v);return '<td><select data-f="'+k+'" data-id="'+r.c.id+'" aria-label="'+(k==="prio"?"우선순위":"난도")+'">'+o.map(function(x){return '<option'+(x===v?" selected":"")+'>'+esc(x)+'</option>'}).join("")+'</select></td>'}
-  if(k==="note")return '<td><input type="text" class="nt" data-f="note" data-id="'+r.c.id+'" value="'+esc(v)+'" aria-label="특이사항"></td>';
-  if(k==="fee")return '<td><input type="text" class="fe" inputmode="numeric" autocomplete="off" placeholder="금액" data-money="1" data-f="fee" data-id="'+r.c.id+'" value="'+esc(fmtM(v))+'" aria-label="수수료"></td>';
-  return '<td><input type="text" class="dt" inputmode="numeric" autocomplete="off" placeholder="2026-1-1" data-date="1" data-f="'+k+'" data-id="'+r.c.id+'" value="'+esc(fmtD(v))+'" aria-label="'+esc(COLS.filter(function(c){return c[0]===k})[0][1])+'"></td>';
+  if(t==="check")return '<td><input type="checkbox" data-f="'+k+'" data-id="'+id+'"'+(v?" checked":"")+' aria-label="'+al+'"></td>';
+  if(t==="sel"){var o=["","상","중","하"];if(v&&o.indexOf(v)<0)o.push(v);return '<td><select data-f="'+k+'" data-id="'+id+'" aria-label="'+al+'">'+o.map(function(x){return '<option'+(x===v?" selected":"")+'>'+esc(x)+'</option>'}).join("")+'</select></td>'}
+  if(t==="num")return '<td><input type="text" class="fe" inputmode="numeric" autocomplete="off" placeholder="금액" data-money="1" data-f="'+k+'" data-id="'+id+'" value="'+esc(fmtM(v))+'" aria-label="'+al+'"></td>';
+  if(t==="date")return '<td><input type="text" class="dt" inputmode="numeric" autocomplete="off" placeholder="2026-1-1" data-date="1" data-f="'+k+'" data-id="'+id+'" value="'+esc(fmtD(v))+'" aria-label="'+al+'"></td>';
+  return '<td><input type="text" class="nt" data-f="'+k+'" data-id="'+id+'" value="'+esc(v)+'" aria-label="'+al+'"></td>';
+}
+function colEditor(){
+  var cs=cols(),TY=[["text","글"],["date","날짜"],["num","금액"],["check","체크"]];
+  var h='<div class="panel ced"><div class="row"><b>열 편집</b><span class="sub">이름을 바꾸거나, 순서를 옮기거나, 지우거나, 새 열을 추가할 수 있습니다. 열을 지워도 입력해 둔 값은 남아 있고, 같은 열을 다시 만들 때까지 보이지 않을 뿐입니다.</span></div>';
+  cs.forEach(function(c,i){
+    var fixed=c.k==="name";
+    h+='<div class="row ce"><input type="text" data-cl="'+i+'" value="'+esc(c.l)+'" maxlength="20" aria-label="열 이름"><span class="sub">'+({check:"체크",sel:"상중하",text:"글",date:"날짜",num:"금액",auto:"자동"}[c.t]||"")+'</span>'+
+      '<button class="btn ghost sm" data-cmv="'+i+'" data-d="-1"'+(i?"":" disabled")+' aria-label="앞으로">↑</button><button class="btn ghost sm" data-cmv="'+i+'" data-d="1"'+(i<cs.length-1?"":" disabled")+' aria-label="뒤로">↓</button>'+
+      (fixed?'<span class="sub">(필수)</span>':'<button class="btn ghost sm" data-cdel="'+i+'">지우기</button>')+'</div>';
+  });
+  h+='<div class="row"><input type="text" id="cnn" placeholder="새 열 이름" maxlength="20"><select id="cnt">'+TY.map(function(x){return '<option value="'+x[0]+'">'+x[1]+'</option>'}).join("")+'</select><button class="btn sm" id="cadd">열 추가</button><button class="btn ghost sm" id="creset">기본 열로 되돌리기</button><button class="btn sm" id="cdone">닫기</button></div></div>';
+  return h;
+}
+function saveCols(next){
+  var l=curList();if(!l)return;var old=l.cols;l.cols=next;S.err="";draw();say("저장 중…");
+  api("progress.cols",{id:l.id,cols:next}).then(function(r){l.cols=r.cols;say("열 구성을 저장했습니다.")},function(e){l.cols=old;draw();say(e.message,true)});
+}
+function nextCk(){
+  var used={};cols().forEach(function(c){used[c.k]=1});
+  var m=S.rows[S.cur]||{};Object.keys(m).forEach(function(id){Object.keys(m[id]).forEach(function(k){used[k]=1})});
+  for(var n=1;n<1000;n++)if(!used["c"+n])return "c"+n;
 }
 function drawList(){
   var l=curList();if(!l){S.cur=null;return drawLists()}
@@ -173,16 +196,16 @@ function drawList(){
   });
   var owners=["전체"].concat(S.people);
   var h='<div class="row"><button class="btn ghost sm" id="back">← 신고리스트 목록</button><span class="st" id="st">'+esc(S.msg)+'</span></div><h1>'+esc(l.title)+'</h1>';
-  h+='<div class="panel">'+summary(all)+'</div>';
+  h+='<div class="panel">'+summary(all)+'</div>'+(S.edit?colEditor():"");
   h+='<div class="panel"><div class="row">'+owners.map(function(o){return '<button class="chip" data-own="'+esc(o)+'" aria-pressed="'+(S.own===o)+'">'+esc(o)+'</button>'}).join("")+
      '<span class="sub">|</span>'+["전체","미완료","완료"].map(function(o){return '<button class="chip" data-stf="'+o+'" aria-pressed="'+(S.stf===o)+'">'+o+'</button>'}).join("")+
      '<span class="sub">'+shown.length+'곳 · 수수료 합계 '+fmtM(shown.reduce(function(a,r){return a+(Number(r.d.fee)||0)},0)||"0")+'원</span></div>';
-  h+='<div class="scroll"><table class="tb"><thead><tr>'+COLS.map(function(c){return c[0]==="done"?'<th><label class="alld" title="보이는 업체 전체 체크/해제"><input type="checkbox" id="alldone"'+(shown.length&&shown.every(function(r){return r.d.done})?" checked":"")+' aria-label="전체 완료 체크"> 완료</label></th>':'<th>'+c[1]+'</th>'}).join("")+'<th></th></tr></thead><tbody>'+
-    (shown.length?shown.map(function(r){return '<tr class="'+(r.d.deliv||r.d.done?"done":"")+'">'+COLS.map(function(c){return cell(r,c[0])}).join("")+'<td><button class="btn ghost sm" data-rm="'+r.c.id+'" title="이 신고리스트에서 빼기">빼기</button></td></tr>'}).join(""):'<tr><td colspan="16" class="sub" style="padding:16px">해당하는 업체가 없습니다.</td></tr>')+
+  h+='<div class="scroll"><table class="tb"><thead><tr>'+cols().map(function(c){return c.k==="done"?'<th><label class="alld" title="보이는 업체 전체 체크/해제"><input type="checkbox" id="alldone"'+(shown.length&&shown.every(function(r){return r.d.done})?" checked":"")+' aria-label="전체 완료 체크"> '+esc(c.l)+'</label></th>':'<th>'+esc(c.l)+'</th>'}).join("")+'<th></th></tr></thead><tbody>'+
+    (shown.length?shown.map(function(r){return '<tr class="'+(r.d.deliv||r.d.done?"done":"")+'">'+cols().map(function(c){return cell(r,c)}).join("")+'<td><button class="btn ghost sm" data-rm="'+r.c.id+'" title="이 신고리스트에서 빼기">빼기</button></td></tr>'}).join(""):'<tr><td colspan="'+(cols().length+1)+'" class="sub" style="padding:16px">해당하는 업체가 없습니다.</td></tr>')+
     '</tbody></table></div>';
   h+='<div class="row"><label>업체 추가 <input id="addn" list="addl" placeholder="업체명" autocomplete="off"></label><datalist id="addl">'+
     S.clients.filter(function(c){return (c.status||"거래중")==="거래중"&&!(S.rows[S.cur]||{})[c.id]}).map(function(c){return '<option value="'+esc(c.name)+'">'}).join("")+'</datalist>'+
-    '<button class="btn sm" id="addb">추가</button><button class="btn ghost sm" id="auto">대상 업체 자동으로 채우기</button><button class="btn ghost sm" id="imp">엑셀에서 붙여넣기</button>'+
+    '<button class="btn sm" id="addb">추가</button><button class="btn ghost sm" id="auto">대상 업체 자동으로 채우기</button><button class="btn ghost sm" id="imp">엑셀에서 붙여넣기</button><button class="btn ghost sm" id="cedit">열 편집</button>'+
     (S.confirmDel?'<span class="err">이 신고리스트와 기록이 모두 사라집니다.</span><button class="btn danger sm" id="delyes">삭제 확인</button><button class="btn ghost sm" id="delno">취소</button>':'<button class="btn ghost sm" id="del">이 신고리스트 삭제…</button>')+'</div>';
   if(l.kind==="vat")h+='<p class="sub">업체별 기장의 부가세 신고 체크리스트에서 <b>작성자 결재</b>를 체크하면 작업일이, <b>대표세무사 결재</b>를 체크하면 결재완료 날짜가 이 표에 자동으로 찍힙니다(체크리스트 이름이 "'+l.year+'년 '+l.ki+'기 '+esc(l.sub)+'"으로 시작해야 합니다). 날짜는 여기서 직접 고쳐도 됩니다.</p>';
   h+='</div>';
@@ -242,7 +265,7 @@ function parsePaste(text){
   var hi=-1;lines.forEach(function(r,i){if(hi<0&&r.some(function(c){return c.trim()==="상호"}))hi=i});
   if(hi<0)return {error:'머리글 줄(상호, 담당자, 작업일 …)이 함께 붙여넣어져야 합니다. 엑셀에서 "완료여부 / 우선순위 … " 머리글 줄부터 복사하세요.'};
   var head=lines[hi].map(function(x){return x.trim()}),ix=function(n){return head.indexOf(n)};
-  var map={done:ix("완료여부"),prio:ix("우선순위"),diff:ix("난도"),work:ix("작업일"),file:ix("신고일"),appr:ix("결재완료"),deliv:ix("전달일"),note:ix("특이사항"),mail:ix("메일발송"),fee:ix("수수료"),paid:ix("입금여부"),tinv:ix("세금계산서")},ni=ix("상호");
+  var map={};cols().forEach(function(c){if(c.t==="auto")return;var i=ix(c.l);if(i<0&&c.k==="done")i=ix("완료여부");if(i>=0)map[c.k]=i});var ni=ix("상호");
   var byName={};S.clients.forEach(function(c){byName[normName(c.name)]=c});
   var items=[],miss=[],baddate=0;
   lines.slice(hi+1).forEach(function(r){
@@ -250,10 +273,10 @@ function parsePaste(text){
     var c=byName[normName(nm)];if(!c){miss.push(nm);return}
     var d={};
     Object.keys(map).forEach(function(k){
-      var v=map[k]<0?"":(r[map[k]]||"").trim();if(!v)return;
-      if(k==="done")d.done=/^(x|n|no|false|0|미완료)$/i.test(v)?"":"1";
-      else if(/^(work|file|appr|deliv|mail|paid|tinv)$/.test(k)){var dt=parseDate(v);if(dt)d[k]=dt;else baddate++}
-      else if(k==="fee"){var fm=String(v).replace(/[^\d]/g,"");if(fm)d.fee=fm}
+      var v=(r[map[k]]||"").trim();if(!v)return;var t=colOf(k).t;
+      if(t==="check")d[k]=/^(x|n|no|false|0|미완료)$/i.test(v)?"":"1";
+      else if(t==="date"){var dt=parseDate(v);if(dt)d[k]=dt;else baddate++}
+      else if(t==="num"){var fm=String(v).replace(/[^\d]/g,"");if(fm)d[k]=fm}
       else d[k]=v;
     });
     items.push({clientId:c.id,data:d});
@@ -262,14 +285,15 @@ function parsePaste(text){
 }
 function importDlg(){
   var m=document.createElement("div");m.className="dlg";
-  m.innerHTML='<div><h2>엑셀에서 붙여넣기</h2><p class="sub">엑셀의 표를 머리글 줄(완료여부, 우선순위, 상호, 담당자 …)부터 복사해 아래에 붙여넣으세요. 상호가 업체 목록과 같은 줄만 들어가고, 이미 있는 업체는 붙여넣은 내용으로 덮어씁니다(빈 칸은 그대로 둡니다). 담당자와 구분은 업체 정보를 따릅니다.</p><textarea id="pt" placeholder="여기에 붙여넣기"></textarea><p class="sub">머리글은 <b>완료여부, 우선순위, 상호, 담당자, 난도, 작업일, 신고일, 결재완료, 전달일, 특이사항, 메일발송, 수수료, 입금여부, 세금계산서</b> 중 필요한 것만 있으면 됩니다(상호는 꼭 필요). 날짜는 2026-1-1 형식, 수수료는 숫자, 완료여부는 O(또는 아무 글자)를 적으면 체크됩니다. 개인/법인 열이 있어도 무시합니다.</p><p class="sub" id="pi"></p><div class="row"><button class="btn ghost" id="ptpl">양식 받기(CSV)</button><button class="btn" id="pgo">넣기</button><button class="btn ghost" id="pno">닫기</button></div></div>';
+  m.innerHTML='<div><h2>엑셀에서 붙여넣기</h2><p class="sub">엑셀의 표를 머리글 줄(완료여부, 우선순위, 상호, 담당자 …)부터 복사해 아래에 붙여넣으세요. 상호가 업체 목록과 같은 줄만 들어가고, 이미 있는 업체는 붙여넣은 내용으로 덮어씁니다(빈 칸은 그대로 둡니다). 담당자와 구분은 업체 정보를 따릅니다.</p><textarea id="pt" placeholder="여기에 붙여넣기"></textarea><p class="sub">머리글은 이 표의 열 이름과 같게 적으세요(<b id="phn"></b>). 필요한 열만 있으면 되고 상호는 꼭 필요합니다. 날짜는 2026-1-1 형식, 금액은 숫자, 체크 열은 O(또는 아무 글자)를 적으면 체크됩니다. 구분·담당자는 업체 정보를 따르니 열이 있어도 무시합니다.</p><p class="sub" id="pi"></p><div class="row"><button class="btn ghost" id="ptpl">양식 받기(CSV)</button><button class="btn" id="pgo">넣기</button><button class="btn ghost" id="pno">닫기</button></div></div>';
   document.body.appendChild(m);
-  var ta=m.querySelector("#pt"),pi=m.querySelector("#pi"),res=null;
+  m.querySelector("#phn").textContent=cols().filter(function(c){return c.t!=="auto"||c.k==="name"}).map(function(c){return c.l}).join(", ");var ta=m.querySelector("#pt"),pi=m.querySelector("#pi"),res=null;
   ta.addEventListener("input",function(){res=parsePaste(ta.value);pi.className=res.error?"err":"sub";pi.textContent=res.error?res.error:res.items.length+"곳을 넣습니다."+(res.miss.length?" 업체 목록에서 못 찾은 상호 "+res.miss.length+"곳: "+res.miss.slice(0,6).join(", ")+(res.miss.length>6?" …":""):"")+(res.baddate?" (읽지 못한 날짜 "+res.baddate+"칸은 건너뜀)":"")});
   m.addEventListener("click",function(e){
     if(e.target===m||e.target.id==="pno")return m.remove();
     if(e.target.id==="ptpl"){
-      var csv="\ufeff완료여부,우선순위,개인/법인,상호,담당자,난도,작업일,신고일,결재완료,전달일,특이사항,메일발송,수수료,입금여부,세금계산서\r\nO,상,법인,예시상사,,중,2026-10-16,,,,,,150000,,\r\n";
+      var hs=cols().map(function(c){return c.l}),ex=cols().map(function(c){return c.k==="name"?"예시상사":c.t==="date"&&c.k==="work"?"2026-10-16":c.t==="num"?"150000":c.t==="check"?"O":""});
+      var csv="\ufeff"+hs.map(function(x){return '"'+x.replace(/"/g,'""')+'"'}).join(",")+"\r\n"+ex.join(",")+"\r\n";
       var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="신고리스트_업로드양식.csv";document.body.appendChild(a);a.click();a.remove();return;
     }
     if(e.target.id==="pgo"){
@@ -296,6 +320,12 @@ document.addEventListener("click",function(e){
   }
   if((b=t.closest("[data-open]")))return openList(b.dataset.open);
   if(t.id==="back"){S.cur=null;S.err="";loadAll().then(draw,draw);draw();return}
+  if(t.id==="cedit"){S.edit=!S.edit;return draw()}
+  if(t.id==="cdone"){S.edit=false;return draw()}
+  if((b=t.closest("[data-cmv]"))){var i=+b.dataset.cmv,dd=+b.dataset.d,n=cols().slice(),x=n[i];n.splice(i,1);n.splice(i+dd,0,x);return saveCols(n)}
+  if((b=t.closest("[data-cdel]"))){var n2=cols().slice();n2.splice(+b.dataset.cdel,1);return saveCols(n2)}
+  if(t.id==="cadd"){var nm=($("#cnn").value||"").trim();if(!nm)return say("새 열 이름을 적어 주세요.",true);return saveCols(cols().concat([{k:nextCk(),l:nm,t:$("#cnt").value}]))}
+  if(t.id==="creset"){return saveCols(DEF_COLS.slice())}
   if((b=t.closest("[data-own]"))){S.own=b.dataset.own;return draw()}
   if((b=t.closest("[data-stf]"))){S.stf=b.dataset.stf;return draw()}
   if((b=t.closest("[data-rm]"))){
@@ -327,6 +357,7 @@ document.addEventListener("click",function(e){
 });
 document.addEventListener("change",function(e){
   var t=e.target;
+  if(t.dataset&&t.dataset.cl!==undefined){var nm2=t.value.trim(),n3=cols().map(function(c){return {k:c.k,l:c.l,t:c.t}}),ci=+t.dataset.cl;if(!nm2){t.value=n3[ci].l;return}if(nm2===n3[ci].l)return;n3[ci].l=nm2;return saveCols(n3)}
   if(t.id==="alldone"){bulkDone(shownIds(),t.checked);return}
   if(t.dataset&&t.dataset.f==="done"&&t.dataset.id){
     var on=t.checked,ids=shownIds(),last=S.lastDone,shift=S.shift;S.shift=false;S.lastDone=t.dataset.id;
