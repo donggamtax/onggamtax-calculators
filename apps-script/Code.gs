@@ -70,10 +70,10 @@ function route(req) {
     case "board.save": return boardSave(req, who);
     case "board.delete": return boardDelete(req);
     case "guide.upload": return guideUpload(req, who);
-    case "progress.lists": return progressLists();
+    case "progress.lists": return progressLists(who);
     case "progress.listSave": return progressListSave(req);
     case "progress.cols": return progressCols(req);
-    case "progress.listDelete": return progressListDelete(req);
+    case "progress.listDelete": return progressListDelete(req, who);
     case "progress.get": return progressGet(req);
     case "progress.save": return progressSave(req);
     case "progress.add": return progressAdd(req);
@@ -187,7 +187,11 @@ function plTitle(kind, year, ki, sub) {
   if (kind === "biz") return year + "년 사업장 현황신고";
   return year + "년 종합소득세 신고리스트";
 }
-function progressLists() {
+// 신고리스트 삭제 권한: 스크립트 속성 PROGRESS_ADMINS(쉼표나 줄바꿈으로 이름 구분)에 적힌 사람만. 비어 있으면 아무도 지울 수 없다.
+function progressAdmin(who) {
+  return String(props().PROGRESS_ADMINS || "").split(/[,\n]/).map(s => s.trim()).filter(Boolean).indexOf(who) >= 0;
+}
+function progressLists(who) {
   const lists = plRows(), sh = prSheet(), last = sh.getLastRow(), cnt = {};
   if (last >= 2) sh.getRange(2, 1, last - 1, 3).getValues().forEach(r => {
     const id = String(r[0]); if (!id) return;
@@ -195,7 +199,7 @@ function progressLists() {
     let d = {}; try { d = JSON.parse(String(r[2] || "{}")); } catch (e) {}
     c.n++; if (d.work) c.work++; if (d.appr) c.appr++; if (d.deliv) c.deliv++;
   });
-  return { lists: lists.map(l => Object.assign(l, cnt[l.id] || { n: 0, work: 0, appr: 0, deliv: 0 })) };
+  return { lists: lists.map(l => Object.assign(l, cnt[l.id] || { n: 0, work: 0, appr: 0, deliv: 0 })), canDelete: progressAdmin(who) };
 }
 // 신고리스트별 열 구성(이름·순서·삭제·추가). 기록은 열 키로 저장되므로 열을 지워도 입력한 값은 남고, 다시 추가하면 보인다.
 const PC_TYPES = { check: 1, sel: 1, text: 1, date: 1, num: 1, auto: 1 };
@@ -231,7 +235,8 @@ function progressListSave(req) {
     return { id: id, title: plTitle(kind, year, k2, s2), kind: kind, year: year, ki: k2, sub: s2 };
   });
 }
-function progressListDelete(req) {
+function progressListDelete(req, who) {
+  if (!progressAdmin(who)) throw fail("신고리스트는 지정된 담당자만 지울 수 있습니다.", 403);
   const id = String(req.id || "");
   return withLock(() => {
     const sh = plSheet(), row = findRow(sh, id);
