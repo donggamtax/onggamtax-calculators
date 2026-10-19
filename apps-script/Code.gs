@@ -155,8 +155,8 @@ function leaveStatus(p) {
 // ── 진도체크: 신고 종류별 신고리스트(예: 2026년 2기 예정 부가세)와 업체별 진행 기록 ──────────
 // 시트 '진도목록' = 신고리스트 정의, 시트 '진도체크' = (리스트ID, 업체ID, 진행 기록 JSON). 업체명·구분·담당자는 업체 시트에서 화면이 실시간으로 가져온다.
 const PL_SHEET = "진도목록", PR_SHEET = "진도체크";
-const PR_FIELDS = { done: 1, prio: 1, diff: 1, work: 1, file: 1, appr: 1, deliv: 1, note: 1, mail: 1 };
-const PR_DATES = { work: 1, file: 1, appr: 1, deliv: 1, mail: 1 };
+const PR_FIELDS = { done: 1, prio: 1, diff: 1, work: 1, file: 1, appr: 1, deliv: 1, note: 1, mail: 1, fee: 1, paid: 1, tinv: 1 };
+const PR_DATES = { work: 1, file: 1, appr: 1, deliv: 1, mail: 1, paid: 1, tinv: 1 };
 function progSheet(name, head) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   if (!ss) throw fail("이 스크립트는 구글 시트의 확장 프로그램 → Apps Script에서 만들어야 합니다.", 503);
