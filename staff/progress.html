@@ -41,8 +41,8 @@ table.sm td.l,table.tb td.l{text-align:left}
 table.tb{min-width:100%}
 table.tb thead th{position:sticky;top:0;z-index:1}
 table.tb td{padding:2px 4px}table.tb tr.done td{background:var(--ok-bg)}
-table.tb input[type=text],table.tb select,table.tb input[type=date]{border:0;background:transparent;padding:3px 2px;width:100%}
-table.tb input[type=date]{min-width:128px}table.tb input.nt{min-width:170px}table.tb select{min-width:52px}
+table.tb input[type=text],table.tb select{border:0;background:transparent;padding:3px 2px;width:100%}
+table.tb input.dt{min-width:92px;width:92px;text-align:center}table.tb input.nt{min-width:170px}table.tb select{min-width:52px}
 table.tb input:focus,table.tb select:focus{outline:2px solid var(--accent);outline-offset:-2px;background:var(--bg)}
 table.tb .nmc{text-align:left;font-weight:500;min-width:150px;white-space:normal}
 .scroll{overflow:auto;max-height:68vh}
@@ -95,6 +95,8 @@ function loadAll(){
 function loadRows(id){
   return api("progress.get",{list:id}).then(function(r){var m={};(r.rows||[]).forEach(function(x){m[x.clientId]=x.data||{}});S.rows[id]=m});
 }
+/* 날짜는 저장은 2026-01-01, 화면은 2026-1-1 로 보이고 입력한다 */
+function fmtD(iso){var m=String(iso||"").match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);return m?m[1]+"-"+(+m[2])+"-"+(+m[3]):""}
 function pct(a,b){return b?Math.round(a*100/b)+"%":"-"}
 
 /* ── 목록 화면 ── */
@@ -157,7 +159,7 @@ function cell(r,k){
   if(k==="owner")return '<td>'+esc(r.c.owner||"")+'</td>';
   if(k==="prio"||k==="diff"){var o=["","상","중","하"];if(v&&o.indexOf(v)<0)o.push(v);return '<td><select data-f="'+k+'" data-id="'+r.c.id+'" aria-label="'+(k==="prio"?"우선순위":"난도")+'">'+o.map(function(x){return '<option'+(x===v?" selected":"")+'>'+esc(x)+'</option>'}).join("")+'</select></td>'}
   if(k==="note")return '<td><input type="text" class="nt" data-f="note" data-id="'+r.c.id+'" value="'+esc(v)+'" aria-label="특이사항"></td>';
-  return '<td><input type="date" data-f="'+k+'" data-id="'+r.c.id+'" value="'+esc(v)+'" aria-label="'+esc(COLS.filter(function(c){return c[0]===k})[0][1])+'"></td>';
+  return '<td><input type="text" class="dt" inputmode="numeric" autocomplete="off" placeholder="2026-1-1" data-date="1" data-f="'+k+'" data-id="'+r.c.id+'" value="'+esc(fmtD(v))+'" aria-label="'+esc(COLS.filter(function(c){return c[0]===k})[0][1])+'"></td>';
 }
 function drawList(){
   var l=curList();if(!l){S.cur=null;return drawLists()}
@@ -202,7 +204,7 @@ function save(id,field,value,el){
     /* 요약과 줄 색만 다시 그린다: 입력 중인 칸을 건드리지 않도록 전체를 다시 그리지 않는다 */
     var l=curList(),all=joined();var sm=$(".panel .sm");if(sm)sm.outerHTML=summary(all);
     var tr=el&&el.closest("tr");if(tr)tr.className=(m[id].deliv||m[id].done)?"done":"";
-  },function(e){if(m[id]){if(old)m[id][field]=old;else delete m[id][field]}if(el){if(el.type==="checkbox")el.checked=!!old;else el.value=old}say(e.message,true)});
+  },function(e){if(m[id]){if(old)m[id][field]=old;else delete m[id][field]}if(el){if(el.type==="checkbox")el.checked=!!old;else el.value=el.dataset.date?fmtD(old):old}say(e.message,true)});
 }
 
 /* ── 엑셀 붙여넣기 ── */
@@ -300,7 +302,11 @@ document.addEventListener("change",function(e){
   if(t.id==="nk"){$("#nvat").style.display=t.value==="vat"?"":"none";return}
   if(t.dataset&&t.dataset.f&&t.dataset.id){
     var v=t.type==="checkbox"?(t.checked?"1":""):t.value.trim();
-    if(t.type==="date"&&t.value&&!/^\d{4}-\d{2}-\d{2}$/.test(t.value))return;
+    if(t.dataset.date){
+      var dv=parseDate(v);
+      if(dv===null){say('날짜는 2026-1-1 처럼 적어 주세요.',true);t.value=fmtD(((S.rows[S.cur]||{})[t.dataset.id]||{})[t.dataset.f]);return}
+      v=dv;t.value=fmtD(dv);
+    }
     save(t.dataset.id,t.dataset.f,v,t);
   }
 });
