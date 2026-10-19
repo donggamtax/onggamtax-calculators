@@ -201,7 +201,7 @@ function drawList(){
      '<span class="sub">|</span>'+["전체","미완료","완료"].map(function(o){return '<button class="chip" data-stf="'+o+'" aria-pressed="'+(S.stf===o)+'">'+o+'</button>'}).join("")+
      '<span class="sub">'+shown.length+'곳 · 수수료 합계 '+fmtM(shown.reduce(function(a,r){return a+(Number(r.d.fee)||0)},0)||"0")+'원</span></div>';
   h+='<div class="scroll"><table class="tb"><thead><tr>'+cols().map(function(c){return c.k==="done"?'<th><label class="alld" title="보이는 업체 전체 체크/해제"><input type="checkbox" id="alldone"'+(shown.length&&shown.every(function(r){return r.d.done})?" checked":"")+' aria-label="전체 완료 체크"> '+esc(c.l)+'</label></th>':'<th>'+esc(c.l)+'</th>'}).join("")+'<th></th></tr></thead><tbody>'+
-    (shown.length?shown.map(function(r){return '<tr class="'+(r.d.deliv||r.d.done?"done":"")+'">'+cols().map(function(c){return cell(r,c)}).join("")+'<td><button class="btn ghost sm" data-rm="'+r.c.id+'" title="이 신고리스트에서 빼기">빼기</button></td></tr>'}).join(""):'<tr><td colspan="'+(cols().length+1)+'" class="sub" style="padding:16px">해당하는 업체가 없습니다.</td></tr>')+
+    (shown.length?shown.map(function(r){return '<tr class="'+(r.d.deliv||r.d.done?"done":"")+'">'+cols().map(function(c){return cell(r,c)}).join("")+'<td><button class="btn ghost sm" data-rm="'+r.c.id+'" title="이 신고리스트에서 빼기">빼기</button></td></tr>'}).join(""):'<tr><td colspan="'+(cols().length+1)+'" class="sub" style="padding:16px">해당하는 업체가 없습니다. 아래의 "엑셀에서 붙여넣기"로 업체를 넣어 주세요.</td></tr>')+
     '</tbody></table></div>';
   h+='<div class="row"><label>업체 추가 <input id="addn" list="addl" placeholder="업체명" autocomplete="off"></label><datalist id="addl">'+
     S.clients.filter(function(c){return (c.status||"거래중")==="거래중"&&!(S.rows[S.cur]||{})[c.id]}).map(function(c){return '<option value="'+esc(c.name)+'">'}).join("")+'</datalist>'+
@@ -313,8 +313,7 @@ document.addEventListener("click",function(e){
   if(t.id==="mk"){
     var kind=$("#nk").value,year=+$("#ny").value,ki=+$("#nki").value,sub=$("#nsub").value;t.disabled=true;
     api("progress.listSave",{kind:kind,year:year,ki:ki,sub:sub}).then(function(l){
-      var li=Object.assign({n:0,work:0,appr:0,deliv:0},l),ids=eligible(li).map(function(c){return c.id});
-      return api("progress.add",{list:l.id,ids:ids}).then(function(){S.adding=false;S.msg=l.title+" 을(를) 만들고 "+ids.length+"곳을 넣었습니다.";return loadAll()}).then(function(){openList(l.id)});
+      S.adding=false;return loadAll().then(function(){openList(l.id)});
     }).catch(function(x){S.err=x.message;drawLists()});
     return;
   }
