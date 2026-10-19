@@ -186,8 +186,11 @@ body:has(.app[data-wide="1"]) .wrap{max-width:1700px}
 @media (max-width:1100px){.cmpgrid{grid-template-columns:minmax(0,1fr)}}
 html[data-embed="1"] header h1,html[data-embed="1"] header .nav2,html[data-embed="1"] .lead{display:none}
 html[data-embed="1"] .wrap{padding-top:6px}
-.tx{width:auto}.paper.taxp .tx td.cc input{min-width:0}.paper.taxp .taxgrid{grid-template-columns:fit-content(62%) minmax(280px,1fr);gap:12px 18px}
-@media (max-width:1100px){.paper.taxp .taxgrid{grid-template-columns:minmax(0,max-content)}}
+.paper.taxp .tx{width:100%;table-layout:fixed}.paper.taxp .tx td.cc input{min-width:0;width:100%;text-align:right}.paper.taxp .tx td.c.cc{text-align:right;padding-right:8px}
+.paper.taxp .tx th.xn input{width:calc(100% - 24px)}.paper.taxp .tx:not(.sm) tr:first-child th:first-child{width:150px}.paper.taxp .tx:not(.sm) tr:first-child th:last-child{width:15%}
+.paper.taxp .taxgrid{grid-template-columns:minmax(0,1fr) 380px;gap:12px 18px}
+body:has(.app[data-tax="1"]) .wrap{max-width:1700px}
+@media (max-width:1500px){.paper.taxp .taxgrid{grid-template-columns:minmax(0,1fr)}}
 .paper.taxp .tx th{padding:3px 5px}.paper.taxp .tx td{padding:2px 4px}
 input.vauto,.ht input.vauto{color:var(--muted)}
 .oxc{display:flex;flex-wrap:wrap;gap:2px;align-items:center}.oxc select.ox{width:3.4em;min-width:0;flex:none;font-weight:700;text-align:center;padding:3px 0}.ht .oxc input[type=text]{min-width:64px;flex:1 1 64px;border-bottom:1px dotted var(--rule)}
@@ -607,13 +610,8 @@ function paperTax(id){
    '</div><div class="memo"><div class="sh">특이사항 · 상담 메모</div><textarea data-k="'+esc(P+"memo")+'" rows="12" placeholder="이 업체의 특이사항, 상담 내용, 절세 방향, 확인할 것 등을 자유롭게 적어두세요.">'+esc(val(P+"memo"))+'</textarea></div></div></div>';
   return h;
 }
-function fitTaxIn(el){
-  if(!el||el.type!=="text"||el.classList.contains("mo")||!el.closest(".paper[data-taxp] .tx"))return;
-  var v=String(el.value||""),n=0;for(var i=0;i<v.length;i++)n+=v.charCodeAt(i)>127?1.9:1;
-  var min=el.classList.contains("num")?5:(el.closest("th")?10:8);
-  el.style.width=(Math.max(n,min)+1.5)+"ch";
-}
-function fitAllTax(){document.querySelectorAll(".paper[data-taxp] .tx input[type=text]").forEach(fitTaxIn)}
+function fitTaxIn(){}
+function fitAllTax(){}
 function refreshTax(){
   document.querySelectorAll(".paper[data-taxp]").forEach(function(p){
     var P=p.dataset.taxp,isCorp=p.dataset.corp==="1",res=taxCompute(P,+p.dataset.yr,isCorp);
@@ -667,7 +665,7 @@ function drawDetail(){
     '<div class="row"><button class="btn" type="button" id="save">지금 저장</button><span class="saved" id="saved" role="status"></span><span class="sub">입력하면 1~2초 뒤 자동으로 저장됩니다. 저장 버튼을 누르지 않아도 됩니다.</span></div>'+
     '<div class="hist">'+histHtml(c)+'</div>';
   var tk=state.tab==="부가세"?"vp":state.tab==="소득세"?"ip":state.tab==="법인세"?"cp":state.tab==="세금예측"?"tp":null;
-  document.getElementById("app").dataset.wide=((tk&&state.cmp[tk])||state.tab==="세금예측")?"1":"";
+  document.getElementById("app").dataset.wide=(tk&&state.cmp[tk])?"1":"";document.getElementById("app").dataset.tax=state.tab==="세금예측"?"1":"";
   fitAllWn();fitAllTax();
 }
 document.addEventListener("input",function(e){if(e.target.classList&&e.target.classList.contains("repi"))e.target.size=repSize(e.target.value);if(e.target.classList&&(e.target.classList.contains("wn")||e.target.classList.contains("ag")))fitWn(e.target)});
