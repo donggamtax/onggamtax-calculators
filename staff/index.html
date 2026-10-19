@@ -50,6 +50,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .lvt{border-collapse:collapse;font-size:13px;min-width:100%}.lvt th,.lvt td{border:1px solid var(--line);padding:5px 8px;text-align:center;white-space:nowrap}.lvt th{background:var(--soft,#f3f1ea);font-weight:600}.lvt td.nm{font-weight:600}.lvt td.rem{font-weight:700}.lvt td.neg{color:var(--stamp)}
 #clientsFrame{display:block;width:100%;height:calc(100vh - 130px);min-height:560px;border:0;background:transparent}
 #clientsFrame[hidden]{display:none}
+#progressFrame{display:block;width:100%;height:calc(100vh - 130px);min-height:560px;border:0;background:transparent}
+#progressFrame[hidden]{display:none}
 .err{color:var(--stamp);font-size:14px;font-weight:600}
 
 /* 본문 */
@@ -129,6 +131,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 <nav class="tabs" id="tabs" role="tablist" aria-label="메뉴" hidden>
   <button type="button" role="tab" data-tab="clients" aria-selected="false">업체별 기장</button>
+  <button type="button" role="tab" data-tab="progress" aria-selected="false">진도체크</button>
   <button type="button" role="tab" data-tab="tpl" aria-selected="false">안내문·템플릿</button>
   <button type="button" role="tab" data-tab="guide" aria-selected="false">고객 안내</button>
   <button type="button" role="tab" data-tab="notice" aria-selected="false">공지·매뉴얼</button>
@@ -137,6 +140,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 <div class="cols one" id="boardView" hidden><div class="main" id="board"></div></div>
 <iframe id="clientsFrame" title="업체별 기장" hidden></iframe>
+<iframe id="progressFrame" title="진도체크" hidden></iframe>
 
 
 <script src="config.js"></script>
@@ -161,7 +165,7 @@ async function api(action, data = {}){
 }
 
 // ── 로그인 ──
-function showApp(on){ $("#loginView").hidden = on; $("#tabs").hidden = !on; $("#logout").hidden = !on; $("#pwBtn").hidden = !on; $("#who").hidden = !on; if(on){ if(!PEOPLE.length) api("config").then(cf => { PEOPLE = cf.people || []; }).catch(() => {}); $("#who").textContent = store.get("staff.who") ? store.get("staff.who") + " 님" : ""; showTab(new URLSearchParams(location.search).get("tab") || store.get("staff.tab") || "clients"); } else { $("#boardView").hidden = true; } }
+function showApp(on){ $("#loginView").hidden = on; $("#tabs").hidden = !on; $("#logout").hidden = !on; $("#pwBtn").hidden = !on; $("#who").hidden = !on; if(on){ if(!PEOPLE.length) api("config").then(cf => { PEOPLE = cf.people || []; }).catch(() => {}); $("#who").textContent = store.get("staff.who") ? store.get("staff.who") + " 님" : ""; showTab(new URLSearchParams(location.search).get("tab") || store.get("staff.tab") || "clients"); } else { $("#boardView").hidden = true; $("#clientsFrame").hidden = true; $("#progressFrame").hidden = true; } }
 function logout(){ token = null; store.set("staff.token", null); try{ sessionStorage.removeItem("staff.clients.light"); }catch{} showApp(false); }
 $("#logout").onclick = logout;
 $("#pwBtn").onclick = () => { ["#pwCur","#pwNew","#pwNew2"].forEach(i => $(i).value = ""); $("#pwErr").hidden = true; $("#pwOk").hidden = true; $("#pwDlg").showModal(); $("#pwCur").focus(); };
@@ -201,12 +205,19 @@ const BOARD_UI = {
 let guideKey = null; // 고객용 링크 키(서버 설정). null=아직 안 불러옴
 const boards = {}; // board → { items, q, cat, editing, open }
 function showTab(tab){
-  if(!BOARD_UI[tab] && tab !== "leave" && tab !== "clients") tab = "clients";
+  if(!BOARD_UI[tab] && tab !== "leave" && tab !== "clients" && tab !== "progress") tab = "clients";
   store.set("staff.tab", tab);
   document.querySelectorAll("#tabs [data-tab]").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === tab));
   // 업체별 기장은 같은 화면 안에서 열고(처음 한 번만 불러옴), 다른 메뉴로 갔다 와도 입력 중이던 화면이 그대로 남는다
   const fr = $("#clientsFrame");
   fr.hidden = tab !== "clients";
+  const pf = $("#progressFrame");
+  pf.hidden = tab !== "progress";
+  if(tab === "progress"){
+    $("#boardView").hidden = true;
+    if(!pf.getAttribute("src")) pf.src = "progress.html";
+    return;
+  }
   if(tab === "clients"){
     $("#boardView").hidden = true;
     if(!fr.getAttribute("src")) fr.src = "clients.html?embed=1";

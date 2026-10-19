@@ -70,6 +70,15 @@ function route(req) {
     case "board.save": return boardSave(req, who);
     case "board.delete": return boardDelete(req);
     case "guide.upload": return guideUpload(req, who);
+    case "progress.lists": return progressLists();
+    case "progress.listSave": return progressListSave(req);
+    case "progress.listDelete": return progressListDelete(req);
+    case "progress.get": return progressGet(req);
+    case "progress.save": return progressSave(req);
+    case "progress.add": return progressAdd(req);
+    case "progress.remove": return progressRemove(req);
+    case "progress.import": return progressImport(req);
+    case "progress.sync": return progressSync(req);
     case "leave.status": return leaveStatus(p);
     case "clients.load": return clientsLoad(req);
     case "template.save": return templateSave(req, who);
@@ -143,6 +152,144 @@ function leaveStatus(p) {
   for (let i = hi + 1; i < vals.length && String(vals[i][0]).trim() !== ""; i++) rows.push(vals[i].map(String));
   return { configured: true, asof: asof, head: head, rows: rows };
 }
+// ── 진도체크: 신고 종류별 신고리스트(예: 2026년 2기 예정 부가세)와 업체별 진행 기록 ──────────
+// 시트 '진도목록' = 신고리스트 정의, 시트 '진도체크' = (리스트ID, 업체ID, 진행 기록 JSON). 업체명·구분·담당자는 업체 시트에서 화면이 실시간으로 가져온다.
+const PL_SHEET = "진도목록", PR_SHEET = "진도체크";
+const PR_FIELDS = { done: 1, prio: 1, diff: 1, work: 1, file: 1, appr: 1, deliv: 1, note: 1, mail: 1 };
+const PR_DATES = { work: 1, file: 1, appr: 1, deliv: 1, mail: 1 };
+function progSheet(name, head) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!ss) throw fail("이 스크립트는 구글 시트의 확장 프로그램 → Apps Script에서 만들어야 합니다.", 503);
+  let sh = ss.getSheetByName(name);
+  if (!sh) { sh = ss.insertSheet(name); sh.appendRow(head); sh.setFrozenRows(1); }
+  return sh;
+}
+function plSheet() { return progSheet(PL_SHEET, ["id", "제목", "종류", "연도", "기", "구분", "생성일시"]); }
+function prSheet() { return progSheet(PR_SHEET, ["목록ID", "업체ID", "진행기록", "수정일시"]); }
+function todayKst() { return Utilities.formatDate(new Date(), "Asia/Seoul", "yyyy-MM-dd"); }
+function plRows() {
+  const sh = plSheet(), last = sh.getLastRow();
+  if (last < 2) return [];
+  return sh.getRange(2, 1, last - 1, 7).getValues().filter(r => r[0]).map(r => ({ id: String(r[0]), title: String(r[1]), kind: String(r[2]), year: Number(r[3]) || 0, ki: Number(r[4]) || 0, sub: String(r[5] || "") }));
+}
+function plTitle(kind, year, ki, sub) {
+  if (kind === "vat") return year + "년 " + ki + "기 " + sub + " 부가세 신고리스트";
+  if (kind === "corp") return year + "년 법인세 신고리스트";
+  return year + "년 종합소득세 신고리스트";
+}
+function progressLists() {
+  const lists = plRows(), sh = prSheet(), last = sh.getLastRow(), cnt = {};
+  if (last >= 2) sh.getRange(2, 1, last - 1, 3).getValues().forEach(r => {
+    const id = String(r[0]); if (!id) return;
+    const c = cnt[id] || (cnt[id] = { n: 0, work: 0, appr: 0, deliv: 0 });
+    let d = {}; try { d = JSON.parse(String(r[2] || "{}")); } catch (e) {}
+    c.n++; if (d.work) c.work++; if (d.appr) c.appr++; if (d.deliv) c.deliv++;
+  });
+  return { lists: lists.map(l => Object.assign(l, cnt[l.id] || { n: 0, work: 0, appr: 0, deliv: 0 })) };
+}
+function progressListSave(req) {
+  const kind = String(req.kind || ""), year = Math.round(Number(req.year)), ki = Math.round(Number(req.ki) || 0), sub = String(req.sub || "");
+  if (!/^(vat|corp|inc)$/.test(kind)) throw fail("신고 종류가 올바르지 않습니다.");
+  if (!(year >= 2000 && year <= 2100)) throw fail("연도를 확인하세요.");
+  if (kind === "vat" && !((ki === 1 || ki === 2) && /^(예정|확정)$/.test(sub))) throw fail("부가세는 1기/2기와 예정/확정을 고르세요.");
+  return withLock(() => {
+    const dup = plRows().filter(l => l.kind === kind && l.year === year && l.ki === (kind === "vat" ? ki : 0) && l.sub === (kind === "vat" ? sub : ""))[0];
+    if (dup) throw fail("이미 있는 신고리스트입니다: " + dup.title);
+    const id = "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    const k2 = kind === "vat" ? ki : 0, s2 = kind === "vat" ? sub : "";
+    plSheet().appendRow([id, plTitle(kind, year, k2, s2), kind, year, k2, s2, new Date().toISOString()]);
+    return { id: id, title: plTitle(kind, year, k2, s2), kind: kind, year: year, ki: k2, sub: s2 };
+  });
+}
+function progressListDelete(req) {
+  const id = String(req.id || "");
+  return withLock(() => {
+    const sh = plSheet(), row = findRow(sh, id);
+    if (row) sh.deleteRow(row);
+    const pr = prSheet(), last = pr.getLastRow();
+    if (last >= 2) { const ids = pr.getRange(2, 1, last - 1, 1).getValues(); for (let i = ids.length - 1; i >= 0; i--) if (String(ids[i][0]) === id) pr.deleteRow(i + 2); }
+    return { ok: true };
+  });
+}
+function progressGet(req) {
+  const id = String(req.list || ""), sh = prSheet(), last = sh.getLastRow(), rows = [];
+  if (last >= 2) sh.getRange(2, 1, last - 1, 4).getValues().forEach(r => {
+    if (String(r[0]) !== id) return;
+    let d = {}; try { d = JSON.parse(String(r[2] || "{}")); } catch (e) {}
+    rows.push({ clientId: Number(r[1]), data: d });
+  });
+  return { rows: rows };
+}
+function prFind(sh, listId, clientId) {
+  const last = sh.getLastRow();
+  if (last < 2) return 0;
+  const v = sh.getRange(2, 1, last - 1, 2).getValues();
+  for (let i = 0; i < v.length; i++) if (String(v[i][0]) === listId && Number(v[i][1]) === clientId) return i + 2;
+  return 0;
+}
+function prClean(patch) {
+  const out = {};
+  Object.keys(patch || {}).forEach(k => {
+    if (!PR_FIELDS[k]) return;
+    let v = String(patch[k] == null ? "" : patch[k]).slice(0, 500);
+    if (PR_DATES[k] && v && !/^\d{4}-\d{2}-\d{2}$/.test(v)) throw fail("날짜 형식이 올바르지 않습니다.");
+    out[k] = v; // JSON 문자열 안에 저장되므로(셀이 { 로 시작) 수식으로 해석되지 않는다
+  });
+  return out;
+}
+function prUpsert(listId, clientId, patch) {
+  const sh = prSheet(), row = prFind(sh, listId, clientId), now = new Date().toISOString();
+  if (!row) { const d = {}; Object.keys(patch).forEach(k => { if (patch[k] !== "") d[k] = patch[k]; }); sh.appendRow([listId, clientId, JSON.stringify(d), now]); return d; }
+  let d = {}; try { d = JSON.parse(String(sh.getRange(row, 3, 1, 1).getValues()[0][0] || "{}")); } catch (e) {}
+  Object.keys(patch).forEach(k => { if (patch[k] === "") delete d[k]; else d[k] = patch[k]; });
+  sh.getRange(row, 3, 1, 2).setValues([[JSON.stringify(d), now]]);
+  return d;
+}
+function prCheckList(id) { if (!plRows().some(l => l.id === id)) throw fail("없는 신고리스트입니다. 새로고침해 주세요.", 404); }
+function progressSave(req) {
+  const id = String(req.list || ""), cid = Math.round(Number(req.clientId));
+  if (!(cid > 0)) throw fail("업체를 확인하세요.");
+  const patch = prClean(req.patch);
+  return withLock(() => { prCheckList(id); return { data: prUpsert(id, cid, patch) }; });
+}
+function progressAdd(req) {
+  const id = String(req.list || ""), ids = (Array.isArray(req.ids) ? req.ids : []).slice(0, 1000).map(Number).filter(n => n > 0);
+  return withLock(() => {
+    prCheckList(id);
+    const sh = prSheet(), last = sh.getLastRow(), have = {};
+    if (last >= 2) sh.getRange(2, 1, last - 1, 2).getValues().forEach(r => { if (String(r[0]) === id) have[Number(r[1])] = 1; });
+    const add = ids.filter((n, i) => !have[n] && ids.indexOf(n) === i).map(n => [id, n, "{}", new Date().toISOString()]);
+    if (add.length) sh.getRange(sh.getLastRow() + 1, 1, add.length, 4).setValues(add);
+    return { added: add.length };
+  });
+}
+function progressRemove(req) {
+  const id = String(req.list || ""), cid = Math.round(Number(req.clientId));
+  return withLock(() => { const sh = prSheet(), row = prFind(sh, id, cid); if (row) sh.deleteRow(row); return { ok: true }; });
+}
+function progressImport(req) {
+  const id = String(req.list || ""), items = (Array.isArray(req.items) ? req.items : []).slice(0, 500);
+  return withLock(() => {
+    prCheckList(id);
+    let n = 0;
+    items.forEach(it => { const cid = Math.round(Number(it && it.clientId)); if (cid > 0) { prUpsert(id, cid, prClean(it.data)); n++; } });
+    return { saved: n };
+  });
+}
+// 업체별 기장의 신고 체크리스트(부가세) 결재란을 체크하면 같은 기수의 신고리스트에 날짜가 찍힌다.
+// 작성자 결재 → 작업일, 대표세무사 결재 → 결재완료. 체크를 풀면 날짜도 지운다. 맞는 신고리스트가 없으면 아무것도 하지 않는다.
+function progressSync(req) {
+  const kind = String(req.kind || "vat"), year = Math.round(Number(req.year)), ki = Math.round(Number(req.ki) || 0), sub = String(req.sub || "");
+  const cid = Math.round(Number(req.clientId)), field = req.which === "appr" ? "appr" : req.which === "work" ? "work" : "";
+  if (!field || !(cid > 0)) throw fail("요청이 올바르지 않습니다.");
+  return withLock(() => {
+    const l = plRows().filter(x => x.kind === kind && x.year === year && x.ki === (kind === "vat" ? ki : 0) && x.sub === (kind === "vat" ? sub : ""))[0];
+    if (!l) return { matched: false };
+    const d = {}; d[field] = req.on ? todayKst() : "";
+    return { matched: true, list: l.title, data: prUpsert(l.id, cid, d) };
+  });
+}
+
 // ── 고객 안내 페이지(비밀 링크) ──────────────────────────────
 const GUIDE_CACHE_KEY = "guide_v2";
 function guideKeyOf(p) { const k = String(p.GUIDE_KEY || "").trim(); return /^[A-Za-z0-9_-]{16,64}$/.test(k) ? k : ""; }
