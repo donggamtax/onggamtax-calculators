@@ -214,7 +214,7 @@ function progressLists(who) {
     const id = String(r[0]); if (!id) return;
     const c = cnt[id] || (cnt[id] = { n: 0, work: 0, appr: 0, deliv: 0 });
     let d = {}; try { d = JSON.parse(String(r[2] || "{}")); } catch (e) {}
-    c.n++; if (d.work) c.work++; if (d.appr) c.appr++; if (d.deliv) c.deliv++;
+    c.n++; if (d.work) c.work++; if (d.appr && d.appr !== "반려") c.appr++; if (d.deliv) c.deliv++;
   });
   return { lists: lists.map(l => Object.assign(l, cnt[l.id] || { n: 0, work: 0, appr: 0, deliv: 0 })), canDelete: progressAdmin(who) };
 }
@@ -295,7 +295,7 @@ function prClean(patch) {
   Object.keys(patch || {}).forEach(k => {
     if (!PR_FIELDS[k] && !/^c\d{1,3}$/.test(k)) return;
     let v = String(patch[k] == null ? "" : patch[k]).slice(0, 500);
-    if (PR_DATES[k] && v && !/^\d{4}-\d{2}-\d{2}$/.test(v)) throw fail("날짜 형식이 올바르지 않습니다.");
+    if (PR_DATES[k] && v && !(k === "appr" && v === "반려") && !/^\d{4}-\d{2}-\d{2}$/.test(v)) throw fail("날짜 형식이 올바르지 않습니다.");
     if (k === "xn" || k === "xo") v = v.trim().slice(0, 40);
     if (k === "xt") v = v === "법인" ? "법인" : "개인";
     out[k] = v; // JSON 문자열 안에 저장되므로(셀이 { 로 시작) 수식으로 해석되지 않는다
@@ -372,12 +372,18 @@ function progressImport(req, who) {
 // 작성자 결재 → 작업일, 대표세무사 결재 → 결재완료. 체크를 풀면 날짜도 지운다. 맞는 신고리스트가 없으면 아무것도 하지 않는다.
 function progressSync(req, who) {
   const kind = String(req.kind || "vat"), year = Math.round(Number(req.year)), ki = Math.round(Number(req.ki) || 0), sub = String(req.sub || "");
-  const cid = Math.round(Number(req.clientId)), field = req.which === "appr" ? "appr" : req.which === "work" ? "work" : "";
+  const cid = Math.round(Number(req.clientId)), field = req.which === "appr" ? "appr" : req.which === "work" ? "work" : req.which === "rej" ? "rej" : "";
   if (!field || !(cid > 0)) throw fail("요청이 올바르지 않습니다.");
-  if (field === "appr" && !canApprove(who)) throw fail("대표세무사 결재는 대표세무사만 할 수 있습니다.");
+  if ((field === "appr" || field === "rej") && req.on && !canApprove(who)) throw fail("대표세무사 결재·반려는 대표세무사만 할 수 있습니다.");
   return withLock(() => {
     const l = plRows().filter(x => x.kind === kind && x.year === year && x.ki === (kind === "vat" ? ki : 0) && x.sub === (kind === "vat" ? sub : ""))[0];
     if (!l) return { matched: false };
+    if (field === "rej") { // 반려: 결재완료 칸에 "반려"를 적는다. 지우는 것은 누구나 할 수 있고, 반려가 아닌 날짜는 건드리지 않는다.
+      const row = prFind(prSheet(), l.id, cid); let cur = {};
+      if (row) { try { cur = JSON.parse(String(prSheet().getRange(row, 3, 1, 1).getValues()[0][0] || "{}")); } catch (e) {} }
+      if (!req.on && cur.appr !== "반려") return { matched: true, list: l.title, data: prHide(cur, who) };
+      return { matched: true, list: l.title, data: prHide(prUpsert(l.id, cid, { appr: req.on ? "반려" : "" }), who) };
+    }
     const d = {}; d[field] = req.on ? todayKst() : "";
     return { matched: true, list: l.title, data: prHide(prUpsert(l.id, cid, d), who) };
   });
@@ -803,7 +809,7 @@ function clientsSave(req, who) {
         Object.keys(val || {}).slice(0, 500).forEach(k => { const v = String(val[k] == null ? "" : val[k]); if (v !== "") clean[String(k).slice(0, 80)] = v.slice(0, 20000); });
         if (/^(vat|inc|corp)\|/.test(g) && !canApprove(who)) {
           let oj = {}; try { oj = JSON.parse(String(oldJson[key] || "{}")); } catch (e) {}
-          Object.keys(Object.assign({}, oj, clean)).forEach(k => { if (/^(vat|inc|corp)\|[^|]+\|s2$/.test(k) && String(clean[k] || "") !== String(oj[k] || "")) throw fail("대표세무사 결재 체크는 대표세무사만 바꿀 수 있습니다."); });
+          Object.keys(clean).forEach(k => { if (/^(vat|inc|corp)\|[^|]+\|(s2|rej)$/.test(k) && String(clean[k]) !== String(oj[k] || "")) throw fail("대표세무사 결재·반려는 대표세무사만 체크할 수 있습니다. (해제는 누구나 할 수 있습니다)"); });
         }
         const json = JSON.stringify(clean);
         if (json.length > CELL_MAX) throw fail("한 화면에 적은 내용이 너무 깁니다. 메모를 나눠 적거나 줄여 주세요. (" + groupLabel(g) + ")");

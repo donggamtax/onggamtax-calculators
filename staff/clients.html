@@ -200,6 +200,7 @@ body:has(.app[data-wide="1"]) .wrap{max-width:1700px}
 .tx td.cc input{text-align:right}
 .tx th{white-space:nowrap}.tx tr:first-child th{white-space:normal;font-size:12px}.paper.taxp{max-width:1150px}.cmpgrid .paper.taxp{max-width:none}.tx td.cc input{min-width:0}.sm td.cc input{min-width:0}.bw .sm{min-width:400px}
 .mo{width:34px!important;text-align:center;border:1px solid var(--line)!important;display:inline-block;padding:1px 2px!important}
+.rejrow{display:flex;justify-content:flex-end;margin:10px 0 4px}.rejbtn{border:1px solid #d62d2d;color:#d62d2d;background:var(--panel);border-radius:6px;padding:4px 12px;font-size:12.5px;cursor:pointer}.rejbtn.on{background:#d62d2d;color:#fff;font-weight:700}.rejbtn:disabled{opacity:.45;cursor:default}
 .sig{display:grid;grid-template-columns:auto 1fr 1fr;width:240px;margin-left:auto;border:1px solid var(--rule);font-size:12.5px}
 .sig div{border:1px solid var(--rule);padding:4px 6px;text-align:center}
 .sig .tall2{grid-row:span 2;display:flex;align-items:center}
@@ -316,7 +317,7 @@ function applyNum(el){
   try{el.setSelectionRange(c,c)}catch(e){}
 }
 var APPROVER=true; /* 대표세무사 결재 체크는 서버가 알려준 결재자만 바꾼다 */
-function ck(k,label){return '<input type="checkbox" data-ck="'+esc(k)+'"'+(val(k)?" checked":"")+(/\|s2$/.test(k)&&!APPROVER?' disabled title="대표세무사만 체크할 수 있습니다"':'')+' aria-label="'+esc(label||"체크")+'">'}
+function ck(k,label){return '<input type="checkbox" data-ck="'+esc(k)+'"'+(val(k)?" checked":"")+(/\|s2$/.test(k)&&!APPROVER?' title="대표세무사만 체크할 수 있고, 해제는 누구나 할 수 있습니다"':'')+' aria-label="'+esc(label||"체크")+'">'}
 function sel(k,opts){return '<select data-k="'+esc(k)+'"><option value=""></option>'+opts.map(function(o){return '<option'+(val(k)===o?" selected":"")+'>'+o+'</option>'}).join("")+'</select>'}
 function wn(k,ph,def){return '<textarea class="wn" rows="1" data-k="'+esc(k)+'" placeholder="'+esc(ph||"")+'" aria-label="'+esc(ph||k)+'">'+esc(val(k,def))+'</textarea>'}
 function repSize(v){return Math.max(4,Math.ceil(String(v||"").length*1.8)+1)}
@@ -350,7 +351,11 @@ function periodBar(kind,list,cur,addLabel){
   return h;
 }
 function curId(kind,list){var cur=state[kind];if(!list.some(function(x){return x.id===cur}))cur=list.length?list[0].id:null;state[kind]=cur;return cur}
-function signBox(P){return '<div class="sig"><div class="tall2">결재</div><div>작성자</div><div>대표세무사</div><div><label>'+ck(P+"s1","작성자 결재")+'</label></div><div><label>'+ck(P+"s2","대표세무사 결재")+'</label></div></div>'}
+function rejBtn(P){
+  var r=val(P+"rej"),can=!!r||APPROVER;
+  return '<div class="rejrow"><button type="button" class="rejbtn'+(r?' on':'')+'" data-rej="'+esc(P)+'"'+(can?'':' disabled')+' title="'+(r?'누르면 반려를 취소합니다':can?'반려하면 진도체크 결재완료 칸에 빨간 글씨로 반려가 표시됩니다':'대표세무사만 반려할 수 있습니다')+'">'+(r?'↩ 반려 취소 ('+esc(fmtMD(r))+' 반려됨)':'반려')+'</button></div>';
+}
+function signBox(P){return rejBtn(P)+'<div class="sig"><div class="tall2">결재</div><div>작성자</div><div>대표세무사</div><div><label>'+ck(P+"s1","작성자 결재")+'</label></div><div><label>'+ck(P+"s2","대표세무사 결재")+'</label></div></div>'}
 
 /* ① 기본정보: 거래처별 특이사항 등 체크리스트 */
 var INFO_OPTS={"창업감면":["100%","75%","50%","25%","X"],"중기특감":["30%","20%","15%","10%","5%","X"],"고용증대":["O","X"],"성실신고":["O","X"]};
@@ -415,6 +420,8 @@ function vPc(D,id){var n=+vRaw(D,id,"pc");return n>=1&&n<=8?n:3}
 function vPv(D,id,i){var r=vRaw(D,id,"pv"+i);if(r!=="")return r;var pv=vatPrev(D,id);return pv?vPv(D,pv,Math.min(i+1,vPc(D,pv)-1)):""}
 function vPh(D,id,i){
   var st=D.v["vat|"+id+"|ph"+i];if(st!==undefined)return st;
+  var inf=vatInfo(vatName(D,id));
+  if(inf.year&&inf.ki){var nq=inf.year*2+inf.ki-1+(i-(Math.min(vPc(D,id),3)-1));return Math.floor(nq/2)+"년 "+(nq%2+1)+"기"} /* 기본: 선택한 회차의 기를 맨 뒤로 하고 앞 기수들을 차례로 (추가하면 다음 기) */
   var pv=vatPrev(D,id);if(!pv)return ["2025년 2기","2026년 1기","2026년 2기"][i]||"";
   return i===vPc(D,id)-1?vatName(D,id):vPh(D,pv,i+1);
 }
@@ -446,12 +453,12 @@ function refreshVat(){
 /* 체크리스트 마감 → 진도체크 작업일, 대표세무사 결재 → 진도체크 결재완료. 풀면 날짜도 지운다 (부가세·종합소득세·법인세) */
 function nameOfPeriod(kind,id){var D=d(state.sel),l=kind==="vat"?D.vps:kind==="inc"?D.ips:D.cps,p=l.filter(function(x){return x.id===id})[0];return p?p.name:""}
 function syncProgress(key,on,which){
-  var m=key.match(/^(vat|inc|corp)\|([^|]+)\|(s2|closed)$/);if(!m)return;
+  var m=key.match(/^(vat|inc|corp)\|([^|]+)\|(s2|closed|rej)$/);if(!m)return;
   var kind=m[1],info=vatInfo(nameOfPeriod(kind,m[2]));if(!info.year||(kind==="vat"&&(!info.ki||!info.sub)))return;
-  var w=m[3]==="s2"?"appr":"work",lab=w==="appr"?"결재완료":"작업일";
+  var w=m[3]==="s2"?"appr":m[3]==="rej"?"rej":"work",lab=w==="appr"?"결재완료":w==="rej"?"반려":"작업일";
   var note=document.querySelector('.paper[data-pid="'+m[2]+'"] [data-signnote]');
   api("progress.sync",{kind:kind,year:info.year,ki:kind==="vat"?info.ki:0,sub:kind==="vat"?info.sub:"",clientId:state.sel,which:w,on:!!on}).then(function(r){
-    if(note)note.textContent=r.matched?'진도체크 "'+r.list+'"에 '+lab+(on?" 날짜가 기록되었습니다.":" 날짜를 지웠습니다."):"";
+    if(note)note.textContent=r.matched?'진도체크 "'+r.list+'"에 '+lab+(on?(w==="rej"?" 표시가 기록되었습니다.":" 날짜가 기록되었습니다."):(w==="rej"?" 표시를 지웠습니다.":" 날짜를 지웠습니다.")):"";
   },function(){if(note)note.textContent="진도체크에는 반영하지 못했습니다(나중에 진도체크에서 직접 입력하세요)."});
 }
 /* ② 부가세 신고 체크리스트 */
@@ -545,7 +552,7 @@ var IND_TBL=[[14e6,.06,0],[50e6,.15,1.26e6],[88e6,.24,5.76e6],[150e6,.35,15.44e6
 var OPT_ROWS=["oexp","dona"]; /* 기본으로는 숨겨 두고 "+"로 넣는 줄: 타소득경비, 이월기부금 */
 var DED_NAMES=["통합고용세액공제","창업감면","중소기업특별세액감면","기타 공제·감면"];
 function calcTax(base,tbl){if(!(base>0))return 0;for(var i=0;i<tbl.length;i++){if(base<=tbl[i][0])return base*tbl[i][1]-tbl[i][2]}return 0}
-function nvk(P,k){var x=val(P+k);if(x===""||x==null)return null;var n=Number(String(x).replace(/,/g,""));return isNaN(n)?null:n}
+function nvk(P,k){var x=val(P+k);if(x===""||x==null)return null;if(String(x).trim()==="-")return 0;var n=Number(String(x).replace(/,/g,""));return isNaN(n)?null:n}
 function fmtI(n){return (Math.round(n)||0).toLocaleString("en-US")}
 function yearOf(name){var m=String(name).match(/\d{4}/);return m?+m[0]:2026}
 function taxCompute(P,yr,isCorp){
@@ -799,7 +806,10 @@ document.addEventListener("click",function(e){
       else{var cf2=LK[pp[0]];V[TP+cf2[0]]=gl(TP+cf2[0],cf2[1]).filter(function(x){return x!==pp[1]}).join(",");
         Object.keys(V).forEach(function(key){var del=pp[0]==="b"?key.indexOf(TP+"b"+pp[1]+"|")===0:(key===TP+pp[0]+(pp[0]==="d"?"n":"n")+pp[1]||["I","J","K"].some(function(c){return key===TP+c+"|"+pp[0]+pp[1]||key===TP+"note|"+pp[0]+pp[1]}));if(del)delete V[key]})}}
     drawDetail()}}
-  else if((t=e.target.closest("[data-close]"))){var ck0=t.dataset.close+"closed",on0=!d(state.sel).v[ck0];d(state.sel).v[ck0]=on0?todayLocal():"";touch();drawDetail();syncProgress(ck0,on0)}
+  else if((t=e.target.closest("[data-close]"))){var ck0=t.dataset.close+"closed",on0=!d(state.sel).v[ck0],pd0=t.dataset.close+"date",V0=d(state.sel).v;
+    if(/^vat\|/.test(t.dataset.close)){if(on0)V0[pd0]=todayLocal();else if(V0[pd0]===V0[ck0])V0[pd0]=""} /* 부가세 작성일자: 마감한 날짜가 자동으로 들어간다 */
+    V0[ck0]=on0?todayLocal():"";touch();drawDetail();syncProgress(ck0,on0)}
+  else if((t=e.target.closest("[data-rej]"))){var rk=t.dataset.rej+"rej",V1=d(state.sel).v,on1=!V1[rk];V1[rk]=on1?todayLocal():"";if(on1)V1[t.dataset.rej+"s2"]="";touch();drawDetail();syncProgress(rk,on1)}
   else if((t=e.target.closest("[data-fopen]"))){openAtt(t)}
   else if((t=e.target.closest("[data-fdel]"))){delAtt(t)}
   else if((t=e.target.closest("[data-vdeem]"))){var vk="vat|"+t.dataset.pid+"|"+(t.dataset.vdeem==="bulgoff"?"bulgoff":"deemoff");D.v[vk]=D.v[vk]==="1"?"":"1";drawDetail()}
@@ -826,6 +836,7 @@ document.addEventListener("change",function(e){
   if(t.dataset.cl==="type"||t.dataset.cl==="status"||t.dataset.cl==="svc"||t.dataset.cl==="owner"){var c3=CLIENTS.filter(function(x){return x.id===state.sel})[0];c3[t.dataset.cl]=t.value;state.setOpen=true;drawList();drawDetail();return}
   if(t.dataset.cmp){state.cmp[t.dataset.cmp]=t.value||null;drawDetail();return}
   if(t.dataset.pname==="vp"){drawDetail();return} /* 회차 이름을 바꾸면 앞 기수 값이 이월되도록 서식을 다시 그린다 */
+  if(state.sel&&t.dataset.ck&&t.checked&&/\|s2$/.test(t.dataset.ck)&&!APPROVER){t.checked=false;var sn=t.closest(".paper")&&t.closest(".paper").querySelector("[data-signnote]");if(sn)sn.textContent="대표세무사만 체크할 수 있습니다.";return}
   if(state.sel&&t.dataset.ck){d(state.sel).v[t.dataset.ck]=t.checked?"1":"";refreshProg();syncProgress(t.dataset.ck,t.checked)}
   else if(state.sel&&t.tagName==="SELECT"&&t.dataset.k){d(state.sel).v[t.dataset.k]=t.value;
     if(t.classList.contains("ox")){t.classList.toggle("ox-o",t.value==="O");t.classList.toggle("ox-x",t.value==="X")}
@@ -846,6 +857,10 @@ document.addEventListener("keydown",function(e){
     for(var r=ri+dir;r>=0&&r<rows.length;r+=dir){var c=rows[r].children[ci],f=c&&c.querySelector("input");if(f){nx=f;break}}
   }
   if(nx){e.preventDefault();nx.focus();nx.select()}
+});
+document.addEventListener("focusout",function(e){
+  var t=e.target;
+  if(state.sel&&t&&t.tagName==="INPUT"&&t.classList.contains("num")&&t.dataset.k&&t.closest(".paper[data-vp],.paper[data-taxp]")&&/^[0,]*0(\.0*)?$/.test(t.value.trim())){t.value="-";d(state.sel).v[t.dataset.k]="-";touch()} /* 0을 넣으면 -로 표시 */
 });
 document.addEventListener("focusout",function(e){if(e.target.closest&&e.target.closest(".paper[data-vp]"))setTimeout(refreshVat,0)});
 document.addEventListener("focusin",function(e){var t=e.target;if(t&&t.tagName==="INPUT"&&t.classList.contains("num")&&t.closest(".paper[data-taxp],.paper[data-vp]"))setTimeout(function(){if(document.activeElement===t)t.select()},0)});
@@ -947,7 +962,7 @@ function todayLocal(){var t=new Date();return t.getFullYear()+"-"+("0"+(t.getMon
 function applyLocks(){
   document.querySelectorAll(".paper.closed").forEach(function(p){
     p.querySelectorAll("input,select,textarea,button").forEach(function(el){
-      if(el.closest(".sig,.att")||el.hasAttribute("data-close")||el.hasAttribute("data-savepic"))return;
+      if(el.closest(".sig,.att")||el.hasAttribute("data-rej")||el.hasAttribute("data-close")||el.hasAttribute("data-savepic"))return;
       el.disabled=true;
     });
   });
