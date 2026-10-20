@@ -28,6 +28,7 @@ function doPost(e) {
   try {
     return out(route(req));
   } catch (err) {
+    if (!err.publicMessage) { try { console.error(String(req.action || "") + ": " + (err && err.stack || err)); } catch (e2) {} } // 실행 로그에 원인을 남긴다
     return out({ error: err.publicMessage || "처리 중 오류가 났습니다. 잠시 후 다시 시도하세요.", status: err.status || 500 });
   }
 }
@@ -433,6 +434,11 @@ function attachFolder() {
   sp.setProperty("ATTACH_FOLDER", f.getId());
   return f;
 }
+// 스크립트 소유자가 Apps Script 화면에서 이 함수를 한 번 실행하면(▶ 실행) 구글 드라이브 권한 허용 창이 뜬다. 허용한 뒤 배포를 새 버전으로 올린다.
+function attachSetup() {
+  const f = attachFolder();
+  Logger.log("첨부 폴더: " + f.getName() + " (" + f.getId() + ")");
+}
 function attachPut(req, who) {
   const mime = String(req.mime || "");
   if (!/^(image\/(jpeg|png)|application\/pdf)$/.test(mime)) throw fail("사진(JPG·PNG)이나 PDF만 올릴 수 있습니다.");
@@ -446,7 +452,9 @@ function attachPut(req, who) {
   if (!ok) throw fail("파일 내용이 올바르지 않습니다.");
   const ext = mime === "application/pdf" ? "pdf" : mime === "image/png" ? "png" : "jpg";
   const name = String(req.name || "").replace(/[\\\/:*?"<>|\r\n]/g, "").trim().slice(0, 60) || ("첨부." + ext);
-  const file = attachFolder().createFile(Utilities.newBlob(bytes, mime, Date.now() + "_" + who + "_" + name));
+  let file;
+  try { file = attachFolder().createFile(Utilities.newBlob(bytes, mime, Date.now() + "_" + who + "_" + name)); }
+  catch (e) { console.error("attach.put: " + (e && e.stack || e)); throw fail("구글 드라이브에 저장하지 못했습니다. (" + String(e && e.message || e).slice(0, 120) + ")"); }
   return { id: file.getId(), name: name, mime: mime, size: bytes.length };
 }
 function attachFile(id) {
