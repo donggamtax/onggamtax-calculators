@@ -86,7 +86,7 @@ function route(req) {
     case "progress.import": return progressImport(req, who);
     case "progress.sync": return progressSync(req, who);
     case "leave.status": return leaveStatus(p);
-    case "clients.load": return clientsLoad(req);
+    case "clients.load": return clientsLoad(req, who);
     case "template.save": return templateSave(req, who);
     case "clients.get": return clientsGet(req);
     case "clients.getMany": return clientsGetMany(req);
@@ -374,6 +374,7 @@ function progressSync(req, who) {
   const kind = String(req.kind || "vat"), year = Math.round(Number(req.year)), ki = Math.round(Number(req.ki) || 0), sub = String(req.sub || "");
   const cid = Math.round(Number(req.clientId)), field = req.which === "appr" ? "appr" : req.which === "work" ? "work" : "";
   if (!field || !(cid > 0)) throw fail("요청이 올바르지 않습니다.");
+  if (field === "appr" && !canApprove(who)) throw fail("대표세무사 결재는 대표세무사만 할 수 있습니다.");
   return withLock(() => {
     const l = plRows().filter(x => x.kind === kind && x.year === year && x.ki === (kind === "vat" ? ki : 0) && x.sub === (kind === "vat" ? sub : ""))[0];
     if (!l) return { matched: false };
@@ -634,14 +635,20 @@ function groupLabel(g) {
 // 업체 목록·양식은 자주 읽고 드물게 바뀌므로 6시간 캐시한다. 업체/양식을 바꾸는 저장은 clCacheClear()로 비운다.
 const CL_CACHE_KEY = "cl_light_v1";
 function clCacheClear() { try { CacheService.getScriptCache().remove(CL_CACHE_KEY); } catch (e) {} }
-function clientsLoad(req) {
+// 대표세무사 결재 체크는 스크립트 속성 APPROVERS(쉼표나 줄바꿈으로 이름 구분)에 적힌 사람만 바꿀 수 있다. 비어 있으면 제한하지 않는다.
+function canApprove(who) {
+  const l = String(props().APPROVERS || "").split(/[,\n]/).map(s => s.trim()).filter(Boolean);
+  return !l.length || l.indexOf(who) >= 0;
+}
+function clientsLoad(req, who) {
   const light = !!(req && req.light);
   if (light) {
-    try { const hit = CacheService.getScriptCache().get(CL_CACHE_KEY); if (hit) { const r = JSON.parse(hit); r.people = PEOPLE; return r; } } catch (e) {}
+    try { const hit = CacheService.getScriptCache().get(CL_CACHE_KEY); if (hit) { const r = JSON.parse(hit); r.people = PEOPLE; r.approver = canApprove(who); return r; } } catch (e) {}
   }
   const res = clientsLoadRaw(req);
   if (light) { try { const j = JSON.stringify(res); if (j.length < 90000) CacheService.getScriptCache().put(CL_CACHE_KEY, j, 21600); } catch (e) {} }
   res.people = PEOPLE;
+  res.approver = canApprove(who);
   return res;
 }
 function clientsLoadRaw(req) {
@@ -776,8 +783,8 @@ function clientsSave(req, who) {
     const now = new Date().toISOString();
     const clRows = clAll(cl, CL_COLS.length);
     const cdLast = cd.getLastRow();
-    const cdRows = cdLast < 2 ? [] : cd.getRange(2, 1, cdLast - 1, 2).getValues(); // 업체id, 그룹만 읽는다
-    const where = {}; cdRows.forEach((r, i) => { where[r[0] + "|" + r[1]] = i + 2; });
+    const cdRows = cdLast < 2 ? [] : cd.getRange(2, 1, cdLast - 1, 3).getValues(); // 업체id, 그룹, 내용
+    const where = {}, oldJson = {}; cdRows.forEach((r, i) => { where[r[0] + "|" + r[1]] = i + 2; oldJson[r[0] + "|" + r[1]] = r[2]; });
     const logs = [];
     let metaChanged = false;
     const append = [], del = [], hist = {};
@@ -794,6 +801,10 @@ function clientsSave(req, who) {
         if (val === null || (val && !Object.keys(val).length)) { if (row) del.push(row); delete where[key]; changed.push(groupLabel(g) + " 삭제"); return; }
         const clean = {};
         Object.keys(val || {}).slice(0, 500).forEach(k => { const v = String(val[k] == null ? "" : val[k]); if (v !== "") clean[String(k).slice(0, 80)] = v.slice(0, 20000); });
+        if (/^(vat|inc|corp)\|/.test(g) && !canApprove(who)) {
+          let oj = {}; try { oj = JSON.parse(String(oldJson[key] || "{}")); } catch (e) {}
+          Object.keys(Object.assign({}, oj, clean)).forEach(k => { if (/^(vat|inc|corp)\|[^|]+\|s2$/.test(k) && String(clean[k] || "") !== String(oj[k] || "")) throw fail("대표세무사 결재 체크는 대표세무사만 바꿀 수 있습니다."); });
+        }
         const json = JSON.stringify(clean);
         if (json.length > CELL_MAX) throw fail("한 화면에 적은 내용이 너무 깁니다. 메모를 나눠 적거나 줄여 주세요. (" + groupLabel(g) + ")");
         const values = [id, g, json, who, now];
