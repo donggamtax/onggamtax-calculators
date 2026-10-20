@@ -811,7 +811,7 @@ document.addEventListener("keydown",function(e){
   if(nx){e.preventDefault();nx.focus();nx.select()}
 });
 document.addEventListener("focusout",function(e){if(e.target.closest&&e.target.closest(".paper[data-vp]"))setTimeout(refreshVat,0)});
-document.addEventListener("focusin",function(e){var t=e.target;if(t&&t.tagName==="INPUT"&&t.classList.contains("num")&&t.closest(".paper[data-taxp]"))setTimeout(function(){if(document.activeElement===t)t.select()},0)});
+document.addEventListener("focusin",function(e){var t=e.target;if(t&&t.tagName==="INPUT"&&t.classList.contains("num")&&t.closest(".paper[data-taxp],.paper[data-vp]"))setTimeout(function(){if(document.activeElement===t)t.select()},0)});
 document.addEventListener("focusout",function(e){if(e.target.closest&&e.target.closest(".paper[data-taxp]"))setTimeout(refreshTax,0)});
 
 var selCells=[];
