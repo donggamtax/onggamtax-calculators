@@ -162,7 +162,7 @@ function eligible(l){
 /* ── 신고리스트 화면 ── */
 function joined(){
   var m=S.rows[S.cur]||{},out=[];
-  Object.keys(m).forEach(function(id){var c=+id<0?{id:+id,name:m[id].xn||"(이름 없음)",type:m[id].xt||"개인",owner:m[id].xo||"",extra:true}:cById(id);if(c)out.push({c:c,d:m[id]})});
+  Object.keys(m).forEach(function(id){var c=+id<0?{id:+id,name:m[id].xn||"(이름 없음)",type:m[id].xt||"개인",owner:m[id].xo||"",extra:true}:cById(id);if(c&&!c.extra&&m[id].xo)c=Object.assign({},c,{owner:m[id].xo,base:c.owner});if(c)out.push({c:c,d:m[id]})});
   var po={"상":0,"중":1,"하":2};
   out.sort(function(a,b){return String(a.c.owner||"~").localeCompare(String(b.c.owner||"~"),"ko")||((po[a.d.prio]==null?3:po[a.d.prio])-(po[b.d.prio]==null?3:po[b.d.prio]))||a.c.name.localeCompare(b.c.name,"ko")});
   return out;
@@ -215,11 +215,10 @@ function fmtM(v){var n=String(v||"").replace(/[^\d]/g,"");return n?Number(n).toL
 function cell(r,col){
   var k=col.k,t=col.t,d=r.d,v=d[k]||"",id=r.c.id,al=esc(col.l);
   if(r.c.extra&&k==="type")return '<td><select data-f="xt" data-id="'+id+'" aria-label="구분">'+["개인","법인"].map(function(x){return '<option'+(x===(r.c.type||"개인")?" selected":"")+'>'+x+'</option>'}).join("")+'</select></td>';
-  if(r.c.extra&&k==="owner"){var op=[""].concat(S.people);if(r.c.owner&&op.indexOf(r.c.owner)<0)op.push(r.c.owner);return '<td><select data-f="xo" data-id="'+id+'" aria-label="담당자">'+op.map(function(x){return '<option'+(x===(r.c.owner||"")?" selected":"")+'>'+esc(x)+'</option>'}).join("")+'</select></td>'}
+  if(k==="owner"){var op=[""].concat(S.people);if(r.c.owner&&op.indexOf(r.c.owner)<0)op.push(r.c.owner);var cur=r.c.owner||"",bs=r.c.extra?"":(r.c.base!=null?r.c.base:r.c.owner)||"";return '<td><select data-f="xo" data-id="'+id+'" aria-label="담당자"'+(!r.c.extra&&r.d.xo?' title="이 신고리스트에서만 바꾼 담당자입니다. 업체 정보의 담당자: '+esc(bs||"없음")+'"':'')+'>'+op.map(function(x){return '<option'+(x===cur?" selected":"")+(x===""&&!r.c.extra?' value="">(업체 정보대로)':'>')+esc(x)+'</option>'}).join("")+'</select></td>'}
   if(r.c.extra&&k==="name")return '<td class="nmc"><input type="text" class="nt" data-f="xn" data-id="'+id+'" value="'+esc(r.c.name)+'" aria-label="상호" title="기장 업체 명단에 없는 업체">'+'</td>';
   if(k==="type")return '<td>'+esc(r.c.type||"개인")+'</td>';
   if(k==="name")return '<td class="nmc">'+esc(r.c.name)+'</td>';
-  if(k==="owner")return '<td>'+esc(r.c.owner||"")+'</td>';
   if(t==="check")return '<td><input type="checkbox" data-f="'+k+'" data-id="'+id+'"'+(v?" checked":"")+' aria-label="'+al+'"></td>';
   if(t==="sel"){var o=["","상","중","하"];if(v&&o.indexOf(v)<0)o.push(v);return '<td><select data-f="'+k+'" data-id="'+id+'" aria-label="'+al+'">'+o.map(function(x){return '<option'+(x===v?" selected":"")+'>'+esc(x)+'</option>'}).join("")+'</select></td>'}
   if(t==="num")return '<td><input type="text" class="fe" inputmode="numeric" autocomplete="off" placeholder="금액" data-money="1" data-f="'+k+'" data-id="'+id+'" value="'+esc(fmtM(v))+'" aria-label="'+al+'"></td>';
@@ -424,7 +423,7 @@ function gMove(dr,dc,extend){
   else gFocus(r,c);
 }
 function gKeyOf(col,tr){
-  if(col.t==="auto"){if(tr.querySelector('[data-f="xn"]'))return {type:"xt",name:"xn",owner:"xo"}[col.k]||null;return null}
+  if(col.t==="auto"){if(tr.querySelector('[data-f="xn"]'))return {type:"xt",name:"xn",owner:"xo"}[col.k]||null;return col.k==="owner"?"xo":null}
   return col.k;
 }
 function gText(){
