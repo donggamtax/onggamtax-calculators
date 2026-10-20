@@ -43,7 +43,7 @@ table.tb{table-layout:fixed;min-width:0;width:auto}table.tb th{overflow:hidden;t
 table.tb thead th{position:sticky;top:0;z-index:1}
 table.tb td{padding:2px 4px}table.tb tr.done td{background:var(--ok-bg)}
 table.tb input[type=text],table.tb select{border:0;background:transparent;padding:3px 2px;width:100%}
-table.tb input.dt{text-align:center}button.srt{border:0;background:none;color:inherit;font:inherit;font-weight:inherit;cursor:pointer;padding:0 2px;white-space:nowrap}button.srt:hover{text-decoration:underline}table.tb label.alld{cursor:pointer;white-space:nowrap}table.tb input.fe{text-align:right}
+table.tb input.dt{text-align:center}table.tb input.dt.rej{color:#d62d2d;font-weight:800}button.srt{border:0;background:none;color:inherit;font:inherit;font-weight:inherit;cursor:pointer;padding:0 2px;white-space:nowrap}button.srt:hover{text-decoration:underline}table.tb label.alld{cursor:pointer;white-space:nowrap}table.tb input.fe{text-align:right}
 table.tb input:focus,table.tb select:focus{outline:2px solid var(--accent);outline-offset:-2px;background:var(--bg)}
 table.tb .nmc{text-align:left;font-weight:500;white-space:normal}
 .scroll{overflow:auto;max-height:80vh}
@@ -89,6 +89,7 @@ var TAX_NOTES=["정확하지 않아도 됨","1~8월 매출액 기준, 단 판매
 function isTax(){var l=curList();return !!l&&l.kind==="tax"}
 function defCols(){return isTax()?TAX_COLS:DEF_COLS}
 /* 소득세/법인세 예측은 추정완료(날짜)가 끝난 표시, 다른 리스트는 완료 체크·전달일 */
+function okA(d){return !!d.appr&&d.appr!=="반려"}
 function isDone(d){return isTax()?!!d.work:!!(d.deliv||d.done)}
 var PRIV={fee:1,paid:1,tinv:1};
 function isAdmin(){return !!S.canDelete}
@@ -122,8 +123,8 @@ function loadRows(id){
   return api("progress.get",{list:id}).then(function(r){var m={};(r.rows||[]).forEach(function(x){m[x.clientId]=x.data||{}});S.rows[id]=m});
 }
 /* 날짜는 저장은 2026-01-01, 화면은 2026-1-1 로 보이고 입력한다 */
-function fmtD(iso){var m=String(iso||"").match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);return m?(+m[2])+"/"+(+m[3]):""}
-function fullD(iso){var m=String(iso||"").match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);return m?m[1]+"-"+(+m[2])+"-"+(+m[3]):""}
+function fmtD(iso){if(iso==="반려")return"반려";var m=String(iso||"").match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);return m?(+m[2])+"/"+(+m[3]):""}
+function fullD(iso){if(iso==="반려")return"반려";var m=String(iso||"").match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);return m?m[1]+"-"+(+m[2])+"-"+(+m[3]):""}
 function pct(a,b){return b?Math.round(a*100/b)+"%":"-"}
 
 /* ── 목록 화면 ── */
@@ -174,7 +175,7 @@ function summary(rows){
   var tot={n:0,w:0,a:0,d:0},h='<table class="sm"><tr><th>담당자</th><th>개수</th><th>작업완료</th><th>진행률</th><th>결재완료</th><th>전달완료</th><th>잔여</th></tr>';
   ps.forEach(function(p){
     var rs=rows.filter(function(r){return (r.c.owner||"(미지정)")===p});if(!rs.length)return;
-    var w=rs.filter(function(r){return r.d.work}).length,a=rs.filter(function(r){return r.d.appr}).length,d=rs.filter(function(r){return r.d.deliv}).length;
+    var w=rs.filter(function(r){return r.d.work}).length,a=rs.filter(function(r){return okA(r.d)}).length,d=rs.filter(function(r){return r.d.deliv}).length;
     tot.n+=rs.length;tot.w+=w;tot.a+=a;tot.d+=d;
     h+='<tr><td class="l">'+esc(p)+'</td><td>'+rs.length+'</td><td>'+w+'</td><td class="pb">'+pct(w,rs.length)+'</td><td>'+a+'</td><td>'+d+'</td><td>'+(rs.length-w)+'</td></tr>';
   });
@@ -211,7 +212,7 @@ function saveNotes(next){
   var l=curList();if(!l)return;var old=l.notes;l.notes=next;S.err="";say("저장 중…");
   api("progress.notes",{id:l.id,notes:next}).then(function(r){l.notes=r.notes;say("안내 문구를 저장했습니다.");if(!S.nedit)draw()},function(e){l.notes=old;draw();say(e.message,true)});
 }
-function fmtM(v){var n=String(v||"").replace(/[^\d]/g,"");return n?Number(n).toLocaleString("ko-KR"):""}
+function fmtM(v){var n=String(v||"").replace(/[^\d]/g,"");return n?(Number(n)===0?"-":Number(n).toLocaleString("ko-KR")):""}
 function cell(r,col){
   var k=col.k,t=col.t,d=r.d,v=d[k]||"",id=r.c.id,al=esc(col.l);
   if(r.c.extra&&k==="type")return '<td><select data-f="xt" data-id="'+id+'" aria-label="구분">'+["개인","법인"].map(function(x){return '<option'+(x===(r.c.type||"개인")?" selected":"")+'>'+x+'</option>'}).join("")+'</select></td>';
@@ -221,8 +222,8 @@ function cell(r,col){
   if(k==="name")return '<td class="nmc">'+esc(r.c.name)+'</td>';
   if(t==="check")return '<td><input type="checkbox" data-f="'+k+'" data-id="'+id+'"'+(v?" checked":"")+' aria-label="'+al+'"></td>';
   if(t==="sel"){var o=["","상","중","하"];if(v&&o.indexOf(v)<0)o.push(v);return '<td><select data-f="'+k+'" data-id="'+id+'" aria-label="'+al+'">'+o.map(function(x){return '<option'+(x===v?" selected":"")+'>'+esc(x)+'</option>'}).join("")+'</select></td>'}
-  if(t==="num")return '<td><input type="text" class="fe" inputmode="numeric" autocomplete="off" placeholder="금액" data-money="1" data-f="'+k+'" data-id="'+id+'" value="'+esc(fmtM(v))+'" aria-label="'+al+'"></td>';
-  if(t==="date")return '<td><input type="text" class="dt" inputmode="numeric" autocomplete="off" data-date="1" data-f="'+k+'" data-id="'+id+'" title="'+esc(fullD(v))+'" value="'+esc(fmtD(v))+'" aria-label="'+al+'"></td>';
+  if(t==="num")return '<td><input type="text" class="fe" inputmode="numeric" autocomplete="off" data-money="1" data-f="'+k+'" data-id="'+id+'" value="'+esc(fmtM(v))+'" aria-label="'+al+'"></td>';
+  if(t==="date")return '<td><input type="text" class="dt'+(v==="반려"?" rej":"")+'" inputmode="numeric" autocomplete="off" data-date="1" data-f="'+k+'" data-id="'+id+'" title="'+esc(fullD(v))+'" value="'+esc(fmtD(v))+'" aria-label="'+al+'"></td>';
   return '<td><input type="text" class="nt" data-f="'+k+'" data-id="'+id+'" value="'+esc(v)+'" aria-label="'+al+'"></td>';
 }
 function colEditor(){
@@ -276,7 +277,7 @@ function drawList(){
 }
 function draw(){S.cur?drawList():drawLists()}
 function say(t,bad){S.msg=t;var e=$("#st");if(e){e.textContent=t;e.className="st"+(bad?" bad":"")}}
-function refreshCounts(){var l=curList();if(!l)return;var m=S.rows[l.id]||{},ids=Object.keys(m);l.n=ids.length;l.work=ids.filter(function(i){return m[i].work}).length;l.appr=ids.filter(function(i){return m[i].appr}).length;l.deliv=ids.filter(function(i){return m[i].deliv}).length}
+function refreshCounts(){var l=curList();if(!l)return;var m=S.rows[l.id]||{},ids=Object.keys(m);l.n=ids.length;l.work=ids.filter(function(i){return m[i].work}).length;l.appr=ids.filter(function(i){return okA(m[i])}).length;l.deliv=ids.filter(function(i){return m[i].deliv}).length}
 
 function openList(id){
   S.cur=id;S.nedit=false;S.own="전체";S.stf="전체";S.sort=null;S.xform=false;S.cw=null;G.a=G.f=null;S.err="";S.msg="";S.confirmDel=false;
@@ -446,7 +447,7 @@ function gText(){
 function gConv(col,v){
   v=String(v==null?"":v).trim();
   if(col.t==="check")return /^(|x|n|no|false|0|미완료)$/i.test(v)?"":"1";
-  if(col.t==="date"){if(v==="")return "";var d=parseDate(v);return d===null?null:d}
+  if(col.t==="date"){if(v==="")return "";if(col.k==="appr"&&v==="반려")return v;var d=parseDate(v);return d===null?null:d}
   if(col.t==="num"){var n=v.replace(/[^\d]/g,"");return n}
   if(col.t==="sel")return v;
   return v.slice(0,500);
@@ -640,9 +641,9 @@ document.addEventListener("change",function(e){
     var v=t.type==="checkbox"?(t.checked?"1":""):t.value.trim();
     if(t.dataset.money){v=v.replace(/[^\d]/g,"");if(v)v=String(Number(v));t.value=fmtM(v)}
     if(t.dataset.date){
-      var dv=parseDate(v);
+      var dv=t.dataset.f==="appr"&&v==="반려"?"반려":parseDate(v);
       if(dv===null){say('날짜는 6/11 처럼 적어 주세요(연도까지 쓰려면 2026-6-11).',true);t.value=fmtD(((S.rows[S.cur]||{})[t.dataset.id]||{})[t.dataset.f]);return}
-      v=dv;t.value=fmtD(dv);t.title=fullD(dv);
+      v=dv;t.value=fmtD(dv);t.title=fullD(dv);t.classList.toggle("rej",dv==="반려");
     }
     save(t.dataset.id,t.dataset.f,v,t);
   }
