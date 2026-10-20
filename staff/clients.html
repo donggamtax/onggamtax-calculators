@@ -161,6 +161,22 @@ body:has(.app[data-wide="1"]) .wrap{max-width:1700px}
 .rowtools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}.rowtools .mini{margin:0}
 .memo{margin-top:14px}.memo .sh{font-weight:700;margin-bottom:6px}
 .memo textarea{width:100%;min-height:240px;resize:vertical;font:inherit;line-height:1.55;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);box-sizing:border-box}
+.closebtn{position:absolute;top:8px;left:8px;z-index:2;border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:4px 9px;font-size:12px;cursor:pointer;color:var(--ink)}
+.paper.closed .closebtn{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.closednote{font-size:12.5px;color:var(--muted);text-align:center;margin:0 0 8px}
+.paper.closed input:disabled,.paper.closed select:disabled,.paper.closed textarea:disabled{opacity:1;color:inherit;-webkit-text-fill-color:currentColor;cursor:default}
+.att{margin-top:16px;border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.att .sh{font-weight:700;margin-bottom:6px}
+.att .ar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}
+.att .ar b{min-width:110px;font-size:13px}
+.att .fchip{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:14px;padding:2px 4px 2px 10px;font-size:12.5px;background:var(--soft)}
+.att .fchip button{border:0;background:transparent;cursor:pointer;color:var(--muted);font-size:13px;padding:0 4px}
+.att .fchip .fo{border:0;background:transparent;cursor:pointer;color:var(--ink);font-size:12.5px;padding:0}
+.att .fadd{border:1px dashed var(--line);border-radius:14px;padding:2px 10px;font-size:12.5px;cursor:pointer;color:var(--muted)}
+.att .fview{flex-basis:100%;margin-top:4px}
+.att .fview img{max-width:100%;border:1px solid var(--line)}
+.att .fview iframe{width:100%;height:640px;border:1px solid var(--line)}
+.att .fst{font-size:12px;color:var(--muted)}
 .savepic{position:absolute;top:8px;right:8px;z-index:2;border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:4px 9px;font-size:12px;cursor:pointer;color:var(--ink)}
 .paper .selc,.paper td.selc{outline:2px solid #2a6fdb;outline-offset:-2px;background:rgba(42,111,219,.14)!important}
 .picmodal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
@@ -361,7 +377,7 @@ function oxCell(k,only){
 }
 /* 이름에서 연도·기·예정/확정을 읽어 시간순으로 놓는다(못 읽으면 만든 순서). 앞 기수의 당기가 다음 기수의 전기가 된다. */
 function vatInfo(name){
-  var s=String(name||""),y=s.match(/(\d{4})\s*년/)||s.match(/(\d{2})\s*년/),g=s.match(/([12])\s*기/),sub=/확정/.test(s)?"확정":/예정/.test(s)?"예정":"";
+  var s=String(name||""),y=s.match(/(\d{4})\s*년/)||s.match(/(\d{2})\s*년/)||s.match(/(20\d{2})/),g=s.match(/([12])\s*기/),sub=/확정/.test(s)?"확정":/예정/.test(s)?"예정":"";
   var yy=y?(y[1].length===2?2000+ +y[1]:+y[1]):0;
   return {year:yy,ki:g?+g[1]:0,sub:sub};
 }
@@ -420,13 +436,15 @@ function refreshVat(){
     var r=vcShown(el);if(el.value!==r.s)el.value=r.s;el.classList.toggle("vauto",r.auto&&r.s!=="");
   });
 }
-/* 체크리스트 결재란 → 진도체크 신고리스트에 날짜 기록 (작성자=작업일, 대표세무사=결재완료) */
-function syncProgress(key,on){
-  var m=key.match(/^vat\|([^|]+)\|s([12])$/);if(!m)return;
-  var D=d(state.sel),info=vatInfo(vatName(D,m[1]));if(!info.year||!info.ki||!info.sub)return;
-  var note=document.querySelector('.paper[data-pid="'+m[1]+'"] [data-signnote]');
-  api("progress.sync",{kind:"vat",year:info.year,ki:info.ki,sub:info.sub,clientId:state.sel,which:m[2]==="1"?"work":"appr",on:!!on}).then(function(r){
-    if(note)note.textContent=r.matched?'진도체크 "'+r.list+'"에 '+(m[2]==="1"?"작업일":"결재완료")+(on?" 날짜가 기록되었습니다.":" 날짜를 지웠습니다."):"";
+/* 체크리스트 마감 → 진도체크 작업일, 대표세무사 결재 → 진도체크 결재완료. 풀면 날짜도 지운다 (부가세·종합소득세·법인세) */
+function nameOfPeriod(kind,id){var D=d(state.sel),l=kind==="vat"?D.vps:kind==="inc"?D.ips:D.cps,p=l.filter(function(x){return x.id===id})[0];return p?p.name:""}
+function syncProgress(key,on,which){
+  var m=key.match(/^(vat|inc|corp)\|([^|]+)\|(s2|closed)$/);if(!m)return;
+  var kind=m[1],info=vatInfo(nameOfPeriod(kind,m[2]));if(!info.year||(kind==="vat"&&(!info.ki||!info.sub)))return;
+  var w=m[3]==="s2"?"appr":"work",lab=w==="appr"?"결재완료":"작업일";
+  var note=document.querySelector('.paper[data-pid="'+m[2]+'"] [data-signnote]');
+  api("progress.sync",{kind:kind,year:info.year,ki:kind==="vat"?info.ki:0,sub:kind==="vat"?info.sub:"",clientId:state.sel,which:w,on:!!on}).then(function(r){
+    if(note)note.textContent=r.matched?'진도체크 "'+r.list+'"에 '+lab+(on?" 날짜가 기록되었습니다.":" 날짜를 지웠습니다."):"";
   },function(){if(note)note.textContent="진도체크에는 반영하지 못했습니다(나중에 진도체크에서 직접 입력하세요)."});
 }
 /* ② 부가세 신고 체크리스트 */
@@ -471,7 +489,7 @@ function paperVat(id){
       h+='<tr><td>'+tx+'</td><td class="cb">'+ck(P+"c"+i,it.t)+'</td><td>'+inp(P+"n"+i,it.ph||"비고")+'</td></tr>';
     }
   });
-  h+='</table>'+signBox(P)+'<div class="sub" data-signnote style="text-align:right;margin-top:4px"></div></div>';
+  h+='</table>'+signBox(P)+'<div class="sub" data-signnote style="text-align:right;margin-top:4px"></div>'+attPanel(P)+'</div>';
   return h.replace(/ placeholder="[^"]*"/g,"");
 }
 /* ③ 종합소득세 신고 체크리스트 */
@@ -491,7 +509,7 @@ function paperInc(id){
       h+='<tr>'+(j===0?'<td class="gp" rowspan="'+g.rows.length+'">'+esc(g.g)+'</td>':'')+'<td>'+esc(r.t)+'</td><td class="cb">'+ck(P+"c"+r.id,r.t)+'</td><td>'+inp(P+"n"+r.id,"비고",r.n)+'</td></tr>';
     });
   });
-  h+='</table>'+signBox(P)+'</div>';
+  h+='</table>'+signBox(P)+'<div class="sub" data-signnote style="text-align:right;margin-top:4px"></div></div>';
   return h;
 }
 function paperCorp(id){
@@ -509,7 +527,7 @@ function paperCorp(id){
       h+='<tr>'+(j===0?'<td class="gp" rowspan="'+g.rows.length+'">'+esc(g.g)+'</td>':'')+'<td>'+esc(r.t)+'</td><td class="cb">'+ck(P+"c"+r.id,r.t)+'</td><td>'+inp(P+"n"+r.id,"비고",r.n)+'</td></tr>';
     });
   });
-  h+='</table>'+signBox(P)+'<div class="box" style="margin-top:14px"><div class="bt">MEMO, 특이사항 및 확인사항 등</div>'+ta(P+"memo","tall")+'</div></div>';
+  h+='</table>'+signBox(P)+'<div class="sub" data-signnote style="text-align:right;margin-top:4px"></div><div class="box" style="margin-top:14px"><div class="bt">MEMO, 특이사항 및 확인사항 등</div>'+ta(P+"memo","tall")+'</div></div>';
   return h;
 }
 
@@ -688,8 +706,13 @@ function periodTab(kind){
   var others=list.filter(function(x){return x.id!==id}),c2=state.cmp[kind];
   if(!others.some(function(x){return x.id===c2}))c2=state.cmp[kind]=null;
   if(others.length)bar+='<div class="ctl"><label style="flex-direction:row;align-items:center;gap:6px">나란히 보기 <select data-cmp="'+kind+'"><option value="">안 함</option>'+others.map(function(x){return '<option value="'+x.id+'"'+(c2===x.id?' selected':'')+'>'+esc(x.name||"(이름 없음)")+'</option>'}).join("")+'</select></label><span class="sub">두 신고서를 좌우로 놓고 비교합니다. 위 칩에서 고른 것이 왼쪽입니다.</span></div>';
-  var wp=function(h){return h.replace(/^(<div class="paper[^>]*>)/,'$1<button type="button" class="savepic" data-savepic title="이 서식을 이미지(PNG)로 저장">📷 그림으로 저장</button>')};
-  return bar+(c2?'<div class="cmpgrid">'+wp(K.fn(id))+wp(K.fn(c2))+'</div>':wp(K.fn(id)));
+  var wp=function(h,pid){
+    var pf=PREF[kind],cl=pf&&pf!=="tax|"?val(pf+pid+"|closed"):"",cb="";
+    if(pf&&pf!=="tax|")cb='<button type="button" class="closebtn" data-close="'+pf+pid+'|" title="마감하면 숫자를 고칠 수 없고 진도체크 작업일에 날짜가 적힙니다">'+(cl?'🔓 마감 풀기':'🔒 마감')+'</button>'+(cl?'<div class="closednote">'+esc(fmtMD(cl))+' 마감됨 · 숫자를 고치려면 마감을 풀어 주세요</div>':'');
+    if(cl)h=h.replace('class="paper"','class="paper closed" data-closed="1"');
+    return h.replace(/^(<div class="paper[^>]*>)/,'$1<button type="button" class="savepic" data-savepic title="이 서식을 이미지(PNG)로 저장">📷 그림으로 저장</button>'+cb);
+  };
+  return bar+(c2?'<div class="cmpgrid">'+wp(K.fn(id),id)+wp(K.fn(c2),c2)+'</div>':wp(K.fn(id),id));
 }
 function tabVat(){return periodTab("vp")}
 function tabInc(){return periodTab("ip")}
@@ -716,7 +739,7 @@ function drawDetail(){
     '<div class="hist">'+histHtml(c)+'</div>';
   var tk=state.tab==="부가세"?"vp":state.tab==="소득세"?"ip":state.tab==="법인세"?"cp":state.tab==="세금예측"?"tp":null;
   document.getElementById("app").dataset.wide=(tk&&state.cmp[tk])?"1":"";document.getElementById("app").dataset.tax=state.tab==="세금예측"?"1":"";
-  fitAllWn();fitAllTax();applyTaxW();
+  fitAllWn();fitAllTax();applyTaxW();applyLocks();
 }
 document.addEventListener("input",function(e){if(e.target.classList&&e.target.classList.contains("repi"))e.target.size=repSize(e.target.value);if(e.target.classList&&(e.target.classList.contains("wn")||e.target.classList.contains("ag")))fitWn(e.target)});
 // 업체 위에 마우스를 올리거나 손가락을 대면 자료를 미리 받아 둔다(누르는 순간 바로 열린다)
@@ -765,6 +788,9 @@ document.addEventListener("click",function(e){
       else{var cf2=LK[pp[0]];V[TP+cf2[0]]=gl(TP+cf2[0],cf2[1]).filter(function(x){return x!==pp[1]}).join(",");
         Object.keys(V).forEach(function(key){var del=pp[0]==="b"?key.indexOf(TP+"b"+pp[1]+"|")===0:(key===TP+pp[0]+(pp[0]==="d"?"n":"n")+pp[1]||["I","J","K"].some(function(c){return key===TP+c+"|"+pp[0]+pp[1]||key===TP+"note|"+pp[0]+pp[1]}));if(del)delete V[key]})}}
     drawDetail()}}
+  else if((t=e.target.closest("[data-close]"))){var ck0=t.dataset.close+"closed",on0=!d(state.sel).v[ck0];d(state.sel).v[ck0]=on0?todayLocal():"";touch();drawDetail();syncProgress(ck0,on0)}
+  else if((t=e.target.closest("[data-fopen]"))){openAtt(t)}
+  else if((t=e.target.closest("[data-fdel]"))){delAtt(t)}
   else if((t=e.target.closest("[data-vdeem]"))){var vk="vat|"+t.dataset.pid+"|"+(t.dataset.vdeem==="bulgoff"?"bulgoff":"deemoff");D.v[vk]=D.v[vk]==="1"?"":"1";drawDetail()}
   else if((t=e.target.closest("[data-pcol]"))){var P="vat|"+t.dataset.pid+"|",pc=+(D.v[P+"pc"]||3)+ +t.dataset.pcol;if(pc>=1&&pc<=8){if(+t.dataset.pcol<0){delete D.v[P+"ph"+(pc)];delete D.v[P+"pv"+(pc)]}D.v[P+"pc"]=String(pc)}drawDetail()}
   else if(e.target.closest("#back")){state.sel=null;show()}
@@ -903,6 +929,85 @@ function loadCap(cb){
   var sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
   sc.onload=function(){cb(null)};sc.onerror=function(){cb("load")};document.head.appendChild(sc);
 }
+
+/* ===== 마감(체크리스트 잠금) · 결재서식 첨부 ===== */
+function fmtMD(iso){var m=String(iso).match(/(\d{4})-(\d{1,2})-(\d{1,2})/);return m?(+m[2])+"/"+(+m[3]):String(iso)}
+function todayLocal(){var t=new Date();return t.getFullYear()+"-"+("0"+(t.getMonth()+1)).slice(-2)+"-"+("0"+t.getDate()).slice(-2)}
+function applyLocks(){
+  document.querySelectorAll(".paper.closed").forEach(function(p){
+    p.querySelectorAll("input,select,textarea,button").forEach(function(el){
+      if(el.closest(".sig,.att")||el.hasAttribute("data-close")||el.hasAttribute("data-savepic"))return;
+      el.disabled=true;
+    });
+  });
+}
+var ATTS=[["vsr","부가세 신고서"],["htx","홈택스 통합조회"],["hlp","신고도움 서비스"]],ATT_MAX=8,ATT_BYTES=6000000;
+function attOf(D,key){try{var a=JSON.parse(D.v[key]||"[]");return Array.isArray(a)?a:[]}catch(e){return[]}}
+function attPanel(P){
+  var D=d(state.sel);
+  return '<div class="att" data-att="'+esc(P)+'"><div class="sh">결재서식 첨부 <span class="fst">사진(JPG·PNG)이나 PDF를 올리면 여기서 바로 열어 볼 수 있습니다</span></div>'+ATTS.map(function(a){
+    return '<div class="ar" data-slot="'+a[0]+'"><b>'+a[1]+'</b>'+attOf(D,P+"att|"+a[0]).map(function(f,i){return '<span class="fchip"><button type="button" class="fo" data-fopen="'+i+'" title="열어 보기">'+esc(f.name)+'</button><button type="button" data-fdel="'+i+'" title="지우기">×</button></span>'}).join("")+
+      '<label class="fadd">+ 사진/PDF 추가<input type="file" hidden accept="image/*,application/pdf" data-fadd multiple></label><span class="fst" data-fst></span><div class="fview" hidden></div></div>';
+  }).join("")+'</div>';
+}
+function attSave(cid,key,list){var D=d(cid);D.v[key]=list.length?JSON.stringify(list):"";pending[cid]=1;clearTimeout(timer);timer=setTimeout(flush,1500)}
+function attRedraw(P){var b=document.querySelector('[data-att="'+P+'"]');if(b)b.outerHTML=attPanel(P)}
+function attPrep(f){
+  return new Promise(function(ok,no){
+    var isPdf=f.type==="application/pdf"||/\.pdf$/i.test(f.name||"");
+    if(isPdf){
+      if(f.size>ATT_BYTES)return no(new Error("PDF는 6MB 이하로 올려 주세요."));
+      var fr=new FileReader();fr.onload=function(){ok({mime:"application/pdf",data:String(fr.result).split(",")[1]})};fr.onerror=function(){no(new Error("파일을 읽지 못했습니다."))};return fr.readAsDataURL(f);
+    }
+    if(!/^image\//.test(f.type||""))return no(new Error("사진(JPG·PNG)이나 PDF만 올릴 수 있습니다."));
+    var url=URL.createObjectURL(f),img=new Image();
+    img.onload=function(){
+      var sc=Math.min(1,2000/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement("canvas");
+      c.width=Math.round(img.naturalWidth*sc);c.height=Math.round(img.naturalHeight*sc);
+      var g=c.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,c.width,c.height);g.drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);
+      var q=.85,u=c.toDataURL("image/jpeg",q);
+      while(u.length>ATT_BYTES*1.3&&q>.4){q-=.15;u=c.toDataURL("image/jpeg",q)}
+      ok({mime:"image/jpeg",data:u.split(",")[1]});
+    };
+    img.onerror=function(){URL.revokeObjectURL(url);no(new Error("그림을 읽지 못했습니다."))};
+    img.src=url;
+  });
+}
+document.addEventListener("change",async function(e){
+  var t=e.target;if(!t.matches||!t.matches("input[data-fadd]"))return;
+  var box=t.closest("[data-att]"),row=t.closest("[data-slot]"),P=box.dataset.att,key=P+"att|"+row.dataset.slot,st=row.querySelector("[data-fst]"),files=[].slice.call(t.files),cid=state.sel;
+  t.value="";
+  for(var i=0;i<files.length;i++){
+    var f=files[i],list=attOf(d(cid),key);
+    if(list.length>=ATT_MAX){st.textContent="한 항목에 "+ATT_MAX+"개까지 올릴 수 있습니다.";break}
+    st.textContent=f.name+" 올리는 중…";
+    try{
+      var up=await attPrep(f),r=await api("attach.put",{mime:up.mime,name:f.name,data:up.data});
+      attSave(cid,key,attOf(d(cid),key).concat([{id:r.id,name:r.name,mime:r.mime,at:todayLocal()}]));
+      if(state.sel===cid){attRedraw(P);var nb=document.querySelector('[data-att="'+P+'"] [data-slot="'+row.dataset.slot+'"] [data-fst]');if(nb&&i<files.length-1)nb.textContent="올리는 중…"}
+    }catch(err){var cur=document.querySelector('[data-att="'+P+'"] [data-slot="'+row.dataset.slot+'"] [data-fst]')||st;cur.textContent=err.message;break}
+  }
+});
+var attBlob={};
+function attB64(b64,mime){var bin=atob(b64),u=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new Blob([u],{type:mime})}
+function openAtt(btn){
+  var row=btn.closest("[data-slot]"),box=btn.closest("[data-att]"),key=box.dataset.att+"att|"+row.dataset.slot,f=attOf(d(state.sel),key)[+btn.dataset.fopen],view=row.querySelector(".fview"),st=row.querySelector("[data-fst]");
+  if(!f)return;
+  if(!view.hidden&&view.dataset.fid===f.id){view.hidden=true;view.innerHTML="";return}
+  var show=function(url){
+    view.dataset.fid=f.id;view.hidden=false;
+    view.innerHTML='<div class="fst"><a href="'+url+'" target="_blank" rel="noopener">새 탭에서 열기</a></div>'+(f.mime==="application/pdf"?'<iframe src="'+url+'" title="'+esc(f.name)+'"></iframe>':'<img src="'+url+'" alt="'+esc(f.name)+'">');
+  };
+  if(attBlob[f.id])return show(attBlob[f.id]);
+  st.textContent="불러오는 중…";
+  api("attach.get",{id:f.id}).then(function(r){var u=URL.createObjectURL(attB64(r.data,r.mime));attBlob[f.id]=u;st.textContent="";show(u)},function(e){st.textContent=e.message});
+}
+function delAtt(btn){
+  var row=btn.closest("[data-slot]"),box=btn.closest("[data-att]"),P=box.dataset.att,key=P+"att|"+row.dataset.slot,list=attOf(d(state.sel),key),i=+btn.dataset.fdel,f=list[i];
+  if(!f||!confirm('"'+f.name+'" 파일을 지울까요?'))return;
+  list.splice(i,1);attSave(state.sel,key,list);attRedraw(P);
+  api("attach.del",{id:f.id}).catch(function(){});
+}
 document.addEventListener("click",function(e){
   var b=e.target.closest&&e.target.closest("[data-savepic]");if(!b)return;
   var paper=b.closest(".paper"),old=b.textContent;b.textContent="만드는 중…";
@@ -910,7 +1015,7 @@ document.addEventListener("click",function(e){
     if(err||!window.html2canvas){b.textContent=old;alert("그림 저장 기능을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.");return}
     clearSel();
     window.html2canvas(paper,{scale:2,backgroundColor:"#ffffff",useCORS:true,onclone:function(doc){
-      doc.querySelectorAll("[data-savepic],.mini,.add").forEach(function(x){x.style.display="none"});
+      doc.querySelectorAll("[data-savepic],.closebtn,.att,.mini,.add").forEach(function(x){x.style.display="none"});
       doc.querySelectorAll("input").forEach(function(i){i.setAttribute("placeholder","")});doc.querySelectorAll(".help").forEach(function(x){x.style.display="none"});doc.querySelectorAll(".rdel").forEach(function(x){x.style.display="none"});doc.querySelectorAll(".rowtools").forEach(function(x){x.style.display="none"});doc.querySelectorAll("textarea").forEach(function(t){var dv=doc.createElement("div");dv.textContent=t.value;dv.style.cssText="white-space:pre-wrap;line-height:1.55;padding:10px;border:1px solid #ccd;border-radius:8px;min-height:"+(t.value?0:60)+"px";if(!t.value){dv.parentNode;}t.parentNode.replaceChild(dv,t)});
       doc.querySelectorAll(".paper").forEach(function(p){p.style.overflow="visible";p.style.maxWidth="none"});
     }}).then(function(cv){
