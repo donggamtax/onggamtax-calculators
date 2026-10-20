@@ -164,6 +164,7 @@ body:has(.app[data-wide="1"]) .wrap{max-width:1700px}
 .closebtn{position:absolute;top:8px;left:8px;z-index:2;border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:4px 9px;font-size:12px;cursor:pointer;color:var(--ink)}
 .closebtn.tb{position:static;margin-left:auto;padding:6px 14px;font-size:13px}
 .closebtn.on,.paper.closed .closebtn{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.opin{border:1px solid var(--line);border-radius:8px;padding:10px 12px}.opin .sh{font-weight:700;margin-bottom:6px}.opin textarea{width:100%;min-height:120px;resize:vertical;font:inherit;line-height:1.5;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);box-sizing:border-box}
 .pgrid{display:flex;flex-direction:column}.pgrid>.pside{order:-1}.pside .att{margin:0 0 14px}
 @media (min-width:1280px){body:has(.pgrid) .wrap{max-width:1500px}.pgrid{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:14px;align-items:start}.pgrid>.pside{order:0;position:sticky;top:52px;max-height:calc(100vh - 70px);overflow:auto}.pside .att .ar b{min-width:0;flex-basis:100%}}
 .closednote{font-size:12.5px;color:var(--muted);text-align:center;margin:0 0 8px}
@@ -720,7 +721,7 @@ function periodTab(kind){
     return h.replace(/^(<div class="paper[^>]*>)/,'$1<button type="button" class="savepic" data-savepic title="이 서식을 이미지(PNG)로 저장">📷 그림으로 저장</button>'+cb);
   };
   var main=c2?'<div class="cmpgrid">'+wp(K.fn(id),id)+wp(K.fn(c2),c2)+'</div>':wp(K.fn(id),id);
-  if(kind==="vp")main='<div class="pgrid"><div class="pmain">'+main+'</div><aside class="pside">'+attPanel("vat|"+id+"|")+'</aside></div>';
+  if(kind==="vp")main='<div class="pgrid"><div class="pmain">'+main+'</div><aside class="pside">'+attPanel("vat|"+id+"|")+'<div class="opin"><div class="sh">결재자 의견</div><textarea data-k="'+esc("vat|"+id+"|opin")+'" rows="6" placeholder="결재할 때 남길 의견을 적어 두세요" aria-label="결재자 의견">'+esc(val("vat|"+id+"|opin"))+'</textarea></div></aside></div>';
   return bar+main;
 }
 function tabVat(){return periodTab("vp")}
