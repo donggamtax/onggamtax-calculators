@@ -944,7 +944,7 @@ function applyLocks(){
     });
   });
 }
-var ATTS=[["vsr","부가세 신고서"],["htx","홈택스 통합조회"],["hlp","신고도움 서비스"]],ATT_MAX=8,ATT_BYTES=6000000;
+var ATTS=[["vsr","부가세 신고서"],["htx","홈택스 통합조회"],["hlp","신고도움 서비스"],["etc","기타"]],ATT_MAX=8,ATT_BYTES=6000000;
 function attOf(D,key){try{var a=JSON.parse(D.v[key]||"[]");return Array.isArray(a)?a:[]}catch(e){return[]}}
 function attPanel(P){
   var D=d(state.sel);
