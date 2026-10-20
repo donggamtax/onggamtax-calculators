@@ -70,6 +70,9 @@ function route(req) {
     case "board.save": return boardSave(req, who);
     case "board.delete": return boardDelete(req);
     case "guide.upload": return guideUpload(req, who);
+    case "attach.put": return attachPut(req, who);
+    case "attach.get": return attachGet(req);
+    case "attach.del": return attachDel(req);
     case "progress.lists": return progressLists(who);
     case "progress.listSave": return progressListSave(req);
     case "progress.cols": return progressCols(req);
@@ -419,6 +422,48 @@ function guideUpload(req, who) {
   const file = guideFolder().createFile(Utilities.newBlob(bytes, mime, "guide-" + Date.now() + "." + ext));
   file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
   return { id: file.getId() };
+}
+// ── 결재서식 첨부(부가세 신고서·홈택스 통합조회·신고도움 서비스) ──────────────
+// 사진(JPG/PNG)이나 PDF를 구글 드라이브의 비공개 폴더에 저장한다. 링크로 공유하지 않고, 직원이 로그인한 화면에서만 내려받아 본다.
+// 드라이브 권한이 필요하므로 처음 쓸 때 스크립트 소유자가 권한을 한 번 허용해야 한다.
+function attachFolder() {
+  const sp = PropertiesService.getScriptProperties(), id = sp.getProperty("ATTACH_FOLDER");
+  if (id) { try { return DriveApp.getFolderById(id); } catch (e) {} }
+  const it = DriveApp.getFoldersByName("동감_결재첨부"), f = it.hasNext() ? it.next() : DriveApp.createFolder("동감_결재첨부");
+  sp.setProperty("ATTACH_FOLDER", f.getId());
+  return f;
+}
+function attachPut(req, who) {
+  const mime = String(req.mime || "");
+  if (!/^(image\/(jpeg|png)|application\/pdf)$/.test(mime)) throw fail("사진(JPG·PNG)이나 PDF만 올릴 수 있습니다.");
+  const b64 = typeof req.data === "string" ? req.data : "";
+  if (!b64 || b64.length > 8400000) throw fail("파일이 너무 큽니다. 6MB 이하로 올려 주세요.");
+  const bytes = Utilities.base64Decode(b64);
+  if (!bytes.length || bytes.length > 6000000) throw fail("파일이 너무 큽니다. 6MB 이하로 올려 주세요.");
+  const h = [0, 1, 2, 3].map(i => (bytes[i] || 0) & 255); // 구글은 바이트를 -128~127로 준다
+  const ok = mime === "application/pdf" ? (h[0] === 37 && h[1] === 80 && h[2] === 68 && h[3] === 70)
+    : mime === "image/png" ? (h[0] === 137 && h[1] === 80) : (h[0] === 255 && h[1] === 216);
+  if (!ok) throw fail("파일 내용이 올바르지 않습니다.");
+  const ext = mime === "application/pdf" ? "pdf" : mime === "image/png" ? "png" : "jpg";
+  const name = String(req.name || "").replace(/[\\\/:*?"<>|\r\n]/g, "").trim().slice(0, 60) || ("첨부." + ext);
+  const file = attachFolder().createFile(Utilities.newBlob(bytes, mime, Date.now() + "_" + who + "_" + name));
+  return { id: file.getId(), name: name, mime: mime, size: bytes.length };
+}
+function attachFile(id) {
+  id = String(id || "");
+  if (!/^[A-Za-z0-9_-]{20,70}$/.test(id)) throw fail("첨부 파일이 올바르지 않습니다.");
+  let file; try { file = DriveApp.getFileById(id); } catch (e) { throw fail("첨부 파일을 찾을 수 없습니다.", 404); }
+  const fid = attachFolder().getId(), ps = file.getParents();
+  while (ps.hasNext()) if (ps.next().getId() === fid) return file;
+  throw fail("첨부 파일이 아닙니다.", 403);
+}
+function attachGet(req) {
+  const file = attachFile(req.id), blob = file.getBlob();
+  return { mime: blob.getContentType(), name: file.getName(), data: Utilities.base64Encode(blob.getBytes()) };
+}
+function attachDel(req) {
+  attachFile(req.id).setTrashed(true);
+  return { ok: true };
 }
 function boardOf(req) {
   const b = BOARDS[String(req.board || "")];
