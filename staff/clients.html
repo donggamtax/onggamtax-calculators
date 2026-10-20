@@ -315,7 +315,8 @@ function applyNum(el){
   var c=0,n=0;for(;c<f.length&&n<before;c++){if(/[\d.\-]/.test(f[c]))n++}
   try{el.setSelectionRange(c,c)}catch(e){}
 }
-function ck(k,label){return '<input type="checkbox" data-ck="'+esc(k)+'"'+(val(k)?" checked":"")+' aria-label="'+esc(label||"체크")+'">'}
+var APPROVER=true; /* 대표세무사 결재 체크는 서버가 알려준 결재자만 바꾼다 */
+function ck(k,label){return '<input type="checkbox" data-ck="'+esc(k)+'"'+(val(k)?" checked":"")+(/\|s2$/.test(k)&&!APPROVER?' disabled title="대표세무사만 체크할 수 있습니다"':'')+' aria-label="'+esc(label||"체크")+'">'}
 function sel(k,opts){return '<select data-k="'+esc(k)+'"><option value=""></option>'+opts.map(function(o){return '<option'+(val(k)===o?" selected":"")+'>'+o+'</option>'}).join("")+'</select>'}
 function wn(k,ph,def){return '<textarea class="wn" rows="1" data-k="'+esc(k)+'" placeholder="'+esc(ph||"")+'" aria-label="'+esc(ph||k)+'">'+esc(val(k,def))+'</textarea>'}
 function repSize(v){return Math.max(4,Math.ceil(String(v||"").length*1.8)+1)}
@@ -1128,6 +1129,7 @@ window.addEventListener("beforeunload",function(e){var dirty=busy||Object.keys(p
 
 function applyLoad(r,lazy){
   if(r.people&&r.people.length)PEOPLE=r.people;
+  if("approver" in r)APPROVER=r.approver!==false;
   ["vat","inc","corp"].forEach(function(k){var t=r.templates&&r.templates[k];if(Array.isArray(t)&&t.length)TPL[k]=t});
   var by={};(r.data||[]).forEach(function(x){(by[x.id]=by[x.id]||[]).push(x)});
   CLIENTS=(r.clients||[]).map(function(c){return {id:c.id,name:c.name,type:c.type||"개인",owner:c.owner,svc:c.svc,status:c.status==="거래중"?"":c.status,reason:c.reason,tier:c.tier,tf:c.periods&&c.periods.tf?1:0,rep:(c.periods&&c.periods.rep)||"",by:c.by,at:c.at}});
