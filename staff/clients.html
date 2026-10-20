@@ -46,7 +46,7 @@ ul.cl button[aria-current=true]{background:var(--soft);font-weight:700}
 .dh{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 16px;margin-bottom:12px}
 .dh h2{margin:0;font-size:20px}
 .back{display:none;border:1px solid var(--line);background:none;color:var(--ink);border-radius:6px;padding:5px 10px;font:inherit;cursor:pointer;margin-bottom:10px}
-.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto;position:sticky;top:0;z-index:6;background:var(--panel)}
 .tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:9px 14px;color:var(--muted);font:inherit;cursor:pointer;white-space:nowrap}
 .tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--accent);font-weight:700}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 16px}
@@ -162,7 +162,11 @@ body:has(.app[data-wide="1"]) .wrap{max-width:1700px}
 .memo{margin-top:14px}.memo .sh{font-weight:700;margin-bottom:6px}
 .memo textarea{width:100%;min-height:240px;resize:vertical;font:inherit;line-height:1.55;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);box-sizing:border-box}
 .closebtn{position:absolute;top:8px;left:8px;z-index:2;border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:4px 9px;font-size:12px;cursor:pointer;color:var(--ink)}
-.paper.closed .closebtn{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.closebtn.tb{position:static;margin-left:auto;padding:6px 14px;font-size:13px}
+.closebtn.on,.paper.closed .closebtn{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.opin{border:1px solid var(--line);border-radius:8px;padding:10px 12px}.opin .sh{font-weight:700;margin-bottom:6px}.opin textarea{width:100%;min-height:120px;resize:vertical;font:inherit;line-height:1.5;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);box-sizing:border-box}
+.pgrid{display:flex;flex-direction:column}.pgrid>.pside{order:-1}.pside .att{margin:0 0 14px}
+@media (min-width:1280px){body:has(.pgrid) .wrap{max-width:1500px}.pgrid{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:14px;align-items:start}.pgrid>.pside{order:0;position:sticky;top:52px;max-height:calc(100vh - 70px);overflow:auto}.pside .att .ar b{min-width:0;flex-basis:100%}}
 .closednote{font-size:12.5px;color:var(--muted);text-align:center;margin:0 0 8px}
 .paper.closed input:disabled,.paper.closed select:disabled,.paper.closed textarea:disabled{opacity:1;color:inherit;-webkit-text-fill-color:currentColor;cursor:default}
 .att{margin:0 0 14px;border:1px solid var(--line);border-radius:8px;padding:10px 12px}
@@ -458,7 +462,6 @@ function paperVat(id){
   var h='<div class="paper" data-pid="'+id+'" data-vp="1"><h2 class="ttl">'+esc(name)+' 부가가치세 신고 체크리스트</h2>';
   h+='<div class="line"><label>상 호 '+inp(P+"co","상호",CLIENTS.filter(function(x){return x.id===state.sel})[0].name)+'</label><label>작성일 '+inp(P+"date","작성일")+'</label></div>'+
      '<div class="line"><label>담당자 '+sel(P+"owner",PEOPLE)+'</label><label>업 종 '+inp(P+"biz","업종",val("info|업종"))+'</label><label>사업자유형 <select data-k="'+P+'kind">'+["법인","개인"].map(function(o){return '<option'+((val(P+"kind")||CLIENTS.filter(function(x){return x.id===state.sel})[0].type)===o?" selected":"")+'>'+o+'</option>'}).join("")+'</select></label></div>';
-  h+=attPanel(P); // 결재서식 첨부: 결재할 때 바로 보이도록 위쪽에 둔다
   // 과세기간 / 부가율: 가로로 펼침, 열 이름 수정 가능
   h+='<table class="ht"><tr><th style="width:84px">과세기간</th>'+cols.map(function(i){return '<th><input type="text" style="text-align:center;font-weight:500" data-k="'+P+'ph'+i+'" value="'+esc(vPh(D,id,i))+'" aria-label="과세기간 이름"></th>'}).join("")+'<th style="width:22%">비고</th></tr>'+
      '<tr><th>부가율</th>'+cols.map(function(i){return '<td class="c">'+vcPv(D,id,i,"예: 75.9 / 82.6")+'</td>'}).join("")+'<td>'+inp(P+"pn","비고")+'</td></tr></table>'+
@@ -709,13 +712,17 @@ function periodTab(kind){
   var others=list.filter(function(x){return x.id!==id}),c2=state.cmp[kind];
   if(!others.some(function(x){return x.id===c2}))c2=state.cmp[kind]=null;
   if(others.length)bar+='<div class="ctl"><label style="flex-direction:row;align-items:center;gap:6px">나란히 보기 <select data-cmp="'+kind+'"><option value="">안 함</option>'+others.map(function(x){return '<option value="'+x.id+'"'+(c2===x.id?' selected':'')+'>'+esc(x.name||"(이름 없음)")+'</option>'}).join("")+'</select></label><span class="sub">두 신고서를 좌우로 놓고 비교합니다. 위 칩에서 고른 것이 왼쪽입니다.</span></div>';
+  var pf0=PREF[kind],cl0=pf0&&pf0!=="tax|"?val(pf0+id+"|closed"):"";
+  if(pf0&&pf0!=="tax|")bar=bar.replace('</div>','<button type="button" class="closebtn tb'+(cl0?' on':'')+'" data-close="'+pf0+id+'|" title="마감하면 숫자를 고칠 수 없고 진도체크 작업일에 날짜가 적힙니다">'+(cl0?'🔓 마감 풀기':'🔒 마감')+'</button></div>');
   var wp=function(h,pid){
     var pf=PREF[kind],cl=pf&&pf!=="tax|"?val(pf+pid+"|closed"):"",cb="";
-    if(pf&&pf!=="tax|")cb='<button type="button" class="closebtn" data-close="'+pf+pid+'|" title="마감하면 숫자를 고칠 수 없고 진도체크 작업일에 날짜가 적힙니다">'+(cl?'🔓 마감 풀기':'🔒 마감')+'</button>'+(cl?'<div class="closednote">'+esc(fmtMD(cl))+' 마감됨 · 숫자를 고치려면 마감을 풀어 주세요</div>':'');
+    if(pf&&pf!=="tax|")cb=(pid!==id?'<button type="button" class="closebtn'+(cl?' on':'')+'" data-close="'+pf+pid+'|" title="마감하면 숫자를 고칠 수 없고 진도체크 작업일에 날짜가 적힙니다">'+(cl?'🔓 마감 풀기':'🔒 마감')+'</button>':'')+(cl?'<div class="closednote">'+esc(fmtMD(cl))+' 마감됨 · 숫자를 고치려면 마감을 풀어 주세요</div>':'');
     if(cl)h=h.replace('class="paper"','class="paper closed" data-closed="1"');
     return h.replace(/^(<div class="paper[^>]*>)/,'$1<button type="button" class="savepic" data-savepic title="이 서식을 이미지(PNG)로 저장">📷 그림으로 저장</button>'+cb);
   };
-  return bar+(c2?'<div class="cmpgrid">'+wp(K.fn(id),id)+wp(K.fn(c2),c2)+'</div>':wp(K.fn(id),id));
+  var main=c2?'<div class="cmpgrid">'+wp(K.fn(id),id)+wp(K.fn(c2),c2)+'</div>':wp(K.fn(id),id);
+  if(kind==="vp")main='<div class="pgrid"><div class="pmain">'+main+'</div><aside class="pside">'+attPanel("vat|"+id+"|")+'<div class="opin"><div class="sh">결재자 의견</div><textarea data-k="'+esc("vat|"+id+"|opin")+'" rows="6" placeholder="결재할 때 남길 의견을 적어 두세요" aria-label="결재자 의견">'+esc(val("vat|"+id+"|opin"))+'</textarea></div></aside></div>';
+  return bar+main;
 }
 function tabVat(){return periodTab("vp")}
 function tabInc(){return periodTab("ip")}
