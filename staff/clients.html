@@ -165,7 +165,7 @@ body:has(.app[data-wide="1"]) .wrap{max-width:1700px}
 .paper.closed .closebtn{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .closednote{font-size:12.5px;color:var(--muted);text-align:center;margin:0 0 8px}
 .paper.closed input:disabled,.paper.closed select:disabled,.paper.closed textarea:disabled{opacity:1;color:inherit;-webkit-text-fill-color:currentColor;cursor:default}
-.att{margin-top:16px;border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.att{margin:0 0 14px;border:1px solid var(--line);border-radius:8px;padding:10px 12px}
 .att .sh{font-weight:700;margin-bottom:6px}
 .att .ar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}
 .att .ar b{min-width:110px;font-size:13px}
@@ -458,6 +458,7 @@ function paperVat(id){
   var h='<div class="paper" data-pid="'+id+'" data-vp="1"><h2 class="ttl">'+esc(name)+' 부가가치세 신고 체크리스트</h2>';
   h+='<div class="line"><label>상 호 '+inp(P+"co","상호",CLIENTS.filter(function(x){return x.id===state.sel})[0].name)+'</label><label>작성일 '+inp(P+"date","작성일")+'</label></div>'+
      '<div class="line"><label>담당자 '+sel(P+"owner",PEOPLE)+'</label><label>업 종 '+inp(P+"biz","업종",val("info|업종"))+'</label><label>사업자유형 <select data-k="'+P+'kind">'+["법인","개인"].map(function(o){return '<option'+((val(P+"kind")||CLIENTS.filter(function(x){return x.id===state.sel})[0].type)===o?" selected":"")+'>'+o+'</option>'}).join("")+'</select></label></div>';
+  h+=attPanel(P); // 결재서식 첨부: 결재할 때 바로 보이도록 위쪽에 둔다
   // 과세기간 / 부가율: 가로로 펼침, 열 이름 수정 가능
   h+='<table class="ht"><tr><th style="width:84px">과세기간</th>'+cols.map(function(i){return '<th><input type="text" style="text-align:center;font-weight:500" data-k="'+P+'ph'+i+'" value="'+esc(vPh(D,id,i))+'" aria-label="과세기간 이름"></th>'}).join("")+'<th style="width:22%">비고</th></tr>'+
      '<tr><th>부가율</th>'+cols.map(function(i){return '<td class="c">'+vcPv(D,id,i,"예: 75.9 / 82.6")+'</td>'}).join("")+'<td>'+inp(P+"pn","비고")+'</td></tr></table>'+
@@ -491,7 +492,7 @@ function paperVat(id){
       h+='<tr><td>'+tx+'</td><td class="cb">'+ck(P+"c"+i,it.t)+'</td><td>'+inp(P+"n"+i,it.ph||"비고")+'</td></tr>';
     }
   });
-  h+='</table>'+signBox(P)+'<div class="sub" data-signnote style="text-align:right;margin-top:4px"></div>'+attPanel(P)+'</div>';
+  h+='</table>'+signBox(P)+'<div class="sub" data-signnote style="text-align:right;margin-top:4px"></div></div>';
   return h.replace(/ placeholder="[^"]*"/g,"");
 }
 /* ③ 종합소득세 신고 체크리스트 */
