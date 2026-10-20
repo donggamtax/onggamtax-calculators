@@ -173,6 +173,8 @@ body:has(.app[data-wide="1"]) .wrap{max-width:1700px}
 .att .fchip button{border:0;background:transparent;cursor:pointer;color:var(--muted);font-size:13px;padding:0 4px}
 .att .fchip .fo{border:0;background:transparent;cursor:pointer;color:var(--ink);font-size:12.5px;padding:0}
 .att .fadd{border:1px dashed var(--line);border-radius:14px;padding:2px 10px;font-size:12.5px;cursor:pointer;color:var(--muted)}
+.att .ar:focus{outline:2px solid var(--accent);outline-offset:1px;border-radius:6px}
+.att .fhint{display:none}.att .ar:focus .fhint{display:inline}
 .att .fview{flex-basis:100%;margin-top:4px}
 .att .fview img{max-width:100%;border:1px solid var(--line)}
 .att .fview iframe{width:100%;height:640px;border:1px solid var(--line)}
@@ -945,9 +947,9 @@ var ATTS=[["vsr","부가세 신고서"],["htx","홈택스 통합조회"],["hlp",
 function attOf(D,key){try{var a=JSON.parse(D.v[key]||"[]");return Array.isArray(a)?a:[]}catch(e){return[]}}
 function attPanel(P){
   var D=d(state.sel);
-  return '<div class="att" data-att="'+esc(P)+'"><div class="sh">결재서식 첨부 <span class="fst">사진(JPG·PNG)이나 PDF를 올리면 여기서 바로 열어 볼 수 있습니다</span></div>'+ATTS.map(function(a){
-    return '<div class="ar" data-slot="'+a[0]+'"><b>'+a[1]+'</b>'+attOf(D,P+"att|"+a[0]).map(function(f,i){return '<span class="fchip"><button type="button" class="fo" data-fopen="'+i+'" title="열어 보기">'+esc(f.name)+'</button><button type="button" data-fdel="'+i+'" title="지우기">×</button></span>'}).join("")+
-      '<label class="fadd">+ 사진/PDF 추가<input type="file" hidden accept="image/*,application/pdf" data-fadd multiple></label><span class="fst" data-fst></span><div class="fview" hidden></div></div>';
+  return '<div class="att" data-att="'+esc(P)+'"><div class="sh">결재서식 첨부 <span class="fst">사진(JPG·PNG)이나 PDF를 올리면 여기서 바로 열어 볼 수 있습니다. 항목 줄을 클릭한 뒤 Ctrl+V로 캡처한 사진을 바로 붙여 넣을 수도 있습니다.</span></div>'+ATTS.map(function(a){
+    return '<div class="ar" data-slot="'+a[0]+'" tabindex="0"><b>'+a[1]+'</b>'+attOf(D,P+"att|"+a[0]).map(function(f,i){return '<span class="fchip"><button type="button" class="fo" data-fopen="'+i+'" title="열어 보기">'+esc(f.name)+'</button><button type="button" data-fdel="'+i+'" title="지우기">×</button></span>'}).join("")+
+      '<label class="fadd">+ 사진/PDF 추가<input type="file" hidden accept="image/*,application/pdf" data-fadd multiple></label><span class="fst fhint">Ctrl+V로 붙여넣기</span><span class="fst" data-fst></span><div class="fview" hidden></div></div>';
   }).join("")+'</div>';
 }
 function attSave(cid,key,list){var D=d(cid);D.v[key]=list.length?JSON.stringify(list):"";pending[cid]=1;clearTimeout(timer);timer=setTimeout(flush,1500)}
@@ -973,20 +975,33 @@ function attPrep(f){
     img.src=url;
   });
 }
-document.addEventListener("change",async function(e){
-  var t=e.target;if(!t.matches||!t.matches("input[data-fadd]"))return;
-  var box=t.closest("[data-att]"),row=t.closest("[data-slot]"),P=box.dataset.att,key=P+"att|"+row.dataset.slot,st=row.querySelector("[data-fst]"),files=[].slice.call(t.files),cid=state.sel;
-  t.value="";
+async function attUpload(row,files){
+  var box=row.closest("[data-att]"),P=box.dataset.att,slot=row.dataset.slot,key=P+"att|"+slot,cid=state.sel,focused=document.activeElement===row,sel='[data-att="'+P+'"] [data-slot="'+slot+'"]';
+  var stOf=function(){return document.querySelector(sel+" [data-fst]")||row.querySelector("[data-fst]")};
   for(var i=0;i<files.length;i++){
     var f=files[i],list=attOf(d(cid),key);
-    if(list.length>=ATT_MAX){st.textContent="한 항목에 "+ATT_MAX+"개까지 올릴 수 있습니다.";break}
-    st.textContent=f.name+" 올리는 중…";
+    if(list.length>=ATT_MAX){stOf().textContent="한 항목에 "+ATT_MAX+"개까지 올릴 수 있습니다.";break}
+    stOf().textContent=f.name+" 올리는 중…";
     try{
-      var up=await attPrep(f),r=await api("attach.put",{mime:up.mime,name:f.name,data:up.data});
+      var up=await attPrep(f),r=await api("attach.put",{mime:up.mime,name:up.mime==="image/jpeg"?f.name.replace(/\.(png|jpe?g|webp|heic|gif|bmp)$/i,"")+".jpg":f.name,data:up.data});
       attSave(cid,key,attOf(d(cid),key).concat([{id:r.id,name:r.name,mime:r.mime,at:todayLocal()}]));
-      if(state.sel===cid){attRedraw(P);var nb=document.querySelector('[data-att="'+P+'"] [data-slot="'+row.dataset.slot+'"] [data-fst]');if(nb&&i<files.length-1)nb.textContent="올리는 중…"}
-    }catch(err){var cur=document.querySelector('[data-att="'+P+'"] [data-slot="'+row.dataset.slot+'"] [data-fst]')||st;cur.textContent=err.message;break}
+      if(state.sel===cid){attRedraw(P);var nr=document.querySelector(sel);if(nr&&focused)nr.focus();if(i<files.length-1)stOf().textContent="올리는 중…"}
+    }catch(err){stOf().textContent=err.message;break}
   }
+}
+document.addEventListener("change",function(e){
+  var t=e.target;if(!t.matches||!t.matches("input[data-fadd]"))return;
+  var files=[].slice.call(t.files),row=t.closest("[data-slot]");t.value="";attUpload(row,files);
+});
+/* Ctrl+V: 항목 줄을 클릭해 둔 상태에서 캡처·복사한 사진(또는 PDF 파일)을 붙여넣는다 */
+document.addEventListener("paste",function(e){
+  var a=document.activeElement,row=a&&a.closest?a.closest("[data-slot]"):null;if(!row||!row.closest("[data-att]"))return;
+  var cd=e.clipboardData,items=cd&&cd.items?[].slice.call(cd.items):[],fs=[];
+  items.forEach(function(it){if(it.kind==="file"&&/^(image\/|application\/pdf)/.test(it.type)){var f=it.getAsFile();if(f)fs.push(f)}});
+  if(!fs.length)return;
+  e.preventDefault();
+  var t=new Date(),stamp=(t.getMonth()+1)+"-"+t.getDate()+" "+("0"+t.getHours()).slice(-2)+("0"+t.getMinutes()).slice(-2);
+  attUpload(row,fs.map(function(f,i){var ext=f.type==="application/pdf"?"pdf":f.type==="image/png"?"png":"jpg";return new File([f],"붙여넣기 "+stamp+(fs.length>1?"-"+(i+1):"")+"."+ext,{type:f.type})}));
 });
 var attBlob={};
 function attB64(b64,mime){var bin=atob(b64),u=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new Blob([u],{type:mime})}
