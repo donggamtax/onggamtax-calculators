@@ -445,14 +445,14 @@ function parsePaste(text){
       else if(t==="num"){var fm=String(v).replace(/[^\d]/g,"");if(fm)d[k]=fm}
       else d[k]=v;
     });
-    if(c)items.push({clientId:c.id,data:d});
+    if(c){var ov=oi>=0?(r[oi]||"").trim():"";if(ov&&!c.extra&&ov!==c.owner)d.xo=ov;items.push({clientId:c.id,data:d})}  // 붙여넣은 담당자가 기장 명단과 다르면 이 신고리스트에서만 담당자로 쓴다
     else{var xk=normName(nm);if(seenX[xk])return;seenX[xk]=1;miss.push(nm);extra.push({name:nm,type:ti>=0&&/법인/.test(r[ti]||"")?"법인":"개인",owner:oi>=0?(r[oi]||"").trim():"",data:d})}
   });
   return {items:items,miss:miss,extra:extra,baddate:baddate};
 }
 function importDlg(){
   var m=document.createElement("div");m.className="dlg";
-  m.innerHTML='<div><h2>엑셀에서 붙여넣기</h2><p class="sub">엑셀의 표를 머리글 줄(완료여부, 우선순위, 상호, 담당자 …)부터 복사해 아래에 붙여넣으세요. 이미 있는 업체는 붙여넣은 내용으로 덮어씁니다(빈 칸은 그대로 둡니다). 업체별 기장 명단에 있는 업체의 구분과 담당자는 명단을 따르고, 명단에 없는 업체는 붙여넣은 구분(개인/법인)과 담당자로 새로 추가됩니다.</p><textarea id="pt" placeholder="여기에 붙여넣기"></textarea><p class="sub">머리글은 이 표의 열 이름과 같게 적으세요(<b id="phn"></b>). 필요한 열만 있으면 되고 상호는 꼭 필요합니다. 날짜는 6/11 형식, 금액은 숫자, 체크 열은 O(또는 아무 글자)를 적으면 체크됩니다. 구분·담당자는 업체 정보를 따르니 열이 있어도 무시합니다.</p><label class="sub"><input type="checkbox" id="pxtra" checked> 명단에 없는 업체도 새로 추가</label><p class="sub" id="pi"></p><div class="row"><button class="btn ghost" id="ptpl">양식 받기(CSV)</button><button class="btn" id="pgo">넣기</button><button class="btn ghost" id="pno">닫기</button></div></div>';
+  m.innerHTML='<div><h2>엑셀에서 붙여넣기</h2><p class="sub">엑셀의 표를 머리글 줄(완료여부, 우선순위, 상호, 담당자 …)부터 복사해 아래에 붙여넣으세요. 이미 있는 업체는 붙여넣은 내용으로 덮어씁니다(빈 칸은 그대로 둡니다). 업체별 기장 명단에 있는 업체의 구분은 명단을 따르고, 담당자는 붙여넣은 값이 명단과 다르면 이 신고리스트에서만 붙여넣은 값으로 씁니다. 명단에 없는 업체는 붙여넣은 구분(개인/법인)과 담당자로 새로 추가됩니다.</p><textarea id="pt" placeholder="여기에 붙여넣기"></textarea><p class="sub">머리글은 이 표의 열 이름과 같게 적으세요(<b id="phn"></b>). 필요한 열만 있으면 되고 상호는 꼭 필요합니다. 날짜는 6/11 형식, 금액은 숫자, 체크 열은 O(또는 아무 글자)를 적으면 체크됩니다. 구분·담당자는 업체 정보를 따르니 열이 있어도 무시합니다.</p><label class="sub"><input type="checkbox" id="pxtra" checked> 명단에 없는 업체도 새로 추가</label><p class="sub" id="pi"></p><div class="row"><button class="btn ghost" id="ptpl">양식 받기(CSV)</button><button class="btn" id="pgo">넣기</button><button class="btn ghost" id="pno">닫기</button></div></div>';
   document.body.appendChild(m);
   m.querySelector("#phn").textContent=cols().filter(function(c){return c.t!=="auto"||c.k==="name"}).map(function(c){return c.l}).join(", ");var ta=m.querySelector("#pt"),pi=m.querySelector("#pi"),res=null;
   var px=m.querySelector("#pxtra"),upd=function(){res=parsePaste(ta.value);pi.className=res.error?"err":"sub";if(res.error){pi.textContent=res.error;return}
