@@ -234,6 +234,7 @@ input.vauto,.ht input.vauto{color:var(--muted)}
   <div class="app" id="app" data-view="list">
     <aside class="panel list">
       <input type="search" id="q" placeholder="업체명 검색" aria-label="업체명 검색">
+      <select id="sortSel" aria-label="정렬" style="width:100%;margin-top:6px"><option value="">정렬: 등록순</option><option value="name">정렬: 가나다순</option><option value="owner">정렬: 담당자순 (가나다)</option></select>
       <div class="chips" id="chips"></div>
       <div class="chips" id="chips2"></div>
       <div class="chips" id="chips3"></div>
@@ -297,7 +298,7 @@ var TPL=defaultTpl();
 var TPLNAME={vat:"부가세",inc:"소득세",corp:"법인세"};
 function tplIds(kind){var a=[];if(kind==="vat")TPL.vat.forEach(function(it){if(!it.k)a.push(it.id)});else TPL[kind].forEach(function(g){g.rows.forEach(function(r){a.push(r.id)})});return a}
 
-var state={svc:"전체",tfo:false,showOff:false,owner:"전체",adding:false,askDel:null,cmp:{},sel:null,tab:"기본정보",filter:"전체",q:"",vp:null,ip:null,cp:null,ask:null,data:{}};
+var state={sort:"",svc:"전체",tfo:false,showOff:false,owner:"전체",adding:false,askDel:null,cmp:{},sel:null,tab:"기본정보",filter:"전체",q:"",vp:null,ip:null,cp:null,ask:null,data:{}};
 var seq=10;
 function d(id){ if(!state.data[id]) state.data[id]=buildData({},[]); return state.data[id]; }
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -325,6 +326,7 @@ function fitWn(el){el.style.height="auto";el.style.height=el.scrollHeight+"px"}
 function fitAllWn(){document.querySelectorAll("textarea.wn,textarea.ag").forEach(fitWn)}
 function ta(k,cls){return '<textarea class="'+(cls||"")+'" data-k="'+esc(k)+'" aria-label="'+esc(k)+'">'+esc(val(k))+'</textarea>'}
 
+try{var sv0=localStorage.getItem("clients.sort");if(sv0==="name"||sv0==="owner"){state.sort=sv0;document.addEventListener("DOMContentLoaded",function(){var ss=document.getElementById("sortSel");if(ss)ss.value=sv0})}}catch(x){}
 function drawList(){
   var chip=function(attr,v,label,on){return '<button class="chip" type="button" data-'+attr+'="'+v+'" aria-pressed="'+on+'">'+label+'</button>'};
   $("#chips").innerHTML=["전체","법인","개인"].map(function(c){return chip("f",c,c,state.filter===c)}).join("");
@@ -333,6 +335,7 @@ function drawList(){
   state.showOff=state.owner==="폐업/이탈";
   $("#addbox").innerHTML=state.adding?'<div class="addf"><input type="text" id="addName" placeholder="새 업체명" aria-label="새 업체명"><div class="ctl" style="margin:6px 0 0"><select id="addType" aria-label="구분"><option>개인</option><option>법인</option></select><select id="addSvc" aria-label="기장/신고">'+SVCS.map(function(p){return '<option>'+p+'</option>'}).join("")+'</select><select id="addOwner" aria-label="담당자">'+PEOPLE.map(function(p){return '<option>'+p+'</option>'}).join("")+'</select><button class="btn sm" type="button" data-addc="1">추가</button><button class="btn ghost sm" type="button" data-addno="1">취소</button></div></div>':'<button class="btn ghost sm" type="button" data-adding="1" style="margin-bottom:6px">+ 업체 추가</button>';
   var rows=CLIENTS.filter(function(c){var off=stOf(c)!=="거래중";return off===state.showOff&&(state.filter==="전체"||c.type===state.filter)&&(state.svc==="전체"||c.svc===state.svc)&&(!state.tfo||c.tf)&&(state.showOff||state.owner==="전체"||c.owner===state.owner)&&(nameHit(c.name,state.q)||nameHit(c.rep,state.q))});
+  if(state.sort){var kc=function(a,b){return String(a||"~").localeCompare(String(b||"~"),"ko")};rows=rows.slice().sort(function(a,b){return state.sort==="owner"?(kc(a.owner,b.owner)||kc(a.name,b.name)):kc(a.name,b.name)})}
   var offN=CLIENTS.filter(function(c){return stOf(c)!=="거래중"}).length;
   $("#count").textContent=(state.showOff?"폐업·이탈 ":"거래중 ")+rows.length+"곳"+(state.showOff?"":" · 숨긴 폐업·이탈 "+offN+"곳")+"";
   $("#cl").innerHTML=rows.map(function(c){return '<li><button type="button" data-id="'+c.id+'" aria-current="'+(state.sel===c.id)+'"><span>'+esc(c.name||"(이름 없음)")+' <span class="tag">'+esc(c.svc||"기장")+'</span>'+(c.tf?' <span class="tag" style="background:var(--soft)">면세</span>':'')+(c.tier?' <span class="tag">'+esc(c.tier)+'</span>':'')+(stOf(c)!=="거래중"?' <span class="tag" style="background:var(--warn-bg);color:var(--warn)">'+stOf(c)+'</span>':'')+'</span><span class="sub">'+(c.rep?esc(c.rep)+' · ':'')+esc(c.owner||"미지정")+'</span></button></li>'}).join("")||'<li class="empty">'+(state.showOff?"폐업·이탈 처리한 업체가 없습니다":"검색 결과가 없습니다")+'</li>';
@@ -861,6 +864,7 @@ document.addEventListener("click",function(e){
 document.addEventListener("input",function(e){
   var t=e.target;
   if(t.id==="q"){state.q=t.value.trim();drawList();return}
+  if(t.id==="sortSel"){state.sort=t.value;try{localStorage.setItem("clients.sort",t.value)}catch(x){}drawList();return}
   if(!state.sel)return;
   var D=d(state.sel);
   if(t.classList.contains("num"))applyNum(t);
