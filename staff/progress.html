@@ -250,14 +250,14 @@ function summary(rows){
   if(isTax())return summaryTax(rows);
   var ps=S.people.slice(),extra={};rows.forEach(function(r){var o=r.c.owner||"(미지정)";if(S.people.indexOf(o)<0)extra[o]=1});
   ps=ps.concat(Object.keys(extra));
-  var tot={n:0,w:0,a:0,d:0},h='<table class="sm"><tr><th>담당자</th><th>개수</th><th>작업완료</th><th>진행률</th><th>결재완료</th><th>전달완료</th><th>잔여</th></tr>';
+  var tot={n:0,w:0,a:0,d:0},h='<table class="sm"><tr><th>담당자</th><th>개수</th><th>작업완료</th><th>진행률</th><th>결재완료</th><th>전달완료</th><th>잔여</th><th>최종완료율</th></tr>';
   ps.forEach(function(p){
     var rs=rows.filter(function(r){return (r.c.owner||"(미지정)")===p});if(!rs.length)return;
     var w=rs.filter(function(r){return r.d.work}).length,a=rs.filter(function(r){return okA(r.d)}).length,d=rs.filter(function(r){return r.d.deliv}).length;
     tot.n+=rs.length;tot.w+=w;tot.a+=a;tot.d+=d;
-    h+='<tr><td class="l">'+esc(p)+'</td><td>'+rs.length+'</td><td>'+w+'</td><td class="pb">'+pct(w,rs.length)+'</td><td>'+a+'</td><td>'+d+'</td><td>'+(rs.length-w)+'</td></tr>';
+    h+='<tr><td class="l">'+esc(p)+'</td><td>'+rs.length+'</td><td>'+w+'</td><td class="pb">'+pct(w,rs.length)+'</td><td>'+a+'</td><td>'+d+'</td><td>'+(rs.length-d)+'</td><td class="pb">'+pct(d,rs.length)+'</td></tr>';
   });
-  h+='<tr><th>합계</th><th>'+tot.n+'</th><th>'+tot.w+'</th><th>'+pct(tot.w,tot.n)+'</th><th>'+tot.a+'</th><th>'+tot.d+'</th><th>'+(tot.n-tot.w)+'</th></tr></table>';
+  h+='<tr><th>합계</th><th>'+tot.n+'</th><th>'+tot.w+'</th><th>'+pct(tot.w,tot.n)+'</th><th>'+tot.a+'</th><th>'+tot.d+'</th><th>'+(tot.n-tot.d)+'</th><th>'+pct(tot.d,tot.n)+'</th></tr></table>';
   return h;
 }
 function summaryTax(rows){
