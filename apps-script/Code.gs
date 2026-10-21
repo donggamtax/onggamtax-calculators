@@ -93,6 +93,7 @@ function route(req) {
     case "clients.save": return clientsSave(req, who);
     case "clients.add": return clientsAdd(req, who);
     case "clients.import": return clientsImport(req, who);
+    case "clients.setRep": return clientsSetRep(req, who);
     case "clients.delete": return clientsDelete(req, who);
   }
   throw fail("없는 요청입니다.", 404);
@@ -792,6 +793,38 @@ function clientsImport(req, who) {
     clLog(who, "", "", "업체 " + add.length + "곳 불러오기" + (skipped ? " (중복 " + skipped + "곳 건너뜀)" : ""));
     return { added: add.length, skipped: skipped };
   });
+}
+
+// 대표자명만 한꺼번에 고친다. items: [{ name, rep }]. dry=true면 바뀔 목록만 돌려주고 저장하지 않는다.
+// 업체명은 띄어쓰기와 (주)/㈜/주식회사 표기 차이를 무시하고 맞춘다. 다른 정보(회차·면세 등)는 건드리지 않는다.
+function clNameKey(v) { return String(v || "").replace(/\s+/g, "").replace(/\(주\)|㈜|주식회사/g, "").toLowerCase(); }
+function clientsSetRep(req, who) {
+  const items = (Array.isArray(req.items) ? req.items : []).slice(0, 1000).map(x => ({ name: String(x && x.name || "").trim().slice(0, 100), rep: String(x && x.rep || "").trim().slice(0, 40) })).filter(x => x.name && x.rep);
+  const run = () => {
+    const sh = clSheet(CL_SHEET, CL_COLS), rows = clAll(sh, CL_COLS.length), byKey = {}, dup = {};
+    rows.forEach((r, i) => { if (r[0] === "") return; const k = clNameKey(r[1]); if (byKey[k] !== undefined) dup[k] = 1; byKey[k] = i; });
+    const changes = [], notFound = [], ambiguous = [], seen = {};
+    items.forEach(it => {
+      const k = clNameKey(it.name); if (seen[k]) return; seen[k] = 1;
+      if (dup[k]) { ambiguous.push(it.name); return; }
+      const i = byKey[k]; if (i === undefined) { notFound.push(it.name); return; }
+      let per = {}; try { per = JSON.parse(rows[i][8] || "{}"); } catch (e) {}
+      if (String(per.rep || "") === it.rep) return;
+      changes.push({ i: i, id: Number(rows[i][0]), name: String(rows[i][1]), from: String(per.rep || ""), to: it.rep });
+    });
+    if (!req.dry && changes.length) {
+      const now = new Date().toISOString();
+      changes.forEach(c => {
+        let per = {}; try { per = JSON.parse(rows[c.i][8] || "{}"); } catch (e) {}
+        per.rep = c.to; per.hist = histPush(per.hist, who, now, ["대표자"]);
+        sh.getRange(c.i + 2, 9, 1, 3).setValues([[JSON.stringify(per), who, now]]);
+      });
+      clCacheClear();
+      clLog(who, "", "", "대표자명 " + changes.length + "곳 한꺼번에 수정");
+    }
+    return { changes: changes.map(c => ({ id: c.id, name: c.name, from: c.from, to: c.to })), notFound: notFound, ambiguous: ambiguous, saved: !req.dry };
+  };
+  return req.dry ? run() : withLock(run);
 }
 
 // items: [{ id, meta?, groups?: { 그룹: {키:값} 또는 null(삭제) } }]
