@@ -35,6 +35,22 @@ label{display:inline-flex;gap:6px;align-items:center;font-size:13px;color:var(--
 .lst tr{border-top:1px solid var(--line)}.lst tr:first-child{border-top:0}.lst tr:hover{background:var(--soft)}
 .lst td{padding:0 8px;font-size:13.5px;white-space:nowrap}.lst td:first-child{white-space:normal;padding:0}
 .bar{display:inline-block;width:70px;height:8px;border-radius:4px;background:var(--line);vertical-align:middle;margin-right:6px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ok)}
+.sumrow{display:flex;gap:18px;align-items:stretch;flex-wrap:wrap}.sumrow>.sumtab{flex:none;overflow-x:auto;max-width:100%}
+.trk{flex:1;min-width:300px;border:1px solid var(--line);border-radius:10px;padding:8px 12px 6px;background:linear-gradient(var(--soft),transparent 70%)}
+.trk h4{margin:0 0 4px;font-size:13px;font-weight:700;color:var(--accent);display:flex;justify-content:space-between;align-items:baseline}.trk h4 span{font-size:11.5px;font-weight:400;color:var(--muted,#667)}
+.lane{display:flex;align-items:center;gap:8px;height:38px}.lane .nm{flex:none;width:58px;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+.lane .rd{position:relative;flex:1;height:100%;border-bottom:2px dashed var(--line);margin-right:30px}
+.lane .rd::before{content:"";position:absolute;left:0;top:6px;bottom:-2px;border-left:2px solid var(--line)}
+.lane .fl{position:absolute;right:-30px;bottom:-3px;font-size:20px;line-height:1}
+.lane .rn{position:absolute;left:0;bottom:-2px;width:30px;text-align:center;transition:left 1.2s cubic-bezier(.3,1.3,.5,1);will-change:left}
+.lane .rn .ch{display:block;font-size:24px;line-height:26px}.lane.run .rn .ch{animation:hop .45s ease-in-out infinite}
+.lane .rn .pc{position:absolute;left:50%;top:-9px;transform:translateX(-50%);font-size:10px;font-weight:700;background:var(--accent);color:var(--accent-ink);border-radius:8px;padding:0 5px;white-space:nowrap}
+.lane .rn .cr{position:absolute;left:50%;top:-20px;transform:translateX(-50%) rotate(-12deg);font-size:14px}
+.lane .rn .ds{position:absolute;right:26px;bottom:6px;font-size:11px;opacity:.55}
+.lane.fin .rn .ch{animation:cheer .8s ease-in-out infinite}
+@keyframes hop{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-6px) rotate(4deg)}}
+@keyframes cheer{0%,100%{transform:scale(1)}50%{transform:scale(1.25) rotate(8deg)}}
+@media (prefers-reduced-motion:reduce){.lane .rn{transition:none}.lane.run .rn .ch,.lane.fin .rn .ch{animation:none}}
 table.sm,table.tb{border-collapse:collapse;width:auto}
 table.sm th,table.sm td,table.tb th,table.tb td{border:1px solid var(--line);padding:4px 8px;font-size:13px;text-align:center;white-space:nowrap}
 table.sm th,table.tb th{background:var(--soft);font-weight:500}
@@ -168,6 +184,41 @@ function joined(){
   out.sort(function(a,b){return String(a.c.owner||"~").localeCompare(String(b.c.owner||"~"),"ko")||((po[a.d.prio]==null?3:po[a.d.prio])-(po[b.d.prio]==null?3:po[b.d.prio]))||a.c.name.localeCompare(b.c.name,"ko")});
   return out;
 }
+/* 달리기 트랙: 담당자별 진행률(작업완료/개수)만큼 캐릭터가 결승선 쪽으로 달린다 */
+var RUNNERS=["🐰","🐱","🐶","🐻","🦊","🐼","🐸","🐥","🐹","🦄"];
+function trackLanes(rows){
+  var ps=S.people.slice(),extra={};rows.forEach(function(r){var o=r.c.owner||"(미지정)";if(S.people.indexOf(o)<0)extra[o]=1});
+  ps=ps.concat(Object.keys(extra));var out=[],best=0;
+  ps.forEach(function(p,i){
+    var rs=rows.filter(function(r){return (r.c.owner||"(미지정)")===p});if(!rs.length)return;
+    var w=rs.filter(function(r){return r.d.work}).length,f=w/rs.length;if(f>best)best=f;
+    out.push({p:p,f:f,w:w,n:rs.length,ch:RUNNERS[i%RUNNERS.length]});
+  });
+  out.forEach(function(o){o.lead=best>0&&o.f===best&&o.f<1});return out;
+}
+function laneHtml(o,go){
+  var pc=Math.round(o.f*100),cls="lane"+(o.f>=1?" fin":o.f>0?" run":"");
+  return '<div class="'+cls+'" data-ln="'+esc(o.p)+'"><span class="nm" title="'+esc(o.p)+'">'+esc(o.p)+'</span><div class="rd"><span class="fl">'+(o.f>=1?"🏆":"🏁")+'</span>'+
+    '<div class="rn" data-f="'+o.f+'" style="left:'+(go?"calc((100% - 30px) * "+o.f+")":"0")+'">'+(o.lead?'<span class="cr">👑</span>':'')+(o.f>0&&o.f<1?'<span class="ds">💨</span>':'')+'<span class="ch">'+(o.f>=1?"🥳":o.ch)+'</span><span class="pc">'+pc+'%</span></div></div></div>';
+}
+function trackHtml(rows){
+  var ls=trackLanes(rows);if(!ls.length)return '<div class="trk"><h4>달려라 동감!<span>업체를 넣으면 달리기가 시작돼요</span></h4></div>';
+  var tot=ls.reduce(function(a,o){a.n+=o.n;a.w+=o.w;return a},{n:0,w:0});
+  return '<div class="trk" aria-label="담당자별 진행 달리기"><h4>🏃 달려라 동감!<span>전체 '+tot.w+'/'+tot.n+' 완료 · '+(tot.n?Math.round(tot.w*100/tot.n):0)+'%</span></h4>'+ls.map(function(o){return laneHtml(o,false)}).join("")+'</div>';
+}
+function trackGo(){ /* 처음에는 출발선에서, 다음 프레임에 진행률 위치로 달려간다 */
+  requestAnimationFrame(function(){requestAnimationFrame(function(){document.querySelectorAll(".trk .rn").forEach(function(r){r.style.left="calc((100% - 30px) * "+r.dataset.f+")"})})});
+}
+function trackRefresh(rows){ /* 저장할 때: 같은 담당자 줄이면 캐릭터만 새 위치로 이동, 구성이 바뀌면 다시 그린다 */
+  var el=document.querySelector(".trk");if(!el)return;
+  var ls=trackLanes(rows),cur=el.querySelectorAll(".lane");
+  var same=ls.length===cur.length&&ls.every(function(o,i){return cur[i].dataset.ln===o.p});
+  if(!same){el.outerHTML=trackHtml(rows);trackGo();return}
+  ls.forEach(function(o,i){var tmp=document.createElement("div");tmp.innerHTML=laneHtml(o,true);var nl=tmp.firstChild,ol=cur[i],orn=ol.querySelector(".rn"),nrn=nl.querySelector(".rn");
+    ol.className=nl.className;ol.querySelector(".fl").textContent=nl.querySelector(".fl").textContent;
+    orn.dataset.f=o.f;orn.innerHTML=nrn.innerHTML;orn.style.left=nrn.style.left});
+  var h=el.querySelector("h4 span"),tot=ls.reduce(function(a,o){a.n+=o.n;a.w+=o.w;return a},{n:0,w:0});if(h)h.textContent="전체 "+tot.w+"/"+tot.n+" 완료 · "+(tot.n?Math.round(tot.w*100/tot.n):0)+"%";
+}
 function summary(rows){
   if(isTax())return summaryTax(rows);
   var ps=S.people.slice(),extra={};rows.forEach(function(r){var o=r.c.owner||"(미지정)";if(S.people.indexOf(o)<0)extra[o]=1});
@@ -258,7 +309,7 @@ function drawList(){
   var all=joined(),shown=shownRows();
   var owners=["전체"].concat(S.people);
   var h='<div class="row"><button class="btn ghost sm" id="back">← 신고리스트 목록</button><span class="st" id="st">'+esc(S.msg)+'</span></div><h1>'+esc(l.title)+'</h1>'+notesBox(l);
-  h+='<div class="panel">'+summary(all)+'</div>'+(S.edit?colEditor():"");
+  h+='<div class="panel sumrow"><div class="sumtab">'+summary(all)+'</div>'+trackHtml(all)+'</div>'+(S.edit?colEditor():"");
   h+='<div class="panel"><div class="row">'+owners.map(function(o){return '<button class="chip" data-own="'+esc(o)+'" aria-pressed="'+(S.own===o)+'">'+esc(o)+'</button>'}).join("")+
      '<span class="sub">|</span>'+["전체","미완료","완료"].map(function(o){return '<button class="chip" data-stf="'+o+'" aria-pressed="'+(S.stf===o)+'">'+o+'</button>'}).join("")+
      '<span class="sub">'+shown.length+'곳'+(isAdmin()?' · 수수료 합계 '+fmtM(shown.reduce(function(a,r){return a+(Number(r.d.fee)||0)},0)||"0")+'원':'')+'</span></div>';
@@ -274,6 +325,7 @@ function drawList(){
   h+='</div>';
   if(S.err)h+='<p class="err">'+esc(S.err)+'</p>';
   $("#view").innerHTML=h;
+  if(S.cur)trackGo();
 }
 function draw(){S.cur?drawList():drawLists()}
 function say(t,bad){S.msg=t;var e=$("#st");if(e){e.textContent=t;e.className="st"+(bad?" bad":"")}}
@@ -290,7 +342,7 @@ function save(id,field,value,el){
   say("저장 중…");
   api("progress.save",{list:S.cur,clientId:+id,patch:patch}).then(function(r){m[id]=r.data||m[id];refreshCounts();say("저장했습니다.");var keep=document.activeElement;var st=$(".scroll");var top=st?st.scrollTop:0;var ae=keep&&keep.dataset?keep.dataset.id+"|"+keep.dataset.f:null;
     /* 요약과 줄 색만 다시 그린다: 입력 중인 칸을 건드리지 않도록 전체를 다시 그리지 않는다 */
-    var l=curList(),all=joined();var sm=$(".panel table.sm");if(sm)sm.outerHTML=summary(all);
+    var l=curList(),all=joined();var sm=$(".panel table.sm");if(sm)sm.outerHTML=summary(all);trackRefresh(all);
     var ad=$("#alldone");if(ad){var sid=shownIds();ad.checked=sid.length>0&&sid.every(function(x){return !!(m[x]||{}).done})}
     var tr=el&&el.closest("tr");if(tr)tr.className=isDone(m[id])?"done":"";
   },function(e){if(m[id]){if(old)m[id][field]=old;else delete m[id][field]}if(el){if(el.type==="checkbox")el.checked=!!old;else el.value=el.dataset.date?fmtD(old):el.dataset.money?fmtM(old):old}say(e.message,true)});
