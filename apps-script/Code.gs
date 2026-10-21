@@ -208,6 +208,12 @@ function prHide(d, who) {
 function progressAdmin(who) {
   return String(props().PROGRESS_ADMINS || "").split(/[,\n]/).map(s => s.trim()).filter(Boolean).indexOf(who) >= 0;
 }
+// 달리기 트랙 캐릭터: 스크립트 속성 RUNNER_SKINS(쉼표나 줄바꿈 구분, "이름=캐릭터" 형식)로 사람별 캐릭터를 정한다. 이름은 소스에 두지 않는다.
+function runnerSkins() {
+  const o = {};
+  String(props().RUNNER_SKINS || "").split(/[,\n]/).forEach(s => { const m = s.split("="); const n = (m[0] || "").trim(), k = (m[1] || "").trim(); if (n && /^[a-z0-9_-]{1,20}$/.test(k)) o[n] = k; });
+  return o;
+}
 function progressLists(who) {
   const lists = plRows(), sh = prSheet(), last = sh.getLastRow(), cnt = {};
   if (last >= 2) sh.getRange(2, 1, last - 1, 3).getValues().forEach(r => {
@@ -216,7 +222,7 @@ function progressLists(who) {
     let d = {}; try { d = JSON.parse(String(r[2] || "{}")); } catch (e) {}
     c.n++; if (d.work) c.work++; if (d.appr && d.appr !== "반려") c.appr++; if (d.deliv) c.deliv++;
   });
-  return { lists: lists.map(l => Object.assign(l, cnt[l.id] || { n: 0, work: 0, appr: 0, deliv: 0 })), canDelete: progressAdmin(who) };
+  return { lists: lists.map(l => Object.assign(l, cnt[l.id] || { n: 0, work: 0, appr: 0, deliv: 0 })), canDelete: progressAdmin(who), skins: runnerSkins() };
 }
 // 신고리스트별 열 구성(이름·순서·삭제·추가). 기록은 열 키로 저장되므로 열을 지워도 입력한 값은 남고, 다시 추가하면 보인다.
 const PC_TYPES = { check: 1, sel: 1, text: 1, date: 1, num: 1, auto: 1 };
