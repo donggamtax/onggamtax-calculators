@@ -332,7 +332,7 @@ function drawList(){
   $("#chips3").innerHTML=["전체"].concat(PEOPLE,["폐업/이탈"]).map(function(p){return chip("own",p,p,state.owner===p)}).join("");
   state.showOff=state.owner==="폐업/이탈";
   $("#addbox").innerHTML=state.adding?'<div class="addf"><input type="text" id="addName" placeholder="새 업체명" aria-label="새 업체명"><div class="ctl" style="margin:6px 0 0"><select id="addType" aria-label="구분"><option>개인</option><option>법인</option></select><select id="addSvc" aria-label="기장/신고">'+SVCS.map(function(p){return '<option>'+p+'</option>'}).join("")+'</select><select id="addOwner" aria-label="담당자">'+PEOPLE.map(function(p){return '<option>'+p+'</option>'}).join("")+'</select><button class="btn sm" type="button" data-addc="1">추가</button><button class="btn ghost sm" type="button" data-addno="1">취소</button></div></div>':'<button class="btn ghost sm" type="button" data-adding="1" style="margin-bottom:6px">+ 업체 추가</button>';
-  var rows=CLIENTS.filter(function(c){var off=stOf(c)!=="거래중";return off===state.showOff&&(state.filter==="전체"||c.type===state.filter)&&(state.svc==="전체"||c.svc===state.svc)&&(!state.tfo||c.tf)&&(state.showOff||state.owner==="전체"||c.owner===state.owner)&&(c.name.indexOf(state.q)>=0||(c.rep||"").indexOf(state.q)>=0)});
+  var rows=CLIENTS.filter(function(c){var off=stOf(c)!=="거래중";return off===state.showOff&&(state.filter==="전체"||c.type===state.filter)&&(state.svc==="전체"||c.svc===state.svc)&&(!state.tfo||c.tf)&&(state.showOff||state.owner==="전체"||c.owner===state.owner)&&(nameHit(c.name,state.q)||nameHit(c.rep,state.q))});
   var offN=CLIENTS.filter(function(c){return stOf(c)!=="거래중"}).length;
   $("#count").textContent=(state.showOff?"폐업·이탈 ":"거래중 ")+rows.length+"곳"+(state.showOff?"":" · 숨긴 폐업·이탈 "+offN+"곳")+"";
   $("#cl").innerHTML=rows.map(function(c){return '<li><button type="button" data-id="'+c.id+'" aria-current="'+(state.sel===c.id)+'"><span>'+esc(c.name||"(이름 없음)")+' <span class="tag">'+esc(c.svc||"기장")+'</span>'+(c.tf?' <span class="tag" style="background:var(--soft)">면세</span>':'')+(c.tier?' <span class="tag">'+esc(c.tier)+'</span>':'')+(stOf(c)!=="거래중"?' <span class="tag" style="background:var(--warn-bg);color:var(--warn)">'+stOf(c)+'</span>':'')+'</span><span class="sub">'+(c.rep?esc(c.rep)+' · ':'')+esc(c.owner||"미지정")+'</span></button></li>'}).join("")||'<li class="empty">'+(state.showOff?"폐업·이탈 처리한 업체가 없습니다":"검색 결과가 없습니다")+'</li>';
@@ -388,6 +388,45 @@ function oxCell(k,only){
   return '<div class="oxc"><select class="ox'+(o==="O"?" ox-o":o==="X"?" ox-x":"")+'" data-k="'+esc(k+"|ox")+'" aria-label="O/X"><option value=""></option><option'+(o==="O"?" selected":"")+'>O</option><option'+(o==="X"?" selected":"")+'>X</option></select>'+(only?'':'<input type="text" data-k="'+esc(k)+'" value="'+esc(val(k))+'" aria-label="메모">')+'</div>';
 }
 /* 이름에서 연도·기·예정/확정을 읽어 시간순으로 놓는다(못 읽으면 만든 순서). 앞 기수의 당기가 다음 기수의 전기가 된다. */
+/* 한글 자판 상태에서 영어로 잘못 친 검색어(dhdrma → 동감)를 한글로 바꿔 같이 찾는다 (두벌식) */
+var EK_C={r:0,R:1,s:2,e:3,E:4,f:5,a:6,q:7,Q:8,t:9,T:10,d:11,w:12,W:13,c:14,z:15,x:16,v:17,g:18};
+var EK_V={k:0,o:1,i:2,O:3,j:4,p:5,u:6,P:7,h:8,y:12,n:13,b:17,m:18,l:20};
+var EK_VV={"8:0":9,"8:1":10,"8:20":11,"13:4":14,"13:5":15,"13:20":16,"18:20":19};
+var EK_FJ={0:1,1:2,2:4,3:7,5:8,6:16,7:17,9:19,10:20,11:21,12:22,14:23,15:24,16:25,17:26,18:27}; // 초성 번호 → 종성 번호
+var EK_FF={"0:9":3,"2:12":5,"2:18":6,"5:0":9,"5:6":10,"5:7":11,"5:9":12,"5:16":13,"5:17":14,"5:18":15,"7:9":18};
+function engToHangul(str){
+  var t=String(str||"").split("").map(function(ch){return EK_C.hasOwnProperty(ch)?{c:EK_C[ch]}:EK_V.hasOwnProperty(ch)?{v:EK_V[ch]}:{o:ch}});
+  var out="",i=0;
+  function isV(x){return x&&x.v!==undefined}
+  function isC(x){return x&&x.c!==undefined}
+  function fin(c){return EK_FJ[c]}
+  while(i<t.length){
+    var x=t[i];
+    if(isC(x)&&isV(t[i+1])){
+      var L=x.c,V=t[i+1].v,j=i+2;
+      if(isV(t[j])&&EK_VV[V+":"+t[j].v]!==undefined){V=EK_VV[V+":"+t[j].v];j++}
+      var T=0;
+      if(isC(t[j])&&fin(t[j].c)!==undefined&&!isV(t[j+1])){
+        T=fin(t[j].c);j++;
+      }else if(isC(t[j])&&isC(t[j+1])&&fin(t[j].c)!==undefined&&EK_FF[t[j].c+":"+t[j+1].c]!==undefined&&!isV(t[j+2])){
+        T=EK_FF[t[j].c+":"+t[j+1].c];j+=2;
+      }
+      out+=String.fromCharCode(0xAC00+(L*21+V)*28+T);i=j;
+    }else{
+      var JC=["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"],JV=["ㅏ","ㅐ","ㅑ","ㅒ","ㅓ","ㅔ","ㅕ","ㅖ","ㅗ","ㅘ","ㅙ","ㅚ","ㅛ","ㅜ","ㅝ","ㅞ","ㅟ","ㅠ","ㅡ","ㅢ","ㅣ"];
+      out+=isC(x)?JC[x.c]:isV(x)?JV[x.v]:x.o;i++;
+    }
+  }
+  return out;
+}
+function nameHit(text,q){
+  if(!q)return true;
+  text=String(text||"").toLowerCase();
+  var a=q.toLowerCase();
+  if(text.indexOf(a)>=0)return true;
+  var k=engToHangul(q);
+  return k!==q&&text.indexOf(k)>=0;
+}
 function vatInfo(name){
   var s=String(name||""),y=s.match(/(\d{4})\s*년/)||s.match(/(\d{2})\s*년/)||s.match(/(20\d{2})/),g=s.match(/([12])\s*기/),sub=/확정/.test(s)?"확정":/예정/.test(s)?"예정":"";
   var yy=y?(y[1].length===2?2000+ +y[1]:+y[1]):0;
