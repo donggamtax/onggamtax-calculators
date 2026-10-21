@@ -454,11 +454,12 @@ function refreshVat(){
 function nameOfPeriod(kind,id){var D=d(state.sel),l=kind==="vat"?D.vps:kind==="inc"?D.ips:D.cps,p=l.filter(function(x){return x.id===id})[0];return p?p.name:""}
 function syncProgress(key,on,which){
   var m=key.match(/^(vat|inc|corp)\|([^|]+)\|(s2|closed|rej)$/);if(!m)return;
-  var kind=m[1],info=vatInfo(nameOfPeriod(kind,m[2]));if(!info.year||(kind==="vat"&&(!info.ki||!info.sub)))return;
+  var kind=m[1],info=vatInfo(nameOfPeriod(kind,m[2]));if(!info.year||(kind==="vat"&&!info.ki))return;
+  if(kind==="vat"&&!info.sub)info.sub="확정"; // "2026년 1기"처럼 예정/확정을 안 쓴 이름은 확정으로 본다
   var w=m[3]==="s2"?"appr":m[3]==="rej"?"rej":"work",lab=w==="appr"?"결재완료":w==="rej"?"반려":"작업일";
   var note=document.querySelector('.paper[data-pid="'+m[2]+'"] [data-signnote]');
   api("progress.sync",{kind:kind,year:info.year,ki:kind==="vat"?info.ki:0,sub:kind==="vat"?info.sub:"",clientId:state.sel,which:w,on:!!on}).then(function(r){
-    if(note)note.textContent=r.matched?'진도체크 "'+r.list+'"에 '+lab+(on?(w==="rej"?" 표시가 기록되었습니다.":" 날짜가 기록되었습니다."):(w==="rej"?" 표시를 지웠습니다.":" 날짜를 지웠습니다.")):"";
+    if(note)note.textContent=r.matched?'진도체크 "'+r.list+'"에 '+lab+(on?(w==="rej"?" 표시가 기록되었습니다.":" 날짜가 기록되었습니다."):(w==="rej"?" 표시를 지웠습니다.":" 날짜를 지웠습니다.")):"진도체크에 이 신고기간("+info.year+"년 "+(kind==="vat"?info.ki+"기 "+info.sub:"")+") 목록이 없어 반영되지 않았습니다.";
   },function(){if(note)note.textContent="진도체크에는 반영하지 못했습니다(나중에 진도체크에서 직접 입력하세요)."});
 }
 /* ② 부가세 신고 체크리스트 */
