@@ -30,6 +30,7 @@
   --paper-tint: #F0F2F5;
   --paper-accent: #1F3A5F;
   --need: rgba(31,58,95,.10);
+  --fill: #FFF3C4; --fill-need: #FFE27A; --fill-line: #D49A00;
   --shadow: 0 1px 2px rgba(23,33,44,.08), 0 8px 24px rgba(23,33,44,.07);
   --sans: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
   --serif: "Noto Serif KR", "AppleMyungjo", "Batang", serif;
@@ -101,9 +102,17 @@ button, input, select, textarea { font: inherit; color: inherit; }
   display: inline-block; vertical-align: baseline; min-width: 0; max-width: 100%; line-height: 1.5;
 }
 .in::placeholder { color: #98a1ac; font-size: .85em; }
-.in.need { background: var(--need); }
+.paper .in { background: var(--fill); border-bottom: 1.5px solid var(--fill-line); border-radius: 3px 3px 0 0; }
+.paper .in.need { background: var(--fill-need); }
+.paper .grp { background: var(--fill); border-radius: 4px; padding: 1px 6px; }
+.paper .grp.need { background: var(--fill-need); }
+.paper .sigslot .sigbtn { background: var(--fill); }
+.paper .sigslot.need .sigbtn { background: var(--fill-need); }
+.legend { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-family: var(--sans); font-size: .82rem; color: var(--muted); }
+.legend i { display: inline-block; width: 28px; height: 14px; background: var(--fill-need); border-bottom: 2px solid var(--fill-line); border-radius: 3px 3px 0 0; }
+.legend i.l2 { background: var(--fill); }
 .in.bad { border-bottom-color: var(--seal); }
-.in:focus { outline: none; border-bottom: 2px solid var(--paper-accent); background: var(--need); }
+.paper .in:focus { outline: none; border-bottom: 2px solid var(--paper-accent); background: #fff; box-shadow: 0 0 0 2px rgba(31,58,95,.25); }
 .in:disabled { color: var(--paper-mute); border-bottom-style: dotted; background: transparent; }
 .in.w1 { width: 2.6em; text-align: center; }
 .in.w2 { width: 3.6em; text-align: center; }
@@ -120,6 +129,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .paper .line .k { min-width: 6.2em; color: var(--paper-mute); font-size: .88em; }
 .art { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .art b.h { font-weight: 700; }
+.special { margin: 10px 0 0; padding: 8px 10px; border: 1px solid #222; font-size: 13px; line-height: 1.7; }
+.special #specialText { white-space: pre-wrap; word-break: break-word; margin-top: 2px; }
 .art .sub { display: block; padding-left: .2em; }
 .art .opt { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding-left: 1em; }
 .paper .closing { margin-top: 14px; }
@@ -213,6 +224,29 @@ button, input, select, textarea { font: inherit; color: inherit; }
   width: 794px; box-shadow: none !important; border: 0 !important; border-radius: 0 !important; background: #fff !important; color: #17212C; padding: 30px 48px !important; }
 .pdfmode .pv { display: inline-block; vertical-align: baseline; border-bottom: 1px solid #AEB6C0; padding: 0 4px; line-height: 1.5; min-height: 1.5em; white-space: pre-wrap; overflow-wrap: anywhere; }
 .pdfmode .pg { font-family: var(--sans); }
+.pdfmode .g { grid-template-columns: 9.5em minmax(0, 1fr) 9.5em minmax(0, 1fr); }
+.pdfmode .g > .s3 { grid-column: span 3; }
+.pdfmode .g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.pdfmode .terms { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pdfmode .parties { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pdfmode .grp, .pdfmode .sigslot .sigbtn { background: none !important; padding: 0; }
+.pdfmode.cmsdoc { padding: 20px 34px 14px !important; font-size: .72rem; line-height: 1.42; }
+.pdfmode.cmsdoc .ver { font-size: .6rem; line-height: 1.2; }
+.pdfmode.cmsdoc h2.dt { font-size: 1.15rem; margin: 0 0 4px; }
+.pdfmode.cmsdoc p { margin: 2px 0; }
+.pdfmode.cmsdoc .sec { margin: 7px 0 3px; font-size: .8rem; }
+.pdfmode.cmsdoc .g > div { padding: 2px 8px; gap: 2px 5px; }
+.pdfmode.cmsdoc .g3 > div { padding: 2px 8px; gap: 2px; }
+.pdfmode.cmsdoc .terms { font-size: .62rem; line-height: 1.38; padding: 5px 8px; gap: 2px 16px; }
+.pdfmode.cmsdoc .box { font-size: .64rem; line-height: 1.38; padding: 4px 8px; margin-top: 4px; }
+.pdfmode.cmsdoc .box h4 { font-size: .68rem; margin: 0 0 1px; }
+.pdfmode.cmsdoc .box .refuse { margin-top: 2px; }
+.pdfmode.cmsdoc .date { margin: 6px 0 4px !important; }
+.pdfmode.cmsdoc .signrow { margin-top: 4px; }
+.pdfmode.cmsdoc .sigimg { height: 44px; }
+.pdfmode.cmsdoc .small { font-size: .62rem; line-height: 1.3; }
+.pdfmode .auditfoot { margin-top: 8px; padding-top: 4px; border-top: 1px solid #AEB6C0; font-family: var(--sans); font-size: .56rem; line-height: 1.45; color: #566270; overflow-wrap: anywhere; }
+.pdfmode .auditfoot b { color: #17212C; font-weight: 600; }
 .pdfmode.audit { font-family: var(--sans); font-size: .88rem; line-height: 1.7; }
 .pdfmode.audit h2 { font-family: var(--serif); font-size: 1.25rem; margin: 0 0 6px; }
 .pdfmode.audit table { border-collapse: collapse; width: 100%; margin-top: 12px; }
@@ -262,6 +296,7 @@ body { margin: 0; }
       <label><input type="checkbox" id="lkM" checked> 자동이체 신청서</label>
       <label>유효기간 <select id="lkExp"><option value="3">3일</option><option value="7" selected>7일</option><option value="14">14일</option></select></label>
     </div>
+    <div class="field" id="lkSpecialRow" style="margin:10px 0"><label for="lkSpecial">특약사항 <small>(선택 · 비워두면 기본 계약서 그대로입니다)</small></label><textarea id="lkSpecial" rows="3" maxlength="1500" placeholder="예) 제2조 제1항에도 불구하고 최초 3개월간 보수는 월 10만원으로 한다." style="background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%;font:inherit;resize:vertical"></textarea><span class="small" id="lkSpecialN"></span></div>
     <div class="field" id="lkPwRow" hidden style="max-width:280px"><label for="lkPw">사무소 암호</label><input type="password" id="lkPw" autocomplete="current-password" style="background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%"></div>
     <div class="bar"><button type="button" class="btn primary" id="mkLink">이 내용으로 링크 만들기</button><span class="err" id="lkErr" role="alert"></span></div>
     <div class="linkout" id="linkOut" hidden>
@@ -283,10 +318,11 @@ body { margin: 0; }
   <div class="bar">
     <button type="button" class="btn primary" id="findBlank">빈 칸 찾기</button>
     <button type="button" class="btn" id="pullBtn" hidden>계약서 내용 가져오기</button>
-    <span class="hint" id="barHint">사무소와 고객 누구나 같은 칸을 채울 수 있습니다. 비어 있는 칸은 파란 바탕으로 보입니다.</span>
+    <span class="hint" id="barHint">사무소와 고객 누구나 같은 칸을 채울 수 있습니다. 비어 있는 칸은 진한 노란색으로 보입니다.</span>
   </div>
 
   <!-- ===== 세무대리계약서 ===== -->
+  <p class="legend" id="legend"><i></i><i class="l2"></i> 노란색 칸이 작성하실 곳입니다.</p>
   <article class="paper" id="docContract" aria-label="세무대리계약서">
     <h2 class="dt">세 무 대 리 계 약 서</h2>
     <div class="line pre">
@@ -322,6 +358,7 @@ body { margin: 0; }
       <li><b class="h">제9조 [분쟁의 해결]</b> 본 계약에서 발생한 분쟁은 합의에 의하여 해결함을 원칙으로 하고, 당사자 사이에 해결되지 않은 분쟁은 중재법에 의한 중재기관의 중재에 의하여 최종 해결한다.</li>
       <li><b class="h">제10조 [기타]</b> 본 계약에 명시되지 아니한 사항은 일반 상관례에 따라 상호협의하여 결정한다.</li>
     </ol>
+    <div class="special" id="specialBox" hidden><b class="h">특약사항</b><div id="specialText"></div></div>
     <p class="closing">이 계약의 성립을 증명하기 위하여 계약서 2통을 작성하여 갑과 을이 각각 서명·날인 한 후 1통씩 보관한다.</p>
     <div class="date">
       <input class="in w4" type="text" data-k="c_y" data-fmt="year" inputmode="numeric" aria-label="계약 연도">년
@@ -372,6 +409,7 @@ body { margin: 0; }
 
     <div class="sec">◈ 자동이체 신청정보 <small>[신청인 기재란]</small></div>
     <div class="g">
+      <div class="l">상호(업체명)</div><div class="s3"><input class="in w10" type="text" data-k="c_company" aria-label="상호(업체명)" placeholder="회사 이름"></div>
       <div class="l">신청인명</div><div><input class="in w6" type="text" data-k="m_applicant" aria-label="신청인명" data-sameoff="1"></div>
       <div class="l">예금주와의 관계</div><div><input class="in w6" type="text" data-k="m_rel" aria-label="예금주와의 관계" placeholder="본인, 대표자 등" data-sameoff="1"></div>
       <div class="l">신청인 연락처</div><div><input class="in w8" type="text" data-k="m_aphone" data-fmt="phone" inputmode="tel" aria-label="신청인 연락처" placeholder="비워도 됩니다"></div>
@@ -519,6 +557,11 @@ body { margin: 0; }
   var ART_URL = (window.claude && window.claude.use) ? 'https://claude.ai/artifact/Jfg1gu9serQ29h4ovHFdD5' : String(location.href).split('#')[0];
   var TODAY = parts[0] + '-' + parts[1] + '-' + parts[2];
   var REQ = { mode: 'office', p: null, expired: false, token: '', signed: false };
+  function showSpecial(txt) {
+    txt = String(txt || '').trim();
+    $('#specialText').textContent = txt; $('#specialBox').hidden = !txt;
+    var n = $('#lkSpecialN'); if (n) n.textContent = txt.length ? txt.length + ' / 1500자' : '';
+  }
   var API = String(window.SIGN_API || '').trim();
   var SENSITIVE = ['c_acct', 'm_acct', 'm_birth', 'm_hphone', 'm_amobile', 'm_aphone', 'm_agree1', 'm_agree2', 'c_y', 'c_m', 'c_d', 'm_y', 'm_m', 'm_d'];
   var LOCKABLE = ['c_year', 'c_month', 'c_fee', 'c_pay', 'c_payday', 'c_kindA', 'c_kindB', 'm_amount', 'm_sy', 'm_sm', 'm_day', 'm_kind'];
@@ -553,6 +596,7 @@ body { margin: 0; }
     Object.keys(p.f).forEach(function (k) { if (k in S.f && SENSITIVE.indexOf(k) < 0) S.f[k] = p.f[k]; });
     if (p.t) { var t = new Date(p.t); if (!isNaN(t)) S.sig.c_eul.at = t; }
     REQ.expired = !!(p.e && TODAY > p.e);
+    showSpecial(typeof p.x === 'string' ? p.x : '');
   }
   function rid() {
     var a = new Uint8Array(4);
@@ -573,6 +617,8 @@ body { margin: 0; }
     var exp = new Date(); exp.setDate(exp.getDate() + Number($('#lkExp').value));
     var e = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(exp);
     var p = { d: docs, f: f, e: e, i: rid(), t: new Date().toISOString() };
+    var sp = $('#lkSpecial').value.trim().slice(0, 1500);
+    if (sp && docs.indexOf('contract') >= 0) p.x = sp;
     return { url: ART_URL + '#v1.' + b64u(JSON.stringify(p)), p: p, n: n };
   }
 
@@ -978,7 +1024,7 @@ body { margin: 0; }
     });
     $$('.sigslot', c).forEach(function (sl) { var img = sl.querySelector('img'); sl.innerHTML = ''; if (img) { img.className = 'sigimg'; sl.appendChild(img); } });
   }
-  function auditNode(doc, hash) {
+  function auditRows(doc, hash) {
     var f = S.f, rows = [], sigIds = doc === 'contract' ? ['c_gap', 'c_eul'] : (sameMode() ? ['m_app'] : ['m_app', 'm_holder']);
     var who = doc === 'contract' ? f.c_rep : (f.m_applicant || f.m_holder);
     rows.push(['서식', DOCNAME[doc]]);
@@ -992,13 +1038,22 @@ body { margin: 0; }
     });
     rows.push(['접속 기기', device()]);
     rows.push(['문서 지문(SHA-256)', '<span class="hash">' + esc(hash || '계산할 수 없음') + '</span>']);
+    return rows;
+  }
+  function auditFoot(doc, hash) {
+    var d = document.createElement('div'); d.className = 'auditfoot';
+    d.innerHTML = '<b>서명 기록</b> · ' + auditRows(doc, hash).map(function (r) { return esc(r[0]) + ' ' + (r[0].indexOf('지문') >= 0 ? esc(hash || '-') : esc(r[1])); }).join(' · ');
+    return d;
+  }
+  function auditNode(doc, hash) {
+    var rows = auditRows(doc, hash);
     var d = document.createElement('div');
     d.className = 'pdfmode audit';
     d.innerHTML = '<h2>서명 기록</h2><p>이 기록은 서명 화면에서 자동으로 만들어졌습니다. 문서 지문은 입력 내용과 서명 이미지로 계산한 값으로, 내용이 바뀌면 지문도 달라집니다. 접속 IP는 기록되지 않습니다.</p><table>' +
       rows.map(function (r) { return '<tr><th>' + esc(r[0]) + '</th><td>' + (r[0].indexOf('지문') >= 0 ? r[1] : esc(r[1])) + '</td></tr>'; }).join('') + '</table>';
     return d;
   }
-  async function addNode(pdf, node, paginate, state) {
+  async function addNode(pdf, node, paginate, state, fit) {
     var canvas = await html2canvas(node, { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true });
     var W = node.offsetWidth, H = node.offsetHeight, pageH = 273 * (W / 210), slices = [];
     if (!paginate) slices.push([0, H]);
@@ -1028,12 +1083,15 @@ body { margin: 0; }
       x.drawImage(canvas, 0, sy, canvas.width, sh, 0, 0, canvas.width, sh);
       if (state.used) pdf.addPage();
       state.used = true;
-      pdf.addImage(t.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 12, 210, sh * (210 / canvas.width), undefined, 'FAST');
+      var iw = 210, ih = sh * (210 / canvas.width);
+      if (fit && ih > 273) { iw = 210 * 273 / ih; ih = 273; }
+      pdf.addImage(t.toDataURL('image/jpeg', 0.92), 'JPEG', (210 - iw) / 2, 12, iw, ih, undefined, 'FAST');
     });
   }
   function pickFields(doc) {
     var out = {}, pre = doc === 'contract' ? 'c_' : 'm_';
     Object.keys(S.f).forEach(function (k) { if (k.indexOf(pre) === 0) out[k] = S.f[k]; });
+    if (doc === 'contract' && REQ.p && REQ.p.x) out.special = REQ.p.x;
     return out;
   }
   async function buildPdf(doc) {
@@ -1045,14 +1103,15 @@ body { margin: 0; }
       staticize(clone);
       var sigs = {}; (doc === 'contract' ? ['c_gap', 'c_eul'] : ['m_app', 'm_holder']).forEach(function (id) { if (S.sig[id]) sigs[id] = S.sig[id].img; });
       var hash = await sha256hex(JSON.stringify({ doc: doc, f: pickFields(doc), sig: sigs }));
-      var audit = auditNode(doc, hash); stage.appendChild(audit);
+      var audit = null;
+      if (doc === 'cms') { clone.appendChild(auditFoot(doc, hash)); } else { audit = auditNode(doc, hash); stage.appendChild(audit); }
       if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
       await new Promise(function (r) { setTimeout(r, 350); });
       var pdf = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', compress: true }), state = { used: false };
-      await addNode(pdf, clone, true, state);
-      await addNode(pdf, audit, false, state);
+      await addNode(pdf, clone, doc !== 'cms', state, doc === 'cms');
+      if (audit) await addNode(pdf, audit, false, state);
       var blob = pdf.output('blob');
-      var co = doc === 'contract' ? S.f.c_company : S.f.m_holder;
+      var co = doc === 'contract' ? S.f.c_company : (S.f.c_company || S.f.m_holder);
       var name = (DOCNAME[doc] + '_' + (co || '무명') + '_' + TODAY.replace(/-/g, '') + '.pdf').replace(/[\\\/:*?"<>|]/g, '').replace(/\s+/g, '');
       return { blob: blob, name: name, hash: hash, company: co || '', who: (doc === 'contract' ? S.f.c_rep : (S.f.m_applicant || S.f.m_holder)) || '' };
     } finally { stage.remove(); }
@@ -1093,6 +1152,7 @@ body { margin: 0; }
       btn.dataset.done = '1'; btn.textContent = '제출 완료';
       msg.textContent = '제출이 끝났습니다. 담당자가 확인합니다. 이 화면은 닫으셔도 됩니다.';
     } catch (e) {
+      try { console.error('submit failed', e && (e.apiCode || e.message || e)); } catch (x) {}
       msg.textContent = '제출하지 못했습니다. ' + (e && e.apiCode ? (API_ERR[e.apiCode] || '') : '인터넷 연결을 확인한 뒤 다시 눌러 주세요.');
       btn.disabled = false;
     } finally { delete btn.dataset.busy; refresh(); }
@@ -1111,6 +1171,7 @@ body { margin: 0; }
     if (b && !b.disabled) makePdf(b.dataset.pdf);
   });
 
+  $('#lkSpecial').addEventListener('input', function () { showSpecial(this.value); });
   function setupMode() {
     var recv = REQ.mode === 'recv';
     $('#linkPanel').hidden = recv; $('#officeNote').hidden = recv; $('#recvBanner').hidden = !recv || REQ.expired;
