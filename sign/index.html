@@ -245,6 +245,18 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .pdfmode.cmsdoc .signrow { margin-top: 4px; }
 .pdfmode.cmsdoc .sigimg { height: 44px; }
 .pdfmode.cmsdoc .small { font-size: .62rem; line-height: 1.3; }
+.pdfmode.contractdoc { padding: 22px 38px 14px !important; font-size: .76rem; line-height: 1.5; }
+.pdfmode.contractdoc h2.dt { font-size: 1.2rem; margin: 0 0 8px; }
+.pdfmode.contractdoc .pre { margin-bottom: 4px; }
+.pdfmode.contractdoc p { margin: 3px 0; }
+.pdfmode.contractdoc .art { margin-top: 6px; gap: 4px; }
+.pdfmode.contractdoc .art .sub { padding-left: .2em; }
+.pdfmode.contractdoc .closing { margin-top: 6px; }
+.pdfmode.contractdoc .date { margin: 8px 0 6px !important; }
+.pdfmode.contractdoc .parties { margin-top: 0; gap: 18px; }
+.pdfmode.contractdoc .party { gap: 2px; }
+.pdfmode.contractdoc .special { margin-top: 5px; padding: 4px 8px; font-size: .72rem; line-height: 1.5; }
+.pdfmode.contractdoc .sigimg { height: 48px; }
 .pdfmode .auditfoot { margin-top: 8px; padding-top: 4px; border-top: 1px solid #AEB6C0; font-family: var(--sans); font-size: .56rem; line-height: 1.45; color: #566270; overflow-wrap: anywhere; }
 .pdfmode .auditfoot b { color: #17212C; font-weight: 600; }
 .pdfmode.audit { font-family: var(--sans); font-size: .88rem; line-height: 1.7; }
@@ -323,7 +335,7 @@ body { margin: 0; }
 
   <!-- ===== 세무대리계약서 ===== -->
   <p class="legend" id="legend"><i></i><i class="l2"></i> 노란색 칸이 작성하실 곳입니다.</p>
-  <article class="paper" id="docContract" aria-label="세무대리계약서">
+  <article class="paper contractdoc" id="docContract" aria-label="세무대리계약서">
     <h2 class="dt">세 무 대 리 계 약 서</h2>
     <div class="line pre">
       <span><b>위임인(갑)</b> :</span>
@@ -1056,6 +1068,7 @@ body { margin: 0; }
   async function addNode(pdf, node, paginate, state, fit) {
     var canvas = await html2canvas(node, { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true });
     var W = node.offsetWidth, H = node.offsetHeight, pageH = 273 * (W / 210), slices = [];
+    if (fit === 'auto') { if (H <= pageH * 1.18) { paginate = false; fit = true; } else fit = false; }
     if (!paginate) slices.push([0, H]);
     else {
       var nr = node.getBoundingClientRect(), tops = [];
@@ -1104,12 +1117,11 @@ body { margin: 0; }
       var sigs = {}; (doc === 'contract' ? ['c_gap', 'c_eul'] : ['m_app', 'm_holder']).forEach(function (id) { if (S.sig[id]) sigs[id] = S.sig[id].img; });
       var hash = await sha256hex(JSON.stringify({ doc: doc, f: pickFields(doc), sig: sigs }));
       var audit = null;
-      if (doc === 'cms') { clone.appendChild(auditFoot(doc, hash)); } else { audit = auditNode(doc, hash); stage.appendChild(audit); }
+      clone.appendChild(auditFoot(doc, hash));
       if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
       await new Promise(function (r) { setTimeout(r, 350); });
       var pdf = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', compress: true }), state = { used: false };
-      await addNode(pdf, clone, doc !== 'cms', state, doc === 'cms');
-      if (audit) await addNode(pdf, audit, false, state);
+      await addNode(pdf, clone, doc !== 'cms', state, doc === 'cms' ? true : 'auto');
       var blob = pdf.output('blob');
       var co = doc === 'contract' ? S.f.c_company : (S.f.c_company || S.f.m_holder);
       var name = (DOCNAME[doc] + '_' + (co || '무명') + '_' + TODAY.replace(/-/g, '') + '.pdf').replace(/[\\\/:*?"<>|]/g, '').replace(/\s+/g, '');
