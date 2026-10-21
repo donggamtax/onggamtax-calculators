@@ -276,7 +276,15 @@ function progressListDelete(req, who) {
     const sh = plSheet(), row = findRow(sh, id);
     if (row) sh.deleteRow(row);
     const pr = prSheet(), last = pr.getLastRow();
-    if (last >= 2) { const ids = pr.getRange(2, 1, last - 1, 1).getValues(); for (let i = ids.length - 1; i >= 0; i--) if (String(ids[i][0]) === id) pr.deleteRow(i + 2); }
+    if (last >= 2) { // 행이 많아도 시간이 걸리지 않도록 이어진 행을 한 번에 지운다 (아래쪽부터)
+      const ids = pr.getRange(2, 1, last - 1, 1).getValues();
+      let i = ids.length - 1;
+      while (i >= 0) {
+        if (String(ids[i][0]) !== id) { i--; continue; }
+        let j = i; while (j > 0 && String(ids[j - 1][0]) === id) j--;
+        pr.deleteRows(j + 2, i - j + 1); i = j - 1;
+      }
+    }
     return { ok: true };
   });
 }
