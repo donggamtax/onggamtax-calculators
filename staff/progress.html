@@ -38,19 +38,29 @@ label{display:inline-flex;gap:6px;align-items:center;font-size:13px;color:var(--
 .sumrow{display:flex;gap:18px;align-items:stretch;flex-wrap:wrap}.sumrow>.sumtab{flex:none;overflow-x:auto;max-width:100%}
 .trk{flex:1;min-width:300px;border:1px solid var(--line);border-radius:10px;padding:8px 12px 6px;background:linear-gradient(var(--soft),transparent 70%)}
 .trk h4{margin:0 0 4px;font-size:13px;font-weight:700;color:var(--accent);display:flex;justify-content:space-between;align-items:baseline}.trk h4 span{font-size:11.5px;font-weight:400;color:var(--muted,#667)}
-.lane{display:flex;align-items:center;gap:8px;height:38px}.lane .nm{flex:none;width:58px;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+.lane{display:flex;align-items:center;gap:8px;height:58px}.lane .nm{flex:none;width:58px;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
 .lane .rd{position:relative;flex:1;height:100%;border-bottom:2px dashed var(--line);margin-right:30px}
 .lane .rd::before{content:"";position:absolute;left:0;top:6px;bottom:-2px;border-left:2px solid var(--line)}
-.lane .fl{position:absolute;right:-30px;bottom:-3px;font-size:20px;line-height:1}
-.lane .rn{position:absolute;left:0;bottom:-2px;width:30px;text-align:center;transition:left 1.2s cubic-bezier(.3,1.3,.5,1);will-change:left}
-.lane .rn .ch{display:block;font-size:24px;line-height:26px}.lane.run .rn .ch{animation:hop .45s ease-in-out infinite}
-.lane .rn .pc{position:absolute;left:50%;top:-9px;transform:translateX(-50%);font-size:10px;font-weight:700;background:var(--accent);color:var(--accent-ink);border-radius:8px;padding:0 5px;white-space:nowrap}
-.lane .rn .cr{position:absolute;left:50%;top:-20px;transform:translateX(-50%) rotate(-12deg);font-size:14px}
-.lane .rn .ds{position:absolute;right:26px;bottom:6px;font-size:11px;opacity:.55}
+.lane .fl{position:absolute;right:-30px;bottom:-3px;font-size:22px;line-height:1}
+.lane .rn{position:absolute;left:0;bottom:-2px;width:44px;text-align:center;transition:left 1.2s cubic-bezier(.3,1.3,.5,1);will-change:left}
+.lane .rn .ch{display:block;width:44px;height:52px}.ch svg{display:block;overflow:visible}.lane.run .rn .ch{animation:hop .36s ease-in-out infinite}
+.lane .rn .pc{position:absolute;left:46px;top:18px;font-size:10px;font-weight:700;background:var(--accent);color:var(--accent-ink);border-radius:8px;padding:0 5px;white-space:nowrap}
+.lane .rn .cr{position:absolute;left:50%;top:-16px;transform:translateX(-50%) rotate(-12deg);font-size:14px}
+.lane .rn .ds{position:absolute;right:38px;bottom:10px;font-size:11px;opacity:.55}
+.lane .rn.late .pc{left:auto;right:46px}
 .lane.fin .rn .ch{animation:cheer .8s ease-in-out infinite}
+.ch .arm,.ch .leg{transform-box:view-box}.ch .sw,.ch .mo-ok{display:none}
+.lane.run .ch .a1{animation:swA .36s ease-in-out infinite alternate}.lane.run .ch .a2{animation:swA .36s ease-in-out infinite alternate-reverse}
+.lane.run .ch .l1{animation:swL .36s ease-in-out infinite alternate}.lane.run .ch .l2{animation:swL .36s ease-in-out infinite alternate-reverse}
+.lane.run .ch .sw{display:block;animation:drop .9s ease-in infinite}.lane.run .ch .s2{animation-delay:.45s}
+.lane.run .ch svg{transform:rotate(7deg);transform-origin:50% 100%}
+.lane.fin .ch .a1{transform:rotate(105deg)}.lane.fin .ch .a2{transform:rotate(-105deg)}.lane.fin .ch .mo-run,.lane.fin .ch .tr{display:none}.lane.fin .ch .mo-ok{display:block}
+@keyframes swA{from{transform:rotate(-45deg)}to{transform:rotate(45deg)}}
+@keyframes swL{from{transform:rotate(-38deg)}to{transform:rotate(38deg)}}
+@keyframes drop{0%{transform:translate(0,0);opacity:0}15%{opacity:1}100%{transform:translate(3px,14px);opacity:0}}
 @keyframes hop{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-6px) rotate(4deg)}}
 @keyframes cheer{0%,100%{transform:scale(1)}50%{transform:scale(1.25) rotate(8deg)}}
-@media (prefers-reduced-motion:reduce){.lane .rn{transition:none}.lane.run .rn .ch,.lane.fin .rn .ch{animation:none}}
+@media (prefers-reduced-motion:reduce){.lane .rn{transition:none}.lane.run .rn .ch,.lane.fin .rn .ch,.lane .ch *{animation:none!important}}
 table.sm,table.tb{border-collapse:collapse;width:auto}
 table.sm th,table.sm td,table.tb th,table.tb td{border:1px solid var(--line);padding:4px 8px;font-size:13px;text-align:center;white-space:nowrap}
 table.sm th,table.tb th{background:var(--soft);font-weight:500}
@@ -185,21 +195,37 @@ function joined(){
   return out;
 }
 /* 달리기 트랙: 담당자별 진행률(작업완료/개수)만큼 캐릭터가 결승선 쪽으로 달린다 */
-var RUNNERS=["🐰","🐱","🐶","🐻","🦊","🐼","🐸","🐥","🐹","🦄"];
+var SHIRTS=["#e4572e","#17bebb","#f2b705","#76b041","#9b5de5","#f15bb5","#00a6fb","#ff8c42","#4f8a5b","#bc4749"],HAIRS=["#3a2a1a","#1f1f1f","#8a5a2b","#5b3a29","#c9822b"];
+function runnerSvg(i){ /* 땀 흘리며 헐레벌떡 뛰는 사람 (달리는 중에만 팔다리가 움직이고 땀이 떨어진다) */
+  var sh=SHIRTS[i%SHIRTS.length],hr=HAIRS[i%HAIRS.length],sk="#ffd9b3";
+  return '<svg viewBox="0 0 34 40" width="44" height="52" aria-hidden="true">'+
+    '<g class="leg l1" style="transform-origin:14px 27px"><line x1="14" y1="27" x2="12" y2="37" stroke="#34495e" stroke-width="3.6" stroke-linecap="round"/></g>'+
+    '<g class="leg l2" style="transform-origin:20px 27px"><line x1="20" y1="27" x2="22" y2="37" stroke="#34495e" stroke-width="3.6" stroke-linecap="round"/></g>'+
+    '<rect x="10.5" y="16" width="13" height="12" rx="4.5" fill="'+sh+'"/>'+
+    '<g class="arm a2" style="transform-origin:23px 18.5px"><line x1="23" y1="18.5" x2="28" y2="26" stroke="'+sk+'" stroke-width="3" stroke-linecap="round"/></g>'+
+    '<g class="arm a1" style="transform-origin:11px 18.5px"><line x1="11" y1="18.5" x2="6" y2="26" stroke="'+sk+'" stroke-width="3" stroke-linecap="round"/></g>'+
+    '<circle cx="17" cy="9" r="7.5" fill="'+sk+'"/><path d="M9.6 8 Q10 1 17 1.5 Q24 1 24.4 8 Q20 4.5 17 5.5 Q13 4.5 9.6 8z" fill="'+hr+'"/>'+
+    '<circle cx="11.8" cy="11.8" r="1.7" fill="#ff9aa2" opacity=".75"/><circle cx="22.2" cy="11.8" r="1.7" fill="#ff9aa2" opacity=".75"/>'+
+    '<path class="tr" d="M12.5 7.5 l3 1.4 -3 1.4 M21.5 7.5 l-3 1.4 3 1.4" stroke="#333" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'+
+    '<g class="mo-ok"><circle cx="13.5" cy="8.6" r="1.1" fill="#333"/><circle cx="20.5" cy="8.6" r="1.1" fill="#333"/><path d="M13.5 12.2 Q17 16 20.5 12.2z" fill="#c0392b"/></g>'+
+    '<ellipse class="mo-run" cx="17" cy="13.2" rx="2.1" ry="2.5" fill="#c0392b"/>'+
+    '<path class="sw s1" d="M27 3 q-2.6 3.6 0 4.8 q2.6 -1.2 0 -4.8z" fill="#5bc0eb"/><path class="sw s2" d="M5.5 5 q-2.2 3 0 4 q2.2 -1 0 -4z" fill="#5bc0eb"/>'+
+    '</svg>';
+}
 function trackLanes(rows){
   var ps=S.people.slice(),extra={};rows.forEach(function(r){var o=r.c.owner||"(미지정)";if(S.people.indexOf(o)<0)extra[o]=1});
   ps=ps.concat(Object.keys(extra));var out=[],best=0;
   ps.forEach(function(p,i){
     var rs=rows.filter(function(r){return (r.c.owner||"(미지정)")===p});if(!rs.length)return;
     var w=rs.filter(function(r){return r.d.work}).length,f=w/rs.length;if(f>best)best=f;
-    out.push({p:p,f:f,w:w,n:rs.length,ch:RUNNERS[i%RUNNERS.length]});
+    out.push({p:p,f:f,w:w,n:rs.length,i:i});
   });
   out.forEach(function(o){o.lead=best>0&&o.f===best&&o.f<1});return out;
 }
 function laneHtml(o,go){
   var pc=Math.round(o.f*100),cls="lane"+(o.f>=1?" fin":o.f>0?" run":"");
   return '<div class="'+cls+'" data-ln="'+esc(o.p)+'"><span class="nm" title="'+esc(o.p)+'">'+esc(o.p)+'</span><div class="rd"><span class="fl">'+(o.f>=1?"🏆":"🏁")+'</span>'+
-    '<div class="rn" data-f="'+o.f+'" style="left:'+(go?"calc((100% - 30px) * "+o.f+")":"0")+'">'+(o.lead?'<span class="cr">👑</span>':'')+(o.f>0&&o.f<1?'<span class="ds">💨</span>':'')+'<span class="ch">'+(o.f>=1?"🥳":o.ch)+'</span><span class="pc">'+pc+'%</span></div></div></div>';
+    '<div class="rn'+(o.f>.8?" late":"")+'" data-f="'+o.f+'" style="left:'+(go?"calc((100% - 44px) * "+o.f+")":"0")+'">'+(o.lead?'<span class="cr">👑</span>':o.f>=1?'<span class="cr">🎉</span>':'')+(o.f>0&&o.f<1?'<span class="ds">💨</span>':'')+'<span class="ch">'+runnerSvg(o.i)+'</span><span class="pc">'+pc+'%</span></div></div></div>';
 }
 function trackHtml(rows){
   var ls=trackLanes(rows);if(!ls.length)return '<div class="trk"><h4>달려라 동감!<span>업체를 넣으면 달리기가 시작돼요</span></h4></div>';
@@ -207,7 +233,7 @@ function trackHtml(rows){
   return '<div class="trk" aria-label="담당자별 진행 달리기"><h4>🏃 달려라 동감!<span>전체 '+tot.w+'/'+tot.n+' 완료 · '+(tot.n?Math.round(tot.w*100/tot.n):0)+'%</span></h4>'+ls.map(function(o){return laneHtml(o,false)}).join("")+'</div>';
 }
 function trackGo(){ /* 처음에는 출발선에서, 다음 프레임에 진행률 위치로 달려간다 */
-  requestAnimationFrame(function(){requestAnimationFrame(function(){document.querySelectorAll(".trk .rn").forEach(function(r){r.style.left="calc((100% - 30px) * "+r.dataset.f+")"})})});
+  requestAnimationFrame(function(){requestAnimationFrame(function(){document.querySelectorAll(".trk .rn").forEach(function(r){r.style.left="calc((100% - 44px) * "+r.dataset.f+")"})})});
 }
 function trackRefresh(rows){ /* 저장할 때: 같은 담당자 줄이면 캐릭터만 새 위치로 이동, 구성이 바뀌면 다시 그린다 */
   var el=document.querySelector(".trk");if(!el)return;
@@ -216,7 +242,7 @@ function trackRefresh(rows){ /* 저장할 때: 같은 담당자 줄이면 캐릭
   if(!same){el.outerHTML=trackHtml(rows);trackGo();return}
   ls.forEach(function(o,i){var tmp=document.createElement("div");tmp.innerHTML=laneHtml(o,true);var nl=tmp.firstChild,ol=cur[i],orn=ol.querySelector(".rn"),nrn=nl.querySelector(".rn");
     ol.className=nl.className;ol.querySelector(".fl").textContent=nl.querySelector(".fl").textContent;
-    orn.dataset.f=o.f;orn.innerHTML=nrn.innerHTML;orn.style.left=nrn.style.left});
+    orn.dataset.f=o.f;orn.className=nrn.className;orn.innerHTML=nrn.innerHTML;orn.style.left=nrn.style.left});
   var h=el.querySelector("h4 span"),tot=ls.reduce(function(a,o){a.n+=o.n;a.w+=o.w;return a},{n:0,w:0});if(h)h.textContent="전체 "+tot.w+"/"+tot.n+" 완료 · "+(tot.n?Math.round(tot.w*100/tot.n):0)+"%";
 }
 function summary(rows){
