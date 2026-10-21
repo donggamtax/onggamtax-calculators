@@ -1285,7 +1285,7 @@ function openImport(first){
   m.innerHTML='<div class="pm" style="width:min(640px,100%)"><b>업체 한꺼번에 넣기</b>'+
    '<div class="sub">'+(first?'아직 등록된 업체가 없습니다. ':'')+'엑셀에서 아래 순서로 칸을 복사해 붙여넣으세요. 이미 있는 업체명은 건너뜁니다.<br>업체명 · 대표자 · 면세(O 또는 빈칸) · 구분(법인/개인) · 담당 · 기장/신고 · 비고 (뒤쪽 칸은 비워도 됩니다. 구분이 비면 개인)</div>'+
    '<textarea id="impText" rows="10" style="width:100%;font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)" placeholder="예)\n㈜가나다\t홍길동\t\t법인\t담당자1\t기장\n나다라 식당\t김영희\tO\t개인\t담당자2\t기장"></textarea>'+
-   '<div class="sub" id="impInfo"></div><div style="display:flex;gap:8px"><button class="btn" type="button" id="impGo">넣기</button><button class="btn ghost" type="button" data-picclose>닫기</button></div></div>';
+   '<div class="sub" id="impInfo"></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" id="impGo">넣기</button><button class="btn ghost" type="button" id="repChk" title="업체명 · 대표자 두 칸만 읽어서, 이미 있는 업체의 대표자명을 고칩니다">이미 있는 업체의 대표자명만 고치기</button><button class="btn ghost" type="button" data-picclose>닫기</button></div></div>';
   document.body.appendChild(m);
   var ta=m.querySelector("#impText"),info=m.querySelector("#impInfo");
   ta.addEventListener("input",function(){var n=parseImport(ta.value).length;info.textContent=n?n+"곳을 넣습니다.":""});
@@ -1295,6 +1295,26 @@ function openImport(first){
     var b=this;b.disabled=true;info.textContent="넣는 중…";
     api("clients.import",{items:items}).then(function(r){m.remove();return api("clients.load",{light:1}).then(function(x){applyLoad(x,true);show();alert(r.added+"곳을 넣었습니다."+(r.skipped?" (이미 있어 건너뜀 "+r.skipped+"곳)":""))})})
       .catch(function(e){b.disabled=false;info.textContent="실패: "+e.message});
+  };
+  // 대표자명만 고치기: 먼저 바뀔 목록을 보여 주고, 확인을 누르면 저장한다
+  var repItems=null;
+  m.querySelector("#repChk").onclick=function(){
+    var b=this;
+    if(repItems){b.disabled=true;info.textContent="고치는 중…";
+      api("clients.setRep",{items:repItems}).then(function(r){m.remove();return api("clients.load",{light:1}).then(function(x){applyLoad(x,true);show();alert("대표자명 "+r.changes.length+"곳을 고쳤습니다.")})})
+        .catch(function(e){b.disabled=false;info.textContent="실패: "+e.message});return}
+    var items=parseImport(ta.value).map(function(x){return {name:x.name,rep:x.periods.rep}}).filter(function(x){return x.rep});
+    if(!items.length){info.textContent="업체명과 대표자 두 칸을 붙여넣으세요.";return}
+    b.disabled=true;info.textContent="확인하는 중…";
+    api("clients.setRep",{items:items,dry:true}).then(function(r){
+      b.disabled=false;
+      var h='<b>대표자명이 바뀌는 업체 '+r.changes.length+'곳</b>';
+      if(r.changes.length)h+='<div style="max-height:220px;overflow:auto;border:1px solid var(--line);border-radius:6px;padding:4px 8px;margin:4px 0">'+r.changes.map(function(c){return esc(c.name)+': '+(c.from?'<s>'+esc(c.from)+'</s>':'(빈칸)')+' → <b>'+esc(c.to)+'</b>'}).join("<br>")+'</div>';
+      if(r.notFound.length)h+='<div>명단에 없어 건너뜀 '+r.notFound.length+'곳: '+esc(r.notFound.slice(0,10).join(", "))+(r.notFound.length>10?" …":"")+'</div>';
+      if(r.ambiguous.length)h+='<div>같은 이름 업체가 둘 이상이라 건너뜀: '+esc(r.ambiguous.join(", "))+'</div>';
+      info.innerHTML=h;
+      if(r.changes.length){repItems=items;b.textContent="위 "+r.changes.length+"곳 대표자명 고치기";ta.readOnly=true}
+    },function(e){b.disabled=false;info.textContent="실패: "+e.message});
   };
 }
 
