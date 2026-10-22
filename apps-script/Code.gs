@@ -483,8 +483,12 @@ function attachFile(id) {
   id = String(id || "");
   if (!/^[A-Za-z0-9_-]{20,70}$/.test(id)) throw fail("첨부 파일이 올바르지 않습니다.");
   let file; try { file = DriveApp.getFileById(id); } catch (e) { throw fail("첨부 파일을 찾을 수 없습니다.", 404); }
+  // 한 번 확인한 첨부는 6시간 동안 폴더 확인을 건너뛴다 (드라이브 호출 감소)
+  const cache = CacheService.getScriptCache(), ck = "att_ok_" + id;
+  let ok = false; try { ok = cache.get(ck) === "1"; } catch (e) {}
+  if (ok) return file;
   const fid = attachFolder().getId(), ps = file.getParents();
-  while (ps.hasNext()) if (ps.next().getId() === fid) return file;
+  while (ps.hasNext()) if (ps.next().getId() === fid) { try { cache.put(ck, "1", 21600); } catch (e) {} return file; }
   throw fail("첨부 파일이 아닙니다.", 403);
 }
 function attachGet(req) {
@@ -493,6 +497,7 @@ function attachGet(req) {
 }
 function attachDel(req) {
   attachFile(req.id).setTrashed(true);
+  try { CacheService.getScriptCache().remove("att_ok_" + String(req.id)); } catch (e) {}
   return { ok: true };
 }
 function boardOf(req) {

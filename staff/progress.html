@@ -91,7 +91,7 @@ table.tb .nmc{text-align:left;font-weight:500;white-space:normal}
 "use strict";
 var API=(window.STAFF_API||"").replace(/\/$/,""),token=null;
 try{token=localStorage.getItem("staff.token")}catch(e){}
-function goLogin(){try{sessionStorage.removeItem("staff.clients.light")}catch(e){}(window.top||window).location.href="index.html"}
+function goLogin(){try{sessionStorage.removeItem("staff.clients.light");localStorage.removeItem("progress.boot.v1")}catch(e){}(window.top||window).location.href="index.html"}
 if(!token||Number(String(token).split(".")[0])<Date.now())goLogin();
 function api(action,data){
   if(!API)return Promise.reject(new Error("서버 주소가 설정되지 않았습니다."));
@@ -140,9 +140,16 @@ function cById(id){return S.clients.filter(function(c){return c.id===+id})[0]}
 function curList(){return S.lists.filter(function(l){return l.id===S.cur})[0]}
 function sortLists(a,b){return (b.year-a.year)||(b.ki-a.ki)||((b.sub==="확정")-(a.sub==="확정"))||(a.kind<b.kind?-1:1)}
 
+/* 지난번에 받은 목록을 저장해 두었다가 먼저 보여주고, 최신 내용은 뒤에서 받아 바꾼다 */
+var BOOT="progress.boot.v1",WHO="";try{WHO=localStorage.getItem("staff.who")||""}catch(e){}
+function bootGet(){try{var o=JSON.parse(localStorage.getItem(BOOT)||"null");return o&&o.who===WHO&&o.d?o.d:null}catch(e){return null}}
+function bootPut(d){try{localStorage.setItem(BOOT,JSON.stringify({who:WHO,d:d}))}catch(e){}}
+function applyAll(a,b){
+  S.lists=(a.lists||[]).sort(sortLists);S.canDelete=!!a.canDelete;S.skins=a.skins||{};S.clients=b.clients||[];S.people=b.people||[];
+}
 function loadAll(){
   return Promise.all([api("progress.lists"),api("clients.load",{lite:1})]).then(function(r){
-    S.lists=(r[0].lists||[]).sort(sortLists);S.canDelete=!!r[0].canDelete;S.skins=r[0].skins||{};S.clients=r[1].clients||[];S.people=r[1].people||[];
+    applyAll(r[0],r[1]);bootPut({a:r[0],b:r[1]});
   });
 }
 function loadRows(id){
@@ -728,7 +735,11 @@ document.addEventListener("change",function(e){
   }
 });
 
-loadAll().then(draw,function(e){$("#view").innerHTML='<p class="err">'+esc(e.message)+'</p>'});
+(function(){
+  var c=bootGet(),shown=false;
+  if(c){try{applyAll(c.a,c.b);shown=true;draw()}catch(e){shown=false}}
+  loadAll().then(function(){if(!shown||(!S.cur&&!S.adding))draw()},function(e){if(!shown)$("#view").innerHTML='<p class="err">'+esc(e.message)+'</p>'});
+})();
 })();
 </script>
 </body>
