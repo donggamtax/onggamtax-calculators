@@ -1197,7 +1197,7 @@ function applyLoad(r,lazy){
 }
 var LCK="staff.clients.light";
 function readLight(){try{var j=sessionStorage.getItem(LCK);return j?JSON.parse(j):null}catch(e){return null}}
-function writeLight(r){try{sessionStorage.setItem(LCK,JSON.stringify({clients:r.clients,templates:r.templates,data:[]}))}catch(e){}}
+function writeLight(r){try{sessionStorage.setItem(LCK,JSON.stringify({clients:r.clients,templates:r.templates,people:r.people,approver:r.approver,data:[]}))}catch(e){}}
 function boot(){
   setSt("불러오는 중…");
   var cached=readLight();
@@ -1205,7 +1205,7 @@ function boot(){
   return api("clients.load",{light:1}).then(function(r){
     writeLight(r);
     if(!state.sel&&!Object.keys(pending).length){applyLoad(r,true);setSt("저장됨","ok");show();if(!CLIENTS.length)openImport(true)}
-    else{["vat","inc","corp"].forEach(function(k){var t=r.templates&&r.templates[k];if(Array.isArray(t)&&t.length)TPL[k]=t});setSt("저장됨","ok")}
+    else{["vat","inc","corp"].forEach(function(k){var t=r.templates&&r.templates[k];if(Array.isArray(t)&&t.length)TPL[k]=t});if(r.people&&r.people.length&&String(r.people)!==String(PEOPLE)){PEOPLE=r.people;drawList()}setSt("저장됨","ok")}
     setTimeout(bgPrefetch,800);
   })
     .catch(function(e){setSt("불러오지 못했습니다: "+e.message,"bad");$("#detail").innerHTML='<div class="empty">'+esc(e.message)+' <button class="btn sm" type="button" onclick="boot()">다시 불러오기</button></div>'});
