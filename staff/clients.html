@@ -1232,12 +1232,13 @@ function applyGet(id,r,lz){
   if(before!==after&&state.sel===id&&!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))){drawList();drawDetail()}
   else showLast();
 }
-/* 화면이 열린 뒤 뒤에서 업체 자료를 30곳씩 미리 받아 둔다: 업체를 열 때 서버를 기다리지 않는다 */
+/* 화면이 열린 뒤 뒤에서 내 담당 업체 자료만 30곳씩 미리 받아 둔다: 자주 여는 업체는 기다리지 않고,
+   나머지 업체는 열 때 받는다(모든 직원이 전체 업체를 한꺼번에 받으면 서버가 붐벼 저장까지 느려진다) */
 var bgOn=false,skip={};
 function bgPrefetch(){
   if(bgOn)return;bgOn=true;
   (function next(){
-    var ids=CLIENTS.filter(function(c){var D=state.data[c.id];return D&&D.lazy&&!skip[c.id]}).slice(0,30).map(function(c){return c.id});
+    var ids=CLIENTS.filter(function(c){var D=state.data[c.id];return c.owner===ME&&stOf(c)==="거래중"&&D&&D.lazy&&!skip[c.id]}).slice(0,30).map(function(c){return c.id});
     if(!ids.length){bgOn=false;return}
     ids.forEach(function(i){skip[i]=1});
     api("clients.getMany",{ids:ids}).then(function(r){
