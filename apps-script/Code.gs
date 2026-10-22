@@ -836,8 +836,10 @@ function clientsSave(req, who) {
     const now = new Date().toISOString();
     const clRows = clAll(cl, CL_COLS.length);
     const cdLast = cd.getLastRow();
-    const cdRows = cdLast < 2 ? [] : cd.getRange(2, 1, cdLast - 1, 3).getValues(); // 업체id, 그룹, 내용
-    const where = {}, oldJson = {}; cdRows.forEach((r, i) => { where[r[0] + "|" + r[1]] = i + 2; oldJson[r[0] + "|" + r[1]] = r[2]; });
+    // 업체id·그룹 두 칸만 읽는다(내용 칸까지 다 읽으면 자료가 쌓일수록 저장이 느려진다). 내용은 필요한 줄만 따로 읽는다.
+    const cdRows = cdLast < 2 ? [] : cd.getRange(2, 1, cdLast - 1, 2).getValues();
+    const where = {}; cdRows.forEach((r, i) => { where[r[0] + "|" + r[1]] = i + 2; });
+    const oldJsonOf = key => where[key] ? cd.getRange(where[key], 3, 1, 1).getValues()[0][0] : "";
     const logs = [];
     let metaChanged = false;
     const append = [], del = [], hist = {};
@@ -855,7 +857,7 @@ function clientsSave(req, who) {
         const clean = {};
         Object.keys(val || {}).slice(0, 500).forEach(k => { const v = String(val[k] == null ? "" : val[k]); if (v !== "") clean[String(k).slice(0, 80)] = v.slice(0, 20000); });
         if (/^(vat|inc|corp)\|/.test(g) && !canApprove(who)) {
-          let oj = {}; try { oj = JSON.parse(String(oldJson[key] || "{}")); } catch (e) {}
+          let oj = {}; try { oj = JSON.parse(String(oldJsonOf(key) || "{}")); } catch (e) {}
           Object.keys(clean).forEach(k => { if (/^(vat|inc|corp)\|[^|]+\|(s2|rej)$/.test(k) && String(clean[k]) !== String(oj[k] || "")) throw fail("대표세무사 결재·반려는 대표세무사만 체크할 수 있습니다. (해제는 누구나 할 수 있습니다)"); });
         }
         const json = JSON.stringify(clean);
