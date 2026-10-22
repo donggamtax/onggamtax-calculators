@@ -655,13 +655,29 @@ function groupLabel(g) {
 
 // 업체 목록·양식은 자주 읽고 드물게 바뀌므로 6시간 캐시한다. 업체/양식을 바꾸는 저장은 clCacheClear()로 비운다.
 const CL_CACHE_KEY = "cl_light_v1";
-function clCacheClear() { try { CacheService.getScriptCache().remove(CL_CACHE_KEY); } catch (e) {} }
+const CL_LITE_KEY = "cl_lite_v1";
+function clCacheClear() { try { CacheService.getScriptCache().removeAll([CL_CACHE_KEY, CL_LITE_KEY]); } catch (e) {} }
 // 대표세무사 결재 체크는 스크립트 속성 APPROVERS(쉼표나 줄바꿈으로 이름 구분)에 적힌 사람만 바꿀 수 있다. 비어 있으면 제한하지 않는다.
 function canApprove(who) {
   const l = String(props().APPROVERS || "").split(/[,\n]/).map(s => s.trim()).filter(Boolean);
   return !l.length || l.indexOf(who) >= 0;
 }
+// 진도체크용: 업체 이름·구분·담당·상태·면세만(양식·회차·업체자료는 빼서 가볍게, 6시간 캐시)
+function clientsLoadLite(who) {
+  let res = null;
+  try { const hit = CacheService.getScriptCache().get(CL_LITE_KEY); if (hit) res = JSON.parse(hit); } catch (e) {}
+  if (!res) {
+    res = { clients: clAll(clSheet(CL_SHEET, CL_COLS), CL_COLS.length).filter(r => r[0] !== "").map(r => {
+      const c = clRowToItem(r);
+      return { id: c.id, name: c.name, type: c.type, owner: c.owner, svc: c.svc, status: c.status, periods: { tf: c.periods && c.periods.tf ? 1 : 0 } };
+    }) };
+    try { CacheService.getScriptCache().put(CL_LITE_KEY, JSON.stringify(res), 21600); } catch (e) {}
+  }
+  res.people = PEOPLE; res.approver = canApprove(who);
+  return res;
+}
 function clientsLoad(req, who) {
+  if (req && req.lite) return clientsLoadLite(who);
   const light = !!(req && req.light);
   if (light) {
     try { const hit = CacheService.getScriptCache().get(CL_CACHE_KEY); if (hit) { const r = JSON.parse(hit); r.people = PEOPLE; r.approver = canApprove(who); return r; } } catch (e) {}

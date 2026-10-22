@@ -141,7 +141,7 @@ function curList(){return S.lists.filter(function(l){return l.id===S.cur})[0]}
 function sortLists(a,b){return (b.year-a.year)||(b.ki-a.ki)||((b.sub==="확정")-(a.sub==="확정"))||(a.kind<b.kind?-1:1)}
 
 function loadAll(){
-  return Promise.all([api("progress.lists"),api("clients.load",{light:1})]).then(function(r){
+  return Promise.all([api("progress.lists"),api("clients.load",{lite:1})]).then(function(r){
     S.lists=(r[0].lists||[]).sort(sortLists);S.canDelete=!!r[0].canDelete;S.skins=r[0].skins||{};S.clients=r[1].clients||[];S.people=r[1].people||[];
   });
 }
