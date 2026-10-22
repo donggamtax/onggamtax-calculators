@@ -298,7 +298,7 @@ var TPL=defaultTpl();
 var TPLNAME={vat:"부가세",inc:"소득세",corp:"법인세"};
 function tplIds(kind){var a=[];if(kind==="vat")TPL.vat.forEach(function(it){if(!it.k)a.push(it.id)});else TPL[kind].forEach(function(g){g.rows.forEach(function(r){a.push(r.id)})});return a}
 
-var state={sort:"",svc:"전체",tfo:false,showOff:false,owner:"전체",adding:false,askDel:null,cmp:{},sel:null,tab:"기본정보",filter:"전체",q:"",vp:null,ip:null,cp:null,ask:null,data:{}};
+var state={loading:true,sort:"",svc:"전체",tfo:false,showOff:false,owner:"전체",adding:false,askDel:null,cmp:{},sel:null,tab:"기본정보",filter:"전체",q:"",vp:null,ip:null,cp:null,ask:null,data:{}};
 var seq=10;
 function d(id){ if(!state.data[id]) state.data[id]=buildData({},[]); return state.data[id]; }
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -338,7 +338,7 @@ function drawList(){
   if(state.sort){var kc=function(a,b){return String(a||"~").localeCompare(String(b||"~"),"ko")};rows=rows.slice().sort(function(a,b){return state.sort==="owner"?(kc(a.owner,b.owner)||kc(a.name,b.name)):kc(a.name,b.name)})}
   var offN=CLIENTS.filter(function(c){return stOf(c)!=="거래중"}).length;
   $("#count").textContent=(state.showOff?"폐업·이탈 ":"거래중 ")+rows.length+"곳"+(state.showOff?"":" · 숨긴 폐업·이탈 "+offN+"곳")+"";
-  $("#cl").innerHTML=rows.map(function(c){return '<li><button type="button" data-id="'+c.id+'" aria-current="'+(state.sel===c.id)+'"><span>'+esc(c.name||"(이름 없음)")+' <span class="tag">'+esc(c.svc||"기장")+'</span>'+(c.tf?' <span class="tag" style="background:var(--soft)">면세</span>':'')+(c.tier?' <span class="tag">'+esc(c.tier)+'</span>':'')+(stOf(c)!=="거래중"?' <span class="tag" style="background:var(--warn-bg);color:var(--warn)">'+stOf(c)+'</span>':'')+'</span><span class="sub">'+(c.rep?esc(c.rep)+' · ':'')+esc(c.owner||"미지정")+'</span></button></li>'}).join("")||'<li class="empty">'+(state.showOff?"폐업·이탈 처리한 업체가 없습니다":"검색 결과가 없습니다")+'</li>';
+  $("#cl").innerHTML=rows.map(function(c){return '<li><button type="button" data-id="'+c.id+'" aria-current="'+(state.sel===c.id)+'"><span>'+esc(c.name||"(이름 없음)")+' <span class="tag">'+esc(c.svc||"기장")+'</span>'+(c.tf?' <span class="tag" style="background:var(--soft)">면세</span>':'')+(c.tier?' <span class="tag">'+esc(c.tier)+'</span>':'')+(stOf(c)!=="거래중"?' <span class="tag" style="background:var(--warn-bg);color:var(--warn)">'+stOf(c)+'</span>':'')+'</span><span class="sub">'+(c.rep?esc(c.rep)+' · ':'')+esc(c.owner||"미지정")+'</span></button></li>'}).join("")||'<li class="empty">'+(state.loading&&!CLIENTS.length?"업체 목록을 불러오는 중입니다… (처음 여는 PC는 조금 더 걸립니다)":state.showOff?"폐업·이탈 처리한 업체가 없습니다":"검색 결과가 없습니다")+'</li>';
 }
 /* 회차(신고 단위) 선택·이름 수정·삭제·추가 */
 function periodBar(kind,list,cur,addLabel){
@@ -1199,16 +1199,16 @@ var LCK="staff.clients.light";
 function readLight(){try{var j=sessionStorage.getItem(LCK);return j?JSON.parse(j):null}catch(e){return null}}
 function writeLight(r){try{sessionStorage.setItem(LCK,JSON.stringify({clients:r.clients,templates:r.templates,people:r.people,approver:r.approver,data:[]}))}catch(e){}}
 function boot(){
-  setSt("불러오는 중…");
+  setSt("불러오는 중…");state.loading=true;
   var cached=readLight();
   if(cached&&cached.clients&&cached.clients.length){applyLoad(cached,true);show()} // 지난번 목록을 먼저 보여주고 뒤에서 새로 받는다
   return api("clients.load",{light:1}).then(function(r){
-    writeLight(r);
+    writeLight(r);state.loading=false;
     if(!state.sel&&!Object.keys(pending).length){applyLoad(r,true);setSt("저장됨","ok");show();if(!CLIENTS.length)openImport(true)}
     else{["vat","inc","corp"].forEach(function(k){var t=r.templates&&r.templates[k];if(Array.isArray(t)&&t.length)TPL[k]=t});if(r.people&&r.people.length&&String(r.people)!==String(PEOPLE)){PEOPLE=r.people;drawList()}setSt("저장됨","ok")}
     setTimeout(bgPrefetch,800);
   })
-    .catch(function(e){setSt("불러오지 못했습니다: "+e.message,"bad");$("#detail").innerHTML='<div class="empty">'+esc(e.message)+' <button class="btn sm" type="button" onclick="boot()">다시 불러오기</button></div>'});
+    .catch(function(e){state.loading=false;if(!CLIENTS.length)drawList();setSt("불러오지 못했습니다: "+e.message,"bad");$("#detail").innerHTML='<div class="empty">'+esc(e.message)+' <button class="btn sm" type="button" onclick="boot()">다시 불러오기</button></div>'});
 }
 var fetching={};
 function refreshClient(id){
