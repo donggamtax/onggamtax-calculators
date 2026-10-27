@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>직원 전용 | 동감 세무회계</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="icon" href="../logo.png">
+<style>
+/* 레이아웃: 위 머리글, 메뉴 탭, 아래 본문 */
+:root{
+  --brand:#3D5F70; --deep:#2C4756; --tint:#EEF4F6; --warm:#B8945C; --stamp:#B23A2E;
+  --ink:#18232B; --muted:#66737C; --line:#E1E7EA; --paper:#F6F8F9; --sheet:#fff; --quote:#F8FAFB;
+  --sans:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);color:var(--ink);background:var(--paper);line-height:1.65;word-break:keep-all;letter-spacing:-.01em;-webkit-font-smoothing:antialiased;font-size:15px}
+a{color:inherit}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px;border-radius:6px}
+[hidden]{display:none!important}
+
+.hd{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.hd .in{max-width:1280px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.hd .logo img{height:26px;width:auto;display:block}
+.hd .tag{font-size:12px;font-weight:700;color:var(--brand);background:var(--tint);border-radius:999px;padding:3px 10px}
+.hd .sp{flex:1}
+.hd .out+.out{margin-left:8px}
+#pwDlg{border:1px solid var(--line);border-radius:14px;padding:22px;max-width:360px;width:calc(100% - 32px)}
+#pwDlg::backdrop{background:rgba(0,0,0,.35)}
+#pwDlg h2{font-size:17px;margin:0 0 12px}#pwDlg label{display:block;font-size:13px;margin:10px 0 4px}#pwDlg input{width:100%;box-sizing:border-box}#pwDlg .row{margin-top:16px;display:flex;gap:8px;justify-content:flex-end}
+.hd .out{background:none;border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:13px;cursor:pointer}
+.confid{max-width:1280px;margin:12px auto 0;padding:0 20px}
+.confid p{font-size:13px;font-weight:600;color:var(--stamp);border:1px solid rgba(178,58,46,.4);background:#fff;border-radius:10px;padding:8px 14px}
+
+/* 로그인 */
+.login{max-width:400px;margin:72px auto;padding:0 20px}
+.login form{background:var(--sheet);border:1px solid var(--line);border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 40px -30px rgba(44,71,86,.5)}
+.login h1{font-size:22px;font-weight:800;letter-spacing:-.03em}
+.login p{color:var(--muted);font-size:14px}
+.field{width:100%;border:1px solid #C9D3D8;border-radius:10px;padding:11px 14px;background:#fff}
+.btn{border:0;border-radius:999px;background:var(--brand);color:#fff;font-weight:700;padding:11px 20px;cursor:pointer}
+.btn:hover{background:var(--deep)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.ghost{background:#fff;color:var(--brand);border:1px solid #C9D3D8}
+.btn.ghost:hover{border-color:var(--brand)}
+.btn.sm{padding:6px 12px;font-size:13px}
+.lvt{border-collapse:collapse;font-size:13px;min-width:100%}.lvt th,.lvt td{border:1px solid var(--line);padding:5px 8px;text-align:center;white-space:nowrap}.lvt th{background:var(--soft,#f3f1ea);font-weight:600}.lvt td.nm{font-weight:600}.lvt td.rem{font-weight:700}.lvt td.neg{color:var(--stamp)}
+#clientsFrame{display:block;width:100%;height:calc(100vh - 130px);min-height:560px;border:0;background:transparent}
+#clientsFrame[hidden]{display:none}
+#progressFrame{display:block;width:100%;height:calc(100vh - 130px);min-height:560px;border:0;background:transparent}
+#progressFrame[hidden]{display:none}
+.err{color:var(--stamp);font-size:14px;font-weight:600}
+
+/* 본문 */
+.cols{max-width:1280px;margin:16px auto 56px;padding:0 20px;display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:22px;align-items:start}
+@media (max-width:960px){.cols{grid-template-columns:minmax(0,1fr)}}
+.main{display:flex;flex-direction:column;gap:16px;min-width:0}
+.card{background:var(--sheet);border:1px solid var(--line);border-radius:14px}
+.kinds{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 12px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:#fff}
+.chip .n{font-weight:500;margin-left:4px;opacity:.8;font-variant-numeric:tabular-nums}
+.hint{font-size:13px;color:var(--muted)}
+
+
+/* 메뉴 탭 */
+.who{font-size:13px;font-weight:700;color:var(--muted);margin-right:10px}
+.tabs{max-width:1280px;margin:14px auto 0;padding:0 20px;display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 16px;font-weight:700;font-size:14px;color:var(--muted);cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--deep);border-color:var(--deep);color:#fff}
+.cols.one{grid-template-columns:minmax(0,1fr);max-width:960px}
+
+/* 게시판 */
+.bhead{padding:18px;display:flex;flex-direction:column;gap:12px}
+.bhead h1{font-size:22px;font-weight:800;letter-spacing:-.03em}
+.bhead .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.bhead .note{font-size:13px;color:var(--muted)}
+.bform{padding:16px 18px;display:flex;flex-direction:column;gap:10px;border-color:var(--warm)}
+.bform h2{font-size:15px;font-weight:800}
+.bform textarea{min-height:160px;resize:vertical}
+.bform .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.bform label{font-size:13px;color:var(--muted);font-weight:600}
+.blist{display:flex;flex-direction:column;gap:10px}
+.bitem{padding:14px 18px}
+.bitem .top{display:flex;gap:10px;align-items:flex-start}
+.bitem .t{flex:1;min-width:0;background:none;border:0;text-align:left;cursor:pointer;font-weight:700;font-size:15px;line-height:1.5}
+.bitem .t:hover{color:var(--brand)}
+.bitem .meta{display:block;font-weight:400;color:var(--muted);font-size:12.5px;margin-top:2px}
+.bitem .pin{font-size:11px;font-weight:800;color:#fff;background:var(--stamp);border-radius:4px;padding:1px 6px;margin-right:6px;vertical-align:2px}
+.bitem .txt{white-space:pre-wrap;font-size:14.5px;margin-top:10px;background:var(--quote);border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow-wrap:anywhere}
+.bitem .sub{font-size:13px;color:var(--muted);margin-top:8px;white-space:pre-wrap}
+.bitem .acts{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+
+.empty{color:var(--muted);font-size:14px;padding:12px 14px}
+
+.foot{max-width:1280px;margin:0 auto 32px;padding:0 20px;font-size:12.5px;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<header class="hd"><div class="in">
+  <a class="logo" href="../" aria-label="동감 세무회계 첫 화면"><img src="../logo.png" alt="동감 세무회계" width="1010" height="151"></a>
+  <span class="tag">직원 전용</span>
+  <span class="sp"></span>
+  <span class="who" id="who" hidden></span>
+  <button type="button" class="out" id="pwBtn" hidden>비밀번호 변경</button>
+  <button type="button" class="out" id="logout" hidden>로그아웃</button>
+</div></header>
+<dialog id="pwDlg"><form id="pwForm" method="dialog">
+  <h2>비밀번호 변경</h2>
+  <label for="pwCur">현재 비밀번호</label><input id="pwCur" type="password" autocomplete="current-password" required>
+  <label for="pwNew">새 비밀번호 (6자 이상)</label><input id="pwNew" type="password" autocomplete="new-password" minlength="6" maxlength="64" required>
+  <label for="pwNew2">새 비밀번호 확인</label><input id="pwNew2" type="password" autocomplete="new-password" minlength="6" maxlength="64" required>
+  <p class="err" id="pwErr" hidden></p><p class="hint" id="pwOk" hidden></p>
+  <div class="row"><button type="button" class="btn ghost sm" id="pwCancel">닫기</button><button type="submit" class="btn sm" id="pwSave">변경</button></div>
+</form></dialog>
+<div class="confid"><p>이 프로그램은 동감 세무회계 업무 용도로 제작된 것으로 외부 유출 및 공유를 금합니다.</p></div>
+
+<section class="login" id="loginView">
+  <form id="loginForm">
+    <h1>직원 전용</h1>
+    <p>사무소에서 안내받은 비밀번호를 입력하세요.</p>
+    <input class="field" id="pw" type="password" autocomplete="current-password" placeholder="비밀번호" required>
+    <button class="btn" id="loginBtn">들어가기</button>
+    <p class="err" id="loginErr" hidden></p>
+  </form>
+</section>
+
+<nav class="tabs" id="tabs" role="tablist" aria-label="메뉴" hidden>
+  <button type="button" role="tab" data-tab="clients" aria-selected="false">업체별 기장</button>
+  <button type="button" role="tab" data-tab="progress" aria-selected="false">진도체크</button>
+  <button type="button" role="tab" data-tab="tpl" aria-selected="false">안내문·템플릿</button>
+  <button type="button" role="tab" data-tab="guide" aria-selected="false">고객 안내</button>
+  <button type="button" role="tab" data-tab="notice" aria-selected="false">공지·매뉴얼</button>
+  <button type="button" role="tab" data-tab="leave" aria-selected="false">휴가 신청</button>
+</nav>
+
+<div class="cols one" id="boardView" hidden><div class="main" id="board"></div></div>
+<iframe id="clientsFrame" title="업체별 기장" hidden></iframe>
+<iframe id="progressFrame" title="진도체크" hidden></iframe>
+
+
+<script src="config.js"></script>
+<script>
+const API = (window.STAFF_API || "").replace(/\/$/, "");
+let PEOPLE = []; // 직원 명단은 소스에 두지 않고, 로그인한 뒤 서버(config)에서 받는다
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const store = { get(k){ try{ return localStorage.getItem(k); }catch{ return null; } }, set(k,v){ try{ v==null ? localStorage.removeItem(k) : localStorage.setItem(k,v); }catch{} } };
+
+let token = store.get("staff.token");
+
+// ── 서버 호출 ──
+async function api(action, data = {}){
+  if(!API) throw new Error("서버 주소가 아직 설정되지 않았습니다. 관리자에게 문의하세요.");
+  // 구글 Apps Script는 text/plain POST로 보내야 브라우저 사전 확인 요청 없이 받는다
+  const res = await fetch(API, { method:"POST", headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: JSON.stringify({ action, token, ...data }) });
+  const body = await res.json().catch(() => ({ error: "서버 응답을 읽지 못했습니다." }));
+  if(body.status === 401 && action !== "login"){ logout(); throw new Error("로그인 시간이 지났습니다. 다시 로그인해 주세요."); }
+  if(!res.ok || body.error) throw new Error(body.error || "요청을 처리하지 못했습니다.");
+  return body;
+}
+
+// ── 로그인 ──
+function showApp(on){ $("#loginView").hidden = on; $("#tabs").hidden = !on; $("#logout").hidden = !on; $("#pwBtn").hidden = !on; $("#who").hidden = !on; if(on){ if(!PEOPLE.length) api("config").then(cf => { PEOPLE = cf.people || []; }).catch(() => {}); $("#who").textContent = store.get("staff.who") ? store.get("staff.who") + " 님" : ""; showTab(new URLSearchParams(location.search).get("tab") || store.get("staff.tab") || "clients"); } else { $("#boardView").hidden = true; $("#clientsFrame").hidden = true; $("#progressFrame").hidden = true; } }
+function logout(){ token = null; store.set("staff.token", null); try{ sessionStorage.removeItem("staff.clients.light"); }catch{} showApp(false); }
+$("#logout").onclick = logout;
+$("#pwBtn").onclick = () => { ["#pwCur","#pwNew","#pwNew2"].forEach(i => $(i).value = ""); $("#pwErr").hidden = true; $("#pwOk").hidden = true; $("#pwDlg").showModal(); $("#pwCur").focus(); };
+$("#pwCancel").onclick = () => $("#pwDlg").close();
+$("#pwForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const err = $("#pwErr"), ok = $("#pwOk"), btn = $("#pwSave"); err.hidden = true; ok.hidden = true;
+  if($("#pwNew").value !== $("#pwNew2").value){ err.textContent = "새 비밀번호 두 칸이 서로 다릅니다."; err.hidden = false; return; }
+  btn.disabled = true;
+  try{
+    await api("password.change", { current: $("#pwCur").value, next: $("#pwNew").value });
+    ok.textContent = "비밀번호를 바꿨습니다. 다음 로그인부터 새 비밀번호를 쓰세요."; ok.hidden = false;
+    ["#pwCur","#pwNew","#pwNew2"].forEach(i => $(i).value = "");
+    setTimeout(() => { try{ $("#pwDlg").close(); }catch{} }, 1800);
+  }catch(x){ err.textContent = x.message; err.hidden = false; }
+  finally{ btn.disabled = false; }
+});
+$("#loginForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const btn = $("#loginBtn"), err = $("#loginErr"); btn.disabled = true; err.hidden = true;
+  try{
+    const r = await api("login", { password: $("#pw").value });
+    token = r.token; store.set("staff.token", token); store.set("staff.who", r.user || ""); PEOPLE = r.people || []; $("#pw").value = ""; showApp(true);
+  }catch(x){ err.textContent = x.message; err.hidden = false; }
+  finally{ btn.disabled = false; }
+});
+
+// ── 메뉴 탭 ──
+const BOARD_UI = {
+  tpl: { title:"안내문·템플릿", note:"신고별 필요서류 안내문과 고객 안내 문구입니다. [ ] 부분을 바꿔 쓰세요.", cat:"category", head:"title", body:"body", copy:true,
+    form:[["category","분류","input","예: 부가가치세"],["title","제목","input",""],["body","내용","textarea",""]] },
+  guide: { title:"고객 안내 관리", note:"고객용 비밀 링크 페이지에 보이는 신고 안내·이용 매뉴얼입니다. '고객에게 공개'를 체크한 글만 고객에게 보입니다. 순서는 작은 숫자가 위입니다.", cat:"category", head:"title", body:"body",
+    form:[["category","분류","select",["부가가치세","종합소득세","법인세","사업장현황신고","기타","이용매뉴얼"]],["title","제목","input","예: 부가세 신고 기간과 준비 자료"],["body","내용","textarea","줄바꿈은 그대로 보입니다. https:// 주소는 자동으로 링크가 됩니다."],["order","순서","input","예: 10"],["pinned","맨 위 필독으로 고정","check",""],["pub","고객에게 공개","check",""]] },
+  notice: { title:"공지·업무 매뉴얼", note:"동감 세무회계 공지사항과 업무 매뉴얼입니다.", cat:"type", head:"title", body:"body",
+    form:[["type","종류","select",["공지","매뉴얼"]],["title","제목","input",""],["body","내용","textarea",""],["pinned","맨 위에 고정","check",""]] },
+};
+let guideKey = null; // 고객용 링크 키(서버 설정). null=아직 안 불러옴
+const boards = {}; // board → { items, q, cat, editing, open }
+function showTab(tab){
+  if(!BOARD_UI[tab] && tab !== "leave" && tab !== "clients" && tab !== "progress") tab = "clients";
+  store.set("staff.tab", tab);
+  document.querySelectorAll("#tabs [data-tab]").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === tab));
+  // 업체별 기장은 같은 화면 안에서 열고(처음 한 번만 불러옴), 다른 메뉴로 갔다 와도 입력 중이던 화면이 그대로 남는다
+  const fr = $("#clientsFrame");
+  fr.hidden = tab !== "clients";
+  const pf = $("#progressFrame");
+  pf.hidden = tab !== "progress";
+  if(tab === "progress"){
+    $("#boardView").hidden = true;
+    if(!pf.getAttribute("src")) pf.src = "progress.html?v=20261022b";
+    return;
+  }
+  if(tab === "clients"){
+    $("#boardView").hidden = true;
+    if(!fr.getAttribute("src")) fr.src = "clients.html?embed=1&v=20261022c";
+    return;
+  }
+  $("#boardView").hidden = false;
+  loadBoard(tab);
+}
+$("#tabs").addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if(b) showTab(b.dataset.tab); });
+
+async function loadBoard(key, keep){
+  const st = boards[key] ||= { items:[], q:"", cat:"전체", editing:null, open:{} };
+  st.key = key;
+  if(!keep){ st.loading = true; drawBoard(key); }
+  try{
+    if(key === "guide" && guideKey === null) guideKey = (await api("config")).guideKey || "";
+    st.items = (await api("board.list", { board:key })).items || []; st.err = "";
+  }
+  catch(x){ st.err = x.message; }
+  st.loading = false;
+  if(store.get("staff.tab") === key) drawBoard(key);
+}
+const fmtDay = iso => { const d = new Date(iso); return isNaN(d) ? "" : `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,"0")}.${String(d.getDate()).padStart(2,"0")}`; };
+
+function drawBoard(key){
+  if(key === "leave") return drawLeave();
+  const ui = BOARD_UI[key], st = boards[key];
+  const cats = ["전체", ...new Set(st.items.map(it => it[ui.cat]).filter(Boolean))];
+  const q = st.q.toLowerCase();
+  let list = st.items.filter(it => (st.cat === "전체" || it[ui.cat] === st.cat) && (!q || [it[ui.head], it[ui.body], it[ui.sub] || "", it[ui.cat]].join(" ").toLowerCase().includes(q)));
+  if(key === "notice") list = [...list].sort((a,b) => (b.pinned === "Y") - (a.pinned === "Y"));
+  $("#board").innerHTML = `
+    <section class="card bhead">
+      <h1>${ui.title}</h1>
+      <p class="note">${esc(ui.note)}</p>
+      <div class="row">
+        <input class="field" id="bq" type="search" placeholder="찾기" value="${esc(st.q)}" style="flex:1;min-width:200px">
+        <button type="button" class="btn" id="bnew">새로 쓰기</button>
+      </div>
+      <div class="kinds" id="bcats">${cats.map(c => `<button type="button" class="chip" data-cat="${esc(c)}" aria-pressed="${st.cat === c}">${esc(c)}</button>`).join("")}</div>
+    </section>
+    ${key === "guide" ? guideLinkHtml() : ""}
+    ${st.editing ? formHtml(key) : ""}
+    ${st.err ? `<p class="err">${esc(st.err)}</p>` : ""}
+    <div class="blist">${st.loading ? `<p class="hint">불러오는 중입니다…</p>` : list.length ? list.map(it => itemCard(key, it)).join("") : `<p class="empty card">아직 글이 없습니다. "새로 쓰기"로 추가하세요.</p>`}</div>`;
+  const bq = $("#bq"); bq.addEventListener("input", () => { st.q = bq.value; const pos = bq.selectionStart; drawBoard(key); const n = $("#bq"); n.focus(); n.setSelectionRange(pos, pos); });
+}
+const gImg = id => "https://drive.google.com/thumbnail?id=" + id + "&sz=w1000";
+function guideHtml(t){ return esc(t).replace(/\[그림:([A-Za-z0-9_-]{20,60})\]/g, (m, id) => `<img src="${gImg(id)}" alt="첨부 그림" style="max-width:100%;border-radius:8px;display:block;margin:8px 0" loading="lazy">`); }
+function guideLinkHtml(){
+  if(guideKey === null) return "";
+  if(!guideKey) return `<section class="card bform"><h2>고객용 링크</h2><p class="hint">아직 링크 키가 없습니다. Apps Script → 프로젝트 설정 → 스크립트 속성에 <b>GUIDE_KEY</b>(영문·숫자 16자 이상)를 추가하면 링크가 만들어집니다.</p></section>`;
+  const url = new URL("../guide/?k=" + guideKey, location.href).href;
+  return `<section class="card bform"><h2>고객용 링크</h2><p class="hint">이 주소를 아는 고객만 열 수 있습니다. 고객에게만 보내 주세요(블로그·홈페이지에 올리지 마세요).</p>
+    <div class="row"><input class="field" id="glink" readonly value="${esc(url)}" style="flex:1;min-width:200px"><button type="button" class="btn" id="gcopy">링크 복사</button><a class="btn ghost" href="${esc(url)}" target="_blank" rel="noopener noreferrer">미리 보기</a></div></section>`;
+}
+function itemCard(key, it){
+  const ui = BOARD_UI[key], st = boards[key], open = st.open[it.id];
+  const meta = [it[ui.cat], it.author, fmtDay(it.updatedAt || it.createdAt)].filter(Boolean).join(" · ");
+  return `<article class="card bitem">
+    <div class="top">
+      <button type="button" class="t" data-bopen="${esc(it.id)}">${key === "notice" && it.pinned === "Y" ? `<span class="pin">고정</span>` : ""}${key === "guide" && it.pinned === "Y" ? `<span class="pin">필독</span>` : ""}${key === "guide" ? `<span class="pin"${it.pub === "Y" ? "" : ` style="background:#8a949b"`}>${it.pub === "Y" ? "공개" : "비공개"}</span>` : ""}${esc(it[ui.head])}<span class="meta">${esc(meta)}</span></button>
+      ${ui.copy ? `<button type="button" class="chip" data-bcopy="${esc(it.id)}">복사</button>` : ""}${key === "guide" && it.pub === "Y" && guideKey ? `<button type="button" class="chip" data-glink="${esc(it.id)}">이 글 링크 복사</button>` : ""}
+    </div>
+    ${open ? `<div class="txt">${key === "guide" ? guideHtml(it[ui.body]) : esc(it[ui.body])}</div>${ui.sub && it[ui.sub] ? `<div class="sub"><b>근거</b>\n${esc(it[ui.sub])}</div>` : ""}
+      <div class="acts"><button type="button" class="btn ghost sm" data-bedit="${esc(it.id)}">수정</button><button type="button" class="btn ghost sm" data-bdel="${esc(it.id)}">삭제</button></div>` : ""}
+  </article>`;
+}
+function formHtml(key){
+  const ui = BOARD_UI[key], ed = boards[key].editing;
+  const who = ed.author || store.get("staff.who") || "";
+  return `<section class="card bform" id="bform">
+    <h2>${ed.id ? "글 수정" : "새 글"}</h2>
+    ${ui.form.map(([k,label,type,ph]) => type === "textarea" ? `<label>${label}<textarea class="field" data-f="${k}" placeholder="${esc(ph)}">${esc(ed[k] || "")}</textarea></label>${key === "guide" ? `<div class="row"><button type="button" class="btn ghost sm" id="gimg">그림 넣기</button><input type="file" id="gfile" accept="image/jpeg,image/png" hidden><span class="hint" id="gimgmsg">커서 위치에 그림이 들어갑니다. 본문의 [그림:…] 줄은 지우지 마세요.</span></div>` : ""}`
+      : type === "select" ? `<label>${label} <select class="field" data-f="${k}" style="width:auto">${ph.map(o => `<option${(ed[k]||ph[0]) === o ? " selected" : ""}>${o}</option>`).join("")}</select></label>`
+      : type === "check" ? `<label><input type="checkbox" data-f="${k}"${ed[k] === "Y" ? " checked" : ""}> ${label}</label>`
+      : `<label>${label}<input class="field" data-f="${k}" placeholder="${esc(ph)}" value="${esc(ed[k] || "")}"></label>`).join("")}
+    <div class="row"><label>작성자 <select class="field" data-f="author" style="width:auto">${["",...PEOPLE,"대표"].map(p => `<option value="${p}"${who === p ? " selected" : ""}>${p || "선택 안 함"}</option>`).join("")}</select></label></div>
+    <div class="row"><button type="button" class="btn" id="bsave">저장</button><button type="button" class="btn ghost" id="bcancel">닫기</button></div>
+    <p class="err" id="berr" hidden></p>
+  </section>`;
+}
+document.addEventListener("click", async e => {
+  const key = store.get("staff.tab"), st = boards[key]; if(!st || !$("#board").contains(e.target)) return;
+  const t = e.target;
+  if(t.closest("#gcopy")){ const b = t.closest("#gcopy"); try{ await navigator.clipboard.writeText($("#glink").value); b.textContent = "복사됨"; }catch{ $("#glink").select(); b.textContent = "직접 복사하세요"; } setTimeout(() => { b.textContent = "링크 복사"; }, 1800); return; }
+  if(t.closest("#gimg")){ $("#gfile").click(); return; }
+  const gl = t.closest("[data-glink]"); if(gl){ try{ await navigator.clipboard.writeText(new URL("../guide/?k=" + guideKey + "&p=" + gl.dataset.glink, location.href).href); gl.textContent = "복사됨"; }catch{ gl.textContent = "복사 실패"; } setTimeout(() => { gl.textContent = "이 글 링크 복사"; }, 1800); return; }
+  const cat = t.closest("[data-cat]"); if(cat){ st.cat = cat.dataset.cat; return drawBoard(key); }
+  if(t.closest("#bnew")){ st.editing = {}; drawBoard(key); $("#bform").scrollIntoView({behavior:"smooth"}); return; }
+  if(t.closest("#bcancel")){ st.editing = null; return drawBoard(key); }
+  const op = t.closest("[data-bopen]"); if(op){ st.open[op.dataset.bopen] = !st.open[op.dataset.bopen]; return drawBoard(key); }
+  const cp = t.closest("[data-bcopy]"); if(cp){
+    const it = st.items.find(x => x.id === cp.dataset.bcopy);
+    try{ await navigator.clipboard.writeText(it.body); cp.textContent = "복사됨"; }catch{ cp.textContent = "복사 실패"; }
+    setTimeout(() => { cp.textContent = "복사"; }, 1500); return;
+  }
+  const ed = t.closest("[data-bedit]"); if(ed){ st.editing = { ...st.items.find(x => x.id === ed.dataset.bedit) }; drawBoard(key); $("#bform").scrollIntoView({behavior:"smooth"}); return; }
+  const del = t.closest("[data-bdel]"); if(del){
+    if(del.dataset.armed !== "1"){ del.dataset.armed = "1"; del.textContent = "한 번 더 누르면 삭제"; return; }
+    del.disabled = true;
+    try{ await api("board.delete", { board:key, id: del.dataset.bdel }); st.items = st.items.filter(x => x.id !== del.dataset.bdel); drawBoard(key); }
+    catch(x){ alert(x.message); del.disabled = false; }
+    return;
+  }
+  if(t.closest("#bsave")){
+    const item = { ...st.editing };
+    document.querySelectorAll("#bform [data-f]").forEach(f => { item[f.dataset.f] = f.type === "checkbox" ? (f.checked ? "Y" : "") : f.value; });
+    if(item.author) store.set("staff.who", item.author);
+    const btn = t.closest("#bsave"); btn.disabled = true;
+    try{
+      const saved = await api("board.save", { board:key, item });
+      st.items = item.id ? st.items.map(x => x.id === saved.id ? saved : x) : [saved, ...st.items];
+      st.editing = null; st.open[saved.id] = true; drawBoard(key);
+    }catch(x){ $("#berr").textContent = x.message; $("#berr").hidden = false; btn.disabled = false; }
+  }
+});
+
+// 그림 첨부: 가로 1280px 이하 JPEG로 줄인 뒤 서버(드라이브)에 올리고, 본문 커서 위치에 [그림:파일ID]를 넣는다
+async function shrinkImage(file){
+  const url = URL.createObjectURL(file);
+  try{
+    const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(new Error("그림을 읽지 못했습니다.")); i.src = url; });
+    const sc = Math.min(1, 1280 / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement("canvas");
+    c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+    const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+    return c.toDataURL("image/jpeg", 0.82).split(",")[1];
+  } finally { URL.revokeObjectURL(url); }
+}
+document.addEventListener("change", async e => {
+  if(e.target.id !== "gfile" || !e.target.files[0]) return;
+  const f = e.target.files[0], msg = $("#gimgmsg"), btn = $("#gimg"), ta = document.querySelector('#bform [data-f="body"]');
+  e.target.value = ""; btn.disabled = true; msg.textContent = "그림을 올리는 중입니다…";
+  try{
+    const r = await api("guide.upload", { mime:"image/jpeg", data: await shrinkImage(f) });
+    const tag = "\n[그림:" + r.id + "]\n", p = ta.selectionStart == null ? ta.value.length : ta.selectionStart;
+    ta.value = ta.value.slice(0, p) + tag + ta.value.slice(p); msg.textContent = "그림을 넣었습니다. 저장해야 글에 반영됩니다.";
+  }catch(x){ msg.textContent = x.message; }
+  finally{ btn.disabled = false; }
+});
+
+// ── 휴가 신청: 기존 구글 폼으로 연결 + 사람별 연차 현황(휴가대장 시트의 '연차현황' 탭) ──
+let leaveUrl = null, leaveSheet = "";
+const LV_COLS = ["이름","연차기간 시작","연차기간 끝","발생연차","전년이월","연차 추가부여","사용연차","잔여연차","대체휴가 부여","대체휴가 사용","대체휴가 잔여","특별휴가 부여(올해)","특별휴가 사용(올해)","특별휴가 잔여"];
+function leaveTable(st){
+  if(!st || !st.configured) return `<p class="hint">연차 현황 시트가 아직 연결되지 않았습니다. 관리자가 Apps Script 스크립트 속성에 LEAVE_SHEET_ID를 넣으면 여기에 표시됩니다.</p>`;
+  const ix = LV_COLS.map(c => st.head.indexOf(c)), cols = LV_COLS.filter((c,i) => ix[i] >= 0), idx = ix.filter(i => i >= 0);
+  const live = st.rows.filter(r => { const j = st.head.indexOf("재직"); return j < 0 || r[j] !== "퇴직"; });
+  const num = c => /잔여/.test(c);
+  return `<p class="hint">기준일 ${esc(st.asof || "-")} · 휴가대장 시트의 '연차현황' 탭 그대로입니다(승인 대기·예정 휴가 포함, 반려 제외).</p>
+    <div style="overflow-x:auto"><table class="lvt"><thead><tr>${cols.map(c => `<th>${esc(c.replace("(올해)",""))}</th>`).join("")}</tr></thead>
+    <tbody>${live.map(r => `<tr>${idx.map((i,k) => `<td class="${k===0?"nm":""}${num(cols[k]) ? " rem" : ""}${num(cols[k]) && Number(r[i]) < 0 ? " neg" : ""}">${esc(r[i])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+}
+async function drawLeave(){
+  const el = $("#board");
+  el.innerHTML = `<section class="card bhead"><h1>휴가 신청</h1><p class="hint">불러오는 중입니다…</p></section>`;
+  if(leaveUrl === null){
+    try{ const cf = await api("config"); leaveUrl = cf.leaveFormUrl || ""; leaveSheet = cf.leaveSheetUrl || ""; }
+    catch(x){ if(store.get("staff.tab") === "leave") el.innerHTML = `<section class="card bhead"><h1>휴가 신청</h1><p class="err">${esc(x.message)}</p></section>`; return; }
+  }
+  if(store.get("staff.tab") !== "leave") return;
+  el.innerHTML = `<section class="card bhead">
+    <h1>휴가 신청</h1>
+    ${leaveUrl ? `<p class="note">아래 버튼으로 기존 휴가 신청 구글 폼을 엽니다. 제출하면 사무소 시트에 저장되고 캘린더에 반영됩니다.</p>
+      <div class="row"><a class="btn" href="${esc(leaveUrl)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:inline-block">휴가 신청서 열기</a>${leaveSheet ? ` <a class="btn" href="${esc(leaveSheet)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:inline-block">휴가대장 엑셀 열기</a>` : ""}</div>`
+    : `<p class="err">휴가 신청 폼 주소가 아직 설정되지 않았습니다. 관리자가 Apps Script 스크립트 속성에 LEAVE_FORM_URL을 넣어야 합니다.</p>`}
+    <h2 style="font-size:16px;margin:20px 0 6px">연차 현황 (부여·사용·잔여)</h2><div id="lvBox"><p class="hint">불러오는 중입니다…</p></div>
+  </section>`;
+  let html;
+  try{ html = leaveTable(await api("leave.status")); }catch(x){ html = `<p class="err">${esc(x.message)}</p>`; }
+  const box = $("#lvBox"); if(box && store.get("staff.tab") === "leave") box.innerHTML = html;
+}
+
+// 저장된 로그인 확인은 모든 정의가 끝난 뒤에
+if(token && Number(token.split(".")[0]) > Date.now()) showApp(true); else logout();
+</script>
+</body>
+</html>

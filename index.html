@@ -7,6 +7,7 @@
 <title>동감 세무회계 세금 계산기</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <meta name="description" content="양도·상속·증여·재산세·종합소득세·부가세·월급·주휴수당을 금액만 넣어 바로 계산하는 무료 세금 계산기. 동감 세무회계">
+<meta name="google-site-verification" content="BIuGdEU01QXaZ1DnWrbPS7S2UzeLuknluqydZBDpA8Y">
 <link rel="canonical" href="https://taxdg.com/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="동감 세무회계">
@@ -41,6 +42,12 @@ a:focus-visible{outline:3px solid var(--brand);outline-offset:3px;border-radius:
 .hd nav a:hover{color:var(--brand)}
 .hd .tel{text-decoration:none;color:#fff;background:var(--brand);font-weight:600;font-size:14px;padding:9px 16px;border-radius:999px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .hd .tel:hover{background:var(--deep)}
+.hd .staff-e{display:none}
+@media (min-width:1340px){
+  .hd .staff-n{display:none}
+  .hd .staff-e{display:block;position:absolute;right:28px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:500;color:var(--muted,#6b7280);text-decoration:none;white-space:nowrap}
+  .hd .staff-e:hover{color:var(--brand)}
+}
 
 .hero{position:relative;overflow:hidden;background:linear-gradient(180deg,#F1F6F8,#fff 90%);padding:84px 0 64px}
 .hero::before{content:"";position:absolute;right:-160px;top:-200px;width:680px;height:680px;border-radius:50%;background:radial-gradient(circle,rgba(61,95,112,.14),transparent 65%)}
@@ -157,15 +164,19 @@ footer a{color:var(--brand);font-weight:600;text-decoration:none}
   .card:hover{transform:none}
 }
 </style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"AccountingService","@id":"https://taxdg.com/#office","name":"동감 세무회계","url":"https://taxdg.com/","logo":"https://taxdg.com/logo.png","image":"https://taxdg.com/og.png","telephone":"+82-2-2088-1553","email":"pigeontax@naver.com","address":{"@type":"PostalAddress","streetAddress":"향동로 217 DMC플렉스데시앙 B동 824호","addressLocality":"고양시 덕양구","addressRegion":"경기도","addressCountry":"KR"},"hasMap":"https://naver.me/5r3HGYZG","founder":{"@type":"Person","name":"이동희","jobTitle":"세무사","url":"https://taxdg.com/about/"},"sameAs":["https://blog.naver.com/francepigeon","https://pf.kakao.com/_xftxfAG"]}
+</script>
 </head>
 <body>
 
 <header class="hd">
   <div class="wrap">
     <a class="logo" href="./" aria-label="동감 세무회계 첫 화면"><img src="logo.png" alt="동감 세무회계" width="1010" height="151"></a>
-    <nav aria-label="주요 메뉴"><a href="#cards">세금 계산기</a><a href="about/">대표세무사 소개</a><a href="https://blog.naver.com/francepigeon" target="_blank" rel="noopener noreferrer">이동희 블로그</a><a href="location/">찾아오시는 길</a></nav>
+    <nav aria-label="주요 메뉴"><a href="#cards">세금 계산기</a><a href="about/">대표세무사 소개</a><a href="https://blog.naver.com/francepigeon" target="_blank" rel="noopener noreferrer">이동희 블로그</a><a href="location/">찾아오시는 길</a><a class="staff-n" href="staff/" rel="nofollow">직원 전용</a></nav>
     <a class="tel" href="tel:01082781382">상담 010-8278-1382</a>
   </div>
+  <a class="staff-e" href="staff/" rel="nofollow">직원 전용</a>
 </header>
 
 <section class="hero">
