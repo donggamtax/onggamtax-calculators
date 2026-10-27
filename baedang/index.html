@@ -411,6 +411,61 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
 .rpt .ctbl th{font-size:10.5px;}
 .rpt .tbl-wrap{margin-top:4px;overflow:visible;}
 @media print{.cmp{display:none}}
+
+/* 단순 보기 */
+.more{margin-top:24px;border:1px solid var(--rule-soft);border-radius:12px;background:var(--field);}
+.more summary{cursor:pointer;padding:14px 16px;font-weight:700;font-size:15px;list-style:none;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
+.more summary::-webkit-details-marker{display:none;}
+.more summary::before{content:"+";display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:800;font-size:14px;flex:none;align-self:center;}
+.more[open] summary::before{content:"−";}
+.more summary span{font-weight:400;font-size:13px;color:var(--muted);}
+.more summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:12px;}
+.more-in,.more-in *,.detail *{box-sizing:border-box;}
+.more-in{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;padding:4px 16px 18px;}
+.more-in .lab{display:block;font-weight:600;font-size:15px;margin-bottom:6px;}
+.headline{padding:18px 22px 6px;font-size:16.5px;line-height:1.65;}
+.headline b{color:var(--brand-deep);}
+.headline b.red{color:var(--stamp);}
+.mini3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:6px 22px 4px;}
+.mini3 div{background:var(--brand-tint);border-radius:10px;padding:9px 10px;}
+.mini3 b{display:block;font-size:12px;font-weight:600;color:var(--muted);}
+.mini3 b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;background:var(--c);vertical-align:0;}
+.mini3 span{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;}
+.rpt .mini3,.rpt .headline{padding-left:0;padding-right:0;}
+.detail{margin:14px 22px 6px;border-top:1px solid var(--rule-soft);}
+.detail > summary{cursor:pointer;padding:12px 0;font-weight:700;font-size:14.5px;color:var(--accent);list-style:none;}
+.detail > summary::-webkit-details-marker{display:none;}
+.detail > summary::after{content:" ▾";}
+.detail[open] > summary::after{content:" ▴";}
+.detail .sub-head,.detail .st-body{padding-left:0;padding-right:0;}
+.rpt .detail{margin:8px 0 0;}
+.rpt .detail > summary{display:none;}
+.big-answer{border:1px solid var(--rule-soft);border-left:5px solid var(--stamp);border-radius:14px;padding:18px 20px;margin:0 0 22px;background:#FFF;}
+.big-answer p{margin:0;font-size:18px;line-height:1.6;}
+.big-answer p b{color:var(--stamp);}
+.big-answer small{display:block;margin-top:6px;color:var(--muted);font-size:14px;line-height:1.55;}
+.c-bar.one{height:22px;border-radius:5px;background:#9DB3BF;}
+.c-row.top1 .c-bar.one{background:var(--stamp);}
+.c-row.top1 .c-lab{font-weight:700;color:var(--stamp);}
+.ctbl.simple{min-width:0;font-size:15px;}
+.ctbl.simple tr.min td{background:#FBF1EF;font-weight:700;}
+.ctbl.simple tr.min td:nth-last-child(2){color:var(--stamp);}
+.ctbl .tg{display:inline-block;font-size:11px;font-weight:700;color:#fff;background:var(--stamp);border-radius:999px;padding:1px 7px;margin-left:4px;vertical-align:1px;}
+.ctbl .tg.cur{background:var(--brand);}
+.cmp-more{margin:18px 0 0;}
+.c-lab .dot{display:none;}
+@media (max-width:560px){
+  #tbl-simple{display:none}
+  .chart{--bw:62%}
+  .c-row{grid-template-columns:minmax(0,1fr);gap:4px;padding:8px 6px}
+  .c-lab{text-align:left;font-size:13.5px}
+  .c-lab small{display:inline;font-size:12.5px}
+  .c-lab .dot{display:inline}
+  .res-top{grid-template-columns:minmax(0,1fr)}
+  .res-top div{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+}
+.c-row.cur .c-bar.one{background:var(--brand);}
+@media (max-width:560px){.mini3{grid-template-columns:minmax(0,1fr);}.mini3 div{display:flex;justify-content:space-between;align-items:baseline}.headline{font-size:15.5px}.big-answer p{font-size:16.5px}}
 </style>
 </head>
 <body>
@@ -425,7 +480,7 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
   <p class="kicker">Tax Calculator</p>
   <header>
     <h1>법인 대표 급여·배당 시뮬레이션</h1>
-    <p class="lede">법인 이익을 대표 급여로 가져갈 때와 배당으로 가져갈 때, 법인세·소득세·4대보험이 얼마나 나가는지 한 번에 비교합니다. 급여를 얼마로 잡으면 세금과 보험료 합계가 가장 적은지도 찾아 드립니다. 2026년 세율과 보험료율 기준입니다.</p>
+    <p class="lede">법인 이익과 대표 연봉, 두 가지만 넣으세요. 세금과 4대보험이 모두 얼마인지, 연봉을 얼마로 하면 가장 적게 내는지 알려 드립니다. 2026년 기준입니다.</p>
   </header>
   <ul class="dg-sw" aria-label="다른 계산기">
       <li><a href="../yangdo/">양도소득세·취득세</a></li>
@@ -444,70 +499,65 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
   <div class="grid">
     <form class="panel" id="form" autocomplete="off" onsubmit="return false">
       <div class="section">
-        <h2>법인 이익</h2>
-        <p class="hint">대표 급여와 대표 4대보험(회사 부담분)을 빼기 전의 1년 법인 이익(세전)을 넣으세요. 매출에서 대표 인건비를 뺀 나머지 비용을 모두 뺀 금액입니다.</p>
+        <h2>① 법인의 1년 이익</h2>
+        <p class="hint">대표 급여를 주기 전, 법인에 남는 1년 이익(세전)을 넣으세요.</p>
         <div class="fields">
           <div class="field full">
-            <label class="lab" for="profit">대표 급여 지급 전 법인 이익 (1년)</label>
-            <div class="money"><input type="text" inputmode="numeric" id="profit" data-money placeholder="0"></div>
+            <label class="lab" for="profit">법인 이익 (대표 급여 주기 전)</label>
+            <div class="money"><input type="text" inputmode="numeric" id="profit" data-money placeholder="예: 300,000,000"></div>
             <div class="helper" data-for="profit"></div>
           </div>
         </div>
-        <label class="check"><input type="checkbox" id="small"><span>부동산임대업이 주업인 소규모 법인<small>성실신고확인대상 소규모 법인(지배주주 지분 50% 초과, 상시근로자 5명 미만 등)은 과세표준 2억원 이하 구간에도 20%를 적용합니다.</small></span></label>
       </div>
 
       <div class="section">
-        <h2>대표 급여</h2>
-        <p class="hint">1년 동안 대표에게 줄 급여(세전, 비과세 제외)를 넣으세요. 0원이면 급여 없이 배당만 받는 경우입니다.</p>
+        <h2>② 대표 연봉</h2>
+        <p class="hint">대표에게 줄 1년 급여(세전)입니다. 남는 이익은 배당으로 받는다고 보고 계산합니다.</p>
         <div class="fields">
           <div class="field full">
             <label class="lab" for="salary">대표 연봉 (세전)</label>
-            <div class="money"><input type="text" inputmode="numeric" id="salary" data-money placeholder="0"></div>
+            <div class="money"><input type="text" inputmode="numeric" id="salary" data-money placeholder="예: 60,000,000"></div>
             <div class="helper" data-for="salary"></div>
           </div>
         </div>
-        <div class="ins-list">
-          <label class="check"><input type="checkbox" id="in-np" checked><span>국민연금 가입<small>만 60세 이상이면 보통 가입 대상이 아니므로 체크를 해제하세요.</small></span></label>
-        </div>
-        <div class="helper left">법인 대표이사는 근로자가 아니어서 고용보험·산재보험은 넣지 않았습니다. 건강보험(장기요양 포함)은 급여가 있으면 직장가입자로 계산합니다.</div>
       </div>
 
-      <div class="section">
-        <h2>배당</h2>
-        <p class="hint">법인세를 내고 남은 이익을 배당으로 얼마나 가져갈지 고르세요.</p>
-        <div class="seg three" role="radiogroup" aria-label="배당 방식">
-          <input type="radio" name="dmode" id="d-all" value="all" checked><label for="d-all">남는 이익 모두</label>
-          <input type="radio" name="dmode" id="d-in" value="in"><label for="d-in">금액 직접 입력</label>
-          <input type="radio" name="dmode" id="d-no" value="no"><label for="d-no">배당 안 함</label>
-        </div>
-        <div class="fields" id="d-box" hidden style="margin-top:16px">
-          <div class="field full">
-            <label class="lab" for="div">배당금 (1년, 세전)</label>
-            <div class="money"><input type="text" inputmode="numeric" id="div" data-money placeholder="0"></div>
-            <div class="helper" data-for="div"></div>
+      <details class="more" id="more">
+        <summary>세부 설정 <span>배당 금액, 부양가족, 국민연금 등 (필요할 때만)</span></summary>
+        <div class="more-in">
+          <div class="field">
+            <span class="lab" id="dm-lab">배당</span>
+            <div class="seg three" role="radiogroup" aria-labelledby="dm-lab">
+              <input type="radio" name="dmode" id="d-all" value="all" checked><label for="d-all">남는 이익 모두</label>
+              <input type="radio" name="dmode" id="d-in" value="in"><label for="d-in">금액 직접 입력</label>
+              <input type="radio" name="dmode" id="d-no" value="no"><label for="d-no">배당 안 함</label>
+            </div>
           </div>
-        </div>
-        <div class="field" style="margin-top:18px">
-          <span class="lab" id="gy-lab" style="display:block;font-weight:600;font-size:15px;margin-bottom:6px">배당 받는 때</span>
-          <div class="radios" role="radiogroup" aria-labelledby="gy-lab">
-            <label class="chip"><input type="radio" name="gy" value="27" checked><span>2027년 이후 (가산율 11%)</span></label>
-            <label class="chip"><input type="radio" name="gy" value="26"><span>2026년 (가산율 10%)</span></label>
+          <div class="fields" id="d-box" hidden>
+            <div class="field full">
+              <label class="lab" for="div">배당금 (1년, 세전)</label>
+              <div class="money"><input type="text" inputmode="numeric" id="div" data-money placeholder="0"></div>
+              <div class="helper" data-for="div"></div>
+            </div>
           </div>
-          <div class="helper left">2026년 이익은 보통 2027년 3월 주주총회 뒤에 배당합니다. 2027년 1월 1일 이후 받는 배당부터 배당가산율이 10%에서 11%로 바뀝니다.</div>
-        </div>
-      </div>
-
-      <div class="section">
-        <h2>대표 개인</h2>
-        <div class="num-sel">
+          <div class="field">
+            <span class="lab" id="gy-lab">배당 받는 때</span>
+            <div class="radios" role="radiogroup" aria-labelledby="gy-lab">
+              <label class="chip"><input type="radio" name="gy" value="27" checked><span>2027년 이후</span></label>
+              <label class="chip"><input type="radio" name="gy" value="26"><span>2026년</span></label>
+            </div>
+            <div class="helper left">2027년부터 받는 배당은 배당가산율이 10%에서 11%로 바뀝니다. 올해 이익은 보통 내년 주주총회 뒤에 배당하므로 '2027년 이후'가 기본입니다.</div>
+          </div>
           <div class="field">
             <label class="lab" for="deps">기본공제 인원 (본인 포함)</label>
             <select id="deps"></select>
+            <div class="helper left">소득이 없는 배우자·자녀·부모님 등 공제받는 가족 수입니다.</div>
           </div>
+          <label class="check"><input type="checkbox" id="in-np" checked><span>국민연금 가입<small>만 60세 이상이면 체크를 해제하세요.</small></span></label>
+          <label class="check"><input type="checkbox" id="small"><span>부동산임대업이 주업인 소규모 법인<small>과세표준 2억원 이하에도 법인세 20%가 적용됩니다.</small></span></label>
         </div>
-        <div class="helper left">소득이 없는 배우자·자녀·부모님 등 연말정산이나 종합소득세 신고 때 기본공제(1명 150만원)를 받는 인원입니다.</div>
-        <button type="button" class="btn-reset" id="reset">입력 지우기</button>
-      </div>
+      </details>
+      <button type="button" class="btn-reset" id="reset">입력 지우기</button>
     </form>
 
     <aside class="statement">
@@ -546,13 +596,16 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
 
   <section class="cmp" id="cmp" aria-labelledby="cmp-h" hidden>
     <div class="cmp-in">
-      <h2 id="cmp-h">급여·배당 배분 비교</h2>
-      <p class="hint" id="cmp-hint">같은 법인 이익을 급여와 배당으로 나누는 비율만 바꿔 본 결과입니다. 급여를 뺀 나머지 이익은 법인세를 내고 모두 배당한다고 보고 계산했습니다.</p>
-      <div class="best" id="best"></div>
+      <h2 id="cmp-h">연봉을 얼마로 하면 가장 적게 낼까요?</h2>
+      <p class="hint" id="cmp-hint"></p>
+      <div class="big-answer" id="best"></div>
       <div class="chart" id="chart"></div>
-      <p class="swipe">표가 잘리면 옆으로 밀어 보세요.</p>
-      <div class="tbl-wrap" id="tbl"></div>
-      <p class="foot-note">국민연금은 나중에 연금으로 돌려받는 돈이라 순수한 부담과는 성격이 다릅니다. 그래서 국민연금을 뺀 기준의 최적 급여도 함께 보여 드립니다.</p>
+      <div class="tbl-wrap" id="tbl-simple"></div>
+      <details class="detail cmp-more"><summary>법인세·소득세·4대보험 항목별로 보기</summary>
+        <p class="swipe">표가 잘리면 옆으로 밀어 보세요.</p>
+        <div class="tbl-wrap" id="tbl"></div>
+        <p class="foot-note">국민연금은 나중에 연금으로 돌려받는 돈이라 순수한 부담과는 성격이 다릅니다.</p>
+      </details>
     </div>
   </section>
 
@@ -728,6 +781,11 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
     if(Math.abs(v) >= 1e4) return Math.round(v / 1e4).toLocaleString('ko-KR') + '만';
     return v.toLocaleString('ko-KR');
   };
+  function krw(n){ // 1억 978만원
+    const v = Math.round(Math.abs(n) / 1e4), e = Math.floor(v / 1e4), m = v % 1e4;
+    if(!v) return Math.round(n).toLocaleString('ko-KR') + '원';
+    return (n < 0 ? '−' : '') + (e ? e.toLocaleString('ko-KR') + '억' + (m ? ' ' : '') : '') + (m ? m.toLocaleString('ko-KR') + '만' : '') + '원';
+  }
   function korUnit(n){
     if(!n) return '';
     const eok = Math.floor(n / 1e8), mn = Math.floor((n % 1e8) / 1e4), rest = n % 1e4;
@@ -777,7 +835,7 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
     $('meta').textContent = '2026년 기준 · 대표 지분 100% · 기본공제 ' + o.deps + '명 · 배당가산율 ' + Math.round(o.g * 100) + '%';
     if(!P){
       last = null;
-      out.innerHTML = '<div class="empty">대표 급여 지급 전 법인 이익과 대표 연봉을 입력하세요. 법인세, 대표 소득세, 4대보험과 대표가 손에 쥐는 돈이 바로 나오고, 아래에 급여·배당 배분별 비교표가 나옵니다.</div>';
+      out.innerHTML = '<div class="empty">법인 이익과 대표 연봉을 넣으면 세금과 4대보험 합계, 대표 손에 남는 돈이 바로 나옵니다.</div>';
       $('cmp').hidden = true;
       return;
     }
@@ -848,8 +906,8 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
 
     const used = P - Math.max(0, r.keep);
     const seg = (v, c) => v > 0 ? '<i style="width:' + (v / P * 100) + '%;background:' + c + '"></i>' : '';
-    const bar = '<div class="bar" aria-hidden="true">' + seg(r.hand, 'var(--accent)') + seg(r.corpTax, 'var(--c-corp)') + seg(p.tax, 'var(--c-pit)') + seg(r.hiAll, 'var(--c-hi)') + seg(r.npAll, 'var(--c-np)') + seg(Math.max(0, r.keep), '#C9D3D8') + '</div>' +
-      '<div class="bar-key"><span style="--c:var(--accent)">대표 손에 ' + pct(r.hand, P) + '</span><span style="--c:var(--c-corp)">법인세 ' + pct(r.corpTax, P) + '</span><span style="--c:var(--c-pit)">소득세 ' + pct(p.tax, P) + '</span><span style="--c:var(--c-hi)">건강보험 ' + pct(r.hiAll, P) + '</span><span style="--c:var(--c-np)">국민연금 ' + pct(r.npAll, P) + '</span>' + (r.keep > 0 ? '<span style="--c:#C9D3D8">회사에 남음 ' + pct(r.keep, P) + '</span>' : '') + '</div>';
+    const bar = '<div class="bar" aria-hidden="true">' + seg(r.hand, 'var(--accent)') + seg(r.corpTax, 'var(--c-corp)') + seg(p.tax, 'var(--c-pit)') + seg(r.insAll, 'var(--c-hi)') + seg(Math.max(0, r.keep), '#C9D3D8') + '</div>' +
+      '<div class="bar-key"><span style="--c:var(--accent)">대표 손에 ' + pct(r.hand, P) + '</span><span style="--c:var(--c-corp)">법인세 ' + pct(r.corpTax, P) + '</span><span style="--c:var(--c-pit)">소득세 ' + pct(p.tax, P) + '</span><span style="--c:var(--c-hi)">4대보험 ' + pct(r.insAll, P) + '</span>' + (r.keep > 0 ? '<span style="--c:#C9D3D8">회사에 남음 ' + pct(r.keep, P) + '</span>' : '') + '</div>';
 
     const notes = [];
     if(S + r.er > P) notes.push('급여와 회사 부담 4대보험이 법인 이익보다 많아 법인에 결손이 생깁니다. 결손금은 다음 해로 이월되지만 이 계산에는 반영하지 않았습니다.');
@@ -862,11 +920,21 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
     notes.push('임원 급여는 정관이나 주주총회에서 정한 한도 안에서 줘야 비용으로 인정됩니다. 지나치게 많은 급여나 배당 대신 주는 급여는 비용으로 인정되지 않을 수 있습니다.');
 
     $('meta').textContent += o.small ? ' · 소규모 법인' : '';
+    const head = '법인 이익 ' + krw(P) + ' 중 <b class="red">' + krw(r.burden) + '(' + pct(r.burden, P) + ')</b>이 세금과 4대보험으로 나가고, 대표님 손에는 <b>' + krw(r.hand) + '</b>이 남습니다.' +
+      (r.keep > 0 ? ' 회사에는 ' + krw(r.keep) + '이 남습니다.' : '');
+    const quick = [];
+    if(p.comp) quick.push('배당이 연 2,000만원을 넘어 다음 해 5월 종합소득세 신고 대상이고, 넘는 금액에 건강보험료가 더 붙습니다.');
+    else if(r.D > 0) quick.push('배당이 연 2,000만원 이하라 15.4%만 떼고 끝납니다.');
+    if(S === 0) quick.push('급여가 없으면 지역가입자가 되어 실제로는 집·차 등 재산에도 건강보험료가 붙습니다.');
     out.innerHTML =
-      '<div class="res-top"><div><b>대표가 손에 쥐는 돈 (1년)</b><span class="hl">' + won(r.hand) + '</span></div><div><b>세금 + 4대보험 합계</b><span>' + won(r.burden) + '</span></div></div>' +
-      html +
+      '<div class="headline">' + head + '</div>' +
+      '<div class="res-top"><div><b>대표 손에 남는 돈 (1년)</b><span>' + won(r.hand) + '</span></div><div><b>세금 + 4대보험 합계</b><span class="hl">' + won(r.burden) + '</span></div></div>' +
+      '<div class="mini3"><div style="--c:var(--c-corp)"><b>법인세</b><span>' + won(r.corpTax) + '</span></div><div style="--c:var(--c-pit)"><b>대표 소득세</b><span>' + won(p.tax) + '</span></div><div style="--c:var(--c-hi)"><b>4대보험 (회사+본인)</b><span>' + won(r.insAll) + '</span></div></div>' +
+      bar +
+      (quick.length ? '<ul class="notes" style="margin-top:12px">' + quick.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>' : '') +
+      '<details class="detail"><summary>단계별 계산 자세히 보기</summary>' + html +
       '<div class="total"><span class="tl">세금 + 4대보험 합계<small>법인세·소득세 ' + won(r.taxAll) + ' + 4대보험 ' + won(r.insAll) + ' · 법인 이익의 ' + pct(r.burden, P) + '</small></span><span class="tv">' + won(r.burden) + '</span></div>' +
-      bar + '<ul class="notes" style="margin-top:14px">' + notes.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
+      '<ul class="notes" style="margin-top:14px">' + notes.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul></details>';
     compare(P, S, o);
   }
 
@@ -886,32 +954,38 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
     }
     const cur = o.dmode === 'all' && S <= Smax ? S : null;
     const top = Smax >= 2e6 ? Math.floor(Smax / 1e6) * 1e6 : Smax;
-    const pts = new Set([0, top]);
-    for(let k = 1; k < 8; k++) pts.add(Math.round(top * k / 8 / 1e6) * 1e6);
-    pts.add(best.S); pts.add(bestX.S);
+    const nice = v => v >= 1e7 ? Math.round(v / 1e7) * 1e7 : Math.round(v / 1e6) * 1e6;
+    const pts = new Set([0, top, best.S]);
+    for(let k = 1; k < 5; k++) pts.add(nice(top * k / 5));
     if(cur !== null) pts.add(cur);
     const list = [...pts].filter(v => v >= 0 && v <= Smax).sort((a, b) => a - b).map(v => sim(P, v, oa));
     const minB = Math.min(...list.map(r => r.burden));
     const maxB = Math.max(...list.map(r => r.burden));
+    const isCur = r => cur !== null && r.S === cur, isBest = r => r.S === best.S;
 
-    $('best').innerHTML =
-      '<div><b>세금 + 4대보험이 가장 적은 급여</b><strong>연 ' + won(best.S) + '</strong><small>월 ' + won(Math.floor(best.S / 12)) + ' · 합계 ' + won(best.burden) + ' (' + pct(best.burden, P) + ') · 대표 손에 ' + won(best.hand) + '</small></div>' +
-      '<div class="alt"><b>국민연금을 빼고 볼 때 가장 적은 급여</b><strong>연 ' + won(bestX.S) + '</strong><small>월 ' + won(Math.floor(bestX.S / 12)) + ' · 국민연금 뺀 합계 ' + won(bestX.burden - bestX.npAll) + ' · 국민연금 ' + won(bestX.npAll) + '</small></div>';
+    let more = '';
+    if(cur !== null){
+      const now = sim(P, cur, oa), gap = now.burden - best.burden;
+      more = gap >= 10000 ? '지금 넣으신 연봉 ' + krw(cur) + '보다 1년에 <b>' + krw(gap) + '</b> 덜 냅니다.' : '지금 넣으신 연봉이 이미 가장 적게 내는 수준입니다.';
+    }
+    $('best').innerHTML = '<p>대표 연봉을 <b>' + krw(best.S) + '</b>(월 ' + krw(Math.floor(best.S / 12)) + ')으로 하면 세금과 4대보험이 가장 적습니다.</p>' +
+      '<small>' + (more ? more + ' ' : '') + '이때 세금+4대보험은 ' + krw(best.burden) + '(' + pct(best.burden, P) + '), 대표 손에 남는 돈은 ' + krw(best.hand) + '입니다.' +
+      (bestX.S !== best.S ? ' 국민연금(나중에 돌려받는 돈)을 빼고 보면 연봉 ' + krw(bestX.S) + '이 가장 유리합니다.' : '') + '</small>';
 
-    const C = [['corpTax', '법인세', 'var(--c-corp)'], ['ptax', '대표 소득세', 'var(--c-pit)'], ['hiAll', '건강·장기요양', 'var(--c-hi)'], ['npAll', '국민연금', 'var(--c-np)']];
-    const val = (r, k) => k === 'ptax' ? r.p.tax : r[k];
-    const tag = r => (cur !== null && r.S === cur ? '<em>현재</em>' : '') + (Math.abs(r.burden - minB) < 1 ? '<em class="min">최소</em>' : '');
-    $('chart').innerHTML = '<div class="legend">' + C.map(c => '<span style="--c:' + c[2] + '">' + c[1] + '</span>').join('') + '</div>' +
-      list.map((r, i) => '<div class="c-row' + (cur !== null && r.S === cur ? ' cur' : '') + '" tabindex="0" data-i="' + i + '" aria-label="연봉 ' + won(r.S) + ', 세금과 4대보험 ' + won(r.burden) + '">' +
-        '<div class="c-lab">연봉 ' + man(r.S) + '<small>배당 ' + man(r.D) + '</small></div>' +
-        '<div class="c-track"><div class="c-bar" style="width:calc(' + (maxB ? r.burden / maxB : 0) + ' * var(--bw))">' +
-        C.map(c => { const v = val(r, c[0]); return v > 0 ? '<i style="flex:' + v + ' 1 0;background:' + c[2] + '"></i>' : ''; }).join('') +
-        '</div><span class="c-val">' + man(r.burden) + ' · ' + pct(r.burden, P) + tag(r) + '</span></div></div>').join('');
+    $('cmp-hint').textContent = '법인 이익 ' + krw(P) + '은 그대로 두고 연봉만 바꿔 봤습니다. 연봉으로 주고 남는 이익은 법인세를 낸 뒤 모두 배당한다고 보았습니다. 막대가 짧을수록 덜 냅니다.';
+    $('chart').innerHTML = list.map((r, i) => '<div class="c-row' + (isCur(r) ? ' cur' : '') + (isBest(r) ? ' top1' : '') + '" tabindex="0" data-i="' + i + '" aria-label="연봉 ' + won(r.S) + ', 세금과 4대보험 ' + won(r.burden) + '">' +
+        '<div class="c-lab">연봉 ' + krw(r.S) + '<small><span class="dot"> · </span>배당 ' + krw(r.D) + '</small></div>' +
+        '<div class="c-track"><div class="c-bar one" style="width:calc(' + (maxB ? r.burden / maxB : 0) + ' * var(--bw))"></div>' +
+        '<span class="c-val">' + krw(r.burden) + (isBest(r) ? '<em class="min">가장 적음</em>' : '') + (isCur(r) ? '<em>지금</em>' : '') + '</span></div></div>').join('');
 
+    $('tbl-simple').innerHTML = '<table class="ctbl simple"><thead><tr><th>대표 연봉</th><th>배당</th><th>세금 + 4대보험</th><th>대표 손에 남는 돈</th></tr></thead><tbody>' +
+      list.map(r => '<tr class="' + (isCur(r) ? 'cur ' : '') + (isBest(r) ? 'min' : '') + '"><td>' + krw(r.S) + (isBest(r) ? ' <span class="tg">가장 적음</span>' : '') + (isCur(r) ? ' <span class="tg cur">지금</span>' : '') + '</td><td>' + krw(r.D) + '</td><td>' + krw(r.burden) + '</td><td>' + krw(r.hand) + '</td></tr>').join('') + '</tbody></table>';
     $('tbl').innerHTML = tableHTML(list, P, cur, minB);
 
+    const C = [['corpTax', '법인세', 'var(--c-corp)'], ['ptax', '대표 소득세', 'var(--c-pit)'], ['insAll', '4대보험 (회사+본인)', 'var(--c-hi)']];
+    const val = (r, k) => k === 'ptax' ? r.p.tax : r[k];
     const chart = $('chart');
-    let tip = chart.querySelector('.tip');
+    let tip = null;
     const show = el => {
       const r = list[+el.dataset.i];
       if(!tip){ tip = document.createElement('div'); tip.className = 'tip'; chart.appendChild(tip); }
@@ -919,8 +993,7 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
         C.map(c => '<div style="--c:' + c[2] + '"><span>' + c[1] + '</span><span>' + won(val(r, c[0])) + '</span></div>').join('') +
         '<div><span>합계</span><span>' + won(r.burden) + '</span></div><div><span>대표 손에</span><span>' + won(r.hand) + '</span></div>';
       tip.hidden = false;
-      const top = el.offsetTop + el.offsetHeight + 4;
-      tip.style.top = top + 'px';
+      tip.style.top = (el.offsetTop + el.offsetHeight + 4) + 'px';
       tip.style.left = Math.min(Math.max(0, el.querySelector('.c-track').offsetLeft), Math.max(0, chart.clientWidth - tip.offsetWidth)) + 'px';
     };
     const hide = () => { if(tip) tip.hidden = true; };
@@ -931,7 +1004,6 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
       el.addEventListener('mouseleave', hide);
       el.addEventListener('blur', hide);
     });
-    $('cmp-hint').textContent = '같은 법인 이익 ' + won(P) + '을 급여와 배당으로 나누는 비율만 바꿔 본 결과입니다. 급여를 뺀 나머지 이익은 법인세를 내고 모두 배당한다고 보고 계산했습니다. 막대에 마우스를 올리거나 누르면 금액이 나옵니다.';
     $('cmp').hidden = false;
     last.cmp = {list, cur, minB, best, bestX};
   }
@@ -1035,6 +1107,7 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
       (document.getElementById('cmp').hidden ? '' : '<h3>급여·배당 배분 비교 (남는 이익 모두 배당 기준)</h3><div class="tbl-wrap">' + document.getElementById('tbl').innerHTML + '</div>') +
       '<h3>메모</h3><div class="memo">' + esc(memo) + '</div>' +
       '<div class="foot">이 계산서는 동감 세무회계가 AI의 도움을 받아 제작한 계산기로 작성되었으며, 계산 결과에 오류가 있을 수 있습니다. 2026년 법인세율·소득세율·4대보험 요율 기준이며, 대표 지분 100%, 다른 소득 없음, 이월결손금·세액공제·퇴직금 미반영을 가정한 단순 비교입니다. 이 계산기의 이용으로 발생하는 어떠한 문제에 대해서도 동감 세무회계는 책임지지 않습니다. 상담문의: 이동희 세무사(010-8278-1382)</div>';
+    el.querySelectorAll('details').forEach(d => { d.open = true; });
     return el;
   }
 
