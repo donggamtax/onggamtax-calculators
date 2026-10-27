@@ -108,6 +108,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .paper .grp.need { background: var(--fill-need); }
 .paper .sigslot .sigbtn { background: var(--fill); }
 .paper .sigslot.need .sigbtn { background: var(--fill-need); }
+.app:not(.loading) > #loadingBox { display: none; }
+.app.loading > *:not(#loadingBox):not(.top) { display: none !important; }
 .legend { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-family: var(--sans); font-size: .82rem; color: var(--muted); }
 .legend i { display: inline-block; width: 28px; height: 14px; background: var(--fill-need); border-bottom: 2px solid var(--fill-line); border-radius: 3px 3px 0 0; }
 .legend i.l2 { background: var(--fill); }
@@ -299,6 +301,8 @@ body { margin: 0; }
     <h2>서명 요청 기한이 지났습니다</h2>
     <p>이 링크는 유효기간이 끝났습니다. 동감 세무회계에 새 링크를 요청해 주세요.</p>
   </section>
+
+  <section class="card" id="loadingBox" role="status">링크를 불러오는 중입니다...</section>
 
   <section class="card" id="linkPanel">
     <h2>서명 링크 만들기</h2>
@@ -601,8 +605,9 @@ body { margin: 0; }
     } catch (e) {}
     return null;
   }
-  function applyRequest() {
-    var r = readHash(); if (!r) return;
+  function rawHash() { try { return String(location.hash || '').replace(/^#/, ''); } catch (e) { return ''; } }
+  function applyRequest(r) {
+    if (!r) return;
     var p = r.p;
     REQ.mode = 'recv'; REQ.p = p; REQ.token = r.token; REQ.signed = r.signed;
     Object.keys(p.f).forEach(function (k) { if (k in S.f && SENSITIVE.indexOf(k) < 0) S.f[k] = p.f[k]; });
@@ -977,7 +982,7 @@ body { margin: 0; }
   var API_ERR = {
     bad_password: '사무소 암호가 맞지 않습니다.', locked: '암호를 여러 번 틀려 잠시 막혔습니다. 15분 뒤에 다시 시도해 주세요.',
     expired: '링크 유효기간이 지났습니다.', bad_token: '링크가 올바르지 않습니다. 담당자에게 새 링크를 요청해 주세요.',
-    too_large: '파일이 너무 큽니다.', limit: '제출 횟수 한도를 넘었습니다. 담당자에게 문의해 주세요.', bad_file: 'PDF 파일이 올바르지 않습니다.', bad_request: '요청이 올바르지 않습니다.', server: '서버에 문제가 생겼습니다. 잠시 뒤 다시 시도해 주세요.'
+    too_large: '파일이 너무 큽니다.', limit: '오늘 만들 수 있는 링크 수(또는 제출 횟수) 한도를 넘었습니다.', bad_file: 'PDF 파일이 올바르지 않습니다.', bad_request: '요청이 올바르지 않습니다.', server: '서버에 문제가 생겼습니다. 잠시 뒤 다시 시도해 주세요.'
   };
   $('#mkLink').onclick = async function () {
     var r = buildLink(), btn = $('#mkLink');
@@ -1201,7 +1206,19 @@ body { margin: 0; }
     }
   }
 
-  applyRequest(); initFields(); paintAll(); showDoc(REQ.mode === 'recv' ? REQ.p.d[0] : 'contract'); setupMode();
+  function start(r) { applyRequest(r); initFields(); paintAll(); showDoc(REQ.mode === 'recv' ? REQ.p.d[0] : 'contract'); setupMode(); }
+  var h0 = rawHash();
+  if (/^s\.[0-9a-f]{12}$/.test(h0) && API) {
+    var app = $('.app'); app.classList.add('loading');
+    callApi({ action: 'get', id: h0.slice(2) }).then(function (res) {
+      var p = null; try { p = res && res.ok ? JSON.parse(res.payload) : null; } catch (e) {}
+      if (!p || !Array.isArray(p.d) || !p.d.length || !p.f || typeof p.f !== 'object') throw new Error('bad');
+      app.classList.remove('loading');
+      start({ p: p, token: h0, signed: true });
+    }).catch(function () {
+      $('#loadingBox').textContent = '링크를 불러오지 못했습니다. 인터넷 연결을 확인하시거나, 동감 세무회계에 새 링크를 요청해 주세요.';
+    });
+  } else start(readHash());
 })();
 </script>
 
