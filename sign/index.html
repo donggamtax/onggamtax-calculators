@@ -977,7 +977,7 @@ body { margin: 0; }
   var API_ERR = {
     bad_password: '사무소 암호가 맞지 않습니다.', locked: '암호를 여러 번 틀려 잠시 막혔습니다. 15분 뒤에 다시 시도해 주세요.',
     expired: '링크 유효기간이 지났습니다.', bad_token: '링크가 올바르지 않습니다. 담당자에게 새 링크를 요청해 주세요.',
-    too_large: '파일이 너무 큽니다.', limit: '제출 횟수 한도를 넘었습니다. 담당자에게 문의해 주세요.', bad_file: 'PDF 파일이 올바르지 않습니다.', bad_request: '요청이 올바르지 않습니다.', server: '서버에 문제가 생겼습니다. 잠시 뒤 다시 시도해 주세요.'
+    too_large: '파일이 너무 큽니다.', limit: '오늘 만들 수 있는 링크 수(또는 제출 횟수) 한도를 넘었습니다.', bad_file: 'PDF 파일이 올바르지 않습니다.', bad_request: '요청이 올바르지 않습니다.', server: '서버에 문제가 생겼습니다. 잠시 뒤 다시 시도해 주세요.'
   };
   $('#mkLink').onclick = async function () {
     var r = buildLink(), btn = $('#mkLink');
@@ -985,8 +985,7 @@ body { margin: 0; }
     $('#lkErr').textContent = '';
     var url = r.url, signed = false;
     if (API) {
-      var pw = $('#lkPw').value;
-      if (!pw) { $('#lkErr').textContent = '사무소 암호를 입력해 주세요.'; return; }
+      var pw = '';
       btn.disabled = true; $('#lkErr').textContent = '링크를 만드는 중입니다...';
       try {
         var res = await callApi({ action: 'link', password: pw, payload: JSON.stringify(r.p) });
@@ -1187,7 +1186,7 @@ body { margin: 0; }
   function setupMode() {
     var recv = REQ.mode === 'recv';
     $('#linkPanel').hidden = recv; $('#officeNote').hidden = recv; $('#recvBanner').hidden = !recv || REQ.expired;
-    $('#lkPwRow').hidden = !API;
+    $('#lkPwRow').hidden = true;
     $('#submitPanel').hidden = !(recv && REQ.signed && API && !REQ.expired);
     if (recv && REQ.signed && API) $('#recvBanner').querySelector('p').innerHTML = '아래 서류의 빈 칸을 채우고 서명 또는 날인한 다음, 맨 아래의 <b>서류 제출하기</b>를 눌러 주세요. 담당자에게 바로 전달됩니다. 내 사본이 필요하면 서류마다 있는 PDF 저장 버튼을 쓰시면 됩니다.';
     if (!recv) return;
