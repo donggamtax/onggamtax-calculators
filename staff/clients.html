@@ -194,7 +194,7 @@ body:has(.app[data-wide="1"]) .wrap{max-width:1700px}
 .sm th,.sm td{font-size:11.5px;padding:2px 3px}
 .sm input{font-size:11.5px;padding:2px 3px;min-width:0;width:100%}
 .sm td.nm{min-width:96px;width:36%}.sm textarea.wn{min-height:0;height:auto;resize:none;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.3;field-sizing:content}.sm td.x{width:22px;text-align:center}
-.bw{overflow-x:auto}.bw .sm{min-width:330px}
+.bw{overflow-x:auto}.paper.taxp .tx.bz{table-layout:fixed;width:100%}.tx.bz th.bh{white-space:normal}.tx.bz th.bh .mini{float:right;margin-left:4px}.tx.bz th.bh .wn{width:calc(100% - 26px);min-height:0;height:34px;resize:none;float:left}.tx.bz th.bh{vertical-align:top}.tx.bz th:first-child{width:72px}.bw .sm{min-width:330px}
 .mini{border:1px solid var(--line);background:var(--panel);border-radius:5px;padding:0 6px;cursor:pointer;font-size:12px;line-height:18px}
 .mini.add{margin:6px 0 2px}
 .tx td.cc input{text-align:right}
@@ -686,10 +686,12 @@ function paperTax(id){
    ny('<tr><th>최저한세</th>'+taxCell(P,res,"I","min",false)+taxCell(P,res,"K","min",true)+'<td></td></tr>')+'</table>'+
    '<button type="button" class="mini add" data-txadd="d">+ 항목 넣기</button><div class="sub">합계가 "세액공제 및 감면"에 들어갑니다. 예측은 전년도 금액을 따라갑니다.</div></div>'+
    (isCorp?'':'<div class="sbox"><div class="sh">사업자별 가결산 (사업자가 여러 개일 때)</div>'+
-    (hasB?'<div class="bw"><table class="ht tx sm"><tr><th>사업자</th><th>매출</th><th>매출원가</th><th>판관비</th><th>사업소득</th><th></th></tr>'+
-     res.B.ids.map(function(i){var q="b"+i+"|";return '<tr><td class="nm">'+wn(P+q+"nm","사업자")+'</td>'+["rev","cogs","sga"].map(function(f){return '<td class="cc rawc"><input type="text" class="num" inputmode="decimal" autocomplete="off" data-k="'+esc(P+q+f)+'" value="'+esc(val(P+q+f))+'" placeholder="0" aria-label="'+f+'"></td>'}).join("")+
-      '<td class="cc'+(val(P+q+"inc")!==""?" ov":"")+'"><input type="text" class="num" inputmode="decimal" autocomplete="off" data-k="'+esc(P+q+"inc")+'" data-calc="B|inc'+i+'" value="'+esc(val(P+q+"inc")!==""?val(P+q+"inc"):fmtI(res.B["inc"+i]))+'" aria-label="사업소득"></td><td class="x"><button type="button" class="mini" data-txdel="b:'+i+'" title="이 사업자 빼기">−</button></td></tr>'}).join("")+
-     '<tr class="keyr"><th>합계</th><td class="c cc" data-bsum="rev">'+fmtI(res.B.rev)+'</td><td class="c cc" data-bsum="cogs">'+fmtI(res.B.cogs)+'</td><td class="c cc" data-bsum="sga">'+fmtI(res.B.sga)+'</td><td class="c cc" data-bsum="inc">'+fmtI(res.B.inc)+'</td><td></td></tr></table></div>':'')+
+    (hasB?'<div class="bw"><table class="ht tx bz" style="min-width:'+(res.B.ids.length*96+150)+'px"><tr><th>구분</th>'+res.B.ids.map(function(i){var q="b"+i+"|";return '<th class="bh">'+wn(P+q+"nm","사업자")+'<button type="button" class="mini" data-txdel="b:'+i+'" title="이 사업자 빼기">−</button></th>'}).join("")+'<th>합계</th></tr>'+
+     [["rev","매출"],["cogs","매출원가"],["sga","판관비"],["inc","사업소득"]].map(function(r){var f=r[0];
+      return '<tr'+(f==="inc"?' class="keyr"':'')+'><th>'+r[1]+'</th>'+res.B.ids.map(function(i){var q="b"+i+"|";
+       if(f!=="inc")return '<td class="cc rawc"><input type="text" class="num" inputmode="decimal" autocomplete="off" data-k="'+esc(P+q+f)+'" value="'+esc(val(P+q+f))+'" placeholder="0" aria-label="'+esc(r[1])+'"></td>';
+       return '<td class="cc'+(val(P+q+"inc")!==""?" ov":"")+'"><input type="text" class="num" inputmode="decimal" autocomplete="off" data-k="'+esc(P+q+"inc")+'" data-calc="B|inc'+i+'" value="'+esc(val(P+q+"inc")!==""?val(P+q+"inc"):fmtI(res.B["inc"+i]))+'" aria-label="사업소득"></td>'}).join("")+
+       '<td class="c cc" data-bsum="'+f+'">'+fmtI(res.B[f])+'</td></tr>'}).join("")+'</table></div>':'')+
     '<button type="button" class="mini add" data-txadd="b">+ 사업자 넣기</button><div class="sub">사업자를 넣으면 이 합계가 가결산 수입금액·매출원가·판관비·사업소득금액에 자동으로 들어갑니다(가결산 칸을 직접 적으면 그 값이 우선).</div></div>')+
    '</div><div class="memo"><div class="sh">특이사항 · 상담 메모</div><textarea data-k="'+esc(P+"memo")+'" rows="12" placeholder="이 업체의 특이사항, 상담 내용, 절세 방향, 확인할 것 등을 자유롭게 적어두세요.">'+esc(val(P+"memo"))+'</textarea></div></div></div>';
   return h;
@@ -702,6 +704,7 @@ function rzTables(){return [].slice.call(document.querySelectorAll(".paper table
   if(t.classList.contains("in")||t.classList.contains("sm")||!t.rows.length)return false;
   return [].every.call(t.rows[0].cells,function(c){return c.colSpan===1&&c.rowSpan===1})})}
 function rzKey(t){
+  if(t.classList.contains("bz"))return "tax.cw.bz."+t.rows[0].cells.length;
   var p=t.closest(".paper");if(p.dataset.taxp!==undefined)return TXW_KEY;
   var kind=p.dataset.vp!==undefined?"vp":state.tab,idx=rzTables().filter(function(x){return x.closest(".paper")===p}).indexOf(t);
   return "tbl.cw."+kind+"."+idx;
