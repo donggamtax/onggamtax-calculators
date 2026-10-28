@@ -298,7 +298,7 @@ var TPL=defaultTpl();
 var TPLNAME={vat:"부가세",inc:"소득세",corp:"법인세"};
 function tplIds(kind){var a=[];if(kind==="vat")TPL.vat.forEach(function(it){if(!it.k)a.push(it.id)});else TPL[kind].forEach(function(g){g.rows.forEach(function(r){a.push(r.id)})});return a}
 
-var state={sort:"",svc:"전체",tfo:false,showOff:false,owner:"전체",adding:false,askDel:null,cmp:{},sel:null,tab:"기본정보",filter:"전체",q:"",vp:null,ip:null,cp:null,ask:null,data:{}};
+var state={loading:true,sort:"",svc:"전체",tfo:false,showOff:false,owner:"전체",adding:false,askDel:null,cmp:{},sel:null,tab:"기본정보",filter:"전체",q:"",vp:null,ip:null,cp:null,ask:null,data:{}};
 var seq=10;
 function d(id){ if(!state.data[id]) state.data[id]=buildData({},[]); return state.data[id]; }
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -338,7 +338,7 @@ function drawList(){
   if(state.sort){var kc=function(a,b){return String(a||"~").localeCompare(String(b||"~"),"ko")};rows=rows.slice().sort(function(a,b){return state.sort==="owner"?(kc(a.owner,b.owner)||kc(a.name,b.name)):kc(a.name,b.name)})}
   var offN=CLIENTS.filter(function(c){return stOf(c)!=="거래중"}).length;
   $("#count").textContent=(state.showOff?"폐업·이탈 ":"거래중 ")+rows.length+"곳"+(state.showOff?"":" · 숨긴 폐업·이탈 "+offN+"곳")+"";
-  $("#cl").innerHTML=rows.map(function(c){return '<li><button type="button" data-id="'+c.id+'" aria-current="'+(state.sel===c.id)+'"><span>'+esc(c.name||"(이름 없음)")+' <span class="tag">'+esc(c.svc||"기장")+'</span>'+(c.tf?' <span class="tag" style="background:var(--soft)">면세</span>':'')+(c.tier?' <span class="tag">'+esc(c.tier)+'</span>':'')+(stOf(c)!=="거래중"?' <span class="tag" style="background:var(--warn-bg);color:var(--warn)">'+stOf(c)+'</span>':'')+'</span><span class="sub">'+(c.rep?esc(c.rep)+' · ':'')+esc(c.owner||"미지정")+'</span></button></li>'}).join("")||'<li class="empty">'+(state.showOff?"폐업·이탈 처리한 업체가 없습니다":"검색 결과가 없습니다")+'</li>';
+  $("#cl").innerHTML=rows.map(function(c){return '<li><button type="button" data-id="'+c.id+'" aria-current="'+(state.sel===c.id)+'"><span>'+esc(c.name||"(이름 없음)")+' <span class="tag">'+esc(c.svc||"기장")+'</span>'+(c.tf?' <span class="tag" style="background:var(--soft)">면세</span>':'')+(c.tier?' <span class="tag">'+esc(c.tier)+'</span>':'')+(stOf(c)!=="거래중"?' <span class="tag" style="background:var(--warn-bg);color:var(--warn)">'+stOf(c)+'</span>':'')+'</span><span class="sub">'+(c.rep?esc(c.rep)+' · ':'')+esc(c.owner||"미지정")+'</span></button></li>'}).join("")||'<li class="empty">'+(state.loading&&!CLIENTS.length?"업체 목록을 불러오는 중입니다… (처음 여는 PC는 조금 더 걸립니다)":state.showOff?"폐업·이탈 처리한 업체가 없습니다":"검색 결과가 없습니다")+'</li>';
 }
 /* 회차(신고 단위) 선택·이름 수정·삭제·추가 */
 function periodBar(kind,list,cur,addLabel){
@@ -1199,16 +1199,16 @@ var LCK="staff.clients.light";
 function readLight(){try{var j=sessionStorage.getItem(LCK);return j?JSON.parse(j):null}catch(e){return null}}
 function writeLight(r){try{sessionStorage.setItem(LCK,JSON.stringify({clients:r.clients,templates:r.templates,people:r.people,approver:r.approver,data:[]}))}catch(e){}}
 function boot(){
-  setSt("불러오는 중…");
+  setSt("불러오는 중…");state.loading=true;
   var cached=readLight();
   if(cached&&cached.clients&&cached.clients.length){applyLoad(cached,true);show()} // 지난번 목록을 먼저 보여주고 뒤에서 새로 받는다
   return api("clients.load",{light:1}).then(function(r){
-    writeLight(r);
+    writeLight(r);state.loading=false;
     if(!state.sel&&!Object.keys(pending).length){applyLoad(r,true);setSt("저장됨","ok");show();if(!CLIENTS.length)openImport(true)}
     else{["vat","inc","corp"].forEach(function(k){var t=r.templates&&r.templates[k];if(Array.isArray(t)&&t.length)TPL[k]=t});if(r.people&&r.people.length&&String(r.people)!==String(PEOPLE)){PEOPLE=r.people;drawList()}setSt("저장됨","ok")}
     setTimeout(bgPrefetch,800);
   })
-    .catch(function(e){setSt("불러오지 못했습니다: "+e.message,"bad");$("#detail").innerHTML='<div class="empty">'+esc(e.message)+' <button class="btn sm" type="button" onclick="boot()">다시 불러오기</button></div>'});
+    .catch(function(e){state.loading=false;if(!CLIENTS.length)drawList();setSt("불러오지 못했습니다: "+e.message,"bad");$("#detail").innerHTML='<div class="empty">'+esc(e.message)+' <button class="btn sm" type="button" onclick="boot()">다시 불러오기</button></div>'});
 }
 var fetching={};
 function refreshClient(id){
@@ -1286,7 +1286,7 @@ function openImport(first){
   m.innerHTML='<div class="pm" style="width:min(640px,100%)"><b>업체 한꺼번에 넣기</b>'+
    '<div class="sub">'+(first?'아직 등록된 업체가 없습니다. ':'')+'엑셀에서 아래 순서로 칸을 복사해 붙여넣으세요. 이미 있는 업체명은 건너뜁니다.<br>업체명 · 대표자 · 면세(O 또는 빈칸) · 구분(법인/개인) · 담당 · 기장/신고 · 비고 (뒤쪽 칸은 비워도 됩니다. 구분이 비면 개인)</div>'+
    '<textarea id="impText" rows="10" style="width:100%;font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)" placeholder="예)\n㈜가나다\t홍길동\t\t법인\t담당자1\t기장\n나다라 식당\t김영희\tO\t개인\t담당자2\t기장"></textarea>'+
-   '<div class="sub" id="impInfo"></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" id="impGo">넣기</button><button class="btn ghost" type="button" id="repChk" title="업체명 · 대표자 두 칸만 읽어서, 이미 있는 업체의 대표자명을 고칩니다">이미 있는 업체의 대표자명만 고치기</button><button class="btn ghost" type="button" data-picclose>닫기</button></div></div>';
+   '<div class="sub" id="impInfo"></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" id="impGo">넣기</button><button class="btn ghost" type="button" id="repChk" title="업체명 · 대표자 두 칸만 읽어서, 이미 있는 업체의 대표자명을 고칩니다">이미 있는 업체의 대표자명만 고치기</button><button class="btn ghost" type="button" id="nmChk" title="업체명 · 대표자 · 담당자 세 칸을 읽어서, 이름이 다른 업체를 찾아 고칩니다">엑셀 기준으로 업체명 점검</button><button class="btn ghost" type="button" data-picclose>닫기</button></div></div>';
   document.body.appendChild(m);
   var ta=m.querySelector("#impText"),info=m.querySelector("#impInfo");
   ta.addEventListener("input",function(){var n=parseImport(ta.value).length;info.textContent=n?n+"곳을 넣습니다.":""});
@@ -1296,6 +1296,28 @@ function openImport(first){
     var b=this;b.disabled=true;info.textContent="넣는 중…";
     api("clients.import",{items:items}).then(function(r){m.remove();return api("clients.load",{light:1}).then(function(x){applyLoad(x,true);show();alert(r.added+"곳을 넣었습니다."+(r.skipped?" (이미 있어 건너뜀 "+r.skipped+"곳)":""))})})
       .catch(function(e){b.disabled=false;info.textContent="실패: "+e.message});
+  };
+  // 업체명 점검: 엑셀(업체명·대표자·담당자)과 다른 이름을 대표자로 짝지어 보여 주고, 체크한 것만 고친다
+  var nmItems=null,nmProps=[];
+  m.querySelector("#nmChk").onclick=function(){
+    var b=this;
+    if(nmItems){
+      var apply=[].slice.call(m.querySelectorAll("[data-nm]:checked")).map(function(x){var p=nmProps[+x.dataset.nm];return {id:p.id,to:p.to}});
+      if(!apply.length){info.textContent="고칠 업체를 체크해 주세요.";return}
+      b.disabled=true;info.textContent="고치는 중…";
+      api("clients.setName",{items:nmItems,apply:apply}).then(function(r){m.remove();return api("clients.load",{light:1}).then(function(x){applyLoad(x,true);show();alert("업체명 "+r.done.length+"곳을 고쳤습니다.")})})
+        .catch(function(e){b.disabled=false;info.textContent="실패: "+e.message});return}
+    var items=ta.value.split(/\r?\n/).map(function(l){var c=l.split("\t");return {name:(c[0]||"").trim(),rep:(c[1]||"").trim(),owner:(c[2]||"").trim()}}).filter(function(x){return x.name&&x.rep&&x.name!=="업체명"});
+    if(!items.length){info.textContent="업체명 · 대표자 · 담당자 칸을 붙여넣으세요.";return}
+    b.disabled=true;info.textContent="확인하는 중…";
+    api("clients.setName",{items:items,dry:true}).then(function(r){
+      b.disabled=false;nmProps=r.proposals;
+      var h='<b>이름이 다른 업체 '+r.proposals.length+'곳</b> (엑셀 '+r.total+'곳 중 이름이 같은 곳 '+r.same+'곳). 맞는 것만 체크하세요.';
+      if(r.proposals.length)h+='<div style="max-height:240px;overflow:auto;border:1px solid var(--line);border-radius:6px;padding:4px 8px;margin:4px 0">'+r.proposals.map(function(c,i){return '<label style="display:block"><input type="checkbox" data-nm="'+i+'"'+(c.sure?" checked":"")+'> <s>'+esc(c.from)+'</s> → <b>'+esc(c.to)+'</b> <span class="sub">'+esc(c.rep)+(c.sure?"":" · 확실하지 않음")+'</span></label>'}).join("")+'</div>';
+      if(r.excelOnly.length)h+='<div>사이트에 비슷한 업체가 없어 건너뜀 '+r.excelOnly.length+'곳: '+esc(r.excelOnly.slice(0,10).join(", "))+(r.excelOnly.length>10?" …":"")+'</div>';
+      info.innerHTML=h;
+      if(r.proposals.length){nmItems=items;b.textContent="체크한 업체 이름 고치기";ta.readOnly=true}
+    },function(e){b.disabled=false;info.textContent="실패: "+e.message});
   };
   // 대표자명만 고치기: 먼저 바뀔 목록을 보여 주고, 확인을 누르면 저장한다
   var repItems=null;

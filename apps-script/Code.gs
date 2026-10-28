@@ -94,6 +94,7 @@ function route(req) {
     case "clients.add": return clientsAdd(req, who);
     case "clients.import": return clientsImport(req, who);
     case "clients.setRep": return clientsSetRep(req, who);
+    case "clients.setName": return clientsSetName(req, who);
     case "clients.delete": return clientsDelete(req, who);
   }
   throw fail("없는 요청입니다.", 404);
@@ -846,6 +847,70 @@ function clientsSetRep(req, who) {
     return { changes: changes.map(c => ({ id: c.id, name: c.name, from: c.from, to: c.to })), notFound: notFound, ambiguous: ambiguous, saved: !req.dry };
   };
   return req.dry ? run() : withLock(run);
+}
+
+// 엑셀 명단과 업체명을 맞춘다. 이름이 그대로 있는 업체는 두고, 남은 업체와 엑셀 이름을 대표자명으로 짝지어 바뀔 이름을 제안한다.
+// dry: 제안만 돌려준다. apply: [{ id, to }] 를 받으면 그 업체의 이름만 바꾼다.
+function clRepKey(v) { return String(v || "").replace(/\s+/g, "").split("외")[0]; }
+function clBigrams(v) { const k = clNameKey(v), o = {}; for (let i = 0; i < k.length - 1; i++) o[k.slice(i, i + 2)] = 1; return o; }
+function clSimilar(a, b) {
+  const x = clBigrams(a), y = clBigrams(b), kx = Object.keys(x), ky = Object.keys(y);
+  if (!kx.length || !ky.length) return 0;
+  let n = 0; kx.forEach(g => { if (y[g]) n++; });
+  return 2 * n / (kx.length + ky.length);
+}
+function clientsSetName(req, who) {
+  const items = (Array.isArray(req.items) ? req.items : []).slice(0, 1000).map(x => ({ name: String(x && x.name || "").trim().slice(0, 100), rep: String(x && x.rep || "").trim().slice(0, 40), owner: String(x && x.owner || "").trim().slice(0, 40) })).filter(x => x.name && x.rep);
+  const apply = Array.isArray(req.apply) ? req.apply.slice(0, 500) : null;
+  const run = () => {
+    const sh = clSheet(CL_SHEET, CL_COLS), rows = clAll(sh, CL_COLS.length);
+    const keys = {}; rows.forEach(r => { if (r[0] !== "") keys[clNameKey(r[1])] = (keys[clNameKey(r[1])] || 0) + 1; });
+    if (apply) {
+      const now = new Date().toISOString(), done = [];
+      apply.forEach(a => {
+        const id = Number(a && a.id), to = String(a && a.to || "").trim().slice(0, 100);
+        if (!id || !to) return;
+        const i = rows.findIndex(r => Number(r[0]) === id); if (i < 0) return;
+        const nk = clNameKey(to), ok = clNameKey(rows[i][1]);
+        if (nk !== ok && keys[nk]) return; // 이미 있는 이름이면 건너뜀
+        let per = {}; try { per = JSON.parse(rows[i][8] || "{}"); } catch (e) {}
+        per.hist = histPush(per.hist, who, now, ["업체명"]);
+        const from = String(rows[i][1]);
+        sh.getRange(i + 2, 2, 1, 1).setValues([[to]]);
+        sh.getRange(i + 2, 9, 1, 3).setValues([[JSON.stringify(per), who, now]]);
+        keys[ok]--; keys[nk] = (keys[nk] || 0) + 1; rows[i][1] = to;
+        done.push({ id: id, from: from, to: to });
+      });
+      if (done.length) { clCacheClear(); clLog(who, "", "", "업체명 " + done.length + "곳 엑셀 기준으로 수정"); }
+      return { done: done };
+    }
+    const excelKeys = {}; items.forEach(it => { excelKeys[clNameKey(it.name)] = 1; });
+    const siteLeft = [], xl = [];
+    rows.forEach(r => {
+      if (r[0] === "") return;
+      if (excelKeys[clNameKey(r[1])]) return;
+      let per = {}; try { per = JSON.parse(r[8] || "{}"); } catch (e) {}
+      siteLeft.push({ id: Number(r[0]), name: String(r[1]), rep: String(per.rep || ""), owner: String(r[3] || "") });
+    });
+    const siteKeys = {}; rows.forEach(r => { if (r[0] !== "") siteKeys[clNameKey(r[1])] = 1; });
+    const seen = {}; items.forEach(it => { const k = clNameKey(it.name); if (siteKeys[k] || seen[k]) return; seen[k] = 1; xl.push(it); });
+    const props = [], usedSite = {}, usedXl = {};
+    xl.forEach((it, xi) => {
+      const cand = siteLeft.filter(c => !usedSite[c.id] && c.rep && clRepKey(c.rep) === clRepKey(it.rep));
+      if (!cand.length) return;
+      cand.forEach(c => { c.score = clSimilar(c.name, it.name); });
+      cand.sort((a, b) => b.score - a.score);
+      const best = cand[0], sameXl = xl.filter((o, oi) => oi !== xi && !usedXl[oi] && clRepKey(o.rep) === clRepKey(it.rep)).length;
+      props.push({ id: best.id, from: best.name, to: it.name, rep: it.rep, owner: best.owner, score: Math.round(best.score * 100), sure: best.score >= 0.3 || (cand.length === 1 && sameXl === 0 && (!it.owner || !best.owner || it.owner === best.owner)), _xi: xi });
+    });
+    // 같은 업체를 두 번 제안하지 않도록 점수가 높은 쪽만 남긴다
+    props.sort((a, b) => b.score - a.score);
+    const out = [];
+    props.forEach(p => { if (usedSite[p.id]) return; usedSite[p.id] = 1; usedXl[p._xi] = 1; delete p._xi; out.push(p); });
+    const excelOnly = xl.filter((it, xi) => !usedXl[xi]).map(it => it.name);
+    return { proposals: out, excelOnly: excelOnly, same: items.length - xl.length, total: items.length };
+  };
+  return apply ? withLock(run) : run();
 }
 
 // items: [{ id, meta?, groups?: { 그룹: {키:값} 또는 null(삭제) } }]
