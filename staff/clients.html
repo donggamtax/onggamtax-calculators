@@ -649,7 +649,7 @@ function taxCell(P,res,c,id,raw,isPct){
   var xr=id==="extra"&&(Number(String(shown).replace(/,/g,""))||0)!==0?" exr":"";
   return '<td class="cc'+yc+xr+(raw?' rawc':'')+(!raw&&ov!==""?' ov':'')+'"><input type="text" class="num" inputmode="decimal" autocomplete="off" data-k="'+esc(key)+'"'+(raw?'':' data-calc="'+c+'|'+id+'"')+' value="'+esc(shown)+'"'+(raw?' placeholder="0"':'')+' aria-label="'+esc(id)+'"></td>';
 }
-function ny(h){return h.replace(/ yr"/g,'"')}
+function ny(h){return h.replace(/ yr( |")/g,function(m,t){return t})}
 function paperTax(id){
   var D=d(state.sel),c=CLIENTS.filter(function(x){return x.id===state.sel})[0],P="tax|"+id+"|",name=D.tps.filter(function(x){return x.id===id})[0].name;
   var isCorp=c.type==="법인",yr=yearOf(name),res=taxCompute(P,yr,isCorp),yy=function(n){return String(n).slice(2)+"년"};
