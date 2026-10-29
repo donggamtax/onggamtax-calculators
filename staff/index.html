@@ -139,7 +139,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 </nav>
 
 <div class="cols one" id="boardView" hidden><div class="main" id="board"></div></div>
-<iframe id="clientsFrame" title="업체별 기장" hidden></iframe>
+<iframe id="clientsFrame" title="업체별 기장" allow="clipboard-write" hidden></iframe>
 <iframe id="progressFrame" title="진도체크" hidden></iframe>
 
 
@@ -220,7 +220,7 @@ function showTab(tab){
   }
   if(tab === "clients"){
     $("#boardView").hidden = true;
-    if(!fr.getAttribute("src")) fr.src = "clients.html?embed=1&v=20261028c";
+    if(!fr.getAttribute("src")) fr.src = "clients.html?embed=1&v=20261029a";
     return;
   }
   $("#boardView").hidden = false;

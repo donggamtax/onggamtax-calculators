@@ -680,7 +680,7 @@ function paperTax(id){
    }).join("")+'</table>'+
    '<div class="rowtools"><button type="button" class="mini add" data-txadd="x">+ 줄 추가(경비 항목)</button>'+(hiddenRows.length?'<span class="sub">뺀 줄 다시 넣기:</span>'+hiddenRows.map(function(r){return '<button type="button" class="mini add" data-txshow="'+r[0]+'">+ '+r[1]+'</button>'}).join(""):'')+'</div>'+
    '<div class="sub" style="margin-top:4px">빨간 테두리가 '+yr+'년 예측입니다. 칸에 숫자를 직접 적으면 그 값이 쓰이고(노란색), 지우면 다시 자동 계산됩니다. 예측의 수입금액·매출원가·판관비는 가결산 ÷ 개월수 × 12 입니다. 줄 끝 "−"로 뺀 줄은 계산에서도 0으로 빠집니다.</div></div>'+
-   '<div class="side"><div class="sbox"><div class="sh">세액공제·감면 입력</div><table class="ht tx sm"><tr><th style="width:38%">항목</th><th>예측</th><th>전년도</th><th></th></tr>'+
+   '<div class="side"><div class="sbox"><div class="sh">세액공제·감면 입력</div><table class="ht tx sm dd"><tr><th style="width:38%">항목</th><th>예측</th><th>전년도</th><th></th></tr>'+
    res.dl.map(function(i){return ny('<tr><td class="nm">'+wn(P+"dn"+i,"항목",DED_NAMES[i]||"")+'</td>'+taxCell(P,res,"I","d"+i,false)+taxCell(P,res,"K","d"+i,true)+'<td class="x"><button type="button" class="mini" data-txdel="d:'+i+'" title="이 줄 빼기">−</button></td></tr>')}).join("")+
    '<tr class="keyr"><th>합계</th>'+["I","K"].map(function(cc){return '<td class="c cc" data-dsum="'+cc+'">'+fmtI(res[cc].dsum)+'</td>'}).join("")+'<td></td></tr>'+
    ny('<tr><th>최저한세</th>'+taxCell(P,res,"I","min",false)+taxCell(P,res,"K","min",true)+'<td></td></tr>')+'</table>'+
@@ -696,15 +696,21 @@ function paperTax(id){
    '</div><div class="memo"><div class="sh">특이사항 · 상담 메모</div><textarea data-k="'+esc(P+"memo")+'" rows="12" placeholder="이 업체의 특이사항, 상담 내용, 절세 방향, 확인할 것 등을 자유롭게 적어두세요.">'+esc(val(P+"memo"))+'</textarea></div></div></div>';
   return h;
 }
-function fitTaxIn(){}
-function fitAllTax(){}
+/* 칸보다 숫자가 길면 글자를 조금씩 줄여서 칸 안에 맞춘다(칸을 넓히면 다시 커진다) */
+function fitTaxIn(el){
+  if(!el||!el.closest||!el.closest("table.dd,table.bz"))return;
+  el.style.fontSize="";var sz=parseFloat(getComputedStyle(el).fontSize)||11.5;
+  while(el.scrollWidth>el.clientWidth&&sz>8){sz-=.5;el.style.fontSize=sz+"px"}
+}
+function fitAllTax(){[].forEach.call(document.querySelectorAll("table.dd input.num,table.bz input.num"),fitTaxIn)}
 /* 표 칸 너비: 머리글 경계를 끌어 조정(브라우저에 저장), 더블클릭하면 처음 크기. 세금예측·부가세·소득세·법인세 표 공통 */
 var TXW_KEY="tax.cw";
 function rzTables(){return [].slice.call(document.querySelectorAll(".paper table.ht")).filter(function(t){
-  if(t.classList.contains("in")||t.classList.contains("sm")||!t.rows.length)return false;
+  if(t.classList.contains("in")||(t.classList.contains("sm")&&!t.classList.contains("dd"))||!t.rows.length)return false;
   return [].every.call(t.rows[0].cells,function(c){return c.colSpan===1&&c.rowSpan===1})})}
 function rzKey(t){
   if(t.classList.contains("bz"))return "tax.cw.bz."+t.rows[0].cells.length;
+  if(t.classList.contains("dd"))return "tax.cw.dd."+t.rows[0].cells.length;
   var p=t.closest(".paper");if(p.dataset.taxp!==undefined)return TXW_KEY;
   var kind=p.dataset.vp!==undefined?"vp":state.tab,idx=rzTables().filter(function(x){return x.closest(".paper")===p}).indexOf(t);
   return "tbl.cw."+kind+"."+idx;
@@ -712,7 +718,7 @@ function rzKey(t){
 function rzGet(t){try{var a=JSON.parse(localStorage.getItem(rzKey(t))||"null");return a&&a.length===t.rows[0].cells.length&&a.every(function(n){return n>=40})?a:null}catch(e){return null}}
 function applyTaxW(){
   rzTables().forEach(function(t){
-    if(t.closest(".paper").dataset.taxp!==undefined&&t.classList.contains("sm"))return;
+    if(t.closest(".paper").dataset.taxp!==undefined&&t.classList.contains("sm")&&!t.classList.contains("dd"))return;
     var ths=t.rows[0].cells,w=rzGet(t);
     for(var i=0;i<ths.length;i++){
       if(!ths[i].querySelector(".rz")){var h=document.createElement("i");h.className="rz";h.dataset.i=i;h.title="끌어서 칸 너비 조정 (더블클릭: 처음 크기)";ths[i].appendChild(h)}
@@ -721,6 +727,7 @@ function applyTaxW(){
     t.style.width=w?w.reduce(function(a,b){return a+b},0)+"px":"";
     t.style.maxWidth=w?"none":"";
   });
+  fitAllTax();
 }
 var rzDrag=null;
 document.addEventListener("mousedown",function(e){
@@ -1097,8 +1104,11 @@ function delAtt(btn){
 document.addEventListener("click",function(e){
   var b=e.target.closest&&e.target.closest("[data-savepic]");if(!b)return;
   var paper=b.closest(".paper"),old=b.textContent;b.textContent="만드는 중…";
+  var gotBlob=null,blobP=new Promise(function(res,rej){gotBlob={res:res,rej:rej}}),autoCopied=false;blobP.catch(function(){});
+  /* 클릭한 순간에 복사 약속을 걸어 두면(그림이 다 만들어진 뒤 채워짐) 브라우저가 복사를 허용한다 */
+  try{if(navigator.clipboard&&window.ClipboardItem){navigator.clipboard.write([new ClipboardItem({"image/png":blobP})]).then(function(){autoCopied=true;var n=document.getElementById("picCopyMsg");if(n)n.textContent="✔ 복사됨 — 바로 붙여넣기(Ctrl+V) 하세요"},function(){})}}catch(x){}
   loadCap(function(err){
-    if(err||!window.html2canvas){b.textContent=old;alert("그림 저장 기능을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.");return}
+    if(err||!window.html2canvas){b.textContent=old;if(gotBlob)gotBlob.rej(new Error("load"));alert("그림 저장 기능을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.");return}
     clearSel();
     window.html2canvas(paper,{scale:2,backgroundColor:"#ffffff",useCORS:true,onclone:function(doc){
       doc.querySelectorAll("[data-savepic],.closebtn,.att,.mini,.add").forEach(function(x){x.style.display="none"});
@@ -1108,10 +1118,18 @@ document.addEventListener("click",function(e){
       b.textContent=old;
       var title=(paper.querySelector("h2.ttl")||{}).textContent||"서식",nm=((CLIENTS.filter(function(x){return x.id===state.sel})[0]||{}).name||"")+" "+title.trim();
       var url=cv.toDataURL("image/png"),m=document.createElement("div");m.className="picmodal";
-      m.innerHTML='<div class="pm"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><a class="btn" download="'+esc(nm)+'.png" href="'+url+'" style="text-decoration:none">PNG 파일로 내려받기</a><button class="btn ghost" type="button" data-picclose>닫기</button><span class="sub">내려받기가 안 되면 아래 그림을 길게 누르거나 우클릭해서 저장하세요.</span></div><img alt="'+esc(nm)+'" src="'+url+'"></div>';
-      m.addEventListener("click",function(ev){if(ev.target===m||ev.target.closest("[data-picclose]"))m.remove()});
+      cv.toBlob(function(bl){if(bl)gotBlob.res(bl);else gotBlob.rej(new Error("png"))},"image/png");
+      m.innerHTML='<div class="pm"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn" type="button" data-piccopy>그림 복사 (Ctrl+C)</button><span class="sub" id="picCopyMsg"></span><a class="btn" download="'+esc(nm)+'.png" href="'+url+'" style="text-decoration:none">PNG 파일로 내려받기</a><button class="btn ghost" type="button" data-picclose>닫기</button><span class="sub">내려받기가 안 되면 아래 그림을 길게 누르거나 우클릭해서 저장하세요.</span></div><img alt="'+esc(nm)+'" src="'+url+'"></div>';
+      function copyNow(){
+        var msg=m.querySelector("#picCopyMsg");
+        blobP.then(function(bl){return navigator.clipboard.write([new ClipboardItem({"image/png":bl})])}).then(function(){msg.textContent="✔ 복사됨 — 바로 붙여넣기(Ctrl+V) 하세요"},function(){msg.textContent="복사하지 못했어요. 그림을 우클릭해서 '이미지 복사'를 눌러 주세요."});
+      }
+      function onKey(ev){if((ev.ctrlKey||ev.metaKey)&&(ev.key==="c"||ev.key==="C")&&!String(window.getSelection&&window.getSelection()||"")){ev.preventDefault();copyNow()}}
+      document.addEventListener("keydown",onKey);
+      m.addEventListener("click",function(ev){if(ev.target.closest("[data-piccopy]")){copyNow();return}if(ev.target===m||ev.target.closest("[data-picclose]")){document.removeEventListener("keydown",onKey);m.remove()}});
       document.body.appendChild(m);
-    }).catch(function(){b.textContent=old;alert("그림을 만들지 못했어요.")});
+      if(autoCopied)m.querySelector("#picCopyMsg").textContent="✔ 복사됨 — 바로 붙여넣기(Ctrl+V) 하세요";
+    }).catch(function(){b.textContent=old;if(gotBlob)gotBlob.rej(new Error("fail"));alert("그림을 만들지 못했어요.")});
   });
 });
 /* ===== 서버 연결 · 자동 저장 ===== */
