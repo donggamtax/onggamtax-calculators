@@ -163,8 +163,8 @@ function leaveStatus(p) {
 // ── 진도체크: 신고 종류별 신고리스트(예: 2026년 2기 예정 부가세)와 업체별 진행 기록 ──────────
 // 시트 '진도목록' = 신고리스트 정의, 시트 '진도체크' = (리스트ID, 업체ID, 진행 기록 JSON). 업체명·구분·담당자는 업체 시트에서 화면이 실시간으로 가져온다.
 const PL_SHEET = "진도목록", PR_SHEET = "진도체크";
-const PR_FIELDS = { xn: 1, xt: 1, xo: 1, done: 1, prio: 1, diff: 1, work: 1, file: 1, appr: 1, deliv: 1, note: 1, mail: 1, fee: 1, paid: 1, tinv: 1 };
-const PR_DATES = { work: 1, file: 1, appr: 1, deliv: 1, mail: 1, paid: 1, tinv: 1 };
+const PR_FIELDS = { xn: 1, xt: 1, xo: 1, done: 1, prio: 1, diff: 1, work: 1, file: 1, appr: 1, deliv: 1, note: 1, mail: 1, fee: 1, paid: 1, tinv: 1, cnt: 1, zip: 1, addr: 1, pack: 1, ship: 1 };
+const PR_DATES = { work: 1, file: 1, appr: 1, deliv: 1, mail: 1, paid: 1, tinv: 1, ship: 1 };
 function progSheet(name, head) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   if (!ss) throw fail("이 스크립트는 구글 시트의 확장 프로그램 → Apps Script에서 만들어야 합니다.", 503);
@@ -188,7 +188,7 @@ function plRows() {
     let notes = null; try { const j = JSON.parse(String(r[8] || "")); if (Array.isArray(j)) notes = j.map(x => String(x)); } catch (e) {}
     const kind = String(r[2]), year = Number(r[3]) || 0, ki = Number(r[4]) || 0, sub = String(r[5] || "");
     // 세금 예측·사업장 현황신고는 이름을 항상 현재 규칙으로 만든다(이름을 바꿔도 예전 리스트에 반영)
-    const title = (kind === "tax" || kind === "biz") ? plTitle(kind, year, ki, sub) : String(r[1]);
+    const title = (kind === "tax" || kind === "biz" || kind === "cal") ? plTitle(kind, year, ki, sub) : String(r[1]);
     return { id: String(r[0]), title: title, kind: kind, year: year, ki: ki, sub: sub, cols: cols, notes: notes };
   });
 }
@@ -197,6 +197,7 @@ function plTitle(kind, year, ki, sub) {
   if (kind === "corp") return year + "년 법인세 신고리스트";
   if (kind === "tax") return year + "년 소득세/법인세 예측";
   if (kind === "biz") return year + "년 사업장 현황신고";
+  if (kind === "cal") return year + "년 달력 발송대장";
   return year + "년 종합소득세 신고리스트";
 }
 // 신고리스트 삭제 권한: 스크립트 속성 PROGRESS_ADMINS(쉼표나 줄바꿈으로 이름 구분)에 적힌 사람만. 비어 있으면 아무도 지울 수 없다.
@@ -220,14 +221,14 @@ function progressLists(who) {
   const lists = plRows(), sh = prSheet(), last = sh.getLastRow(), cnt = {};
   if (last >= 2) sh.getRange(2, 1, last - 1, 3).getValues().forEach(r => {
     const id = String(r[0]); if (!id) return;
-    const c = cnt[id] || (cnt[id] = { n: 0, work: 0, appr: 0, deliv: 0 });
+    const c = cnt[id] || (cnt[id] = { n: 0, work: 0, appr: 0, deliv: 0, ship: 0, cnt: 0 });
     let d = {}; try { d = JSON.parse(String(r[2] || "{}")); } catch (e) {}
-    c.n++; if (d.work) c.work++; if (d.appr && d.appr !== "반려") c.appr++; if (d.deliv) c.deliv++;
+    c.n++; if (d.work) c.work++; if (d.appr && d.appr !== "반려") c.appr++; if (d.deliv) c.deliv++; if (d.ship) c.ship++; c.cnt += Number(d.cnt) || 0;
   });
-  return { lists: lists.map(l => Object.assign(l, cnt[l.id] || { n: 0, work: 0, appr: 0, deliv: 0 })), canDelete: progressAdmin(who), skins: runnerSkins() };
+  return { lists: lists.map(l => Object.assign(l, cnt[l.id] || { n: 0, work: 0, appr: 0, deliv: 0, ship: 0, cnt: 0 })), canDelete: progressAdmin(who), skins: runnerSkins() };
 }
 // 신고리스트별 열 구성(이름·순서·삭제·추가). 기록은 열 키로 저장되므로 열을 지워도 입력한 값은 남고, 다시 추가하면 보인다.
-const PC_TYPES = { check: 1, sel: 1, text: 1, date: 1, num: 1, auto: 1 };
+const PC_TYPES = { check: 1, sel: 1, text: 1, date: 1, num: 1, auto: 1, mark: 1 };
 function progressCols(req) {
   const id = String(req.id || ""), src = Array.isArray(req.cols) ? req.cols : null;
   if (!src || src.length > 40) throw fail("열 구성이 올바르지 않습니다.");
@@ -248,7 +249,7 @@ function progressCols(req) {
 }
 function progressListSave(req) {
   const kind = String(req.kind || ""), year = Math.round(Number(req.year)), ki = Math.round(Number(req.ki) || 0), sub = String(req.sub || "");
-  if (!/^(vat|corp|inc|tax|biz)$/.test(kind)) throw fail("신고 종류가 올바르지 않습니다.");
+  if (!/^(vat|corp|inc|tax|biz|cal)$/.test(kind)) throw fail("신고 종류가 올바르지 않습니다.");
   if (!(year >= 2000 && year <= 2100)) throw fail("연도를 확인하세요.");
   if (kind === "vat" && !((ki === 1 || ki === 2) && /^(예정|확정)$/.test(sub))) throw fail("부가세는 1기/2기와 예정/확정을 고르세요.");
   return withLock(() => {
@@ -313,6 +314,9 @@ function prClean(patch) {
     let v = String(patch[k] == null ? "" : patch[k]).slice(0, 500);
     if (PR_DATES[k] && v && !(k === "appr" && v === "반려") && !/^\d{4}-\d{2}-\d{2}$/.test(v)) throw fail("날짜 형식이 올바르지 않습니다.");
     if (k === "xn" || k === "xo") v = v.trim().slice(0, 40);
+    if (k === "zip") v = v.trim().slice(0, 10);
+    if (k === "cnt") v = v.replace(/[^\d]/g, "").slice(0, 7);
+    if (k === "pack") v = v ? "ㅇ" : "";
     if (k === "xt") v = v === "법인" ? "법인" : "개인";
     out[k] = v; // JSON 문자열 안에 저장되므로(셀이 { 로 시작) 수식으로 해석되지 않는다
   });
