@@ -1244,11 +1244,12 @@ function refreshClient(id){
 function applyGet(id,r,lz){
   if(!lz&&(pending[id]||busy||diffClient(id)))return;
   if(!clientById(id))return;
-  var before=JSON.stringify(snap(id)),c=clientById(id);
+  var before=JSON.stringify(snap(id)),c=clientById(id),lk=[c.name,c.type,c.owner,c.svc,c.rep].join("|");
   c.name=r.client.name;c.type=r.client.type;c.owner=r.client.owner;c.svc=r.client.svc;c.status=r.client.status==="거래중"?"":r.client.status;c.reason=r.client.reason;c.tier=r.client.tier;c.tf=r.client.periods&&r.client.periods.tf?1:0;c.rep=(r.client.periods&&r.client.periods.rep)||"";c.by=r.client.by;c.at=r.client.at;c.hist=(r.client.periods&&r.client.periods.hist)||[];
   state.data[id]=buildData(r.client,r.data);
   var after=JSON.stringify(snap(id));saved[id]=snap(id);
   if(lz){if(state.sel===id){drawList();drawDetail()}return}
+  if(lk!==[c.name,c.type,c.owner,c.svc,c.rep].join("|"))drawList();  /* 목록에 있던 이름·담당이 서버 값과 다르면 목록도 바로 고친다 */
   var a=document.activeElement;
   if(before!==after&&state.sel===id&&!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))){drawList();drawDetail()}
   else showLast();
