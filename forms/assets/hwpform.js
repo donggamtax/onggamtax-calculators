@@ -12,7 +12,7 @@
      eat: 넣는 글자 뒤 빈칸(스페이스)을 글자 폭만큼 최대 몇 개까지 지울지 (줄 맞춤 유지용)
      del: 채웠을 때 지울 원래 글자 수 (예: □ 를 ■ 로 바꿀 때 1)
      mark: 체크 표시 글자 (기본 '■'), w: 입력 칸 너비(쪽 px, 기본은 칸 오른쪽 끝까지)
-     post: 넣는 글자 뒤에 붙일 글자(예: ' '), sum: [더할 칸 id...] 자동 합계 */
+     eatBefore: 넣는 자리 앞 빈칸을 글자 폭만큼 최대 몇 개까지 지울지(금액을 '원' 바로 앞에 붙일 때), pre/post: 앞뒤에 붙일 글자, sum: [더할 칸 id...] 자동 합계 */
 import init, { HwpDocument } from './rhwp/rhwp.js';
 
 const F = window.DG_FORM;
@@ -46,7 +46,8 @@ const digits = s => String(s == null ? '' : s).replace(/[^\d-]/g, '');
 const comma = s => { const d = digits(s); if (d === '' || d === '-') return d; const n = parseInt(d, 10); return isNaN(n) ? '' : n.toLocaleString('ko-KR'); };
 const num = s => { const n = parseInt(digits(s), 10); return isNaN(n) ? 0 : n; };
 const byId = id => F.fields.find(f => f.id === id);
-const vwidth = s => [...s].reduce((a, c) => a + (/[ᄀ-ᇿ　-鿿가-힯＀-￯]/.test(c) ? 2 : 1), 0);
+// 글자 폭(빈칸 1칸 기준): 한글 2, 숫자 1.1, 쉼표·마침표 0.6 — 빈칸을 넉넉히 지워 줄이 넘치지 않게
+const vwidth = s => Math.ceil([...s].reduce((a, c) => a + (/[\u1100-\u11ff\u3000-\u9fff\uac00-\ud7af\uff00-\uffef]/.test(c) ? 2 : /[0-9]/.test(c) ? 1.1 : /[,.]/.test(c) ? 0.6 : 1), 0) * 1.12);
 
 /* ── 문서 다루기 ── */
 const isCell = a => a.path && a.path.length;
@@ -70,14 +71,13 @@ function ins(d, a, o, t) {
   if (!t) return;
   if (isCell(a)) d.insertTextInCellByPath(a.s, a.p, pathJson(a), o, t);
   else d.insertText(a.s, a.p, o, t);
-  // 원본 자리의 글자색이 흐리거나 흰색(안내 문구 등)이면 검정으로
+  // 원본 자리의 글자색이 검정이 아니면(안내 문구 색 등) 입력한 글자는 검정으로
   try {
     let pr;
     if (isCell(a) && a.path.length === 1) { const [ci, cell, cp] = a.path[0]; pr = JSON.parse(d.getCellCharPropertiesAt(a.s, a.p, ci, cell, cp, o)); }
     else if (!isCell(a)) pr = JSON.parse(d.getCharPropertiesAt(a.s, a.p, o));
     if (pr && pr.textColor && pr.textColor.toLowerCase() !== '#000000') {
-      const c = pr.textColor.replace('#', ''), r = parseInt(c.slice(0, 2), 16), g = parseInt(c.slice(2, 4), 16), b = parseInt(c.slice(4, 6), 16);
-      if ((r * 299 + g * 587 + b * 114) / 1000 > 140) {
+      {
         const props = JSON.stringify({ textColor: '#000000' });
         if (isCell(a)) { const [ci, cell, cp] = a.path[0]; d.applyCharFormatInCell(a.s, a.p, ci, cell, cp, o, o + t.length, props); }
         else d.applyCharFormat(a.s, a.p, o, o + t.length, props);
@@ -97,14 +97,20 @@ function fillDoc(d) {
       const a = f.at;
       try {
         if (f.type === 'check') { del(d, a, a.o, f.del == null ? 1 : f.del); ins(d, a, a.o, f.mark || '■'); return; }
-        const t = String(vals[f.id]) + (f.post || '');
-        if (f.del) del(d, a, a.o, f.del);
-        if (f.eat) {
-          const after = textAt(d, a, a.o, f.eat); let n = 0;
-          while (n < after.length && after[n] === ' ') n++;
-          del(d, a, a.o, Math.min(n, vwidth(t)));
+        const t = (f.pre || '') + String(vals[f.id]) + (f.post || '');
+        let o = a.o;
+        if (f.del) del(d, a, o, f.del);
+        if (f.eatBefore && o > 0) {
+          const k = Math.min(f.eatBefore, o), before = textAt(d, a, o - k, k); let n = 0;
+          while (n < before.length && before[before.length - 1 - n] === ' ') n++;
+          n = Math.min(n, vwidth(t)); if (n) { del(d, a, o - n, n); o -= n; }
         }
-        ins(d, a, a.o, t);
+        if (f.eat) {
+          const after = textAt(d, a, o, f.eat); let n = 0;
+          while (n < after.length && after[n] === ' ') n++;
+          del(d, a, o, Math.min(n, vwidth(t)));
+        }
+        ins(d, a, o, t);
       } catch (e) { console.warn('칸 넣기 실패', f.id, e); }
     });
   });
@@ -124,13 +130,23 @@ function renderPages() {
       pg = document.createElement('div'); pg.className = 'page'; pg.dataset.p = i;
       pg.innerHTML = '<div class="svg"></div>'; pagesBox.appendChild(pg);
     }
+    // 칸이 없는 쪽(유의사항 등)은 처음 한 번만 그림
+    if (pg.dataset.done && fieldPages && !fieldPages.has(i) && n === lastCount) continue;
     const info = JSON.parse(doc.getPageInfo(i)); pageInfo[i] = info;
     pg.style.aspectRatio = info.width + '/' + info.height;
     pg.style.setProperty('--pw', (info.width * 25.4 / 96).toFixed(2) + 'mm');
     pg.style.setProperty('--ph', (info.height * 25.4 / 96).toFixed(2) + 'mm');
-    $('.svg', pg).innerHTML = doc.renderPageSvg(i);
+    // 쪽마다 SVG 안의 id가 겹치지 않게(겹치면 다른 쪽의 잘라내기 영역을 써서 글자가 사라짐)
+    const pre = 'pg' + i + '-';
+    $('.svg', pg).innerHTML = doc.renderPageSvg(i)
+      .replace(/\bid="([^"]+)"/g, 'id="' + pre + '$1"')
+      .replace(/url\(#([^)]+)\)/g, 'url(#' + pre + '$1)')
+      .replace(/href="#([^"]+)"/g, 'href="#' + pre + '$1"');
+    pg.dataset.done = 1;
   }
+  lastCount = n;
 }
+let fieldPages = null, lastCount = 0;
 let renderT;
 const scheduleRender = () => { clearTimeout(renderT); renderT = setTimeout(renderPages, 180); };
 
@@ -150,16 +166,26 @@ function fieldRect(d, f) {
       if (bb && a.path.length === 1) w = bb.x + bb.w - r.x - 4;
     } catch (e) {}
   }
+  let x = r.x;
+  if (f.eatBefore != null) {
+    // 칸이 기준 글자(예: '원') 왼쪽에 붙는 경우: 앞쪽 빈칸 시작점부터 기준 글자까지
+    const k = Math.min(f.eatBefore || 0, a.o), before = k ? textAt(d, a, a.o - k, k) : '';
+    let n = 0; while (n < before.length && before[before.length - 1 - n] === ' ') n++;
+    let sx = r.x - (f.w || 110);
+    if (n > 1) { try { const r0 = isCell(a) ? JSON.parse(d.getCursorRectByPath(a.s, a.p, pathJson(a), a.o - n)) : JSON.parse(d.getCursorRect(a.s, a.p, a.o - n)); if (r0.pageIndex === r.pageIndex && Math.abs(r0.y - r.y) < 3) sx = r0.x; } catch (e) {} }
+    x = sx; w = r.x - sx - 2;
+  }
   if (f.type === 'check') w = r.height;
   if (!w || w < 20) w = 120;
   const h = f.type === 'check' ? r.height : Math.max(r.height * 1.25, 16);
   const y = f.type === 'check' ? r.y : r.y - (h - r.height) / 2;
-  return { page: r.pageIndex, x: r.x / info.width * 100, y: y / info.height * 100, w: w / info.width * 100, h: h / info.height * 100, fs: r.height * 0.78 / info.width * 100 };
+  return { page: r.pageIndex, x: x / info.width * 100, y: y / info.height * 100, w: w / info.width * 100, h: h / info.height * 100, fs: r.height * 0.78 / info.width * 100 };
 }
 
 function buildOverlays() {
   document.querySelectorAll('.page .fld,.page .ck').forEach(e => e.remove());
   overlays = {};
+  const pages = new Set();
   const d = freshDoc();
   F.fields.forEach(f => {
     if (!f.at) return;
@@ -186,7 +212,9 @@ function buildOverlays() {
     if (f.label && !el.title) el.title = f.label;
     el.style.left = rc.x + '%'; el.style.top = rc.y + '%'; el.style.width = rc.w + '%'; el.style.height = rc.h + '%';
     el.dataset.id = f.id; pg.appendChild(el); overlays[f.id] = el;
+    pages.add(rc.page);
   });
+  fieldPages = pages;
   d.free();
 }
 

@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>주택취득자금 조달 및 입주계획서 바로 작성 | 동감 세무회계</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<meta name="description" content="주택취득자금 조달 및 입주계획서를 원본 서식 그대로 작성해 한글(HWP·HWPX)·PDF로 받으세요. 합계 자동 계산.">
+<link rel="canonical" href="https://taxdg.com/forms/jageum/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="동감 세무회계">
+<meta property="og:title" content="주택취득자금 조달 및 입주계획서 바로 작성 | 동감 세무회계">
+<meta property="og:description" content="주택취득자금 조달 및 입주계획서를 원본 서식 그대로 작성해 한글(HWP·HWPX)·PDF로 받으세요. 합계 자동 계산.">
+<meta property="og:url" content="https://taxdg.com/forms/jageum/">
+<meta property="og:image" content="https://taxdg.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="ko_KR">
+<link rel="icon" href="../../logo.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&family=Noto+Serif+KR:wght@400;700&display=swap">
+<link rel="stylesheet" href="../assets/forms.css">
+<link rel="modulepreload" href="../assets/rhwp/rhwp.js">
+</head>
+<body class="fv">
+
+<header class="hd">
+  <div class="wrap">
+    <a class="logo" href="../../" aria-label="동감 세무회계 첫 화면"><img src="../../logo.png" alt="동감 세무회계" width="1010" height="151"></a>
+    <nav aria-label="주요 메뉴"><a href="../../">세금 계산기</a><a href="../" aria-current="page">서식 작성</a><a href="../../about/">대표세무사 소개</a><a href="https://blog.naver.com/francepigeon" target="_blank" rel="noopener noreferrer">이동희 블로그</a><a href="../../location/">찾아오시는 길</a></nav>
+    <a class="kakao" href="https://pf.kakao.com/_xftxfAG/chat" target="_blank" rel="noopener noreferrer" aria-label="카카오톡 상담"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3.5c-5 0-9 3.2-9 7.1 0 2.5 1.7 4.8 4.3 6l-.9 3.4c-.1.3.3.6.6.4l4-2.7h1c5 0 9-3.2 9-7.1S17 3.5 12 3.5z"/></svg><span>카카오톡 상담</span></a>
+    <a class="tel" href="tel:01082781382">상담 010-8278-1382</a>
+  </div>
+</header>
+
+<div class="fbar">
+  <div class="wrap">
+    <a class="back" href="../">‹ 서식 목록</a>
+    <h1>주택취득자금 조달 및 입주계획서</h1>
+    <span class="saved" id="saved" aria-live="polite"></span>
+    <div class="acts">
+      <button class="b list-only" id="btnList" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>칸 목록<span class="lg">으로 입력</span></button>
+      <button class="b" id="btnClear" type="button"><span class="lg">내용 </span>지우기</button>
+      <button class="b" id="btnPrint" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></svg>인쇄 · PDF</button>
+      <div class="dl">
+        <button class="b pri" id="btnDl" type="button" aria-haspopup="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>한글 파일<span class="lg">로 받기</span></button>
+        <div class="dl-menu" id="dlMenu">
+          <button id="btnHwp" type="button">HWP로 받기<small>원본과 같은 형식</small></button>
+          <button id="btnHwpx" type="button">HWPX로 받기<small>한글 2014 이후 · 공문서 표준 형식</small></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap fv-main">
+  <div>
+    <div class="note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg>
+      <p>양식의 칸을 눌러 바로 쓰거나 <b>칸 목록</b>에서 차례로 입력하세요. 다 쓰면 <b>한글 파일로 받기</b>를 누르면 원본 한글 서식에 내용이 채워진 파일이 내려받아집니다. 빈칸이 있어도 받을 수 있고, 소계·합계(⑦⑧⑫⑬)는 자동으로 더해집니다. 입력 내용은 서버로 보내지 않고 이 기기에서만 처리됩니다.</p>
+    </div>
+    <p class="load" id="loadStatus">원본 서식을 여는 중입니다… 처음 한 번은 몇 초 걸릴 수 있어요.</p>
+    <div class="pages" id="pages"></div>
+  </div>
+  <aside class="side" aria-label="칸 목록">
+    <div class="side-h"><div><b>칸 목록</b> <small>입력하면 양식에 바로 들어갑니다</small></div><button class="x" id="btnListClose" type="button" aria-label="닫기">×</button></div>
+    <div class="side-l" id="sideList"></div>
+  </aside>
+</div>
+
+<script>
+window.DG_FORM={
+ id:'jageum',
+ title:'주택취득자금 조달 및 입주계획서',
+ file:'주택취득자금조달계획서.hwp',
+ fields:[
+  {"id": "name", "label": "성명(법인명)", "at": {"s": 0, "p": 0, "path": [[2, 10, 1]], "o": 0}, "g": "제출인(매수인)"},
+  {"id": "rrn", "label": "주민등록번호(법인·외국인등록번호)", "at": {"s": 0, "p": 0, "path": [[2, 11, 1]], "o": 0}},
+  {"id": "addr", "label": "주소(법인소재지)", "at": {"s": 0, "p": 0, "path": [[2, 12, 0]], "o": 9}, "pre": "  "},
+  {"id": "tel", "label": "(휴대)전화번호", "at": {"s": 0, "p": 0, "path": [[2, 13, 0]], "o": 8}, "pre": "  "},
+  {"id": "dep", "label": "② 금융기관 예금액", "at": {"s": 0, "p": 0, "path": [[2, 17, 1]], "o": 0}, "type": "money", "eatBefore": 40, "g": "① 자금조달계획 - 자기자금"},
+  {"id": "dep_fb", "label": "해외 송금: 해외 금융기관명", "at": {"s": 0, "p": 0, "path": [[2, 19, 1]], "o": 10}, "eat": 40},
+  {"id": "dep_fa", "label": "해외 송금: 금액", "at": {"s": 0, "p": 0, "path": [[2, 19, 1]], "o": 28}, "type": "money", "eatBefore": 40},
+  {"id": "stock", "label": "③ 주식·채권·가상화폐 매각대금", "at": {"s": 0, "p": 0, "path": [[2, 18, 1]], "o": 0}, "type": "money", "eatBefore": 40},
+  {"id": "st_c1", "label": "주식·채권 매각대금", "at": {"s": 0, "p": 0, "path": [[2, 20, 0]], "o": 1}, "type": "check", "mark": "V"},
+  {"id": "st_a1", "label": "주식·채권 매각대금 금액", "at": {"s": 0, "p": 0, "path": [[2, 20, 0]], "o": 26}, "type": "money", "eatBefore": 40},
+  {"id": "st_c2", "label": "가상화폐 매각대금", "at": {"s": 0, "p": 0, "path": [[2, 20, 1]], "o": 1}, "type": "check", "mark": "V"},
+  {"id": "st_a2", "label": "가상화폐 매각대금 금액", "at": {"s": 0, "p": 0, "path": [[2, 20, 1]], "o": 26}, "type": "money", "eatBefore": 40},
+  {"id": "gift_c", "label": "④ 증여", "at": {"s": 0, "p": 0, "path": [[2, 21, 1]], "o": 1}, "type": "check", "mark": "V"},
+  {"id": "gift", "label": "증여 금액", "at": {"s": 0, "p": 0, "path": [[2, 21, 1]], "o": 30}, "type": "money", "eatBefore": 40},
+  {"id": "gift_r1", "label": "증여세 신고", "at": {"s": 0, "p": 0, "path": [[2, 21, 2]], "o": 16}, "type": "check", "mark": "V"},
+  {"id": "gift_r2", "label": "증여세 미신고", "at": {"s": 0, "p": 0, "path": [[2, 21, 2]], "o": 23}, "type": "check", "mark": "V"},
+  {"id": "inh_c", "label": "④ 상속", "at": {"s": 0, "p": 0, "path": [[2, 21, 3]], "o": 1}, "type": "check", "mark": "V"},
+  {"id": "inh", "label": "상속 금액", "at": {"s": 0, "p": 0, "path": [[2, 21, 3]], "o": 30}, "type": "money", "eatBefore": 40},
+  {"id": "inh_r1", "label": "상속세 신고", "at": {"s": 0, "p": 0, "path": [[2, 21, 4]], "o": 16}, "type": "check", "mark": "V"},
+  {"id": "inh_r2", "label": "상속세 미신고", "at": {"s": 0, "p": 0, "path": [[2, 21, 4]], "o": 23}, "type": "check", "mark": "V"},
+  {"id": "rel1", "label": "증여·상속 제공자: 부부", "at": {"s": 0, "p": 0, "path": [[2, 23, 0]], "o": 2}, "type": "check", "mark": "V"},
+  {"id": "rel2", "label": "증여·상속 제공자: 직계존비속", "at": {"s": 0, "p": 0, "path": [[2, 23, 0]], "o": 9}, "type": "check", "mark": "V"},
+  {"id": "rel2t", "label": "직계존비속 관계", "at": {"s": 0, "p": 0, "path": [[2, 23, 0]], "o": 21}, "eat": 40},
+  {"id": "rel3", "label": "증여·상속 제공자: 그 밖의 관계", "at": {"s": 0, "p": 0, "path": [[2, 23, 1]], "o": 2}, "type": "check", "mark": "V"},
+  {"id": "rel3t", "label": "그 밖의 관계", "at": {"s": 0, "p": 0, "path": [[2, 23, 1]], "o": 13}, "eat": 40},
+  {"id": "cash", "label": "⑤ 현금 등 그 밖의 자금", "at": {"s": 0, "p": 0, "path": [[2, 22, 1]], "o": 0}, "type": "money", "eatBefore": 40},
+  {"id": "fx_c", "label": "외화", "at": {"s": 0, "p": 0, "path": [[2, 22, 2]], "o": 1}, "type": "check", "mark": "V"},
+  {"id": "fx", "label": "외화 금액", "at": {"s": 0, "p": 0, "path": [[2, 22, 2]], "o": 30}, "type": "money", "eatBefore": 40},
+  {"id": "fx_r1", "label": "외화반입 신고", "at": {"s": 0, "p": 0, "path": [[2, 22, 3]], "o": 17}, "type": "check", "mark": "V"},
+  {"id": "fx_r2", "label": "외화반입 미신고", "at": {"s": 0, "p": 0, "path": [[2, 22, 3]], "o": 24}, "type": "check", "mark": "V"},
+  {"id": "cash_c1", "label": "보유 현금", "at": {"s": 0, "p": 0, "path": [[2, 24, 0]], "o": 2}, "type": "check", "mark": "V"},
+  {"id": "cash_c2", "label": "그 밖의 자산", "at": {"s": 0, "p": 0, "path": [[2, 24, 1]], "o": 2}, "type": "check", "mark": "V"},
+  {"id": "cash_t", "label": "그 밖의 자산 종류", "at": {"s": 0, "p": 0, "path": [[2, 24, 1]], "o": 16}, "eat": 40},
+  {"id": "re", "label": "⑥ 부동산 처분대금 등", "at": {"s": 0, "p": 0, "path": [[2, 25, 0]], "o": 25}, "type": "money", "eatBefore": 40},
+  {"id": "re_c1", "label": "주택·토지", "at": {"s": 0, "p": 0, "path": [[2, 27, 0]], "o": 1}, "type": "check", "mark": "V"},
+  {"id": "re_a1", "label": "주택·토지 금액", "at": {"s": 0, "p": 0, "path": [[2, 27, 0]], "o": 29}, "type": "money", "eatBefore": 40},
+  {"id": "re_c2", "label": "임대보증금(취득주택 외)", "at": {"s": 0, "p": 0, "path": [[2, 27, 1]], "o": 1}, "type": "check", "mark": "V"},
+  {"id": "re_a2", "label": "임대보증금 금액", "at": {"s": 0, "p": 0, "path": [[2, 27, 1]], "o": 24}, "type": "money", "eatBefore": 40},
+  {"id": "re_c3", "label": "기타", "at": {"s": 0, "p": 0, "path": [[2, 27, 2]], "o": 1}, "type": "check", "mark": "V"},
+  {"id": "re_t3", "label": "기타 종류", "at": {"s": 0, "p": 0, "path": [[2, 27, 2]], "o": 10}, "eat": 40},
+  {"id": "re_a3", "label": "기타 금액", "at": {"s": 0, "p": 0, "path": [[2, 27, 2]], "o": 30}, "type": "money", "eatBefore": 40},
+  {"id": "sub1", "label": "⑦ 소계 (②~⑥ 합계)", "at": {"s": 0, "p": 0, "path": [[2, 26, 1]], "o": 0}, "type": "money", "eatBefore": 40, "sum": ["dep", "stock", "gift", "inh", "cash", "re"]},
+  {"id": "loan", "label": "⑧ 금융기관 대출액 합계", "at": {"s": 0, "p": 0, "path": [[2, 29, 5]], "o": 0}, "type": "money", "eatBefore": 40, "g": "① 자금조달계획 - 차입금 등", "sum": ["l1", "l2", "l3", "l4", "l5"]},
+  {"id": "l1b", "label": "주택담보대출 금융기관명", "at": {"s": 0, "p": 0, "path": [[2, 31, 0]], "o": 7}, "eat": 40},
+  {"id": "l1", "label": "주택담보대출 금액", "at": {"s": 0, "p": 0, "path": [[2, 31, 0]], "o": 27}, "type": "money", "eatBefore": 40},
+  {"id": "l2b", "label": "신용대출 금융기관명", "at": {"s": 0, "p": 0, "path": [[2, 33, 0]], "o": 7}, "eat": 40},
+  {"id": "l2", "label": "신용대출 금액", "at": {"s": 0, "p": 0, "path": [[2, 33, 0]], "o": 27}, "type": "money", "eatBefore": 40},
+  {"id": "l3b", "label": "사업자대출 금융기관명", "at": {"s": 0, "p": 0, "path": [[2, 35, 0]], "o": 7}, "eat": 40},
+  {"id": "l3", "label": "사업자대출 금액", "at": {"s": 0, "p": 0, "path": [[2, 35, 0]], "o": 27}, "type": "money", "eatBefore": 40},
+  {"id": "l4b", "label": "해외 금융기관 대출 금융기관명", "at": {"s": 0, "p": 0, "path": [[2, 37, 0]], "o": 7}, "eat": 40},
+  {"id": "l4", "label": "해외 금융기관 대출 금액", "at": {"s": 0, "p": 0, "path": [[2, 37, 0]], "o": 27}, "type": "money", "eatBefore": 40},
+  {"id": "l5b", "label": "그 밖의 대출 종류", "at": {"s": 0, "p": 0, "path": [[2, 39, 0]], "o": 7}, "eat": 40},
+  {"id": "l5", "label": "그 밖의 대출 금액", "at": {"s": 0, "p": 0, "path": [[2, 39, 0]], "o": 24}, "type": "money", "eatBefore": 40},
+  {"id": "own1", "label": "기존 주택 미보유", "at": {"s": 0, "p": 0, "path": [[2, 40, 0]], "o": 34}, "type": "check", "mark": "V"},
+  {"id": "own2", "label": "기존 주택 보유", "at": {"s": 0, "p": 0, "path": [[2, 40, 0]], "o": 43}, "type": "check", "mark": "V"},
+  {"id": "ownn", "label": "보유 주택 수(건)", "at": {"s": 0, "p": 0, "path": [[2, 40, 0]], "o": 54}, "eatBefore": 6, "type": "num"},
+  {"id": "dep_rent", "label": "⑨ 취득주택의 임대보증금", "at": {"s": 0, "p": 0, "path": [[2, 41, 1]], "o": 0}, "type": "money", "eatBefore": 40},
+  {"id": "co_c1", "label": "⑩ 회사지원금", "at": {"s": 0, "p": 0, "path": [[2, 43, 0]], "o": 1}, "type": "check", "mark": "V"},
+  {"id": "co1", "label": "회사지원금 금액", "at": {"s": 0, "p": 0, "path": [[2, 43, 0]], "o": 7}, "type": "money", "eatBefore": 40},
+  {"id": "co_c2", "label": "⑩ 사채", "at": {"s": 0, "p": 0, "path": [[2, 43, 1]], "o": 1}, "type": "check", "mark": "V"},
+  {"id": "co2", "label": "사채 금액", "at": {"s": 0, "p": 0, "path": [[2, 43, 1]], "o": 32}, "type": "money", "eatBefore": 40},
+  {"id": "etc", "label": "⑪ 그 밖의 차입금", "at": {"s": 0, "p": 0, "path": [[2, 44, 1]], "o": 0}, "type": "money", "eatBefore": 40},
+  {"id": "erel1", "label": "차입 제공자: 부부", "at": {"s": 0, "p": 0, "path": [[2, 46, 0]], "o": 2}, "type": "check", "mark": "V"},
+  {"id": "erel2", "label": "차입 제공자: 직계존비속", "at": {"s": 0, "p": 0, "path": [[2, 46, 0]], "o": 9}, "type": "check", "mark": "V"},
+  {"id": "erel2t", "label": "직계존비속 관계", "at": {"s": 0, "p": 0, "path": [[2, 46, 0]], "o": 21}, "eat": 40},
+  {"id": "erel3", "label": "차입 제공자: 그 밖의 관계", "at": {"s": 0, "p": 0, "path": [[2, 46, 1]], "o": 2}, "type": "check", "mark": "V"},
+  {"id": "erel3t", "label": "그 밖의 관계", "at": {"s": 0, "p": 0, "path": [[2, 46, 1]], "o": 13}, "eat": 40},
+  {"id": "sub2", "label": "⑫ 소계 (⑧~⑪ 합계)", "at": {"s": 0, "p": 0, "path": [[2, 45, 4]], "o": 0}, "type": "money", "eatBefore": 40, "sum": ["loan", "dep_rent", "co1", "co2", "etc"]},
+  {"id": "total", "label": "⑬ 합계 (⑦+⑫)", "at": {"s": 0, "p": 0, "path": [[2, 48, 0]], "o": 0}, "type": "money", "eatBefore": 40, "sum": ["sub1", "sub2"]},
+  {"id": "pay0", "label": "총 거래금액", "at": {"s": 0, "p": 0, "path": [[2, 52, 0]], "o": 33}, "type": "money", "eatBefore": 40, "g": "⑭ 조달자금 지급방식"},
+  {"id": "pay1", "label": "⑮ 계좌이체 금액", "at": {"s": 0, "p": 0, "path": [[2, 54, 0]], "o": 33}, "type": "money", "eatBefore": 40},
+  {"id": "pay2", "label": "⑯ 보증금·대출 승계 금액", "at": {"s": 0, "p": 0, "path": [[2, 56, 0]], "o": 33}, "type": "money", "eatBefore": 40},
+  {"id": "pay3", "label": "⑰ 현금 및 그 밖의 지급방식 금액", "at": {"s": 0, "p": 0, "path": [[2, 58, 0]], "o": 33}, "type": "money", "eatBefore": 40},
+  {"id": "payr", "label": "지급 사유", "at": {"s": 0, "p": 0, "path": [[2, 59, 0]], "o": 10}, "eat": 40},
+  {"id": "mv1", "label": "본인입주", "at": {"s": 0, "p": 0, "path": [[2, 62, 0]], "o": 1}, "type": "check", "mark": "V", "g": "⑱ 입주 계획"},
+  {"id": "mv2", "label": "본인 외 가족입주", "at": {"s": 0, "p": 0, "path": [[2, 62, 0]], "o": 11}, "type": "check", "mark": "V"},
+  {"id": "mvy", "label": "입주 예정 시기: 년", "at": {"s": 0, "p": 0, "path": [[2, 62, 1]], "o": 15}, "eatBefore": 5, "type": "num"},
+  {"id": "mvm", "label": "입주 예정 시기: 월", "at": {"s": 0, "p": 0, "path": [[2, 62, 1]], "o": 19}, "eatBefore": 3, "type": "num"},
+  {"id": "mv3", "label": "임대(전·월세)", "at": {"s": 0, "p": 0, "path": [[2, 63, 0]], "o": 1}, "type": "check", "mark": "V"},
+  {"id": "mv4", "label": "그 밖의 경우(재건축 등)", "at": {"s": 0, "p": 0, "path": [[2, 64, 0]], "o": 1}, "type": "check", "mark": "V"},
+  {"id": "y", "label": "제출일: 년", "at": {"s": 0, "p": 0, "path": [[2, 66, 0]], "o": 0}, "eatBefore": 0, "post": " ", "type": "num", "g": "제출", "w": 40},
+  {"id": "m", "label": "제출일: 월", "at": {"s": 0, "p": 0, "path": [[2, 66, 0]], "o": 6}, "eatBefore": 5, "type": "num"},
+  {"id": "d", "label": "제출일: 일", "at": {"s": 0, "p": 0, "path": [[2, 66, 0]], "o": 12}, "eatBefore": 5, "type": "num"},
+  {"id": "signer", "label": "제출인 이름", "at": {"s": 0, "p": 0, "path": [[2, 67, 0]], "o": 3}, "pre": "   ", "w": 180}
+ ]
+};
+</script>
+<script type="module" src="../assets/hwpform.js"></script>
+<!-- 네이버 애널리틱스 -->
+<script type="text/javascript" src="https://wcs.pstatic.net/wcslog.js"></script>
+<script type="text/javascript">
+if(!wcs_add) var wcs_add = {};
+wcs_add["wa"] = "1c4b4263a9c8f20";
+if(window.wcs) {
+wcs_do();
+}
+</script>
+</body>
+</html>
