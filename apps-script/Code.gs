@@ -673,11 +673,37 @@ function canApprove(who) {
   return !l.length || l.indexOf(who) >= 0;
 }
 // 진도체크용: 업체 이름·구분·담당·상태·면세만(양식·회차·업체자료는 빼서 가볍게, 6시간 캐시)
+// 업체 번호는 직원이 넣지 않고 서버가 붙인다. 시트 편집 등으로 같은 번호가 둘 이상 생기면 업체를 열 때 엉뚱한 업체 자료가 뜨므로,
+// 나중에 나오는 업체에 새 번호(가장 큰 번호+1)를 조용히 붙여 바로잡는다. 자료는 먼저 나오는 업체에 그대로 남는다.
+function clHasDup(rows) {
+  const seen = {};
+  return rows.some(r => { const k = Number(r[0]); if (!k) return false; if (seen[k]) return true; seen[k] = 1; return false; });
+}
+function clHealIdsLocked() {
+  const sh = clSheet(CL_SHEET, CL_COLS), last = sh.getLastRow();
+  if (last < 2) return 0;
+  const col = sh.getRange(2, 1, last - 1, 1).getValues(), seen = {};
+  let max = 0, n = 0;
+  col.forEach(r => { max = Math.max(max, Number(r[0]) || 0); });
+  col.forEach((r, i) => {
+    const k = Number(r[0]); if (!k) return;
+    if (seen[k]) { max++; sh.getRange(i + 2, 1).setValue(max); n++; } else seen[k] = 1;
+  });
+  if (n) clCacheClear();
+  return n;
+}
+function clHealIds() { return withLock(clHealIdsLocked); }
+function clClientRows() {
+  let rows = clAll(clSheet(CL_SHEET, CL_COLS), CL_COLS.length).filter(r => r[0] !== "");
+  if (clHasDup(rows)) { clHealIds(); rows = clAll(clSheet(CL_SHEET, CL_COLS), CL_COLS.length).filter(r => r[0] !== ""); }
+  return rows;
+}
 function clientsLoadLite(who) {
   let res = null;
   try { const hit = CacheService.getScriptCache().get(CL_LITE_KEY); if (hit) res = JSON.parse(hit); } catch (e) {}
   if (!res) {
-    res = { clients: clAll(clSheet(CL_SHEET, CL_COLS), CL_COLS.length).filter(r => r[0] !== "").map(r => {
+    const all = clClientRows();
+    res = { clients: all.map(r => {
       const c = clRowToItem(r);
       return { id: c.id, name: c.name, type: c.type, owner: c.owner, svc: c.svc, status: c.status, periods: { tf: c.periods && c.periods.tf ? 1 : 0 } };
     }) };
@@ -699,7 +725,7 @@ function clientsLoad(req, who) {
   return res;
 }
 function clientsLoadRaw(req) {
-  const clients = clAll(clSheet(CL_SHEET, CL_COLS), CL_COLS.length).filter(r => r[0] !== "").map(clRowToItem);
+  const clients = clClientRows().map(clRowToItem);
   clients.forEach(c => { delete c.periods.hist; }); // 수정 이력은 업체를 열 때(get) 받는다: 목록을 가볍게
   // light: 업체 목록과 양식만(빠름). 업체별 자료는 업체를 열 때 clients.get으로 받는다.
   const data = (req && req.light) ? [] : clAll(clSheet(CD_SHEET, CD_COLS), CD_COLS.length).filter(r => r[0] !== "").map(r => {
@@ -769,7 +795,7 @@ function clDataItem(r) {
 function clDataRows(cd, id) { const m = {}; m[id] = 1; return clDataRowsFor(cd, m); }
 function clientsGet(req) {
   const id = Number(req.id);
-  const c = clAll(clSheet(CL_SHEET, CL_COLS), CL_COLS.length).filter(r => Number(r[0]) === id).map(clRowToItem)[0];
+  const c = clClientRows().filter(r => Number(r[0]) === id).map(clRowToItem)[0];
   if (!c) throw fail("없는 업체입니다.", 404);
   return { client: c, data: clDataRows(clSheet(CD_SHEET, CD_COLS), id).map(clDataItem) };
 }
@@ -777,7 +803,7 @@ function clientsGet(req) {
 function clientsGetMany(req) {
   const ids = (Array.isArray(req.ids) ? req.ids : []).slice(0, 40).map(Number).filter(n => n > 0), set = {};
   ids.forEach(i => { set[i] = 1; });
-  const items = {}, cl = clAll(clSheet(CL_SHEET, CL_COLS), CL_COLS.length).filter(r => set[Number(r[0])]).map(clRowToItem);
+  const items = {}, cl = clClientRows().filter(r => set[Number(r[0])]).map(clRowToItem);
   cl.forEach(c => { items[c.id] = { client: c, data: [] }; });
   clDataRowsFor(clSheet(CD_SHEET, CD_COLS), set).map(clDataItem).forEach(d => { if (items[d.id]) items[d.id].data.push(d); });
   return { items: Object.keys(items).map(k => items[k]) };
@@ -787,6 +813,7 @@ function clientsAdd(req, who) {
   return withLock(() => {
     const sh = clSheet(CL_SHEET, CL_COLS);
     const o = clMeta(req.meta);
+    if (clHasDup(clAll(sh, 1))) clHealIdsLocked();
     const ids = clAll(sh, 1).map(r => Number(r[0]) || 0);
     const id = (ids.length ? Math.max.apply(null, ids) : 0) + 1;
     const now = new Date().toISOString();
@@ -803,6 +830,7 @@ function clientsImport(req, who) {
   const items = Array.isArray(req.items) ? req.items.slice(0, 1000) : [];
   return withLock(() => {
     const sh = clSheet(CL_SHEET, CL_COLS);
+    if (clHasDup(clAll(sh, 1))) clHealIdsLocked();
     const rows = clAll(sh, CL_COLS.length);
     const names = {}; rows.forEach(r => { names[String(r[1]).trim()] = true; });
     let id = rows.reduce((m, r) => Math.max(m, Number(r[0]) || 0), 0);
@@ -924,6 +952,7 @@ function clientsSave(req, who) {
   return withLock(() => {
     const cl = clSheet(CL_SHEET, CL_COLS), cd = clSheet(CD_SHEET, CD_COLS);
     const now = new Date().toISOString();
+    if (clHasDup(clAll(cl, CL_COLS.length))) clHealIdsLocked();
     const clRows = clAll(cl, CL_COLS.length);
     const cdLast = cd.getLastRow();
     // 업체id·그룹 두 칸만 읽는다(내용 칸까지 다 읽으면 자료가 쌓일수록 저장이 느려진다). 내용은 필요한 줄만 따로 읽는다.
