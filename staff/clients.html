@@ -382,7 +382,7 @@ function tabInfo(c){
    '<span style="color:var(--warn)">※ 참고용 안내입니다. 신고 전 해당 조문과 시행령을 직접 확인하세요.</span></div></details>'+
    '<div class="box"><div class="bt">기본 사항</div>'+ta("info|basic","ag")+'</div>'+
    '<div class="box"><div class="bt">원천세</div>'+ta("info|wht","ag")+'</div>'+
-   '<div class="box"><div class="bt">부가세 신고시 참고사항</div>'+ta("info|vatnote","ag")+'</div>'+
+   (c.tf?'':'<div class="box"><div class="bt">부가세 신고시 참고사항</div>'+ta("info|vatnote","ag")+'</div>')+
    '<div class="box"><div class="bt">'+(c.type==="법인"?"법인세":"소득세")+' 신고시 참고사항</div>'+ta("info|taxnote","ag")+'</div></div>';
 }
 /* ===== 부가세: O/X 칸 · 이전 기수 값 이월 · 세액 자동계산 ===== */
