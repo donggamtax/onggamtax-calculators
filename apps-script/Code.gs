@@ -673,11 +673,23 @@ function canApprove(who) {
   return !l.length || l.indexOf(who) >= 0;
 }
 // 진도체크용: 업체 이름·구분·담당·상태·면세만(양식·회차·업체자료는 빼서 가볍게, 6시간 캐시)
+// 같은 번호의 업체가 둘 이상이면 업체를 열 때 엉뚱한 업체 자료가 뜬다. 목록에 경고하고, 열기·저장은 막는다.
+function clDupNames(rows) {
+  const seen = {}, out = [];
+  rows.forEach(r => { const k = Number(r[0]); if (k) (seen[k] = seen[k] || []).push(String(r[1] || "")); });
+  Object.keys(seen).forEach(k => { if (seen[k].length > 1) out.push(k + "번: " + seen[k].join(" / ")); });
+  return out;
+}
+function clDupGuard(rows, id) {
+  const hit = rows.filter(r => Number(r[0]) === id);
+  if (hit.length > 1) throw fail("업체 번호 " + id + "번이 겹칩니다(" + hit.map(r => r[1]).join(", ") + "). 구글 시트 '업체' 탭의 번호 칸을 고친 뒤 이용해 주세요.");
+}
 function clientsLoadLite(who) {
   let res = null;
   try { const hit = CacheService.getScriptCache().get(CL_LITE_KEY); if (hit) res = JSON.parse(hit); } catch (e) {}
   if (!res) {
-    res = { clients: clAll(clSheet(CL_SHEET, CL_COLS), CL_COLS.length).filter(r => r[0] !== "").map(r => {
+    const all = clAll(clSheet(CL_SHEET, CL_COLS), CL_COLS.length).filter(r => r[0] !== "");
+    res = { dups: clDupNames(all), clients: all.map(r => {
       const c = clRowToItem(r);
       return { id: c.id, name: c.name, type: c.type, owner: c.owner, svc: c.svc, status: c.status, periods: { tf: c.periods && c.periods.tf ? 1 : 0 } };
     }) };
@@ -699,7 +711,8 @@ function clientsLoad(req, who) {
   return res;
 }
 function clientsLoadRaw(req) {
-  const clients = clAll(clSheet(CL_SHEET, CL_COLS), CL_COLS.length).filter(r => r[0] !== "").map(clRowToItem);
+  const allRows = clAll(clSheet(CL_SHEET, CL_COLS), CL_COLS.length).filter(r => r[0] !== "");
+  const clients = allRows.map(clRowToItem);
   clients.forEach(c => { delete c.periods.hist; }); // 수정 이력은 업체를 열 때(get) 받는다: 목록을 가볍게
   // light: 업체 목록과 양식만(빠름). 업체별 자료는 업체를 열 때 clients.get으로 받는다.
   const data = (req && req.light) ? [] : clAll(clSheet(CD_SHEET, CD_COLS), CD_COLS.length).filter(r => r[0] !== "").map(r => {
@@ -711,7 +724,7 @@ function clientsLoadRaw(req) {
     if (TPL_KINDS.indexOf(String(r[0])) < 0) return;
     try { templates[String(r[0])] = JSON.parse(r[1] || "null"); } catch (e) {}
   });
-  return { clients: clients, data: data, templates: templates };
+  return { clients: clients, data: data, templates: templates, dups: clDupNames(allRows) };
 }
 
 // 기본 양식(체크리스트 항목) 저장: 모든 업체의 해당 양식이 한 번에 바뀐다
@@ -769,7 +782,9 @@ function clDataItem(r) {
 function clDataRows(cd, id) { const m = {}; m[id] = 1; return clDataRowsFor(cd, m); }
 function clientsGet(req) {
   const id = Number(req.id);
-  const c = clAll(clSheet(CL_SHEET, CL_COLS), CL_COLS.length).filter(r => Number(r[0]) === id).map(clRowToItem)[0];
+  const hit = clAll(clSheet(CL_SHEET, CL_COLS), CL_COLS.length).filter(r => Number(r[0]) === id);
+  clDupGuard(hit, id);
+  const c = hit.map(clRowToItem)[0];
   if (!c) throw fail("없는 업체입니다.", 404);
   return { client: c, data: clDataRows(clSheet(CD_SHEET, CD_COLS), id).map(clDataItem) };
 }
@@ -777,7 +792,9 @@ function clientsGet(req) {
 function clientsGetMany(req) {
   const ids = (Array.isArray(req.ids) ? req.ids : []).slice(0, 40).map(Number).filter(n => n > 0), set = {};
   ids.forEach(i => { set[i] = 1; });
-  const items = {}, cl = clAll(clSheet(CL_SHEET, CL_COLS), CL_COLS.length).filter(r => set[Number(r[0])]).map(clRowToItem);
+  const rowsHit = clAll(clSheet(CL_SHEET, CL_COLS), CL_COLS.length).filter(r => set[Number(r[0])]), cnt = {};
+  rowsHit.forEach(r => { cnt[Number(r[0])] = (cnt[Number(r[0])] || 0) + 1; });
+  const items = {}, cl = rowsHit.filter(r => cnt[Number(r[0])] === 1).map(clRowToItem); // 번호가 겹친 업체는 미리 받지 않는다(열 때 안내)
   cl.forEach(c => { items[c.id] = { client: c, data: [] }; });
   clDataRowsFor(clSheet(CD_SHEET, CD_COLS), set).map(clDataItem).forEach(d => { if (items[d.id]) items[d.id].data.push(d); });
   return { items: Object.keys(items).map(k => items[k]) };
@@ -936,6 +953,7 @@ function clientsSave(req, who) {
     items.forEach(it => {
       const id = Number(it.id), ci = clRows.findIndex(r => Number(r[0]) === id);
       if (ci < 0) throw fail("없는 업체입니다. 새로고침해 주세요.", 404);
+      clDupGuard(clRows, id);
       const cur = clRowToItem(clRows[ci]);
       const changed = [];
       const o = clMeta(it.meta, cur);
