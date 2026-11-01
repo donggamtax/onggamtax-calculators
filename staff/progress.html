@@ -75,7 +75,7 @@ table.tb .nmc{text-align:left;font-weight:500;white-space:normal}
 .scroll{overflow:auto;max-height:80vh}
 .pb{color:var(--ok);font-weight:700}
 .err{color:var(--bad)}.ok{color:var(--ok)}
-.mkc{text-align:center}button.mkall{font:inherit;font-size:11px;padding:1px 6px;margin-right:4px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;cursor:pointer}
+.mkc{text-align:center}
 .mk{width:34px;height:26px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);font:inherit;font-weight:800;cursor:pointer}button.mk.on{background:var(--ok-bg);border-color:var(--ok,#2e7d32);color:var(--ok,#2e7d32)}
 table.tb td.adc{display:table-cell;white-space:nowrap}table.tb td.adc input.nt{width:calc(100% - 28px)}button.sch{border:0;background:none;cursor:pointer;padding:0 2px;font-size:14px}
 table.sm caption{caption-side:top;text-align:left;font-size:14px;font-weight:600;padding:2px 0 6px}table.sm caption b{font-size:20px;color:var(--accent,#1f5f8b)}table.sm caption span{font-weight:400;font-size:12.5px;color:var(--muted,#667)}
@@ -114,18 +114,32 @@ var S={lists:[],clients:[],people:[],cur:null,rows:{},own:"전체",stf:"전체",
 var G={a:null,f:null,drag:false,moved:false};
 var KIND={vat:"부가세",corp:"법인세",inc:"종합소득세",tax:"소득세/법인세 예측",biz:"사업장 현황신고",cal:"달력 발송대장"};
 var DEF_COLS=[["done","완료","check"],["prio","우선순위","sel"],["type","구분","auto"],["name","상호","auto"],["owner","담당자","auto"],["diff","난도","sel"],["work","작업일","date"],["file","신고일","date"],["appr","결재완료","date"],["deliv","전달일","date"],["note","특이사항","text"],["mail","메일발송","date"],["fee","수수료","num"],["paid","입금여부","date"],["tinv","세금계산서","date"]].map(function(c){return {k:c[0],l:c[1],t:c[2]}});
-var TAX_COLS=[["prio","중요도","sel"],["name","업체명","auto"],["owner","담당자","auto"],["work","추정완료","date"],["c1","상담완료","date"]].map(function(c){return {k:c[0],l:c[1],t:c[2]}});
+var TAX_COLS=[["prio","중요도","sel"],["name","업체명","auto"],["owner","담당자","auto"],["work","추정완료","date"],["c1","상담완료","date"],["ntx","세금없음","check"],["rem","비고","text"]].map(function(c){return {k:c[0],l:c[1],t:c[2]}});
 var TAX_NOTES=["정확하지 않아도 됨","1~8월 매출액 기준, 단 판매대행 있는 경우 1~9월 기준으로 예측","인건비는 전표입력, 매출과 매출원가, 감가상각비는 전표입력 안 해도 됨. 예측 자료에는 반영","매출/매입 확인해서 세금 많이 나올 곳을 우선 작업"];
 function isTax(){var l=curList();return !!l&&l.kind==="tax"}
 function isCal(){var l=curList();return !!l&&l.kind==="cal"}
-var CAL_COLS=[["name","상호","auto"],["cnt","개수","num"],["owner","담당자","auto"],["zip","우편번호","text"],["addr","주소","text"],["pack","포장여부","mark"],["ship","배송완료","date"]].map(function(c){return {k:c[0],l:c[1],t:c[2]}});
-function defCols(){return isTax()?TAX_COLS:isCal()?CAL_COLS:DEF_COLS}
+var CAL_COLS=[["name","상호","auto"],["cnt","개수","num"],["owner","담당자","auto"],["zip","우편번호","text"],["addr","주소","text"],["pack","포장여부","mark"],["ship","배송완료","date"],["rem","비고","text"]].map(function(c){return {k:c[0],l:c[1],t:c[2]}});
+var VAT_COLS=DEF_COLS.concat([{k:"rem",l:"비고",t:"text"}]);
+function isVat(){var l=curList();return !!l&&l.kind==="vat"}
+function defCols(){return isTax()?TAX_COLS:isCal()?CAL_COLS:isVat()?VAT_COLS:DEF_COLS}
+/* 새로 생긴 기본 열(세금없음·비고)은 예전에 저장된 열 구성에도 자동으로 끼워 넣는다 */
+function addNewCols(r){
+  var l=curList(),add=l&&({tax:[{k:"ntx",l:"세금없음",t:"check",after:"상담완료"},{k:"rem",l:"비고",t:"text",after:"세금없음"}],cal:[{k:"rem",l:"비고",t:"text",after:"배송완료"}],vat:[{k:"rem",l:"비고",t:"text"}]})[l.kind];
+  if(!add)return r;
+  var out=r.slice();
+  add.forEach(function(a){
+    if(out.some(function(c){return c.k===a.k}))return;
+    var i=-1;if(a.after)out.forEach(function(c,j){if(c.l===a.after)i=j});
+    var col={k:a.k,l:a.l,t:a.t};if(i<0)out.push(col);else out.splice(i+1,0,col);
+  });
+  return out;
+}
 /* 소득세/법인세 예측은 추정완료(날짜)가 끝난 표시, 다른 리스트는 완료 체크·전달일 */
 function okA(d){return !!d.appr&&d.appr!=="반려"}
 function isDone(d){return isTax()?!!d.work:isCal()?!!d.ship:!!(d.deliv||d.done)}
 var PRIV={fee:1,paid:1,tinv:1};
 function isAdmin(){return !!S.canDelete}
-function rawCols(){var l=curList();return (l&&l.cols&&l.cols.length)?l.cols:defCols()}
+function rawCols(){var l=curList();return (l&&l.cols&&l.cols.length)?addNewCols(l.cols):defCols()}
 function cols(){var r=rawCols();return isAdmin()?r:r.filter(function(c){return !PRIV[c.k]})}
 /* 수수료 등을 못 보는 사람이 열을 고쳐도 숨은 열은 그대로 유지한다 */
 function keepPriv(next){
@@ -362,7 +376,7 @@ function nextCk(){
 /* ── 열 너비(끌어서 조절, 이 브라우저에 신고리스트별로 기억) ── */
 function cwKey(){return "progress.cw."+S.cur}
 function loadCw(){try{return JSON.parse(localStorage.getItem(cwKey())||"{}")||{}}catch(e){return {}}}
-function defW(c){if(c.k==="addr")return 320;if(c.k==="zip")return 82;if(c.t==="mark")return 88;if(c.k==="cnt")return 70;if(c.k==="name")return 150;if(c.k==="owner")return 80;if(c.k==="type")return 64;if(c.k==="prio")return 76;if(c.t==="check")return 72;if(c.t==="sel")return 66;if(c.t==="date")return 78;if(c.t==="num")return 92;return c.k==="note"?200:150}
+function defW(c){if(c.k==="addr")return 320;if(c.k==="zip")return 82;if(c.t==="mark")return 88;if(c.k==="cnt")return 70;if(c.k==="name")return 150;if(c.k==="owner")return 80;if(c.k==="type")return 64;if(c.k==="prio")return 76;if(c.t==="check")return 72;if(c.t==="sel")return 66;if(c.t==="date")return 78;if(c.t==="num")return 92;return c.k==="note"||c.k==="rem"?200:150}
 function cw(c){var m=S.cw||(S.cw=loadCw());return Math.max(40,+m[c.k]||defW(c))}
 function tableW(){return cols().reduce(function(a,c){return a+cw(c)},66)}
 function drawList(){
@@ -374,7 +388,7 @@ function drawList(){
   h+='<div class="panel"><div class="row">'+owners.map(function(o){return '<button class="chip" data-own="'+esc(o)+'" aria-pressed="'+(S.own===o)+'">'+esc(o)+'</button>'}).join("")+
      '<span class="sub">|</span>'+["전체","미완료","완료"].map(function(o){return '<button class="chip" data-stf="'+o+'" aria-pressed="'+(S.stf===o)+'">'+o+'</button>'}).join("")+
      '<span class="sub">'+shown.length+'곳'+(isAdmin()?' · 수수료 합계 '+fmtM(shown.reduce(function(a,r){return a+(Number(r.d.fee)||0)},0)||"0")+'원':'')+'</span></div>';
-  h+='<div class="scroll"><table class="tb" style="width:'+tableW()+'px"><colgroup>'+cols().map(function(c){return '<col style="width:'+cw(c)+'px">'}).join("")+'<col style="width:66px"></colgroup><thead><tr>'+cols().map(function(c){var on=S.sort&&S.sort.k===c.k,b='<button class="srt" data-sort="'+c.k+'" title="누를 때마다 오름차순/내림차순">'+esc(c.l)+'<span>'+(on?(S.sort.dir>0?" ▲":" ▼"):"")+'</span></button>';var rz='<span class="rz" data-rz="'+c.k+'" title="끌어서 너비 조절"></span>';if(c.t==="mark"){var allm=shown.length&&shown.every(function(r){return r.d[c.k]});return '<th><button type="button" class="mkall" data-mkall="'+c.k+'" title="보이는 업체 전체에 ㅇ 표시(전부 표시돼 있으면 해제)">'+(allm?"전체 해제":"전체 ㅇ")+'</button>'+b+rz+'</th>'}return c.k==="done"?'<th><label class="alld" title="보이는 업체 전체 체크/해제"><input type="checkbox" id="alldone"'+(shown.length&&shown.every(function(r){return r.d.done})?" checked":"")+' aria-label="전체 완료 체크"></label>'+b+rz+'</th>':'<th>'+b+rz+'</th>'}).join("")+'<th></th></tr></thead><tbody>'+
+  h+='<div class="scroll"><table class="tb" style="width:'+tableW()+'px"><colgroup>'+cols().map(function(c){return '<col style="width:'+cw(c)+'px">'}).join("")+'<col style="width:66px"></colgroup><thead><tr>'+cols().map(function(c){var on=S.sort&&S.sort.k===c.k,b='<button class="srt" data-sort="'+c.k+'" title="누를 때마다 오름차순/내림차순">'+esc(c.l)+'<span>'+(on?(S.sort.dir>0?" ▲":" ▼"):"")+'</span></button>';var rz='<span class="rz" data-rz="'+c.k+'" title="끌어서 너비 조절"></span>';return c.k==="done"?'<th><label class="alld" title="보이는 업체 전체 체크/해제"><input type="checkbox" id="alldone"'+(shown.length&&shown.every(function(r){return r.d.done})?" checked":"")+' aria-label="전체 완료 체크"></label>'+b+rz+'</th>':'<th>'+b+rz+'</th>'}).join("")+'<th></th></tr></thead><tbody>'+
     (shown.length?shown.map(function(r){return '<tr data-id="'+r.c.id+'" class="'+(isDone(r.d)?"done":"")+'">'+cols().map(function(c,ci){return cell(r,c).replace("<td",'<td data-ci="'+ci+'" tabindex="-1"')}).join("")+'<td><button class="btn ghost sm" data-rm="'+r.c.id+'" title="이 신고리스트에서 빼기">빼기</button></td></tr>'}).join(""):'<tr><td colspan="'+(cols().length+1)+'" class="sub" style="padding:16px">해당하는 업체가 없습니다. 아래의 "엑셀에서 붙여넣기"로 업체를 넣어 주세요.</td></tr>')+
     '</tbody></table></div>';
   h+='<div class="row"><label>업체 추가 <input id="addn" list="addl" placeholder="업체명" autocomplete="off"></label><datalist id="addl">'+
@@ -753,7 +767,6 @@ document.addEventListener("click",function(e){
   if(t.id==="nadd"){var tx=($("#nnew").value||"").trim();if(!tx)return say("추가할 문구를 적어 주세요.",true);var l0=curList();S.nedit=true;return saveNotes(notesOf(l0).concat([tx]).slice())}
   if((b=t.closest("[data-ndel]"))){var l1=curList(),n5=notesOf(l1).slice();n5.splice(+b.dataset.ndel,1);S.nedit=true;return saveNotes(n5)}
   if(t.id==="creset"){return saveCols(defCols().slice())}
-  if((b=t.closest("[data-mkall]"))){var mka=b.dataset.mkall,msh=shownIds(),mm=S.rows[S.cur]||{};return bulkMark(mka,msh,!(msh.length&&msh.every(function(x){return (mm[x]||{})[mka]})))}
   if((b=t.closest("[data-mk]"))&&e.shiftKey&&S.lastMk&&S.lastMk[0]===b.dataset.mk){
     var sid=shownIds(),ia=sid.indexOf(S.lastMk[1]),ib=sid.indexOf(b.dataset.id),mon=!((S.rows[S.cur]||{})[b.dataset.id]||{})[b.dataset.mk];
     S.lastMk=[b.dataset.mk,b.dataset.id];
