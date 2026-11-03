@@ -292,6 +292,11 @@ h1,h2,h3,.tv,.tabs button{letter-spacing:-.025em;}
 .dg-sw a{display:inline-block;text-decoration:none;font-size:14px;font-weight:500;color:var(--ink);background:#fff;border:1px solid var(--rule);border-radius:999px;padding:7px 15px;}
 .dg-sw a:hover{border-color:var(--brand);color:var(--brand);}
 .dg-sw a[aria-current="page"]{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600;}
+.dg-sw .grp{flex:none;font-size:12px;font-weight:700;color:var(--brand);letter-spacing:.02em;padding:0 2px 0 0;align-self:center;}
+.dg-sw .grp:first-child{padding-left:0;}
+.dg-sw .brk{flex-basis:100%;height:0;margin:-2px 0 0;}
+.dg-sw .grp{min-width:64px;}
+@media (max-width:640px){.dg-sw .brk{display:none}.dg-sw .grp{min-width:0}}
 @media (max-width:640px){.dg-hero::after{display:none}.dg-hero .in{padding:28px 16px 26px}.dg-sw{flex-wrap:nowrap;overflow-x:auto;margin-right:-16px;padding-right:16px;scrollbar-width:none}.dg-sw li{flex:none}.dg-sw a{font-size:13px;padding:6px 12px}}
 
 /* 본문 요소 다듬기 */
@@ -444,14 +449,19 @@ select{width:100%;}
     <p class="lede">홈택스 신고도움 자료에 나오는 매출·매입 숫자를 그대로 옮겨 적으면 이번에 낼 부가가치세(또는 돌려받을 세금)를 계산합니다. 일반과세자와 간이과세자 모두 계산하며 2026년 시행 중인 부가가치세법을 따릅니다.</p>
   </header>
   <ul class="dg-sw" aria-label="다른 계산기">
+      <li class="grp">부동산·재산</li>
       <li><a href="../yangdo/">양도소득세·취득세</a></li>
       <li><a href="../sangsok/">상속세·증여세</a></li>
       <li><a href="../jaesan/">재산세·종부세</a></li>
+      <li class="brk" aria-hidden="true"></li>
+      <li class="grp">사업자</li>
       <li><a href="../jonghap/">종합소득세</a></li>
       <li><a href="../bugase/" aria-current="page">부가가치세</a></li>
+      <li><a href="../baedang/">급여·배당 시뮬레이션</a></li>
+      <li class="brk" aria-hidden="true"></li>
+      <li class="grp">직원·급여</li>
       <li><a href="../wolgeup/">월급 실수령액</a></li>
       <li><a href="../juhyu/">주휴수당</a></li>
-      <li><a href="../baedang/">급여·배당 시뮬레이션</a></li>
       <li><a href="../chaeyong/">첫 직원 4대보험</a></li>
   </ul>
 </div></div>

@@ -50,6 +50,11 @@ h1,h2,h3,.tv,.tabs button{letter-spacing:-.025em;}
 .dg-sw a{display:inline-block;text-decoration:none;font-size:14px;font-weight:500;color:var(--ink);background:#fff;border:1px solid var(--rule);border-radius:999px;padding:7px 15px;}
 .dg-sw a:hover{border-color:var(--brand);color:var(--brand);}
 .dg-sw a[aria-current="page"]{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600;}
+.dg-sw .grp{flex:none;font-size:12px;font-weight:700;color:var(--brand);letter-spacing:.02em;padding:0 2px 0 0;align-self:center;}
+.dg-sw .grp:first-child{padding-left:0;}
+.dg-sw .brk{flex-basis:100%;height:0;margin:-2px 0 0;}
+.dg-sw .grp{min-width:64px;}
+@media (max-width:640px){.dg-sw .brk{display:none}.dg-sw .grp{min-width:0}}
 @media (max-width:640px){.dg-hero::after{display:none}.dg-hero .in{padding:28px 16px 26px}.dg-sw{flex-wrap:nowrap;overflow-x:auto;margin-right:-16px;padding-right:16px;scrollbar-width:none}.dg-sw li{flex:none}.dg-sw a{font-size:13px;padding:6px 12px}}
 
 /* 본문 요소 다듬기 */

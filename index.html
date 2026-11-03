@@ -85,6 +85,12 @@ main{padding:48px 0 0}
 .sec-h p{color:var(--muted);font-size:15px}
 
 .cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+.groups{display:grid;gap:34px}
+.gh{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 0 14px;font-size:19px;font-weight:800;letter-spacing:-.03em}
+.gh b{color:var(--brand-deep,#2C4756);padding-left:12px;border-left:4px solid var(--warm)}
+.gh span{font-size:14px;font-weight:500;color:var(--muted);letter-spacing:-.01em}
+.group .cards{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:1000px){.group .cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .card{position:relative;overflow:hidden;text-decoration:none;background:#fff;border:1px solid var(--line);border-radius:20px;padding:28px 24px 24px;display:flex;flex-direction:column;gap:14px;box-shadow:0 18px 36px -30px rgba(24,35,43,.35);transition:transform .3s,box-shadow .3s,border-color .3s}
 .card::after{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,var(--brand),var(--warm));transform:scaleX(0);transform-origin:left;transition:transform .4s}
 .card:hover{transform:translateY(-6px);border-color:rgba(61,95,112,.35);box-shadow:0 30px 50px -30px rgba(24,35,43,.45)}
@@ -141,7 +147,6 @@ footer a{color:var(--brand);font-weight:600;text-decoration:none}
   .wrap{padding:0 16px}
   .hero{padding:52px 0 44px}
   .hero .ring{width:320px;height:320px;right:-150px;top:-90px}
-  .cards{grid-template-columns:1fr}
   .band{padding:32px 24px;border-radius:20px}
   .band a{text-align:left;width:100%}
   .steps{padding:48px 0;margin-top:64px}
@@ -151,9 +156,12 @@ footer a{color:var(--brand);font-weight:600;text-decoration:none}
   main>.wrap{display:flex;flex-direction:column}
   main>.wrap>.disclaimer{order:2;margin:24px 0 0}
   main>.wrap>.sec-h{order:0}
-  main>.wrap>.cards{order:1}
-  main>.wrap>*:not(.disclaimer):not(.sec-h):not(.cards){order:3}
-  .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  main>.wrap>.groups{order:1}
+  main>.wrap>*:not(.disclaimer):not(.sec-h):not(.groups){order:3}
+  .groups{gap:22px}
+  .gh{font-size:16.5px;margin-bottom:10px}
+  .gh span{font-size:12.5px}
+  .group .cards,.cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .card{padding:16px 14px;gap:10px;border-radius:16px}
   .card .ic{width:38px;height:38px;border-radius:11px}
   .card .ic svg{width:20px;height:20px}
@@ -211,7 +219,10 @@ footer a{color:var(--brand);font-weight:600;text-decoration:none}
     href(폴더 이름), 제목, 설명, 태그만 바꾸면 됩니다.
     계산기 파일은 같은 이름의 폴더 안에 index.html 로 넣습니다. (예: jaesan/index.html)
   -->
-  <nav class="cards" id="cards" aria-label="계산기 선택">
+  <div class="groups" id="cards" aria-label="계산기 선택">
+   <section class="group" aria-label="부동산·재산">
+    <h3 class="gh"><b>부동산·재산</b><span>집이나 재산을 사고팔고 물려줄 때</span></h3>
+    <nav class="cards">
 
     <a class="card" href="yangdo/">
       <div class="head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h13l-3-3"/><path d="M20 16H7l3 3"/></svg></span></div>
@@ -234,6 +245,12 @@ footer a{color:var(--brand);font-weight:600;text-decoration:none}
       <span class="go">계산하기</span>
     </a>
 
+    </nav>
+   </section>
+   <section class="group" aria-label="사업자">
+    <h3 class="gh"><b>사업자</b><span>사업을 하고 있을 때</span></h3>
+    <nav class="cards">
+
     <a class="card" href="jonghap/">
       <div class="head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h10v18l-2.5-1.5L12 21l-2.5-1.5L7 21z"/><path d="M10 8h4"/><path d="M10 12h4"/></svg></span></div>
       <div><h2>종합소득세</h2><span class="mini">5월 사업자 신고</span><p>사업자와 프리랜서가 5월에 신고하는 소득세를 계산합니다.</p></div>
@@ -247,6 +264,19 @@ footer a{color:var(--brand);font-weight:600;text-decoration:none}
       <ul class="tags"><li>홈택스 자료 그대로</li><li>카드발행 세액공제</li><li>의제매입세액</li></ul>
       <span class="go">계산하기</span>
     </a>
+
+    <a class="card" href="baedang/">
+      <div class="head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16"/><path d="M6 20v-6"/><path d="M10 20V9"/><path d="M14 20v-8"/><path d="M18 20V5"/></svg></span></div>
+      <div><h2>급여·배당 시뮬레이션</h2><span class="mini">법인 대표 절세</span><p>법인 대표가 받고 싶은 금액을 급여와 배당으로 어떻게 나눌 때 가장 유리한지 찾아 줍니다.</p></div>
+      <ul class="tags"><li>법인세 절감</li><li>배당 종합과세</li><li>최적 배분 찾기</li></ul>
+      <span class="go">계산하기</span>
+    </a>
+
+    </nav>
+   </section>
+   <section class="group" aria-label="직원·급여">
+    <h3 class="gh"><b>직원·급여</b><span>직원을 쓰거나 월급을 따질 때</span></h3>
+    <nav class="cards">
 
     <a class="card" href="wolgeup/">
       <div class="head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><path d="M7 15h4"/></svg></span></div>
@@ -262,13 +292,6 @@ footer a{color:var(--brand);font-weight:600;text-decoration:none}
       <span class="go">계산하기</span>
     </a>
 
-    <a class="card" href="baedang/">
-      <div class="head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16"/><path d="M6 20v-6"/><path d="M10 20V9"/><path d="M14 20v-8"/><path d="M18 20V5"/></svg></span></div>
-      <div><h2>급여·배당 시뮬레이션</h2><span class="mini">법인 대표 절세</span><p>법인 대표가 받고 싶은 금액을 급여와 배당으로 어떻게 나눌 때 가장 유리한지 찾아 줍니다.</p></div>
-      <ul class="tags"><li>법인세 절감</li><li>배당 종합과세</li><li>최적 배분 찾기</li></ul>
-      <span class="go">계산하기</span>
-    </a>
-
     <a class="card" href="chaeyong/">
       <div class="head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M18.5 8v6"/><path d="M15.5 11h6"/></svg></span></div>
       <div><h2>첫 직원 4대보험</h2><span class="mini">직원 채용 보험료</span><p>첫 직원을 뽑을 때 대표님이 내 주는 직원 보험료와 대표님 본인의 직장가입자 보험료를 계산합니다.</p></div>
@@ -276,8 +299,9 @@ footer a{color:var(--brand);font-weight:600;text-decoration:none}
       <span class="go">계산하기</span>
     </a>
 
-
-  </nav>
+    </nav>
+   </section>
+  </div>
 
 </div>
 
