@@ -482,6 +482,19 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
 </style>
 <style>
 /* 첫 직원 채용 계산기 전용 */
+.bigtotal{margin:16px 22px 4px;padding:18px 18px 16px;border-radius:16px;background:var(--brand);color:#fff;text-align:center;}
+.bigtotal .bt-l{font-size:14.5px;line-height:1.55;opacity:.92;}
+.bigtotal .bt-v{font-size:clamp(34px,6vw,44px);font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums;margin:6px 0 2px;line-height:1.15;}
+.bigtotal .bt-s{font-size:15px;opacity:.95;}
+.bigtotal .bt-eq{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 10px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.28);font-size:13px;}
+.bigtotal .bt-eq span{background:rgba(255,255,255,.14);border-radius:10px;padding:7px 11px;}
+.bigtotal .bt-eq b{display:block;font-size:16px;font-variant-numeric:tabular-nums;}
+.bigtotal .bt-eq i{font-style:normal;font-weight:800;font-size:18px;}
+.rpt .bigtotal{margin:12px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.locnote{margin:12px 22px 0;padding:11px 13px;border-radius:10px;background:#FBF7F0;border-left:4px solid var(--warm);font-size:13.5px;line-height:1.6;color:var(--ink);}
+.locnote b{color:#7A5B2A;margin-right:4px;}
+.rpt .locnote{margin:8px 0 0;font-size:12px;}
+@media (max-width:560px){.bigtotal{margin:14px 16px 4px}.locnote{margin:12px 16px 0}}
 .flows{padding:6px 22px 4px;display:grid;gap:8px;}
 .flow{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:2px 10px;align-items:center;border:1px solid var(--rule-soft);border-radius:12px;padding:12px 14px;background:var(--sheet);}
 .flow .fn{font-weight:800;color:var(--brand);font-size:18px;}
@@ -529,7 +542,7 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
   <p class="kicker">Tax Calculator</p>
   <header>
     <h1>첫 직원 채용시 4대보험료 계산기</h1>
-    <p class="lede">개인사업자가 첫 직원을 뽑으면 직원 보험료의 절반을 내 주고, 대표님도 지역가입자에서 직장가입자로 바뀝니다. 직원 월급과 대표님 소득만 넣으면 매달 늘어나는 보험료를 계산해 드립니다. 2026년 기준입니다.</p>
+    <p class="lede">개인사업자가 첫 직원을 뽑으면 직원 보험료의 절반을 내 주고, 대표님도 지역가입자에서 직장가입자로 바뀝니다. 직원 월급과 대표님 소득만 넣으면 대표님이 매달 내는 보험료 합계를 계산해 드립니다. 2026년 기준입니다.</p>
   </header>
   <ul class="dg-sw" aria-label="다른 계산기">
       <li><a href="../yangdo/">양도소득세·취득세</a></li>
@@ -544,7 +557,7 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
   </ul>
 </div></div>
 <div class="wrap">
-  <div class="disclaimer" role="note"><strong>이용 전 확인해 주세요</strong><p>이 계산기는 동감 세무회계가 AI의 도움을 받아 제작한 것으로, 계산 결과에 오류가 있을 수 있습니다. 개인사업자가 처음으로 직원을 뽑는 경우를 가정한 어림 계산이며, 실제 보험료는 공단 고지 금액이 기준입니다. 정확한 금액은 세무사와 상의하시기 바랍니다.</p><p>이 계산기의 이용으로 발생하는 어떠한 문제에 대해서도 동감 세무회계는 책임지지 않음을 알려드립니다.</p></div>
+  <div class="disclaimer" role="note"><strong>이용 전 확인해 주세요</strong><p>이 계산기는 동감 세무회계가 AI의 도움을 받아 제작한 것으로, 계산 결과에 오류가 있을 수 있습니다. 개인사업자가 처음으로 직원을 뽑는 경우를 가정한 어림 계산이며, 실제 보험료는 공단 고지 금액이 기준입니다. 정확한 금액은 공단 고지서로 확인하시기 바랍니다.</p><p>이 계산기의 이용으로 발생하는 어떠한 문제에 대해서도 동감 세무회계는 책임지지 않음을 알려드립니다.</p></div>
 
   <div class="grid">
     <form class="panel" id="form" autocomplete="off" onsubmit="return false">
@@ -568,23 +581,6 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
             <label class="lab" for="ceo">대표님 월 소득 <span class="sub-lab">(사업소득금액 ÷ 12)</span></label>
             <div class="money"><input type="text" inputmode="numeric" id="ceo" data-money placeholder="0"></div>
             <div class="helper" data-for="ceo"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="section">
-        <h2>③ 지금 내는 보험료 <span class="sub-lab">(지역가입자, 선택)</span></h2>
-        <p class="hint">지금 고지서로 내는 금액을 넣으면 직장가입자로 바뀐 뒤 얼마나 늘거나 주는지 비교해 드립니다. 모르면 비워 두세요.</p>
-        <div class="duo">
-          <div class="field">
-            <label class="lab" for="lochi">건강보험료 (장기요양 포함, 월)</label>
-            <div class="money"><input type="text" inputmode="numeric" id="lochi" data-money placeholder="0"></div>
-            <div class="helper" data-for="lochi"></div>
-          </div>
-          <div class="field">
-            <label class="lab" for="locnp">국민연금 (월)</label>
-            <div class="money"><input type="text" inputmode="numeric" id="locnp" data-money placeholder="0"></div>
-            <div class="helper" data-for="locnp"></div>
           </div>
         </div>
       </div>
@@ -627,25 +623,6 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
         <textarea id="memo-cy" rows="3" maxlength="500" placeholder="고객명, 상담 내용 등 계산서에 함께 남길 메모 (비워 두면 손으로 쓸 수 있는 빈 칸으로 저장됩니다)"></textarea>
         <div class="save-actions"><button type="button" class="btn-save" data-savebtn="cy">계산서 PDF로 저장</button><button type="button" class="btn-print" data-imgbtn="cy">이미지로 보기</button></div>
         <p class="save-msg" id="save-msg-cy" role="status"></p>
-      </div>
-      <div class="send-box" data-save hidden>
-        <h3>세무사에게 보내 상담받기</h3>
-        <p class="s-hint">직원 채용과 4대보험 신고를 맡기시거나 상담받으시려면 이름과 연락처를 적고 개인정보 수집·이용에 동의한 뒤 [상담 신청하기]를 눌러 주세요. 계산 자료가 세무사에게 바로 전달되고, 확인 후 연락드립니다.</p>
-        <div class="fields">
-          <div class="field">
-            <label class="lab" for="s-name">이름</label>
-            <input type="text" id="s-name" autocomplete="name" maxlength="30" placeholder="홍길동">
-          </div>
-          <div class="field">
-            <label class="lab" for="s-phone">연락처</label>
-            <input type="text" id="s-phone" inputmode="tel" autocomplete="tel" maxlength="13" placeholder="010-0000-0000">
-          </div>
-        </div>
-        <label class="check" style="margin-top:14px"><input type="checkbox" id="s-agree"><span>개인정보 수집·이용에 동의합니다<small>수집 항목: 이름, 연락처, 계산기에 입력하신 직원 월급·대표 소득·보험료 등 자료<br>이용 목적: 직원 채용에 따른 4대보험료 세무 상담<br>보유 기간: 상담 완료 후 지체 없이 파기<br>동의하지 않으면 세무사에게 자료를 보낼 수 없습니다.</small></span></label>
-        <p class="consent-free">동의하지 않으셔도 계산기는 그대로 이용하실 수 있습니다.</p>
-        <button type="button" class="btn-post" id="postbtn" disabled>상담 신청하기</button>
-        <p class="send-msg" id="post-msg" role="status"></p>
-        <p class="contact">상담문의: 이동희 세무사 (<a href="tel:010-8278-1382">010-8278-1382</a>)</p>
       </div>
     </aside>
   </div>
@@ -784,39 +761,38 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
   let last = null;
   function render(){
     const o = opts();
-    const W = num($('wage')), C = num($('ceo')), LH = num($('lochi')), LN = num($('locnp'));
+    const W = num($('wage')), C = num($('ceo'));
     const out = $('out');
     $('meta').textContent = '2026년 기준 · 개인사업자 · 직원 ' + o.n + '명';
     if(!W){
       last = null;
-      out.innerHTML = '<div class="empty">직원 월급을 넣으면 직원 보험료 중 대표님이 내 주는 몫과 대표님 본인 보험료가 바로 나옵니다.</div>';
+      out.innerHTML = '<div class="empty">직원 월급을 넣으면 대표님 본인 직장 보험료와 직원 보험료 중 내 주는 몫, 그 합계가 바로 나옵니다.</div>';
       return;
     }
     const e = employee(W, o), n = o.n;
     const c = ceo(C, e.B, o);
-    const hasLoc = LH > 0 || LN > 0;
-    const loc = LH + LN;
-    const ceoDiff = hasLoc ? c.tot - loc : c.tot;
     const erAll = e.er * n;
-    const add = erAll + ceoDiff;
-    last = {o, W, C, e, c, n, LH, LN, hasLoc, ceoDiff, erAll, add};
+    const add = erAll + c.tot;
+    last = {o, W, C, e, c, n, erAll, add};
 
-    const sg = v => (v < 0 ? '− ' : '') + won(Math.abs(v));
-    const head = '직원 ' + n + '명을 월 ' + krw(W) + '에 뽑으면 대표님이 매달 내는 보험료는 <b class="red">' + krw(add) + '</b> 늘어납니다. 1년이면 <b>' + krw(add * 12) + '</b>입니다.';
     const step = (no, title, val, sub, cls) => '<div class="flow ' + (cls || '') + '"><span class="fn">' + no + '</span><div class="ft"><b>' + title + '</b><small>' + sub + '</small></div><span class="fv">' + val + '</span></div>';
     const ceoParts = '<div class="parts"><div><b>건강보험</b><span>' + won(c.hi) + '</span></div><div><b>장기요양</b><span>' + won(c.ltc) + '</span></div><div><b>국민연금</b><span>' + (o.ceo60 ? '가입 안 함' : won(c.np)) + '</span></div></div>';
+    const big =
+      '<div class="bigtotal"><div class="bt-l">직원 ' + n + '명을 월 ' + krw(W) + '에 뽑으면<br>대표님이 매달 내는 4대보험료 합계</div>' +
+      '<div class="bt-v">' + won(add) + '</div>' +
+      '<div class="bt-s">1년이면 <b>' + won(add * 12) + '</b></div>' +
+      '<div class="bt-eq"><span>대표님 본인 직장 보험료 <b>' + won(c.tot) + '</b></span><i>+</i><span>직원 보험료 중 대표님 몫 <b>' + won(erAll) + '</b></span></div></div>';
     const flow =
       '<div class="flows">' +
-      step('①', '직원 보험료 중 대표님 몫', won(erAll), '직원 ' + n + '명 · 회사 부담분(산재 포함) · 매달') +
-      '<div class="flow ceo"><span class="fn">②</span><div class="ft"><b>대표님 본인이 직장가입자가 되어 내는 보험료</b><small>직원을 뽑으면 지역가입자에서 직장가입자로 바뀝니다. 반을 내 줄 회사가 없어 전액 본인 부담입니다.</small></div><span class="fv">' + won(c.tot) + '</span>' + ceoParts + '</div>' +
-      step('③', hasLoc ? '지금 내던 지역 보험료는 이제 안 냄' : '지금 내던 지역 보험료는 이제 안 냄', hasLoc ? '− ' + won(loc) : '입력 안 함', hasLoc ? '직장가입자가 되면 지역 보험료 고지서는 더 이상 나오지 않아 그만큼 빠집니다.' : '지금 내는 건강보험료·국민연금을 ③에 넣으면 그만큼 빼고 계산합니다. 아래 합계는 지역 보험료를 빼지 않은 금액입니다.', hasLoc ? 'minus' : 'idle') +
-      '</div>';
+      '<div class="flow ceo"><span class="fn">①</span><div class="ft"><b>대표님 본인이 직장가입자가 되어 내는 보험료</b><small>직원을 뽑으면 지역가입자에서 직장가입자로 바뀝니다. 반을 내 줄 회사가 없어 전액 본인 부담입니다.</small></div><span class="fv">' + won(c.tot) + '</span>' + ceoParts + '</div>' +
+      step('②', '직원 보험료 중 대표님이 내 주는 몫', won(erAll), '직원 ' + n + '명 · 회사 부담분(산재 포함) · 매달') +
+      '</div>' +
+      '<p class="locnote"><b>참고</b> 직장가입자가 되면 지금까지 내던 지역가입자 건강보험료(재산·자동차 보험료 포함)와 지역 국민연금은 더 이상 나오지 않습니다. 위 금액은 그 보험료를 뺀 값이 아니라 새로 내는 전체 금액이니, 지금 내는 금액과 비교해 보세요.</p>';
     const split =
       '<div class="split">' +
-      '<div class="warm"><b>대표님 본인 보험료 변화</b><span>' + (hasLoc && ceoDiff > 0 ? '+ ' : '') + sg(ceoDiff) + '</span><small>' + (hasLoc ? '직장 ' + won(c.tot) + ' − 지역 ' + won(loc) : '직장 ' + won(c.tot) + ' (지역 보험료 미반영)') + '</small></div>' +
-      '<div><b>직원 월급에서 떼는 보험료 (1명)</b><span>' + won(e.ee) + '</span><small>직원 1명 실제 인건비 월 ' + won(W + e.er) + '</small></div>' +
+      '<div><b>직원 월급에서 떼는 보험료 (1명)</b><span>' + won(e.ee) + '</span><small>직원 본인 부담분</small></div>' +
+      '<div><b>직원 1명 실제 인건비 (월)</b><span>' + won(W + e.er) + '</span><small>월급 + 회사 부담 보험료</small></div>' +
       '</div>';
-    const top = '';
 
     // 직원 표
     const tr = (lb, sub, ee, er, cls) => '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td>' + esc(lb) + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</td><td>' + ee + '</td><td>' + er + '</td></tr>';
@@ -837,10 +813,6 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
     t2 += tr('장기요양보험', '건강보험료 × 13.14%', '-', won(c.ltc));
     t2 += tr('국민연금', o.ceo60 ? '만 60세 이상이라 가입 안 함' : '9.5% 전액 본인', o.ceo60 ? '-' : won(c.npBase), won(c.np));
     t2 += tr('직장가입자 보험료', '', '', won(c.tot), 'tot');
-    if(hasLoc){
-      t2 += tr('지금 내는 지역 보험료', '건강 ' + won(LH) + ' + 국민연금 ' + won(LN), '', '− ' + won(loc), 'minus');
-      t2 += tr(ceoDiff >= 0 ? '늘어나는 금액' : '줄어드는 금액', '', '', won(Math.abs(ceoDiff)), 'tot');
-    }
     t2 += '</tbody></table>';
 
     const notes = [];
@@ -848,19 +820,17 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
     if(!C) notes.push('대표님 소득을 비워 두어 직원 월급(' + won(e.B) + ')과 같다고 보고 계산했습니다. 실제로는 종합소득세 신고 소득으로 정해집니다.');
     if(c.hiRaised && C) notes.push('대표님 소득이 직원 월급보다 낮아 건강보험은 직원 보수(' + won(c.hiBase) + ')를 기준으로 매깁니다(국민건강보험법 시행령 제38조).');
     notes.push('대표님 건강보험료는 매년 5월(성실신고는 6월) 종합소득세 신고 소득으로 다시 정해지고, 미리 낸 금액과의 차이는 정산됩니다.');
-    if(hasLoc && ceoDiff < 0) notes.push('직장가입자는 집·차 같은 재산에 보험료가 붙지 않아 지금보다 보험료가 줄 수 있습니다.');
-    notes.push('직원을 뽑아 직장가입자가 되면 지금까지 내던 지역가입자 건강보험료(재산·자동차 보험료 포함)와 지역 국민연금은 더 이상 부과되지 않습니다. 그 대신 위 직장 보험료를 내고, 소득·재산 요건을 갖춘 가족은 피부양자로 올릴 수 있어 가족 보험료가 없어질 수도 있습니다.');
+    notes.push('직장가입자는 집·차 같은 재산에는 보험료가 붙지 않고, 소득·재산 요건을 갖춘 가족은 피부양자로 올릴 수 있어 가족 보험료가 없어질 수도 있습니다.');
     if(o.duru && !e.duruOk) notes.push('보험료 기준 월급이 270만원 이상이라 두루누리 지원을 받을 수 없습니다.');
     if(e.duruOk) notes.push('두루누리는 신청해야 받고, 다음 달 보험료에서 깎아 줍니다. 대표님 본인 보험료와 건강보험·산재보험은 지원하지 않습니다.');
     notes.push('직원을 뽑은 날부터 14일 안에 사업장 성립신고를 하고, 직원 4대보험 취득신고는 건강보험 14일 이내, 국민연금·고용·산재는 다음 달 15일까지 해야 합니다.');
     notes.push('직원 월급과 대표님이 내 준 직원 보험료는 사업 경비로 인정되어 종합소득세가 그만큼 줄어듭니다.');
 
     out.innerHTML =
-      '<div class="headline">' + head + '</div>' + flow + split +
+      big + flow + split +
       '<p class="cap">직원 보험료는 직원과 회사가 반씩 냅니다. 직원 몫은 월급에서 떼어 대표님이 회사 몫과 함께 냅니다.</p>' +
       '<details class="detail"><summary>직원 보험료 자세히 보기</summary><div class="ptbl-wrap" style="padding:0">' + t + '</div></details>' +
       '<details class="detail"><summary>대표님 본인 보험료 계산 과정 보기</summary><div class="ptbl-wrap" style="padding:0">' + t2 + '</div></details>' +
-      '<div class="total"><span class="tl">대표님 월 추가 부담<small>① ' + won(erAll) + ' + ② ' + won(c.tot) + (hasLoc ? ' − ③ ' + won(loc) : '') + ' · 1년 ' + won(add * 12) + '</small></span><span class="tv">' + won(add) + '</span></div>' +
       '<ul class="notes">' + notes.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
   }
 
@@ -868,7 +838,7 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
   form.addEventListener('change', render);
   $('reset').addEventListener('click', () => {
     HTMLFormElement.prototype.reset.call(form);
-    ['wage', 'ceo', 'lochi', 'locnp', 'meal'].forEach(id => setMoney($(id), ''));
+    ['wage', 'ceo', 'meal'].forEach(id => setMoney($(id), ''));
     render();
   });
   window.__cy = {employee, ceo, opts, last: () => last, won, R};
@@ -923,7 +893,6 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
     items.push(['대표 월 소득', v('ceo') ? v('ceo') + '원' : '입력 안 함 (직원 월급과 같다고 봄)']);
     items.push(['업종', form.querySelector('#ind').selectedOptions[0].textContent]);
     if(v('meal')) items.push(['비과세 식대', v('meal') + '원']);
-    if(v('lochi') || v('locnp')) items.push(['지금 지역 보험료', '건강 ' + (v('lochi') || '0') + '원, 국민연금 ' + (v('locnp') || '0') + '원']);
     const ex = [];
     if(form.querySelector('#duru').checked) ex.push('두루누리 지원');
     if(form.querySelector('#emp60').checked) ex.push('직원 60세 이상');
@@ -1112,94 +1081,6 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
     finally{ btn.disabled = false; }
   }
   document.querySelectorAll('[data-imgbtn]').forEach(b => b.addEventListener('click', () => saveImage(b.dataset.imgbtn, b)));
-})();
-</script>
-<script>
-/* ---------- 상담 신청 (구글 시트 저장) ---------- */
-(function(){
-  const $ = id => document.getElementById(id);
-  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzS5MRwChXHXcCt3T0m08ZKGLqxP0IGBD_x6kO9nikNCvMmqb7Ku2YDIWQXEUDX6VCB/exec';
-  const won = n => Math.round(n).toLocaleString('ko-KR') + '원';
-  let posting = false, sentSig = '';
-  function fmtPhone(v){
-    const d = v.replace(/[^0-9]/g, '').slice(0, 11);
-    if(d.startsWith('02')){
-      return d.length <= 2 ? d : d.length <= 5 ? d.slice(0, 2) + '-' + d.slice(2)
-        : d.length <= 9 ? d.slice(0, 2) + '-' + d.slice(2, 5) + '-' + d.slice(5)
-        : d.slice(0, 2) + '-' + d.slice(2, 6) + '-' + d.slice(6, 10);
-    }
-    return d.length <= 3 ? d : d.length <= 6 ? d.slice(0, 3) + '-' + d.slice(3)
-      : d.length <= 10 ? d.slice(0, 3) + '-' + d.slice(3, 6) + '-' + d.slice(6)
-      : d.slice(0, 3) + '-' + d.slice(3, 7) + '-' + d.slice(7);
-  }
-  const last = () => window.__cy.last();
-  function state(){
-    const name = $('s-name').value.trim(), tel = $('s-phone').value.trim(), digits = tel.replace(/[^0-9]/g, '');
-    let why = '';
-    if(!last()) why = '먼저 계산을 마쳐 주세요.';
-    else if(!name) why = '이름을 적어 주세요.';
-    else if(!/^0\d{8,10}$/.test(digits)) why = '연락처를 정확히 적어 주세요.';
-    else if(!$('s-agree').checked) why = '개인정보 수집·이용에 동의하셔야 보낼 수 있습니다.';
-    return {ok: !why, why, name, tel};
-  }
-  function calcLines(){
-    const L = last();
-    if(!L) return '';
-    const lines = [
-      '직원 ' + L.n + '명 월급 ' + won(L.W) + ': 직원 부담 ' + won(L.e.ee) + ', 대표 부담 ' + won(L.e.er) + ' (1명, 월)',
-      '대표 직장 보험료(건강·장기요양·국민연금): ' + won(L.c.tot) + ' (월)',
-      L.hasLoc ? '지금 지역 보험료: ' + won(L.LH + L.LN) + ', 변화 ' + won(L.ceoDiff) : '지역 보험료 입력 안 함',
-      '대표 월 추가 부담: ' + won(L.add) + ' (1년 ' + won(L.add * 12) + ')'
-    ];
-    return lines.map(x => '- ' + x).join('\n');
-  }
-  function signature(){
-    const st = state();
-    return st.name + '|' + st.tel + '|' + calcLines() + '|' + $('memo-cy').value.trim();
-  }
-  function postData(){
-    const st = state();
-    const t = new Date();
-    const today = t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
-    return {
-      kind: '첫 직원 4대보험',
-      name: st.name, phone: st.tel,
-      agree: '동의 (' + today + ')',
-      tax: '대표 월 추가 부담 ' + won(last().add),
-      conds: window.__cyCollect().map(([k, v]) => k + ': ' + v).join('\n'),
-      calc: calcLines().replace(/^- /gm, ''),
-      memo: $('memo-cy').value.trim()
-    };
-  }
-  function syncSend(){
-    const st = state(), pb = $('postbtn'), pm = $('post-msg');
-    const sent = sentSig && sentSig === signature();
-    pb.disabled = !st.ok || posting || sent;
-    pb.textContent = sent ? '신청 완료' : posting ? '보내는 중…' : '상담 신청하기';
-    if(!posting && !sent){ pm.classList.remove('bad', 'good'); pm.textContent = st.ok ? '' : st.why; }
-  }
-  $('s-phone').addEventListener('input', e => { e.target.value = fmtPhone(e.target.value); });
-  ['s-name', 's-phone', 's-agree', 'memo-cy'].forEach(id => { $(id).addEventListener('input', syncSend); $(id).addEventListener('change', syncSend); });
-  $('postbtn').addEventListener('click', async () => {
-    const st = state(), pm = $('post-msg');
-    if(!st.ok){ pm.textContent = st.why; pm.classList.add('bad'); return; }
-    const sig = signature();
-    posting = true; syncSend();
-    pm.classList.remove('bad', 'good'); pm.textContent = '보내는 중입니다.';
-    try{
-      await fetch(SHEET_URL, {method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify(postData())});
-      sentSig = sig;
-      posting = false; syncSend();
-      pm.classList.add('good');
-      pm.textContent = '상담 신청이 접수되었습니다. 세무사가 확인 후 ' + st.tel + '로 연락드리겠습니다.';
-    }catch(e){
-      posting = false; syncSend();
-      pm.classList.add('bad');
-      pm.textContent = '전송하지 못했습니다. 인터넷 연결을 확인하고 다시 눌러 주세요. 계속 안 되면 010-8278-1382로 전화 주세요.';
-    }
-  });
-  new MutationObserver(syncSend).observe($('out'), {childList: true});
-  syncSend();
 })();
 </script>
 <!-- 네이버 애널리틱스 -->
