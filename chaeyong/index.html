@@ -482,6 +482,23 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
 </style>
 <style>
 /* 첫 직원 채용 계산기 전용 */
+.flows{padding:6px 22px 4px;display:grid;gap:8px;}
+.flow{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:2px 10px;align-items:center;border:1px solid var(--rule-soft);border-radius:12px;padding:12px 14px;background:var(--sheet);}
+.flow .fn{font-weight:800;color:var(--brand);font-size:18px;}
+.flow .ft b{display:block;font-size:14.5px;}
+.flow .ft small{display:block;font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:2px;}
+.flow .fv{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right;}
+.flow.ceo{border:2px solid var(--warm);background:#FBF7F0;}
+.flow.ceo .fv{font-size:23px;color:var(--stamp);}
+.flow.minus .fv{color:var(--accent);}
+.flow.idle{border-style:dashed;background:transparent;}
+.flow.idle .fv{font-size:14px;font-weight:600;color:var(--muted);}
+.parts{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px;}
+.parts div{background:#fff;border:1px solid var(--rule-soft);border-radius:10px;padding:7px 9px;}
+.parts b{display:block;font-size:12px;color:var(--muted);font-weight:600;}
+.parts span{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.rpt .flows{padding:0;}
+@media (max-width:560px){.flows{padding:6px 16px 4px}.flow .fv{font-size:17px}.flow.ceo .fv{font-size:20px}.parts span{font-size:13.5px}}
 .ptbl{width:100%;border-collapse:collapse;font-size:14.5px;font-variant-numeric:tabular-nums;}
 .ptbl th,.ptbl td{padding:8px 6px;text-align:right;border-bottom:1px solid var(--rule-soft);white-space:nowrap;}
 .ptbl th{font-size:12.5px;font-weight:700;color:var(--brand-deep);background:var(--brand-tint);}
@@ -784,16 +801,22 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
     const add = erAll + ceoDiff;
     last = {o, W, C, e, c, n, LH, LN, hasLoc, ceoDiff, erAll, add};
 
-    const head = '직원 ' + n + '명을 월 ' + krw(W) + '에 뽑으면 대표님이 매달 더 내는 4대보험료는 약 <b class="red">' + krw(add) + '</b>, 1년이면 <b>' + krw(add * 12) + '</b>입니다.' +
-      (hasLoc ? '' : ' <span class="warn" style="color:var(--muted)">③에 지금 내는 지역 보험료를 넣으면 대표님 보험료는 늘어나는 만큼만 계산합니다.</span>');
+    const sg = v => (v < 0 ? '− ' : '') + won(Math.abs(v));
+    const head = '직원 ' + n + '명을 월 ' + krw(W) + '에 뽑으면 대표님이 매달 내는 보험료는 <b class="red">' + krw(add) + '</b> 늘어납니다. 1년이면 <b>' + krw(add * 12) + '</b>입니다.';
+    const step = (no, title, val, sub, cls) => '<div class="flow ' + (cls || '') + '"><span class="fn">' + no + '</span><div class="ft"><b>' + title + '</b><small>' + sub + '</small></div><span class="fv">' + val + '</span></div>';
+    const ceoParts = '<div class="parts"><div><b>건강보험</b><span>' + won(c.hi) + '</span></div><div><b>장기요양</b><span>' + won(c.ltc) + '</span></div><div><b>국민연금</b><span>' + (o.ceo60 ? '가입 안 함' : won(c.np)) + '</span></div></div>';
+    const flow =
+      '<div class="flows">' +
+      step('①', '직원 보험료 중 대표님 몫', won(erAll), '직원 ' + n + '명 · 회사 부담분(산재 포함) · 매달') +
+      '<div class="flow ceo"><span class="fn">②</span><div class="ft"><b>대표님 본인이 직장가입자가 되어 내는 보험료</b><small>직원을 뽑으면 지역가입자에서 직장가입자로 바뀝니다. 반을 내 줄 회사가 없어 전액 본인 부담입니다.</small></div><span class="fv">' + won(c.tot) + '</span>' + ceoParts + '</div>' +
+      step('③', hasLoc ? '지금 내던 지역 보험료는 이제 안 냄' : '지금 내던 지역 보험료는 이제 안 냄', hasLoc ? '− ' + won(loc) : '입력 안 함', hasLoc ? '직장가입자가 되면 지역 보험료 고지서는 더 이상 나오지 않아 그만큼 빠집니다.' : '지금 내는 건강보험료·국민연금을 ③에 넣으면 그만큼 빼고 계산합니다. 아래 합계는 지역 보험료를 빼지 않은 금액입니다.', hasLoc ? 'minus' : 'idle') +
+      '</div>';
     const split =
       '<div class="split">' +
-      '<div><b>직원 보험료 중 대표님 몫</b><span>' + won(erAll) + '</span><small>매달 · 직원 ' + n + '명 · 산재 포함</small></div>' +
-      '<div class="warm"><b>' + (hasLoc ? '대표님 본인 보험료 변화' : '대표님 본인 보험료 (직장)') + '</b><span>' + (hasLoc && ceoDiff > 0 ? '+ ' : '') + (ceoDiff < 0 ? '− ' + won(-ceoDiff) : won(ceoDiff)) + '</span><small>' + (hasLoc ? '직장 ' + won(c.tot) + ' − 지금 ' + won(loc) : '건강·장기요양·국민연금 전액 본인') + '</small></div>' +
+      '<div class="warm"><b>대표님 본인 보험료 변화</b><span>' + (hasLoc && ceoDiff > 0 ? '+ ' : '') + sg(ceoDiff) + '</span><small>' + (hasLoc ? '직장 ' + won(c.tot) + ' − 지역 ' + won(loc) : '직장 ' + won(c.tot) + ' (지역 보험료 미반영)') + '</small></div>' +
+      '<div><b>직원 월급에서 떼는 보험료 (1명)</b><span>' + won(e.ee) + '</span><small>직원 1명 실제 인건비 월 ' + won(W + e.er) + '</small></div>' +
       '</div>';
-    const top =
-      '<div class="res-top"><div><b>직원 월급에서 떼는 보험료 (1명)</b><span>' + won(e.ee) + '</span></div>' +
-      '<div><b>직원 1명 실제 인건비 (월)</b><span>' + won(W + e.er) + '</span></div></div>';
+    const top = '';
 
     // 직원 표
     const tr = (lb, sub, ee, er, cls) => '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td>' + esc(lb) + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</td><td>' + ee + '</td><td>' + er + '</td></tr>';
@@ -826,18 +849,18 @@ input[type=text]:hover,select:hover{border-color:#B9C5CC;}
     if(c.hiRaised && C) notes.push('대표님 소득이 직원 월급보다 낮아 건강보험은 직원 보수(' + won(c.hiBase) + ')를 기준으로 매깁니다(국민건강보험법 시행령 제38조).');
     notes.push('대표님 건강보험료는 매년 5월(성실신고는 6월) 종합소득세 신고 소득으로 다시 정해지고, 미리 낸 금액과의 차이는 정산됩니다.');
     if(hasLoc && ceoDiff < 0) notes.push('직장가입자는 집·차 같은 재산에 보험료가 붙지 않아 지금보다 보험료가 줄 수 있습니다.');
-    notes.push('직장가입자가 되면 소득·재산 요건을 갖춘 가족은 피부양자로 올릴 수 있어, 지역가입 때 함께 내던 가족 보험료가 없어질 수 있습니다.');
+    notes.push('직원을 뽑아 직장가입자가 되면 지금까지 내던 지역가입자 건강보험료(재산·자동차 보험료 포함)와 지역 국민연금은 더 이상 부과되지 않습니다. 그 대신 위 직장 보험료를 내고, 소득·재산 요건을 갖춘 가족은 피부양자로 올릴 수 있어 가족 보험료가 없어질 수도 있습니다.');
     if(o.duru && !e.duruOk) notes.push('보험료 기준 월급이 270만원 이상이라 두루누리 지원을 받을 수 없습니다.');
     if(e.duruOk) notes.push('두루누리는 신청해야 받고, 다음 달 보험료에서 깎아 줍니다. 대표님 본인 보험료와 건강보험·산재보험은 지원하지 않습니다.');
     notes.push('직원을 뽑은 날부터 14일 안에 사업장 성립신고를 하고, 직원 4대보험 취득신고는 건강보험 14일 이내, 국민연금·고용·산재는 다음 달 15일까지 해야 합니다.');
     notes.push('직원 월급과 대표님이 내 준 직원 보험료는 사업 경비로 인정되어 종합소득세가 그만큼 줄어듭니다.');
 
     out.innerHTML =
-      '<div class="headline">' + head + '</div>' + split + top +
+      '<div class="headline">' + head + '</div>' + flow + split +
       '<p class="cap">직원 보험료는 직원과 회사가 반씩 냅니다. 직원 몫은 월급에서 떼어 대표님이 회사 몫과 함께 냅니다.</p>' +
-      '<details class="detail" open><summary>직원 보험료 자세히 보기</summary><div class="ptbl-wrap" style="padding:0">' + t + '</div></details>' +
-      '<details class="detail"><summary>대표님 본인 보험료 자세히 보기</summary><div class="ptbl-wrap" style="padding:0">' + t2 + '</div></details>' +
-      '<div class="total"><span class="tl">대표님 월 추가 부담<small>직원 몫 ' + won(erAll) + (hasLoc ? ' + 본인 보험료 변화 ' + (ceoDiff < 0 ? '−' + won(-ceoDiff) : won(ceoDiff)) : ' + 본인 직장 보험료 ' + won(c.tot)) + ' · 1년 ' + won(add * 12) + '</small></span><span class="tv">' + won(add) + '</span></div>' +
+      '<details class="detail"><summary>직원 보험료 자세히 보기</summary><div class="ptbl-wrap" style="padding:0">' + t + '</div></details>' +
+      '<details class="detail"><summary>대표님 본인 보험료 계산 과정 보기</summary><div class="ptbl-wrap" style="padding:0">' + t2 + '</div></details>' +
+      '<div class="total"><span class="tl">대표님 월 추가 부담<small>① ' + won(erAll) + ' + ② ' + won(c.tot) + (hasLoc ? ' − ③ ' + won(loc) : '') + ' · 1년 ' + won(add * 12) + '</small></span><span class="tv">' + won(add) + '</span></div>' +
       '<ul class="notes">' + notes.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
   }
 
