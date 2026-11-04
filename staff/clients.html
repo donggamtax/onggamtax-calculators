@@ -215,7 +215,7 @@ html[data-embed="1"] .wrap{padding-top:6px}
 .paper.taxp .tx td.cc{text-align:right}.paper.taxp .tx td.cc input{text-align:right!important;padding-right:6px}
 .paper.taxp .tx tr.ratr td{font-weight:700}
 .paper.taxp .tx tr.credr td.cc,.paper.taxp .tx tr.credr td.cc input{color:#d62d2d!important;font-weight:700}
-.paper .ht tr:first-child>*{position:relative}.paper:not(.taxp){overflow-x:auto}.two>*{min-width:0;overflow-x:auto}.paper.taxp .tx th{position:relative}.rz{position:absolute;top:0;right:-3px;width:7px;height:100%;cursor:col-resize;z-index:2}.rz:hover{background:rgba(42,111,219,.35)}
+.paper .ht tr:first-child>*{position:relative}.paper:not(.taxp){overflow-x:auto}.two>*{min-width:0;overflow-x:auto}.paper.taxp .tx th{position:relative}.rz{position:absolute;top:0;right:-3px;width:7px;height:100%;cursor:col-resize;z-index:2}.rz:hover{background:rgba(42,111,219,.35)}.rzr{position:absolute;left:0;bottom:-3px;width:100%;height:7px;cursor:row-resize;z-index:2}.rzr:hover{background:rgba(42,111,219,.35)}
 body:has(.app[data-tax="1"]) .wrap{max-width:1700px}
 @media (max-width:1500px){.paper.taxp .taxgrid{grid-template-columns:minmax(0,1fr)}}
 .paper.taxp .tx th{padding:3px 5px}.paper.taxp .tx td{padding:2px 4px}
@@ -322,7 +322,7 @@ function ck(k,label){return '<input type="checkbox" data-ck="'+esc(k)+'"'+(val(k
 function sel(k,opts){return '<select data-k="'+esc(k)+'"><option value=""></option>'+opts.map(function(o){return '<option'+(val(k)===o?" selected":"")+'>'+o+'</option>'}).join("")+'</select>'}
 function wn(k,ph,def){return '<textarea class="wn" rows="1" data-k="'+esc(k)+'" placeholder="'+esc(ph||"")+'" aria-label="'+esc(ph||k)+'">'+esc(val(k,def))+'</textarea>'}
 function repSize(v){return Math.max(4,Math.ceil(String(v||"").length*1.8)+1)}
-function fitWn(el){el.style.height="auto";el.style.height=el.scrollHeight+"px"}
+function fitWn(el){var bt=el.closest&&el.closest("table.bz"),bh=bt&&bzGet(bt);if(bh){fitBzName(el,bh[0]);return}el.style.height="auto";el.style.height=el.scrollHeight+"px"}
 function fitAllWn(){document.querySelectorAll("textarea.wn,textarea.ag").forEach(fitWn)}
 function ta(k,cls){return '<textarea class="'+(cls||"")+'" data-k="'+esc(k)+'" aria-label="'+esc(k)+'">'+esc(val(k))+'</textarea>'}
 
@@ -560,6 +560,7 @@ function paperInc(id){
    ["25년","24년"].map(function(y,i){return '<table class="ht"><tr><th>'+y+' 소득</th><th>'+y+' 부가율</th><th>'+y+' 조정료</th></tr><tr><td>'+nm(P+"i"+i)+'</td><td>'+inp(P+"r"+i)+'</td><td>'+nm(P+"f"+i)+'</td></tr></table>'}).join("")+'</div>'+
    '<div class="sub" style="text-align:right;margin-bottom:8px">*세금의 경우 기납부세액 포함. 소득의 경우 근로소득 등 모든 소득 포함</div>'+
    '<div class="count" data-prog="'+P+'" data-ids="'+ids.join(",")+'" style="text-align:right">'+n+' / '+total+' 체크</div>'+
+   '<div class="box"><div class="bt" style="text-align:left;padding-left:8px">-memo-</div>'+ta(P+"memo")+'</div>'+
    '<table class="ht"><tr><th style="width:70px">항목</th><th>체크리스트</th><th style="width:46px">체크</th><th style="width:28%">비고</th></tr>';
   TPL.inc.forEach(function(g){
     g.rows.forEach(function(r,j){
@@ -729,6 +730,42 @@ function applyTaxW(){
   });
   fitAllTax();
 }
+/* 사업자별 가결산 표 높이: 줄 아래 경계를 위아래로 끌어 조정(브라우저에 저장), 더블클릭하면 처음 크기. 사업자명은 칸에 맞게 글자가 줄어든다 */
+var BZH_KEY="tax.rh.bz";
+function bzGet(t){try{var a=JSON.parse(localStorage.getItem(BZH_KEY)||"null");return a&&a.length===t.rows.length&&a.every(function(n){return n>=20})?a:null}catch(e){return null}}
+function fitBzName(el,h){
+  el.style.height=Math.max(16,h-10)+"px";el.style.fontSize="";
+  var sz=parseFloat(getComputedStyle(el).fontSize)||12;
+  while(el.scrollHeight>el.clientHeight+1&&sz>7){sz-=.5;el.style.fontSize=sz+"px"}
+}
+function applyBzH(){
+  [].forEach.call(document.querySelectorAll(".paper table.bz"),function(t){
+    var h=bzGet(t);
+    for(var i=0;i<t.rows.length;i++){
+      var tr=t.rows[i],c0=tr.cells[0];
+      if(!c0.querySelector(".rzr")){var g=document.createElement("i");g.className="rzr";g.dataset.r=i;g.title="끌어서 높이 조정 (더블클릭: 처음 크기)";c0.appendChild(g)}
+      tr.style.height=h?h[i]+"px":"";
+      if(i===0)[].forEach.call(tr.querySelectorAll("textarea.wn"),function(el){if(h)fitBzName(el,h[0]);else{el.style.fontSize="";fitWn(el)}});
+    }
+  });
+}
+var rzrDrag=null;
+document.addEventListener("mousedown",function(e){
+  var g=e.target.closest&&e.target.closest(".paper .rzr");if(!g||e.button!==0)return;
+  e.preventDefault();e.stopPropagation();
+  var t=g.closest("table");rzrDrag={r:+g.dataset.r,y:e.clientY,h:[].map.call(t.rows,function(tr){return tr.getBoundingClientRect().height})};
+},true);
+document.addEventListener("mousemove",function(e){
+  if(!rzrDrag)return;
+  var h=rzrDrag.h.slice();h[rzrDrag.r]=Math.max(24,rzrDrag.h[rzrDrag.r]+e.clientY-rzrDrag.y);
+  try{localStorage.setItem(BZH_KEY,JSON.stringify(h.map(Math.round)))}catch(x){}
+  applyBzH();
+});
+document.addEventListener("mouseup",function(){rzrDrag=null});
+document.addEventListener("dblclick",function(e){
+  var g=e.target.closest&&e.target.closest(".paper .rzr");if(!g)return;
+  try{localStorage.removeItem(BZH_KEY)}catch(x){}applyBzH();
+});
 var rzDrag=null;
 document.addEventListener("mousedown",function(e){
   var h=e.target.closest&&e.target.closest(".paper .rz");if(!h||e.button!==0)return;
@@ -810,7 +847,7 @@ function drawDetail(){
     '<div class="hist">'+histHtml(c)+'</div>';
   var tk=state.tab==="부가세"?"vp":state.tab==="소득세"?"ip":state.tab==="법인세"?"cp":state.tab==="세금예측"?"tp":null;
   document.getElementById("app").dataset.wide=(tk&&state.cmp[tk])?"1":"";document.getElementById("app").dataset.tax=state.tab==="세금예측"?"1":"";
-  fitAllWn();fitAllTax();applyTaxW();applyLocks();
+  fitAllWn();fitAllTax();applyTaxW();applyBzH();applyLocks();
 }
 document.addEventListener("input",function(e){if(e.target.classList&&e.target.classList.contains("repi"))e.target.size=repSize(e.target.value);if(e.target.classList&&(e.target.classList.contains("wn")||e.target.classList.contains("ag")))fitWn(e.target)});
 // 업체 위에 마우스를 올리거나 손가락을 대면 자료를 미리 받아 둔다(누르는 순간 바로 열린다)
@@ -1477,11 +1514,11 @@ function exportBook(){
   // 4. 소득세
   var irows=[],ih=BH.concat(["귀속연도","일련번호","기장/신고","이름","거래처명","작성일","담당자","신고유형","25년 소득","25년 부가율","25년 조정료","24년 소득","24년 부가율","24년 조정료"]);
   TPL.inc.forEach(function(g){g.rows.forEach(function(r){ih.push(r.t,r.t+" 비고")})});
-  ih.push("결재 작성자","결재 대표세무사");
+  ih.push("메모","결재 작성자","결재 대표세무사");
   CLIENTS.forEach(function(c){var D=state.data[c.id];if(!D)return;D.ips.forEach(function(p){inClient(c.id,function(){
     var P="inc|"+p.id+"|",r=base(c).concat([p.name,val(P+"no"),val(P+"mode"),val(P+"nm"),val(P+"co",c.name),val(P+"date"),val(P+"owner"),val(P+"kind"),xnum(val(P+"i0")),val(P+"r0"),xnum(val(P+"f0")),xnum(val(P+"i1")),val(P+"r1"),xnum(val(P+"f1"))]);
     TPL.inc.forEach(function(g){g.rows.forEach(function(row){r.push(ox(val(P+"c"+row.id)),val(P+"n"+row.id,row.n))})});
-    r.push(ox(val(P+"s1")),ox(val(P+"s2")));irows.push(r);
+    r.push(val(P+"memo"),ox(val(P+"s1")),ox(val(P+"s2")));irows.push(r);
   })})});
   sheets.push(["소득세",[ih].concat(irows)]);
   // 5. 법인세
