@@ -223,6 +223,23 @@ input.vauto,.ht input.vauto{color:var(--muted)}
 .oxc{display:flex;flex-wrap:wrap;gap:2px;align-items:center}.oxc select.ox{width:3.4em;min-width:0;flex:none;font-weight:700;text-align:center;padding:3px 0}.ht .oxc input[type=text]{min-width:64px;flex:1 1 64px;border-bottom:1px dotted var(--rule)}
 .ox-o{color:var(--ok)}.ox-x{color:#d62d2d}
 @media (max-width:760px){.two{grid-template-columns:1fr!important}.paper{padding:12px 8px;overflow-x:auto}.ht{min-width:560px}.paper h2.ttl{font-size:17px}}
+@media print{
+@page{size:A4;margin:10mm}
+html,body{background:#fff!important;color:#000!important}
+.panel.list,.back,.tabs,.ctl,.mini,.rz,.rzr,.btn,#addbox{display:none!important}
+.app{display:block!important}
+.panel.detail{border:0!important;box-shadow:none!important;padding:0!important;display:block!important}
+.paper{overflow:visible!important;max-width:none!important;padding:0!important;box-shadow:none!important;border:0!important}
+.taxgrid,.paper.taxp .taxgrid{grid-template-columns:minmax(0,1fr)!important;gap:8px!important}.taxgrid>div{min-width:0}.sbox{break-inside:avoid}.tx.dd th:first-child{width:46%!important}.tx.dd th:last-child{width:7%!important}.bz th.bh .wn{height:auto!important;min-height:20px}
+.paper.taxp .taxgrid>div:first-child,.bw,.two>*{overflow:visible!important}
+.ht{width:100%!important;max-width:100%!important;min-width:0!important}
+.tx{table-layout:fixed!important}
+.ht th,.ht td{overflow-wrap:anywhere}
+.tx input.num,.tx td.cc{font-size:9.5px!important}.tx input.num{padding:1px 2px!important}
+.ht tr{break-inside:avoid}
+textarea{field-sizing:content;height:auto!important;overflow:visible!important;resize:none}
+input,select,textarea{border-color:transparent!important;background:transparent!important}
+}
 </style>
 <script src="config.js"></script>
 <script>if(/[?&]embed=1/.test(location.search))document.documentElement.dataset.embed="1"</script>
@@ -322,7 +339,8 @@ function ck(k,label){return '<input type="checkbox" data-ck="'+esc(k)+'"'+(val(k
 function sel(k,opts){return '<select data-k="'+esc(k)+'"><option value=""></option>'+opts.map(function(o){return '<option'+(val(k)===o?" selected":"")+'>'+o+'</option>'}).join("")+'</select>'}
 function wn(k,ph,def){return '<textarea class="wn" rows="1" data-k="'+esc(k)+'" placeholder="'+esc(ph||"")+'" aria-label="'+esc(ph||k)+'">'+esc(val(k,def))+'</textarea>'}
 function repSize(v){return Math.max(4,Math.ceil(String(v||"").length*1.8)+1)}
-function fitWn(el){var bt=el.closest&&el.closest("table.bz"),bh=bt&&bzGet(bt);if(bh){fitBzName(el,bh[0]);return}el.style.height="auto";el.style.height=el.scrollHeight+"px"}
+var FS_OK=window.CSS&&CSS.supports&&CSS.supports("field-sizing","content");
+function fitWn(el){if(FS_OK&&el.classList.contains("wn")&&!el.closest("table.bz")){el.style.height="";return}var bt=el.closest&&el.closest("table.bz"),bh=bt&&bzGet(bt);if(bh){fitBzName(el,bh[0]);return}el.style.height="auto";el.style.height=el.scrollHeight+"px"}
 function fitAllWn(){document.querySelectorAll("textarea.wn,textarea.ag").forEach(fitWn)}
 function ta(k,cls){return '<textarea class="'+(cls||"")+'" data-k="'+esc(k)+'" aria-label="'+esc(k)+'">'+esc(val(k))+'</textarea>'}
 
@@ -728,7 +746,7 @@ function applyTaxW(){
     t.style.width=w?w.reduce(function(a,b){return a+b},0)+"px":"";
     t.style.maxWidth=w?"none":"";
   });
-  fitAllTax();
+  fitAllTax();fitAllWn();
 }
 /* 사업자별 가결산 표 높이: 줄 아래 경계를 위아래로 끌어 조정(브라우저에 저장), 더블클릭하면 처음 크기. 사업자명은 칸에 맞게 글자가 줄어든다 */
 var BZH_KEY="tax.rh.bz";
