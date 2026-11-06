@@ -433,7 +433,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         <div data-mode="week" hidden style="margin-top:18px">
           <div class="week four" id="weekGrid"></div>
-          <div class="helper left">최근 4주 각 주의 소정근로시간을 넣으면 4주 평균으로 판단합니다.</div>
+          <div class="helper left">최근 4주 각 주의 소정근로시간을 넣으면 4주 평균으로 판단합니다. 일한 기간이 4주가 안 되면 일한 주만 넣고 나머지는 비워 두세요(0시간인 주는 빼고 평균합니다).</div>
         </div>
       </div>
 
@@ -576,9 +576,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const on = v.map((x, i) => x ? DAYS[i] + ' ' + h1(x).replace('시간', '') : '').filter(Boolean);
       return {h: v.reduce((a, b) => a + b, 0), sub: on.join(' · '), dayMax: Math.max(...v), entered: on.length > 0, workDays: on.length};
     }
-    const w = [1, 2, 3, 4].map(i => hrs($('w' + i)));
-    const sum = w.reduce((a, b) => a + b, 0);
-    return {h: sum / 4, sub: '4주 평균 (' + w.map(x => h1(x).replace('시간', '')).join(' + ') + ') ÷ 4', dayMax: 0, entered: sum > 0, avg: true};
+    // 근로기준법 제18조 제3항: 4주 동안(4주 미만으로 근로하면 그 기간)을 평균
+    const w = [1, 2, 3, 4].map(i => hrs($('w' + i))).filter(x => x > 0);
+    const n = w.length, sum = w.reduce((a, b) => a + b, 0);
+    if(!n) return {h: 0, sub: '', dayMax: 0, entered: false, avg: true, weeks: 0};
+    const sub = n === 1 ? '근무한 1주 (4주 미만은 그 기간 기준)'
+      : (n < 4 ? '근무한 ' + n + '주 평균 (' : '4주 평균 (') + w.map(x => h1(x).replace('시간', '')).join(' + ') + ') ÷ ' + n;
+    return {h: sum / n, sub, dayMax: 0, entered: true, avg: true, weeks: n};
   }
 
   /* ---------- 계산 ---------- */
@@ -604,7 +608,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     let holRaw, holSub;
     if(partTime){
       holRaw = hEff / stdD;
-      holSub = '단시간근로자: 1주 소정근로시간 ÷ 통상근로자 주 ' + stdD + '일' + (wk.avg ? ' (4주 합계 ÷ ' + stdD * 4 + '일)' : '');
+      holSub = '단시간근로자: 1주 소정근로시간 ÷ 통상근로자 주 ' + stdD + '일' + (wk.avg && wk.weeks > 1 ? ' (' + wk.weeks + '주 합계 ÷ ' + stdD * wk.weeks + '일)' : '');
     } else if(mode() === 'same'){
       holRaw = hrs($('dayH'));
       holSub = '통상근로자: 1일 소정근로시간';
@@ -619,7 +623,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const add = (label, value, opt) => rows.push({no: CIRC[n++] || '', label, value, ...(opt || {})});
     add('시급', won(wage), {sub: wage < min ? y + '년 최저임금 ' + won(min) + '보다 낮음' : y + '년 최저임금 ' + won(min) + ' 이상'});
     add('1주 소정근로시간', h1(wk.h), {sub: wk.sub});
-    add('주 15시간 이상', over15 ? '충족' : '미충족', {sub: wk.avg ? '4주 평균으로 판단' : '1주 소정근로시간 기준', ok: over15});
+    add('주 15시간 이상', over15 ? '충족' : '미충족', {sub: wk.avg ? (wk.weeks < 4 ? '4주 미만 근무: 일한 ' + wk.weeks + (wk.weeks > 1 ? '주 평균으로' : '주로') + ' 판단' : '4주 평균으로 판단') : '1주 소정근로시간 기준', ok: over15});
     add('개근', full ? '충족' : '미충족', {ok: full});
     if(quit) add('다음 주 근로관계', '없음', {sub: '그 주를 끝으로 퇴직', ok: false});
     add('주휴시간', h1(holH), {key: true, sub: ok ? holSub + ', 최대 8시간' : '요건 미충족'});
@@ -637,7 +641,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     add('월 환산 임금', won(wage * monH), {key: true, sub: '시급 × 월 환산 시간, 주휴수당 포함 세전'});
 
     if(wage < min) notes.push('시급이 ' + y + '년 최저임금(' + won(min) + ')보다 낮습니다. 최저임금에 못 미치는 임금 약정은 그 부분이 무효가 되고 최저임금으로 지급해야 합니다.');
-    if(!over15) notes.push('1주 소정근로시간이 15시간 미만(4주 평균)이면 주휴일 규정이 적용되지 않아 주휴수당이 없습니다.');
+    if(!over15) notes.push('1주 소정근로시간이 15시간 미만(4주 평균, 4주 미만 근무는 그 기간 평균)이면 주휴일 규정이 적용되지 않아 주휴수당이 없습니다.');
     if(over15 && !full) notes.push('그 주에 결근한 날이 있어 이번 주 주휴수당은 생기지 않습니다. 다음 주에 개근하면 다시 생깁니다.');
     if(over15 && full && quit) notes.push('마지막 주는 1주를 넘겨 근로관계가 이어지지 않으면 주휴수당이 생기지 않는다는 것이 고용노동부 행정해석(2021. 8. 4.)입니다. 퇴직일이 다음 주 월요일 이후라면 체크를 해제하세요.');
     if(wk.h > 40) notes.push('주 40시간을 넘는 시간은 연장근로라 소정근로시간에 넣지 않았습니다. 연장근로는 통상임금의 50% 이상을 가산해 따로 지급해야 합니다(상시 5명 이상 사업장).');
@@ -645,6 +649,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     if(ok && partTime) notes.push('통상근로자(주 ' + h1(stdH) + ', ' + stdD + '일)보다 적게 일하는 단시간근로자라 근로시간에 비례해 주휴시간을 정했습니다(근로기준법 시행령 별표 2).');
     if(ok && !partTime && mode() !== 'same') notes.push('통상근로자와 같거나 더 많이 일하면 주휴시간은 1일 소정근로시간입니다. 요일마다 시간이 다르면 평균으로 계산했으니 계약서의 1일 소정근로시간을 확인하세요.');
     notes.push('주휴수당은 상시 5명 미만 사업장에도 똑같이 적용되며, 받지 못한 임금은 3년 안에 청구할 수 있습니다.');
+    if(wk.avg && wk.weeks < 4) notes.push('일한 기간이 ' + wk.weeks + '주라 그 기간' + (wk.weeks > 1 ? '의 평균' : '') + '으로 15시간 이상 여부와 주휴시간을 계산했습니다(근로기준법 제18조 제3항). 월 환산은 같은 시간으로 계속 일한다고 가정한 값입니다.');
     notes.push('월 환산은 1년 평균 주 수(365 ÷ 7 ÷ 12 ≈ 4.345주)를 쓴 값이라 달마다 실제 주 수에 따라 달라질 수 있습니다.');
 
     out.innerHTML = top +
@@ -681,9 +686,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   const LAWS = [
     {c: '근로기준법 제55조 제1항', l: ['근로기준법', '제55조'], s: '사용자는 1주에 평균 1회 이상 유급휴일(주휴일)을 보장해야 함'},
     {c: '근로기준법 시행령 제30조 제1항', l: ['근로기준법 시행령', '제30조'], s: '주휴일은 1주 동안 소정근로일을 개근한 근로자에게 줌'},
-    {c: '근로기준법 제18조 제3항', l: ['근로기준법', '제18조'], s: '4주 평균 1주 소정근로시간이 15시간 미만이면 주휴일(제55조) 적용 제외'},
+    {c: '근로기준법 제18조 제3항', l: ['근로기준법', '제18조'], s: '4주 동안(4주 미만 근무는 그 기간)을 평균한 1주 소정근로시간이 15시간 미만이면 주휴일(제55조) 적용 제외'},
     {c: '근로기준법 제18조 제1·2항', l: ['근로기준법', '제18조'], s: '단시간근로자의 근로조건은 통상근로자와의 근로시간 비율에 따라 결정'},
-    {c: '근로기준법 시행령 제9조 제1항 [별표 2]', l: ['근로기준법 시행령', '제9조'], s: '단시간근로자 유급휴일 시간: 4주 소정근로시간 합계 ÷ 통상근로자 4주 소정근로일수'},
+    {c: '근로기준법 시행령 제9조 제1항 [별표 2]', l: ['근로기준법 시행령', '제9조'], s: '단시간근로자 유급휴일 시간: 4주 동안의 소정근로시간 합계 ÷ 통상근로자 4주 동안의 소정근로일수'},
     {c: '근로기준법 제2조 제1항 제8호', l: ['근로기준법', '제2조'], s: '소정근로시간: 법정근로시간 범위에서 근로자와 사용자가 정한 근로시간'},
     {c: '근로기준법 제50조', l: ['근로기준법', '제50조'], s: '법정근로시간: 1주 40시간, 1일 8시간'},
     {c: '근로기준법 시행령 제7조 [별표 1]', l: ['근로기준법 시행령', '제7조'], s: '상시 5명 미만 사업장에도 주휴일(제55조 제1항) 규정 적용'},
