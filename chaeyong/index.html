@@ -629,7 +629,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               <div class="helper left">월 20만원까지 보험료가 붙지 않습니다.</div>
             </div>
           </div>
-          <label class="check"><input type="checkbox" id="duru"><span>두루누리 지원 받음<small>직원 10명 미만, 월급 270만원 미만, 최근 1년 국민연금·고용보험 이력이 없는 새 직원이면 직원·회사의 국민연금과 고용보험(실업급여)을 80% 깎아 줍니다(최대 36개월).</small></span></label>
+          <label class="check"><input type="checkbox" id="duru"><span>두루누리 지원 받음<small>직원 10명 미만, 월급 270만원 미만, 최근 1년 국민연금·고용보험 이력이 없는 새 직원이면 직원·회사의 국민연금과 고용보험을 80% 깎아 줍니다(최대 36개월).</small></span></label>
           <label class="check"><input type="checkbox" id="emp60"><span>직원이 만 60세 이상<small>국민연금 가입 대상이 아니라 국민연금을 빼고 계산합니다.</small></span></label>
           <label class="check"><input type="checkbox" id="ceo60"><span>대표님이 만 60세 이상<small>국민연금을 빼고 계산합니다.</small></span></label>
         </div>
@@ -682,6 +682,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     ei: 0.009, eiEr: 0.0025,                                    // 고용보험료징수법 시행령 제12조: 실업급여 1.8%(각 0.9%), 고안·직능 150명 미만 0.25%
     commute: 0.0006,                                            // 출퇴근재해 요율 1천분의 0.6 (고용노동부고시 제2025-91호)
     duru: 0.8, duruLim: 2700000,                                // 두루누리: 월평균보수 270만원 미만, 80%
+    duruNpMax: 87400,                                           // 국민연금 지원 월 최대(보건복지부고시 제2026-15호 제5조)
+    duruEiEeMax: 16560, duruEiErMax: 21160,                     // 고용보험 지원 월 최대 직원·회사(고용노동부 「고용보험료의 지원 대상 및 지원 수준 등에 관한 고시」 제6조)
     meal: 200000, minWage: 2156880                              // 비과세 식대 한도, 2026 최저임금 월 환산(10,320원 × 209시간)
   };
   // 2026년도 사업종류별 산재보험료율(천분율, 고용노동부고시 제2025-91호)
@@ -754,8 +756,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     r.iaRate = o.ia / 1000 + R.commute;
     r.ia = f10(B * r.iaRate);
     r.duruOk = o.duru && B > 0 && B < R.duruLim;
-    r.duEe = r.duruOk ? f10((r.npEe + r.eiEe) * R.duru) : 0;
-    r.duEr = r.duruOk ? f10((r.npEr + r.eiErU) * R.duru) : 0;
+    // 항목별로 80%(10원 미만 버림) 후 고시 상한 적용. 회사 고용보험은 실업급여 + 고용안정·직업능력개발 모두 지원 대상
+    const du = (x, max) => Math.min(f10(x * R.duru), max);
+    r.duNpEe = r.duruOk ? du(r.npEe, R.duruNpMax) : 0;
+    r.duNpEr = r.duruOk ? du(r.npEr, R.duruNpMax) : 0;
+    r.duEiEe = r.duruOk ? du(r.eiEe, R.duruEiEeMax) : 0;
+    r.duEiEr = r.duruOk ? du(r.eiEr, R.duruEiErMax) : 0;
+    r.duEe = r.duNpEe + r.duEiEe;
+    r.duEr = r.duNpEr + r.duEiEr;
     r.ee = r.npEe + r.hiEe + r.ltcEe + r.eiEe - r.duEe;
     r.er = r.npEr + r.hiEr + r.ltcEr + r.eiEr + r.ia - r.duEr;
     return r;
@@ -828,7 +836,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     t += tr('장기요양보험', '건강보험료 × 13.14%', won(e.ltcEe), won(e.ltcEr));
     t += tr('고용보험', '직원 0.9% · 회사 0.9% + 0.25%', won(e.eiEe), won(e.eiEr));
     t += tr('산재보험', o.indName + ' ' + pctTxt(e.iaRate) + ' (출퇴근 0.06% 포함), 회사 전액', '-', won(e.ia));
-    if(e.duruOk) t += tr('두루누리 지원', '국민연금·실업급여 80%', '− ' + won(e.duEe), '− ' + won(e.duEr), 'minus');
+    if(e.duruOk) t += tr('두루누리 지원', '국민연금·고용보험 80% (월 상한: 국민연금 87,400원, 고용보험 직원 16,560원·회사 21,160원)', '− ' + won(e.duEe), '− ' + won(e.duEr), 'minus');
     t += tr('합계', '', won(e.ee), won(e.er), 'tot');
     t += '</tbody></table>';
     if(n > 1) t += '<p class="cap" style="margin:8px 0 0">직원 ' + n + '명이면 대표님 부담은 ' + won(e.er) + ' × ' + n + ' = ' + won(erAll) + '입니다.</p>';
@@ -846,7 +854,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     notes.push('대표님은 처음에 직원 월급과 같은 금액으로 취득신고하는 것으로 보고 계산했습니다. 국민연금은 매년 7월 소득 자료를 기준으로 기준소득월액이 다시 정해질 수는 있지만, 건강보험료와 달리 지난 기간의 보험료를 정산하지는 않고 바뀐 달부터 새 금액이 적용됩니다.');
     notes.push('직장가입자는 집·차 같은 재산에는 보험료가 붙지 않고, 소득·재산 요건을 갖춘 가족은 피부양자로 올릴 수 있어 가족 보험료가 없어질 수도 있습니다.');
     if(o.duru && !e.duruOk) notes.push('보험료 기준 월급이 270만원 이상이라 두루누리 지원을 받을 수 없습니다.');
-    if(e.duruOk) notes.push('두루누리는 신청해야 받고, 다음 달 보험료에서 깎아 줍니다. 대표님 본인 보험료와 건강보험·산재보험은 지원하지 않습니다.');
+    if(e.duruOk) notes.push('두루누리는 신청해야 받고, 다음 달 보험료에서 깎아 줍니다. 직원의 재산 과세표준이 6억원 이상이거나 전년도 종합소득이 4,300만원 이상이면 받을 수 없습니다. 대표님 본인 보험료와 건강보험·산재보험은 지원하지 않습니다.');
     notes.push('직원을 뽑은 날부터 14일 안에 사업장 성립신고를 하고, 직원 4대보험 취득신고는 건강보험 14일 이내, 국민연금·고용·산재는 다음 달 15일까지 해야 합니다.');
     notes.push('직원 월급과 대표님이 내 준 직원 보험료는 사업 경비로 인정되어 종합소득세가 그만큼 줄어듭니다.');
 
