@@ -226,7 +226,7 @@ input.vauto,.ht input.vauto{color:var(--muted)}
 @media print{
 @page{size:A4;margin:10mm}
 html,body{background:#fff!important;color:#000!important}
-.panel.list,.back,.tabs,.ctl,.mini,.rz,.rzr,.btn,#addbox{display:none!important}
+.panel.list,.back,.tabs,.ctl,.mini,.rz,.rzr,.btn,#addbox,.savepic,details.cset,.sm td.x,.sm th.x{display:none!important}
 .app{display:block!important}
 .panel.detail{border:0!important;box-shadow:none!important;padding:0!important;display:block!important}
 .paper{overflow:visible!important;max-width:none!important;padding:0!important;box-shadow:none!important;border:0!important}
@@ -238,7 +238,16 @@ html,body{background:#fff!important;color:#000!important}
 .tx input.num,.tx td.cc{font-size:9.5px!important}.tx input.num{padding:1px 2px!important}
 .ht tr{break-inside:avoid}
 textarea{field-sizing:content;height:auto!important;overflow:visible!important;resize:none}
-input,select,textarea{border-color:transparent!important;background:transparent!important}
+input,select,textarea{border:0!important;border-radius:0!important;box-shadow:none!important;outline:0!important;background:transparent!important;resize:none!important;-webkit-appearance:none;appearance:none}
+.sbox{border:0!important;border-radius:0!important;padding:0!important;margin-bottom:8px}
+.sm textarea.wn{width:100%!important;display:block;padding:2px 4px!important;font-size:10.5px!important;line-height:1.35!important;overflow:visible!important;height:auto!important}
+.sm td.nm{width:auto!important;white-space:normal!important}
+.tx.dd th:last-child{width:auto!important}
+.tx.bz th.bh .wn{font-size:10.5px!important;padding:1px 2px!important;text-align:center}
+.tx th{background:#f1f1f1!important}
+*{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+textarea::placeholder{color:transparent!important}
+.paper textarea.ag:placeholder-shown{display:none}
 }
 </style>
 <script src="config.js"></script>
@@ -699,10 +708,10 @@ function paperTax(id){
    }).join("")+'</table>'+
    '<div class="rowtools"><button type="button" class="mini add" data-txadd="x">+ 줄 추가(경비 항목)</button>'+(hiddenRows.length?'<span class="sub">뺀 줄 다시 넣기:</span>'+hiddenRows.map(function(r){return '<button type="button" class="mini add" data-txshow="'+r[0]+'">+ '+r[1]+'</button>'}).join(""):'')+'</div>'+
    '<div class="sub" style="margin-top:4px">빨간 테두리가 '+yr+'년 예측입니다. 칸에 숫자를 직접 적으면 그 값이 쓰이고(노란색), 지우면 다시 자동 계산됩니다. 예측의 수입금액·매출원가·판관비는 가결산 ÷ 개월수 × 12 입니다. 줄 끝 "−"로 뺀 줄은 계산에서도 0으로 빠집니다.</div></div>'+
-   '<div class="side"><div class="sbox"><div class="sh">세액공제·감면 입력</div><table class="ht tx sm dd"><tr><th style="width:38%">항목</th><th>예측</th><th>전년도</th><th></th></tr>'+
+   '<div class="side"><div class="sbox"><div class="sh">세액공제·감면 입력</div><table class="ht tx sm dd"><tr><th style="width:38%">항목</th><th>예측</th><th>전년도</th><th class="x"></th></tr>'+
    res.dl.map(function(i){return ny('<tr><td class="nm">'+wn(P+"dn"+i,"항목",DED_NAMES[i]||"")+'</td>'+taxCell(P,res,"I","d"+i,false)+taxCell(P,res,"K","d"+i,true)+'<td class="x"><button type="button" class="mini" data-txdel="d:'+i+'" title="이 줄 빼기">−</button></td></tr>')}).join("")+
-   '<tr class="keyr"><th>합계</th>'+["I","K"].map(function(cc){return '<td class="c cc" data-dsum="'+cc+'">'+fmtI(res[cc].dsum)+'</td>'}).join("")+'<td></td></tr>'+
-   ny('<tr><th>최저한세</th>'+taxCell(P,res,"I","min",false)+taxCell(P,res,"K","min",true)+'<td></td></tr>')+'</table>'+
+   '<tr class="keyr"><th>합계</th>'+["I","K"].map(function(cc){return '<td class="c cc" data-dsum="'+cc+'">'+fmtI(res[cc].dsum)+'</td>'}).join("")+'<td class="x"></td></tr>'+
+   ny('<tr><th>최저한세</th>'+taxCell(P,res,"I","min",false)+taxCell(P,res,"K","min",true)+'<td class="x"></td></tr>')+'</table>'+
    '<button type="button" class="mini add" data-txadd="d">+ 항목 넣기</button><div class="sub">합계가 "세액공제 및 감면"에 들어갑니다. 예측은 전년도 금액을 따라갑니다.</div></div>'+
    (isCorp?'':'<div class="sbox"><div class="sh">사업자별 가결산 (사업자가 여러 개일 때)</div>'+
     (hasB?'<div class="bw"><table class="ht tx bz" style="min-width:'+(res.B.ids.length*96+150)+'px"><tr><th>구분</th>'+res.B.ids.map(function(i){var q="b"+i+"|";return '<th class="bh">'+wn(P+q+"nm","사업자")+'<button type="button" class="mini" data-txdel="b:'+i+'" title="이 사업자 빼기">−</button></th>'}).join("")+'<th>합계</th></tr>'+
