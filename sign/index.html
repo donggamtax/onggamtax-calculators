@@ -297,6 +297,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .tpldoc .party .linkbtn { align-self: flex-start; }
 .tplbar select { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; max-width: 100%; }
 .pdfmode.tpldoc mark.blank { background: none; }
+.pdfmode.tpldoc .line .fixedv:empty { display: inline-block; min-width: 14em; height: 1.3em; border-bottom: 1px solid #AEB6C0; }
 @media (max-width: 640px) {
   .g { grid-template-columns: 7em minmax(0, 1fr); }
   .g > .s3 { grid-column: 2 / -1; }
@@ -1003,6 +1004,8 @@ body { margin: 0; }
     var el = $('[data-k="' + key + '"]');
     return el ? validVal(el) : true;
   }
+  /* 사무소 화면의 편집형 계약서는 빈 칸·서명이 남아도 초안 PDF로 받을 수 있습니다. 고객 화면은 다 채워야 합니다. */
+  function canPdf(doc, st) { return st.done || (isTpl(doc) && REQ.mode !== 'recv'); }
   function status(doc) {
     if (isTpl(doc)) return tplStatus(doc);
     var need = [], sigs = [];
@@ -1068,8 +1071,8 @@ body { margin: 0; }
     ALLDOCS.forEach(function (doc) {
       var st = status(doc), b = $('[data-pdf="' + doc + '"]'), h = $('[data-pdfhint="' + doc + '"]');
       if (!b || b.dataset.busy) return;
-      b.disabled = !st.done;
-      h.textContent = st.done ? '' : '빈 칸 ' + st.need.length + '개, 서명 ' + st.sigs.length + '개가 남아 있습니다.';
+      b.disabled = !canPdf(doc, st);
+      h.textContent = st.done ? '' : '빈 칸 ' + st.need.length + '개, 서명 ' + st.sigs.length + '개가 남아 있습니다.' + (b.disabled ? '' : ' 빈 칸 그대로도 저장할 수 있습니다.');
     });
     var sb = $('#submitBtn');
     if (sb && !sb.dataset.busy && !sb.dataset.done) {
@@ -1404,7 +1407,7 @@ body { margin: 0; }
       if (isTpl(doc)) {
         cl = document.createElement('article'); cl.className = root.className.replace(/\bediting\b/, '');
         cl.innerHTML = renderTpl(doc, 'pdf');
-        [doc + '_gap', doc + '_eul'].forEach(function (id) { var sl = cl.querySelector('.sigslot[data-slot="' + id + '"]'); if (sl && S.sig[id]) sl.innerHTML = '<img class="sigimg" alt="" src="' + S.sig[id].img + '">'; });
+        [doc + '_gap', doc + '_eul'].forEach(function (id) { var sl = cl.querySelector('.sigslot[data-slot="' + id + '"]'); if (!sl) return; sl.innerHTML = S.sig[id] ? '<img class="sigimg" alt="" src="' + S.sig[id].img + '">' : '<span class="tv">(서명 또는 인)</span>'; });
       } else cl = root.cloneNode(true);
       cl.removeAttribute('hidden'); cl.removeAttribute('id'); cl.classList.add('pdfmode'); stage.appendChild(cl);
       staticize(cl);
@@ -1439,7 +1442,7 @@ body { margin: 0; }
       var code = e && e.code;
       msg.textContent = code === 'declined' ? '저장을 취소했습니다.' : code === 'rate_limited' ? '잠시 후 다시 눌러 주세요.' : 'PDF를 만들지 못했습니다. 화면을 새로 고친 뒤 다시 시도해 주세요.';
     } finally {
-      delete btn.dataset.busy; var st = status(doc); btn.disabled = !st.done;
+      delete btn.dataset.busy; var st = status(doc); btn.disabled = !canPdf(doc, st);
     }
   }
   function blobToB64(blob) {
