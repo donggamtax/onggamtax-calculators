@@ -550,7 +550,6 @@ body { margin: 0; }
     <div class="tabs" role="tablist">
       <button type="button" role="tab" id="mtDraw" aria-selected="true">직접 서명</button>
       <button type="button" role="tab" id="mtUp" aria-selected="false">도장 이미지 올리기</button>
-      <button type="button" role="tab" id="mtMake" aria-selected="false">도장 만들기</button>
     </div>
     <div id="pDraw">
       <div class="pad" id="padWrap"><canvas id="padCv" aria-label="서명 입력 영역"></canvas><span class="bl"></span><span class="ph">마우스나 손가락으로 서명하세요</span></div>
@@ -560,13 +559,6 @@ body { margin: 0; }
       <div class="field"><label for="upFile">도장을 찍은 사진이나 이미지 파일</label><input type="file" id="upFile" accept="image/png,image/jpeg,image/webp"></div>
       <label class="chkl" style="margin-top:8px"><input type="checkbox" id="upBg" checked> 흰 배경 지우기</label>
       <div class="prev" id="upPrev" style="margin-top:10px"><span class="empty">이미지를 선택하면 여기에 보입니다.</span></div>
-    </div>
-    <div id="pMake" hidden>
-      <div class="rowf">
-        <div class="field"><label for="mkName">도장에 새길 이름 (최대 4자)</label><input type="text" id="mkName" maxlength="4"></div>
-        <div class="field"><label for="mkShape">모양</label><select id="mkShape"><option value="circle">원형</option><option value="square">사각형</option></select></div>
-      </div>
-      <div class="prev" id="mkPrev" style="margin-top:10px"><canvas id="mkCv" width="200" height="200"></canvas></div>
     </div>
     <div class="bar">
       <button type="button" class="btn primary" id="mApply">적용</button>
@@ -1153,31 +1145,15 @@ body { margin: 0; }
   }
   var pad = makePad($('#padCv'), $('#padWrap'));
 
-  function drawSeal(cv, name, shape) {
-    var ctx = cv.getContext('2d'), s = 200, col = '#C0241B';
-    cv.width = cv.height = s; ctx.clearRect(0, 0, s, s);
-    ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 8;
-    if (shape === 'circle') { ctx.beginPath(); ctx.arc(100, 100, 92, 0, Math.PI * 2); ctx.stroke(); }
-    else { ctx.strokeRect(8, 8, 184, 184); }
-    var c = Array.from(String(name || '').trim()).slice(0, 4);
-    if (c.length === 3) c.push('인');
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    var fam = '"Noto Serif KR", "Batang", serif';
-    if (c.length === 1) { ctx.font = '700 110px ' + fam; ctx.fillText(c[0], 100, 104); }
-    else if (c.length === 2) { ctx.font = '700 76px ' + fam; ctx.fillText(c[0], 100, 62); ctx.fillText(c[1], 100, 140); }
-    else if (c.length === 4) { ctx.font = '700 66px ' + fam; ctx.fillText(c[0], 68, 66); ctx.fillText(c[1], 132, 66); ctx.fillText(c[2], 68, 138); ctx.fillText(c[3], 132, 138); }
-  }
-  function redrawSeal() { drawSeal($('#mkCv'), $('#mkName').value, $('#mkShape').value); }
 
   function setTab(t) {
     tab = t;
-    [['draw', 'mtDraw', 'pDraw'], ['up', 'mtUp', 'pUp'], ['make', 'mtMake', 'pMake']].forEach(function (x) {
+    [['draw', 'mtDraw', 'pDraw'], ['up', 'mtUp', 'pUp']].forEach(function (x) {
       $('#' + x[1]).setAttribute('aria-selected', x[0] === t);
       $('#' + x[2]).hidden = x[0] !== t;
     });
     $('#mErr').textContent = '';
     if (t === 'draw') requestAnimationFrame(function () { pad.size(); });
-    if (t === 'make') redrawSeal();
   }
   function nameFor(id) {
     if (id === 'c_gap') return S.f.c_rep;
@@ -1191,9 +1167,7 @@ body { margin: 0; }
     cur = id; upData = null;
     $('#mTitle').textContent = SLOT_LABEL[id] + ' 서명 · 날인';
     $('#upFile').value = ''; $('#upPrev').innerHTML = '<span class="empty">이미지를 선택하면 여기에 보입니다.</span>';
-    $('#mkName').value = nameFor(id) || '';
     modal.hidden = false;
-    document.fonts && document.fonts.load('700 66px "Noto Serif KR"').then(function () { if (tab === 'make') redrawSeal(); }, function () {});
     setTab('draw'); pad.clear();
     $('#mClose').focus();
   }
@@ -1203,10 +1177,7 @@ body { margin: 0; }
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
   $('#mtDraw').onclick = function () { setTab('draw'); };
   $('#mtUp').onclick = function () { setTab('up'); };
-  $('#mtMake').onclick = function () { setTab('make'); };
   $('#padClear').onclick = function () { pad.clear(); };
-  $('#mkName').addEventListener('input', redrawSeal);
-  $('#mkShape').addEventListener('change', redrawSeal);
 
   function processUpload() {
     var file = $('#upFile').files && $('#upFile').files[0];
@@ -1240,7 +1211,7 @@ body { margin: 0; }
     var img = null, how = '';
     if (tab === 'draw') { if (pad.empty()) { $('#mErr').textContent = '서명을 먼저 해 주세요.'; return; } img = pad.data(); how = '직접 서명'; }
     else if (tab === 'up') { if (!upData) { $('#mErr').textContent = '도장 이미지를 먼저 선택해 주세요.'; return; } img = upData; how = '도장 이미지'; }
-    else { if (!$('#mkName').value.trim()) { $('#mErr').textContent = '도장에 새길 이름을 입력해 주세요.'; return; } img = $('#mkCv').toDataURL('image/png'); how = '도장'; }
+    else return;
     S.sig[cur] = { img: img, how: how, at: new Date() };
     closeModal(); paintAll();
   };
