@@ -74,7 +74,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .brand .sub { display: block; font-size: .8rem; color: var(--muted); }
 .note { font-size: .82rem; color: var(--warn); background: var(--warn-bg); padding: 8px 12px; border-radius: 6px; }
 
-.docs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.docs { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
 .docbtn { text-align: left; display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); cursor: pointer; min-width: 0; }
 .docbtn[aria-selected="true"] { border-color: var(--accent); box-shadow: inset 4px 0 0 var(--accent); }
 .docbtn .t { font-weight: 600; line-height: 1.3; }
@@ -268,8 +268,36 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .pdfmode.audit td { padding: 8px 10px; border: 1px solid #AEB6C0; overflow-wrap: anywhere; }
 .pdfmode.audit .hash { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .72rem; }
 
+/* editable contract templates */
+.tpldoc .tsub { text-align: center; margin: -10px 0 14px; }
+.tpldoc .tparties { margin: 4px 0 14px; }
+.tpldoc .party .line .k { min-width: 6.2em; }
+.tpldoc .colon { color: var(--paper-mute); }
+.tpldoc .tintro { margin-top: 4px; }
+.tpldoc .line .fixedv { flex: 1 1 12em; min-width: 0; }
+.tpldoc .tsign .in.wsign { width: 17em; }
+.tpldoc .tb, .tpldoc .tv { white-space: pre-wrap; overflow-wrap: anywhere; }
+.tpldoc .tart .tb { display: block; }
+.tpldoc .tsign { margin-top: 6px; }
+.tpldoc .tsign .repline { gap: 6px 12px; }
+.tpldoc mark.blank { background: var(--fill-need); color: inherit; padding: 0 2px; border-radius: 2px; }
+.tpldoc .in.tcen { text-align: center; }
+.tpldoc h2.dt .in { font-weight: 700; letter-spacing: .14em; }
+.tpldoc .in.grow { flex: 1 1 12em; width: auto; }
+.tpldoc .in.lab { color: var(--paper-mute); font-size: .88em; }
+.paper textarea.tta { display: block; width: 100%; margin: 4px 0 0; font-family: inherit; font-size: inherit; line-height: 1.75; color: var(--paper-ink);
+  background: var(--fill); border: 0; border-bottom: 1.5px solid var(--fill-line); border-radius: 3px 3px 0 0; padding: 4px 6px; resize: vertical; overflow: hidden; }
+.paper textarea.tta:focus { outline: none; background: #fff; box-shadow: 0 0 0 2px rgba(31,58,95,.25); }
+.tpldoc .tah { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 10px; }
+.tpldoc .tops { display: inline-flex; gap: 4px; font-family: var(--sans); }
+.xbtn { font-family: var(--sans); font-size: .8rem; line-height: 1; padding: 5px 8px; border: 1px solid var(--paper-line); border-radius: 4px; background: var(--paper); color: var(--paper-ink); cursor: pointer; }
+.xbtn:hover:not(:disabled) { border-color: var(--paper-accent); }
+.xbtn:disabled { opacity: .35; cursor: default; }
+.tpldoc .addart { margin-top: 8px; font-size: .85rem; }
+.tpldoc .party .linkbtn { align-self: flex-start; }
+.tplbar select { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; max-width: 100%; }
+.pdfmode.tpldoc mark.blank { background: none; }
 @media (max-width: 640px) {
-  .docs { grid-template-columns: minmax(0, 1fr); }
   .g { grid-template-columns: 7em minmax(0, 1fr); }
   .g > .s3 { grid-column: 2 / -1; }
   .terms { grid-template-columns: minmax(0, 1fr); }
@@ -287,7 +315,7 @@ body { margin: 0; }
   <header class="top">
     <div class="brand">
       <span class="mark" aria-hidden="true">동감</span>
-      <div><strong>동감 세무회계</strong><span class="sub">계약서 · 자동이체 신청서 작성</span></div>
+      <div><strong>동감 세무회계</strong><span class="sub">계약서 · 자동이체 신청서 · 용역계약서 작성</span></div>
     </div>
   </header>
   <p class="note" id="officeNote">시안입니다. 서버가 없어서 입력한 내용은 이 화면을 닫으면 사라집니다. 작성을 마치면 PDF로 저장해 주세요. 테스트에는 실제 계좌번호나 주민번호 대신 예시 값을 넣어 주세요.</p>
@@ -522,7 +550,6 @@ body { margin: 0; }
     <div class="tabs" role="tablist">
       <button type="button" role="tab" id="mtDraw" aria-selected="true">직접 서명</button>
       <button type="button" role="tab" id="mtUp" aria-selected="false">도장 이미지 올리기</button>
-      <button type="button" role="tab" id="mtMake" aria-selected="false">도장 만들기</button>
     </div>
     <div id="pDraw">
       <div class="pad" id="padWrap"><canvas id="padCv" aria-label="서명 입력 영역"></canvas><span class="bl"></span><span class="ph">마우스나 손가락으로 서명하세요</span></div>
@@ -532,13 +559,6 @@ body { margin: 0; }
       <div class="field"><label for="upFile">도장을 찍은 사진이나 이미지 파일</label><input type="file" id="upFile" accept="image/png,image/jpeg,image/webp"></div>
       <label class="chkl" style="margin-top:8px"><input type="checkbox" id="upBg" checked> 흰 배경 지우기</label>
       <div class="prev" id="upPrev" style="margin-top:10px"><span class="empty">이미지를 선택하면 여기에 보입니다.</span></div>
-    </div>
-    <div id="pMake" hidden>
-      <div class="rowf">
-        <div class="field"><label for="mkName">도장에 새길 이름 (최대 4자)</label><input type="text" id="mkName" maxlength="4"></div>
-        <div class="field"><label for="mkShape">모양</label><select id="mkShape"><option value="circle">원형</option><option value="square">사각형</option></select></div>
-      </div>
-      <div class="prev" id="mkPrev" style="margin-top:10px"><canvas id="mkCv" width="200" height="200"></canvas></div>
     </div>
     <div class="bar">
       <button type="button" class="btn primary" id="mApply">적용</button>
@@ -569,6 +589,265 @@ body { margin: 0; }
     sig: { c_gap: null, c_eul: { img: SEAL, how: '계약인', at: new Date() }, m_app: null, m_holder: null }
   };
 
+
+  /* ---------- 편집형 계약서 양식 (용역계약서 등) ----------
+     새 계약서를 추가하려면 TPL에 항목 하나를 더 넣으면 됩니다. 탭, 링크 체크박스, 서식 화면, PDF, 제출이 자동으로 붙습니다.
+     presets: 불러올 수 있는 견본(첫 번째가 기본값). 모든 문구는 사무소 화면에서 고칠 수 있습니다. */
+  var EUL_ROWS = [
+    { l: '상호', v: '동감 세무회계' },
+    { l: '소재지', v: '경기도 고양시 향동로 217, DMC플렉스데시앙 KB 824호' },
+    { l: '대표자', v: '이 동 희' },
+    { l: '사업자등록번호', v: '438-27-01588' }
+  ];
+  var COMMON_ARTS = [
+    { h: '의무', b: '갑은 본 계약에 따른 업무수행에 필요한 증빙자료 및 제반서류를 신속·정확하게 을에게 제공하여야 하며, 을은 갑이 제공한 자료에 의해 합리적이고 타당하며 성실하게 본 사건을 처리하여야 한다.' },
+    { h: '비밀엄수', b: '을은 계약업무 수행 과정에서 지득한 갑의 비밀을 누설하지 아니한다.' },
+    { h: '업무수행불능 및 책임', b: '① 갑이 제공한 자료의 불비 및 사실과 다른 자료의 제시 등의 사유로 본 계약업무 수행이 불가능할 경우 발생하는 문제에 대하여 을은 그 책임을 지지 아니한다.\n② 을은 갑이 제공한 자료에 대하여 신뢰성이 있는 것으로 간주하여 업무처리 하는 것이므로 갑이 제공한 자료에 허위사항이 있거나 요구자료의 지연제시 또는 미제출로 인해서 장래 갑에게 불이익한 행정처분 등이 발생한 경우 갑은 을에게 그 책임을 묻지 않기로 한다.' },
+    { h: '계약해지', b: '① 계약당사자 중 어느 일방이 정당한 사유 없이 본 계약에 따른 의무를 이행하지 아니하였을 경우에 상대방은 서면 통보로 계약을 해지할 수 있으며, 해약 이후에 야기되는 문제에 대하여 을은 그 책임을 지지 아니한다.\n② 갑이 본 계약에 정한 의무를 이행하지 아니하거나 위임사무의 내용에 관하여 제공한 자료가 불비 및 허위인 때에는, 고의가 아닌 경우라도 을은 이 계약을 해지하고 사임할 수 있다.\n③ 갑의 사정에 의하여 을이 업무수행 착수 전에 해약할 때는 을에게 지급한 착수금의 반환을 청구할 수 없으며, 업무수행 도중에 갑의 사정으로 해약할 때는 업무수행 완료로 간주하여 보수 잔액을 해약과 동시에 을에게 지급하여야 한다. 다만, 해약시에는 갑은 을에게 문서로써 통고하여야 한다.\n④ 을이 업무수행 중 갑으로부터 부당한 청탁이나 압력을 받고 정당한 업무를 수행할 수 없다고 판단될 경우에는 을은 일방적으로 해약할 수 있으며 서면으로 통보하여야 한다.' },
+    { h: '분쟁의 해결 및 관할법원', b: '본 계약에서 발생한 분쟁은 당사자간 합의에 의하여 해결함을 원칙으로 하고, 합의에 의해 해결되지 않는 분쟁이 있는 경우에는 세무사법과 상법 및 민법 등 관련법규를 적용하고, 적용법규의 해석상 이견에 따른 분쟁이 있는 경우의 관할법원은 서울중앙지방법원으로 한다.' },
+    { h: '기타', b: '본 계약에 명시되지 아니한 사항은 일반 상관례에 따라 상호 협의하여 결정한다.' }
+  ];
+  var PAY_ACCT = '(입금계좌: 케이뱅크 0010-8278-1382, 이동희(동감 세무회계))';
+  function svcBase(o) {
+    return Object.assign({
+      title: '용 역 계 약 서', sub: '', intro: '',
+      gapWho: '의뢰인(갑)', gap: [{ l: '성명', v: '' }, { l: '주소', v: '' }, { l: '주민번호', v: '' }],
+      eulWho: '수임인(을)', eul: EUL_ROWS,
+      arts: [],
+      closing: '이 계약의 성립을 증명하기 위해 본 계약서를 2통 작성하여 갑과 을이 각각 1통씩 소지한다.',
+      signGap: '갑)', signEul: '을)  동감 세무회계  세무사 이동희'
+    }, o);
+  }
+  var TPL = {
+    service: {
+      name: '용역계약서', file: '용역계약서', hint: '세무조사 대응, 경정청구, 컨설팅처럼 건마다 내용이 다른 용역 계약',
+      presets: [
+        { id: 'basic', label: '기본 용역계약서', data: svcBase({
+          sub: '( ○○ 업무 )',
+          intro: '위 당사자들은 ○○ 업무 위임에 관한 계약을 다음과 같이 체결한다.',
+          arts: [
+            { h: '업무', b: '① 갑은 을에게 “○○ 업무”를 의뢰하고, 을은 이를 수임하며 이에 따라 업무를 수행한다.\n② 계약기간은 ○○. ○○. ○○.부터 ○○. ○○. ○○.까지로 하되, 계약기간 종료 이후에도 을은 본 업무와 관련된 사항을 신의에 의하여 성실하게 이행하여야 한다.\n③ ○○ 업무는 본 계약의 업무 범위에 속하지 아니한다.' },
+            { h: '보수', b: '① 본 계약에 따른 착수금 ○○○만 원(부가가치세 포함)은 ○○. ○○. ○○.까지 지급하기로 한다. ' + PAY_ACCT + '\n② 본 계약에 따른 잔금 ○○○만 원(부가가치세 포함)은 ○○. ○○. ○○.까지 지급하기로 한다.\n③ 상기 용역수수료 외에 추후 용역제공이 증가하는 부분에 대하여는 갑과 을의 쌍방 합의에 따라 추가 수수료 약정을 체결하기로 한다.' }
+          ].concat(COMMON_ARTS)
+        }) },
+        { id: 'audit', label: '세무조사 대응 (7/30 계약서 기준)', data: svcBase({
+          sub: '( ○○세 세무조사 대응 업무 전반 )',
+          intro: '위 당사자들은 세무조사(○○세무서, ○○세) 위임에 관한 계약을 다음과 같이 체결한다.',
+          arts: [
+            { h: '업무', b: '① 갑은 을에게 “○○세 세무조사 대응 업무 전반”을 의뢰하고, 을은 이를 수임하며 이에 따라 업무를 수행한다.\n② 계약기간은 세무조사 기간(○○. ○○. ○○.부터 ○○. ○○. ○○.까지)으로 하되, 조사 기간 종료 이후에도 을은 세무조사와 관련된 업무를 신의에 의하여 성실하게 이행하여야 한다.\n③ 조세불복(이의신청, 심사청구 및 심판청구)은 본 계약의 업무 범위에 속하지 아니한다.\n④ 을은 갑이 조세불복을 개시하여 을이 보유한 자료를 요청하는 경우 이를 성실하게 제공하여야 한다.' },
+            { h: '보수', b: '① 본 계약에 따른 착수금 ○○○만 원(부가가치세 포함)은 세무조사 착수일(○○. ○○. ○○.)까지 지급하기로 한다. ' + PAY_ACCT + '\n② 본 계약에 따른 잔금 ○○○만 원(부가가치세 포함)은 ○○. ○○. ○○.까지 지급하기로 한다.\n③ 상기 용역수수료 외에 추후 용역제공이 증가하는 부분에 대하여는 갑과 을의 쌍방 합의에 따라 추가 수수료 약정을 체결하기로 한다.' }
+          ].concat(COMMON_ARTS)
+        }) }
+      ]
+    }
+  };
+  var TPL_KEYS = Object.keys(TPL);
+  var DOCS = {
+    contract: { el: 'docContract', tab: 'tabC', pill: 'pillC', chk: 'lkC' },
+    cms: { el: 'docCms', tab: 'tabM', pill: 'pillM', chk: 'lkM' }
+  };
+  TPL_KEYS.forEach(function (k) { DOCS[k] = { el: 'doc_' + k, tab: 'tab_' + k, pill: 'pill_' + k, chk: 'lk_' + k, tpl: true }; });
+  var ALLDOCS = Object.keys(DOCS);
+  var isTpl = function (d) { return !!TPL[d]; };
+  var docEl = function (d) { return document.getElementById(DOCS[d].el); };
+  var clone = function (o) { return JSON.parse(JSON.stringify(o)); };
+  var MINE = 'dg_sign_tpl_mine_';
+  function minePreset(k) {
+    try { var s = localStorage.getItem(MINE + k); if (s) { var o = JSON.parse(s); if (o && Array.isArray(o.arts)) return o; } } catch (e) {}
+    return null;
+  }
+  S.tpl = {}; S.tplView = false;
+  TPL_KEYS.forEach(function (k) {
+    S.tpl[k] = clone(minePreset(k) || TPL[k].presets[0].data);
+    S.tpl[k].dy = Y; S.tpl[k].dm = M; S.tpl[k].dd = D;
+    S.sig[k + '_gap'] = null;
+    S.sig[k + '_eul'] = { img: SEAL, how: '계약인', at: new Date() };
+  });
+  /* 주민번호·계좌 같은 값은 링크에 담지 않고 고객이 직접 적습니다. */
+  var SENS_LABEL = /주민|생년|계좌|휴대|연락처|전화/;
+  function tplForLink(k) {
+    var t = clone(S.tpl[k]);
+    t.gap.forEach(function (r) { if (SENS_LABEL.test(r.l)) r.v = ''; });
+    return t;
+  }
+  function tplBlanks(k) {
+    var t = S.tpl[k], txt = [t.title, t.sub, t.intro, t.closing, t.signEul].concat(t.arts.map(function (a) { return a.h + a.b; }), t.eul.map(function (r) { return r.v; })).join('\n');
+    return (txt.match(/○○/g) || []).length;
+  }
+  function tplStatus(k) {
+    var t = S.tpl[k], need = [], sigs = [];
+    t.gap.forEach(function (r, i) { if (!String(r.v || '').trim()) need.push('gap.' + i + '.v'); });
+    if (!t.dy || !t.dm || !t.dd) need.push('date');
+    [k + '_gap', k + '_eul'].forEach(function (s) { if (!S.sig[s]) sigs.push(s); });
+    return { need: need, sigs: sigs, done: !need.length && !sigs.length, total: 2 };
+  }
+
+  /* DOM: 탭, 링크 체크박스, 서식 영역을 TPL 수만큼 만듭니다. */
+  (function buildTplDom() {
+    var docs = $('.docs'), lkrow = $('#linkPanel .lkrow'), after = $('[data-pdfwrap="cms"]');
+    TPL_KEYS.forEach(function (k) {
+      var m = DOCS[k], t = TPL[k];
+      var tab = document.createElement('button');
+      tab.type = 'button'; tab.className = 'docbtn'; tab.setAttribute('role', 'tab'); tab.id = m.tab; tab.dataset.doc = k; tab.setAttribute('aria-selected', 'false');
+      tab.innerHTML = '<span class="t">' + t.name + '</span><span class="pill todo" id="' + m.pill + '">-</span>';
+      docs.appendChild(tab);
+      var lab = document.createElement('label');
+      lab.innerHTML = '<input type="checkbox" id="' + m.chk + '"> ' + t.name;
+      lkrow.insertBefore(lab, lkrow.querySelector('label:last-child'));
+      var art = document.createElement('article');
+      art.className = 'paper contractdoc tpldoc'; art.id = m.el; art.hidden = true; art.dataset.tpl = k; art.setAttribute('aria-label', t.name);
+      var bar = document.createElement('div');
+      bar.className = 'bar pdfbar'; bar.dataset.pdfwrap = k; bar.hidden = true;
+      bar.innerHTML = '<button type="button" class="btn primary" data-pdf="' + k + '" disabled>' + t.name + ' PDF로 저장</button><span class="hint" data-pdfhint="' + k + '"></span>';
+      after.parentNode.insertBefore(bar, after.nextSibling);
+      after.parentNode.insertBefore(art, bar);
+      after = bar;
+    });
+    var tb = document.createElement('section');
+    tb.className = 'card tplbar'; tb.id = 'tplBar'; tb.hidden = true;
+    tb.innerHTML = '<div class="bar"><label for="tplPreset" class="hint">견본</label><select id="tplPreset"></select>' +
+      '<button type="button" class="btn" id="tplLoad">불러오기</button>' +
+      '<button type="button" class="btn" id="tplSaveMine">지금 내용을 내 기본 양식으로 저장</button>' +
+      '<button type="button" class="btn" id="tplView" aria-pressed="false">미리보기</button></div>' +
+      '<p class="hint" id="tplHint"></p>';
+    var first = docEl(TPL_KEYS[0]);
+    first.parentNode.insertBefore(tb, first);
+  })();
+
+  function tplMode(k) { return REQ.mode === 'recv' || S.tplView ? 'view' : 'edit'; }
+  function hl(s) { return esc(s).replace(/○○+/g, function (m) { return '<mark class="blank">' + m + '</mark>'; }); }
+  function tIn(path, val, cls, extra) {
+    return '<input class="in ' + (cls || '') + '" type="text" data-tp="' + path + '" value="' + esc(val) + '"' + (extra || '') + '>';
+  }
+  function tTa(path, val, rows) {
+    return '<textarea class="tta" data-tp="' + path + '" rows="' + (rows || 2) + '">' + esc(val) + '</textarea>';
+  }
+  function rowsHtml(t, arr, mode, pdf) {
+    return t[arr].map(function (r, i) {
+      var label = mode === 'edit' && arr === 'gap' || mode === 'edit' && arr === 'eul' ? tIn(arr + '.' + i + '.l', r.l, 'w6 lab', ' aria-label="항목 이름"') : '<span class="k">' + esc(r.l) + '</span>';
+      var val;
+      if (pdf) val = '<span class="fixedv">' + esc(r.v) + '</span>';
+      else if (arr === 'gap') val = tIn('gap.' + i + '.v', r.v, 'w10 grow', ' aria-label="' + esc(r.l) + '"' + (SENS_LABEL.test(r.l) ? ' autocomplete="off"' : ''));
+      else if (mode === 'edit') val = tIn('eul.' + i + '.v', r.v, 'w10 grow', ' aria-label="' + esc(r.l) + '"');
+      else val = '<span class="fixedv">' + hl(r.v) + '</span>';
+      var del = mode === 'edit' && !pdf ? '<button type="button" class="xbtn" data-op="delrow" data-arr="' + arr + '" data-i="' + i + '" aria-label="이 항목 지우기">✕</button>' : '';
+      return '<div class="line">' + label + '<span class="colon">:</span>' + val + del + '</div>';
+    }).join('') + (mode === 'edit' && !pdf ? '<button type="button" class="linkbtn" data-op="addrow" data-arr="' + arr + '">+ 항목 추가</button>' : '');
+  }
+  function renderTpl(k, mode) {
+    var t = S.tpl[k], pdf = mode === 'pdf', ed = mode === 'edit';
+    var txt = function (path, val, cls, rows) {
+      if (ed) return rows ? tTa(path, val, 1) : tIn(path, val, cls);
+      return '<span class="tv">' + (pdf ? esc(val) : hl(val)) + '</span>';
+    };
+    var h = '';
+    h += '<h2 class="dt">' + (ed ? tIn('title', t.title, 'wfill tcen', ' aria-label="계약서 제목"') : esc(t.title)) + '</h2>';
+    if (ed || t.sub) h += '<p class="tsub">' + (ed ? tIn('sub', t.sub, 'wfill tcen', ' aria-label="부제목" placeholder="부제목 (비워도 됩니다)"') : (pdf ? esc(t.sub) : hl(t.sub))) + '</p>';
+    h += '<div class="parties tparties">';
+    h += '<div class="party"><span class="who">' + (ed ? tIn('gapWho', t.gapWho, 'w8', ' aria-label="갑 명칭"') : esc(t.gapWho)) + '</span>' + rowsHtml(t, 'gap', mode, pdf) + '</div>';
+    h += '<div class="party"><span class="who">' + (ed ? tIn('eulWho', t.eulWho, 'w8', ' aria-label="을 명칭"') : esc(t.eulWho)) + '</span>' + rowsHtml(t, 'eul', mode, pdf) + '</div>';
+    h += '</div>';
+    h += '<p class="pre tintro">' + txt('intro', t.intro, '', 2) + '</p>';
+    h += '<ol class="art">';
+    t.arts.forEach(function (a, i) {
+      var head = '<b class="h">제' + (i + 1) + '조【' + (ed ? tIn('arts.' + i + '.h', a.h, 'w10', ' aria-label="제' + (i + 1) + '조 제목"') : esc(a.h)) + '】</b>';
+      if (ed) {
+        head = '<div class="tah">' + head + '<span class="tops">' +
+          '<button type="button" class="xbtn" data-op="up" data-i="' + i + '" aria-label="위로"' + (i === 0 ? ' disabled' : '') + '>↑</button>' +
+          '<button type="button" class="xbtn" data-op="down" data-i="' + i + '" aria-label="아래로"' + (i === t.arts.length - 1 ? ' disabled' : '') + '>↓</button>' +
+          '<button type="button" class="xbtn" data-op="delart" data-i="' + i + '" aria-label="제' + (i + 1) + '조 삭제">✕</button></span></div>';
+        h += '<li class="tart">' + head + tTa('arts.' + i + '.b', a.b, 1) + '</li>';
+      } else {
+        h += '<li class="tart">' + head + ' <span class="tb">' + (pdf ? esc(a.b) : hl(a.b)) + '</span></li>';
+      }
+    });
+    h += '</ol>';
+    if (ed) h += '<button type="button" class="linkbtn addart" data-op="addart">+ 조항 추가</button>';
+    h += '<p class="closing">' + txt('closing', t.closing, '', 2) + '</p>';
+    var dpart = function (key, cls) { return !pdf && (REQ.mode !== 'recv' || !t[key]) ? tIn(key, t[key], cls + ' tdate', ' inputmode="numeric" data-fmt2="' + (key === 'dy' ? 'year' : 'num2') + '"') : '<span class="tv">' + esc(t[key]) + '</span>'; };
+    h += '<div class="date">' + dpart('dy', 'w4') + '.' + dpart('dm', 'w2') + '.' + dpart('dd', 'w2') + '.</div>';
+    var gapName = (t.gap[0] && t.gap[0].v) || '';
+    h += '<div class="parties tsign">';
+    h += '<div class="party"><div class="repline">' + (ed ? tIn('signGap', t.signGap, 'w4', ' aria-label="갑 서명란 표시"') : '<span>' + esc(t.signGap) + '</span>') + '<span class="tv">' + esc(gapName) + '</span><span class="sigslot" data-slot="' + k + '_gap"></span></div></div>';
+    h += '<div class="party"><div class="repline">' + (ed ? tIn('signEul', t.signEul, 'wsign', ' aria-label="을 서명란 표시"') : '<span class="tv">' + esc(t.signEul) + '</span>') + '<span class="sigslot" data-slot="' + k + '_eul"></span></div></div>';
+    h += '</div>';
+    return h;
+  }
+  function growAll(root) { $$('textarea.tta', root).forEach(grow); }
+  function grow(ta) { ta.style.height = 'auto'; ta.style.height = (ta.scrollHeight + 2) + 'px'; }
+  function paintTpl(k) {
+    var el = docEl(k); if (!el) return;
+    var mode = tplMode(k);
+    el.classList.toggle('editing', mode === 'edit');
+    el.innerHTML = renderTpl(k, mode);
+    [k + '_gap', k + '_eul'].forEach(function (id) { if (typeof paintSlot === 'function') paintSlot(id); });
+    if (!el.hidden) requestAnimationFrame(function () { growAll(el); });
+    paintTplBar();
+  }
+  function paintTplBar() {
+    var bar = $('#tplBar'); if (!bar) return;
+    var k = S.doc, show = isTpl(k) && REQ.mode !== 'recv';
+    bar.hidden = !show; if (!show) return;
+    var sel = $('#tplPreset'), mine = minePreset(k), opts = TPL[k].presets.map(function (p) { return '<option value="' + p.id + '">' + esc(p.label) + '</option>'; });
+    if (mine) opts.unshift('<option value="mine">내 기본 양식 (저장한 것)</option>');
+    var keep = sel.value; sel.innerHTML = opts.join(''); if (keep && sel.querySelector('option[value="' + keep + '"]')) sel.value = keep;
+    $('#tplView').textContent = S.tplView ? '편집으로 돌아가기' : '미리보기';
+    $('#tplView').setAttribute('aria-pressed', S.tplView);
+    var n = tplBlanks(k);
+    $('#tplHint').innerHTML = esc(TPL[k].hint) + '. 제목, 당사자, 조항, 금액, 날짜를 모두 고칠 수 있고, 조항은 추가·삭제·순서 변경이 됩니다. ' +
+      (n ? '<b>○○ 표시 ' + n + '곳</b>이 아직 남아 있습니다.' : '○○ 표시는 모두 채웠습니다.');
+  }
+  function setPath(o, path, v) {
+    var p = path.split('.'), x = o;
+    for (var i = 0; i < p.length - 1; i++) x = x[/^\d+$/.test(p[i]) ? Number(p[i]) : p[i]];
+    x[p[p.length - 1]] = v;
+  }
+  function tplOf(el) { var a = el.closest('[data-tpl]'); return a ? a.dataset.tpl : null; }
+  document.addEventListener('input', function (e) {
+    var el = e.target, path = el.dataset && el.dataset.tp;
+    if (!path) return;
+    var k = tplOf(el); if (!k) return;
+    if (el.dataset.fmt2 && FMT[el.dataset.fmt2]) el.value = FMT[el.dataset.fmt2](el.value);
+    setPath(S.tpl[k], path, el.value);
+    if (el.tagName === 'TEXTAREA') grow(el);
+    if (path === 'gap.0.v') { var nm = docEl(k).querySelector('.tsign .party .tv'); if (nm) nm.textContent = el.value; }
+    delete $('#mkLink').dataset.ok;
+    if (/^(gap\.\d+\.l)$/.test(path)) { /* 이름이 바뀌면 다른 칸의 aria-label만 갱신 */ var v = docEl(k).querySelector('[data-tp="' + path.replace(/l$/, 'v') + '"]'); if (v) v.setAttribute('aria-label', el.value); }
+    paintTplBar(); refresh();
+  });
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-op]'); if (!b) return;
+    var k = tplOf(b); if (!k) return;
+    var t = S.tpl[k], i = Number(b.dataset.i), op = b.dataset.op;
+    if (op === 'addrow') t[b.dataset.arr].push({ l: '항목', v: '' });
+    else if (op === 'delrow') t[b.dataset.arr].splice(i, 1);
+    else if (op === 'addart') t.arts.push({ h: '조항 제목', b: '' });
+    else if (op === 'delart') { if (!confirm('제' + (i + 1) + '조【' + t.arts[i].h + '】를 지울까요?')) return; t.arts.splice(i, 1); }
+    else if (op === 'up' && i > 0) t.arts.splice(i - 1, 0, t.arts.splice(i, 1)[0]);
+    else if (op === 'down' && i < t.arts.length - 1) t.arts.splice(i + 1, 0, t.arts.splice(i, 1)[0]);
+    else return;
+    delete $('#mkLink').dataset.ok;
+    paintTpl(k); refresh();
+    if (op === 'addart') { var last = $$('[data-tp="arts.' + (t.arts.length - 1) + '.h"]', docEl(k))[0]; if (last) { last.focus(); last.select(); } }
+  });
+  $('#tplLoad').onclick = function () {
+    var k = S.doc; if (!isTpl(k)) return;
+    var id = $('#tplPreset').value, src = id === 'mine' ? minePreset(k) : (TPL[k].presets.filter(function (p) { return p.id === id; })[0] || {}).data;
+    if (!src) return;
+    if (!confirm('지금 작성 중인 내용을 지우고 "' + $('#tplPreset').selectedOptions[0].textContent + '"를 불러올까요?')) return;
+    var keep = { dy: S.tpl[k].dy, dm: S.tpl[k].dm, dd: S.tpl[k].dd };
+    S.tpl[k] = Object.assign(clone(src), keep);
+    S.tplView = false; paintTpl(k); refresh();
+  };
+  $('#tplSaveMine').onclick = function () {
+    var k = S.doc; if (!isTpl(k)) return;
+    var t = clone(S.tpl[k]); t.gap.forEach(function (r) { r.v = ''; }); delete t.dy; delete t.dm; delete t.dd;
+    try { localStorage.setItem(MINE + k, JSON.stringify(t)); $('#tplHint').textContent = '이 브라우저에 내 기본 양식으로 저장했습니다. 다음부터 이 내용으로 시작합니다. (갑의 인적사항은 저장하지 않습니다)'; }
+    catch (err) { $('#tplHint').textContent = '이 브라우저에서는 저장할 수 없습니다.'; return; }
+    setTimeout(paintTplBar, 2500);
+  };
+  $('#tplView').onclick = function () { S.tplView = !S.tplView; paintTpl(S.doc); refresh(); };
+
   /* ---------- request link ---------- */
   var ART_URL = (window.claude && window.claude.use) ? 'https://claude.ai/artifact/Jfg1gu9serQ29h4ovHFdD5' : String(location.href).split('#')[0];
   var TODAY = parts[0] + '-' + parts[1] + '-' + parts[2];
@@ -582,6 +861,7 @@ body { margin: 0; }
   var SENSITIVE = ['c_acct', 'm_acct', 'm_birth', 'm_hphone', 'm_amobile', 'm_aphone', 'm_agree1', 'm_agree2', 'c_y', 'c_m', 'c_d', 'm_y', 'm_m', 'm_d'];
   var LOCKABLE = ['c_year', 'c_month', 'c_fee', 'c_pay', 'c_payday', 'c_kindA', 'c_kindB', 'm_amount', 'm_sy', 'm_sm', 'm_day', 'm_kind'];
   var DOCNAME = { contract: '세무대리계약서', cms: '자동이체신청서' };
+  TPL_KEYS.forEach(function (k) { DOCNAME[k] = TPL[k].file; });
   function b64u(str) {
     var bytes = new TextEncoder().encode(str), bin = '';
     bytes.forEach(function (b) { bin += String.fromCharCode(b); });
@@ -614,6 +894,10 @@ body { margin: 0; }
     if (p.t) { var t = new Date(p.t); if (!isNaN(t)) S.sig.c_eul.at = t; }
     REQ.expired = !!(p.e && TODAY > p.e);
     showSpecial(typeof p.x === 'string' ? p.x : '');
+    if (p.tp && typeof p.tp === 'object') TPL_KEYS.forEach(function (k) {
+      var t = p.tp[k];
+      if (t && Array.isArray(t.arts) && Array.isArray(t.gap) && Array.isArray(t.eul)) S.tpl[k] = Object.assign(clone(TPL[k].presets[0].data), t);
+    });
   }
   function rid() {
     var a = new Uint8Array(4);
@@ -624,6 +908,7 @@ body { margin: 0; }
     var docs = [];
     if ($('#lkC').checked) docs.push('contract');
     if ($('#lkM').checked) docs.push('cms');
+    TPL_KEYS.forEach(function (k) { if ($('#' + DOCS[k].chk).checked) docs.push(k); });
     if (!docs.length) return null;
     var f = {}, n = 0;
     Object.keys(S.f).forEach(function (k) {
@@ -636,6 +921,7 @@ body { margin: 0; }
     var p = { d: docs, f: f, e: e, i: rid(), t: new Date().toISOString() };
     var sp = $('#lkSpecial').value.trim().slice(0, 1500);
     if (sp && docs.indexOf('contract') >= 0) p.x = sp;
+    docs.forEach(function (d) { if (isTpl(d)) { p.tp = p.tp || {}; p.tp[d] = tplForLink(d); } });
     return { url: ART_URL + '#v1.' + b64u(JSON.stringify(p)), p: p, n: n };
   }
 
@@ -718,6 +1004,7 @@ body { margin: 0; }
     return el ? validVal(el) : true;
   }
   function status(doc) {
+    if (isTpl(doc)) return tplStatus(doc);
     var need = [], sigs = [];
     if (doc === 'contract') {
       reqContract().forEach(function (k) { if (!fieldOK(k)) need.push(k); });
@@ -750,18 +1037,23 @@ body { margin: 0; }
     $$('[data-auto]').forEach(function (el) { el.disabled = !pay; });
 
     /* classes */
-    $$('.in[data-k]').forEach(function (el) { el.classList.remove('need', 'bad'); });
+    $$('.in[data-k], .in[data-tp]').forEach(function (el) { el.classList.remove('need', 'bad'); });
     $$('.grp').forEach(function (g) { g.classList.remove('need'); });
-    ['contract', 'cms'].forEach(function (doc) {
+    ALLDOCS.forEach(function (doc) {
       var st = status(doc);
-      st.need.forEach(function (k) {
+      if (isTpl(doc)) {
+        st.need.forEach(function (k) {
+          var sel = k === 'date' ? '.tdate' : '[data-tp="' + k + '"]';
+          $$(sel, docEl(doc)).forEach(function (el) { if (!el.value) el.classList.add('need'); });
+        });
+      } else st.need.forEach(function (k) {
         if (k.indexOf('grp') === 0) { var g = document.getElementById(k); if (g) g.classList.add('need'); return; }
         $$('[data-k="' + k + '"]').forEach(function (el) {
           var scope = el.closest('.paper');
-          if (scope && scope.id === (doc === 'contract' ? 'docContract' : 'docCms') && !el.disabled) el.classList.add('need');
+          if (scope && scope.id === DOCS[doc].el && !el.disabled) el.classList.add('need');
         });
       });
-      var pill = $(doc === 'contract' ? '#pillC' : '#pillM');
+      var pill = document.getElementById(DOCS[doc].pill);
       var have = st.total - st.sigs.length;
       pill.className = 'pill ' + (st.done ? 'ok' : 'todo');
       pill.textContent = st.done ? '작성 완료' : '빈 칸 ' + st.need.filter(function (k) { return k.indexOf('grp') !== 0; }).length + (st.need.some(function (k) { return k.indexOf('grp') === 0; }) ? '+선택 ' : '') + ' · 서명 ' + have + '/' + st.total;
@@ -772,8 +1064,8 @@ body { margin: 0; }
       if (fn && el.value && !fn(el.value) && !el.disabled) el.classList.add('bad');
     });
     $$('.sigslot').forEach(function (s) { s.classList.remove('need'); });
-    ['contract', 'cms'].forEach(function (doc) { status(doc).sigs.forEach(function (s) { var el = $('.sigslot[data-slot="' + s + '"]'); if (el) el.classList.add('need'); }); });
-    ['contract', 'cms'].forEach(function (doc) {
+    ALLDOCS.forEach(function (doc) { status(doc).sigs.forEach(function (s) { var el = $('.sigslot[data-slot="' + s + '"]'); if (el) el.classList.add('need'); }); });
+    ALLDOCS.forEach(function (doc) {
       var st = status(doc), b = $('[data-pdf="' + doc + '"]'), h = $('[data-pdfhint="' + doc + '"]');
       if (!b || b.dataset.busy) return;
       b.disabled = !st.done;
@@ -796,6 +1088,7 @@ body { margin: 0; }
 
   /* ---------- signature slots ---------- */
   var SLOT_LABEL = { c_gap: '갑(위임인) 대표자', c_eul: '을(수임인) 대표자 이동희', m_app: '신청인', m_holder: '예금(카드)주' };
+  TPL_KEYS.forEach(function (k) { SLOT_LABEL[k + '_gap'] = '갑'; SLOT_LABEL[k + '_eul'] = '을(수임인) 대표자 이동희'; });
   function paintSlot(id) {
     var el = $('.sigslot[data-slot="' + id + '"]');
     if (!el) return;
@@ -852,45 +1145,29 @@ body { margin: 0; }
   }
   var pad = makePad($('#padCv'), $('#padWrap'));
 
-  function drawSeal(cv, name, shape) {
-    var ctx = cv.getContext('2d'), s = 200, col = '#C0241B';
-    cv.width = cv.height = s; ctx.clearRect(0, 0, s, s);
-    ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 8;
-    if (shape === 'circle') { ctx.beginPath(); ctx.arc(100, 100, 92, 0, Math.PI * 2); ctx.stroke(); }
-    else { ctx.strokeRect(8, 8, 184, 184); }
-    var c = Array.from(String(name || '').trim()).slice(0, 4);
-    if (c.length === 3) c.push('인');
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    var fam = '"Noto Serif KR", "Batang", serif';
-    if (c.length === 1) { ctx.font = '700 110px ' + fam; ctx.fillText(c[0], 100, 104); }
-    else if (c.length === 2) { ctx.font = '700 76px ' + fam; ctx.fillText(c[0], 100, 62); ctx.fillText(c[1], 100, 140); }
-    else if (c.length === 4) { ctx.font = '700 66px ' + fam; ctx.fillText(c[0], 68, 66); ctx.fillText(c[1], 132, 66); ctx.fillText(c[2], 68, 138); ctx.fillText(c[3], 132, 138); }
-  }
-  function redrawSeal() { drawSeal($('#mkCv'), $('#mkName').value, $('#mkShape').value); }
 
   function setTab(t) {
     tab = t;
-    [['draw', 'mtDraw', 'pDraw'], ['up', 'mtUp', 'pUp'], ['make', 'mtMake', 'pMake']].forEach(function (x) {
+    [['draw', 'mtDraw', 'pDraw'], ['up', 'mtUp', 'pUp']].forEach(function (x) {
       $('#' + x[1]).setAttribute('aria-selected', x[0] === t);
       $('#' + x[2]).hidden = x[0] !== t;
     });
     $('#mErr').textContent = '';
     if (t === 'draw') requestAnimationFrame(function () { pad.size(); });
-    if (t === 'make') redrawSeal();
   }
   function nameFor(id) {
     if (id === 'c_gap') return S.f.c_rep;
     if (id === 'c_eul') return '이동희';
     if (id === 'm_app') return S.f.m_applicant || S.f.m_holder;
+    var tk = id.replace(/_(gap|eul)$/, '');
+    if (isTpl(tk)) return /_eul$/.test(id) ? '이동희' : ((S.tpl[tk].gap[0] || {}).v || '');
     return S.f.m_holder;
   }
   function openModal(id) {
     cur = id; upData = null;
     $('#mTitle').textContent = SLOT_LABEL[id] + ' 서명 · 날인';
     $('#upFile').value = ''; $('#upPrev').innerHTML = '<span class="empty">이미지를 선택하면 여기에 보입니다.</span>';
-    $('#mkName').value = nameFor(id) || '';
     modal.hidden = false;
-    document.fonts && document.fonts.load('700 66px "Noto Serif KR"').then(function () { if (tab === 'make') redrawSeal(); }, function () {});
     setTab('draw'); pad.clear();
     $('#mClose').focus();
   }
@@ -900,10 +1177,7 @@ body { margin: 0; }
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
   $('#mtDraw').onclick = function () { setTab('draw'); };
   $('#mtUp').onclick = function () { setTab('up'); };
-  $('#mtMake').onclick = function () { setTab('make'); };
   $('#padClear').onclick = function () { pad.clear(); };
-  $('#mkName').addEventListener('input', redrawSeal);
-  $('#mkShape').addEventListener('change', redrawSeal);
 
   function processUpload() {
     var file = $('#upFile').files && $('#upFile').files[0];
@@ -937,7 +1211,7 @@ body { margin: 0; }
     var img = null, how = '';
     if (tab === 'draw') { if (pad.empty()) { $('#mErr').textContent = '서명을 먼저 해 주세요.'; return; } img = pad.data(); how = '직접 서명'; }
     else if (tab === 'up') { if (!upData) { $('#mErr').textContent = '도장 이미지를 먼저 선택해 주세요.'; return; } img = upData; how = '도장 이미지'; }
-    else { if (!$('#mkName').value.trim()) { $('#mErr').textContent = '도장에 새길 이름을 입력해 주세요.'; return; } img = $('#mkCv').toDataURL('image/png'); how = '도장'; }
+    else return;
     S.sig[cur] = { img: img, how: how, at: new Date() };
     closeModal(); paintAll();
   };
@@ -945,20 +1219,20 @@ body { margin: 0; }
   /* ---------- tabs and toolbar ---------- */
   function showDoc(d) {
     S.doc = d;
-    $('[data-pdfwrap="contract"]').hidden = d !== 'contract';
-    $('[data-pdfwrap="cms"]').hidden = d !== 'cms';
-    $('#docContract').hidden = d !== 'contract';
-    $('#docCms').hidden = d !== 'cms';
-    $('#tabC').setAttribute('aria-selected', d === 'contract');
-    $('#tabM').setAttribute('aria-selected', d === 'cms');
+    ALLDOCS.forEach(function (x) {
+      var w = $('[data-pdfwrap="' + x + '"]'); if (w) w.hidden = d !== x;
+      var el = docEl(x); if (el) el.hidden = d !== x;
+      var tb = document.getElementById(DOCS[x].tab); if (tb) tb.setAttribute('aria-selected', d === x);
+    });
+    $('#legend').hidden = isTpl(d) && REQ.mode !== 'recv' && !S.tplView;
+    if (isTpl(d)) paintTpl(d); else paintTplBar();
     $('#pullBtn').hidden = d !== 'cms' || (REQ.mode === 'recv' && REQ.p.d.length < 2);
     refresh();
   }
-  $('#tabC').onclick = function () { showDoc('contract'); };
-  $('#tabM').onclick = function () { showDoc('cms'); };
+  ALLDOCS.forEach(function (x) { var tb = document.getElementById(DOCS[x].tab); if (tb) tb.onclick = function () { showDoc(x); }; });
 
   $('#findBlank').onclick = function () {
-    var root = $(S.doc === 'contract' ? '#docContract' : '#docCms');
+    var root = docEl(S.doc);
     var first = root.querySelector('.in.need:not(:disabled), .grp.need, .sigslot.need');
     var hint = $('#barHint');
     if (!first) { hint.textContent = '이 서식의 빈 칸이 없습니다.'; return; }
@@ -987,6 +1261,13 @@ body { margin: 0; }
   $('#mkLink').onclick = async function () {
     var r = buildLink(), btn = $('#mkLink');
     if (!r) { $('#lkErr').textContent = '보낼 서식을 하나 이상 선택해 주세요.'; return; }
+    var blanks = r.p.d.filter(isTpl).map(function (d) { var n = tplBlanks(d); return n ? TPL[d].name + ' ' + n + '곳' : ''; }).filter(Boolean);
+    if (blanks.length && !btn.dataset.ok) {
+      btn.dataset.ok = '1';
+      $('#lkErr').textContent = '아직 ○○ 표시가 남아 있습니다(' + blanks.join(', ') + '). 그대로 보내려면 한 번 더 누르세요.';
+      return;
+    }
+    delete btn.dataset.ok;
     $('#lkErr').textContent = '';
     var url = r.url, signed = false;
     if (API) {
@@ -1029,6 +1310,8 @@ body { margin: 0; }
   function staticize(c) {
     $$('[hidden]', c).forEach(function (e) { e.remove(); });
     $$('.need, .bad, .locked', c).forEach(function (e) { e.classList.remove('need', 'bad', 'locked'); });
+    $$('textarea', c).forEach(function (el) { var d = document.createElement('div'); d.className = 'tv'; d.textContent = el.value; el.replaceWith(d); });
+    $$('.xbtn, [data-op]', c).forEach(function (el) { el.remove(); });
     $$('input', c).forEach(function (el) {
       var r = el.getBoundingClientRect(), sp = document.createElement('span');
       if (el.type === 'checkbox' || el.type === 'radio') { sp.className = 'pg'; sp.textContent = el.checked ? '■' : '□'; }
@@ -1042,8 +1325,8 @@ body { margin: 0; }
     $$('.sigslot', c).forEach(function (sl) { var img = sl.querySelector('img'); sl.innerHTML = ''; if (img) { img.className = 'sigimg'; sl.appendChild(img); } });
   }
   function auditRows(doc, hash) {
-    var f = S.f, rows = [], sigIds = doc === 'contract' ? ['c_gap', 'c_eul'] : (sameMode() ? ['m_app'] : ['m_app', 'm_holder']);
-    var who = doc === 'contract' ? f.c_rep : (f.m_applicant || f.m_holder);
+    var f = S.f, rows = [], sigIds = isTpl(doc) ? [doc + '_gap', doc + '_eul'] : doc === 'contract' ? ['c_gap', 'c_eul'] : (sameMode() ? ['m_app'] : ['m_app', 'm_holder']);
+    var who = isTpl(doc) ? (S.tpl[doc].gap[0] || {}).v : doc === 'contract' ? f.c_rep : (f.m_applicant || f.m_holder);
     rows.push(['서식', DOCNAME[doc]]);
     rows.push(['요청 번호', REQ.p ? REQ.p.i : '링크 없이 직접 작성']);
     if (REQ.p && REQ.p.t) rows.push(['링크 생성', fmtTime(REQ.p.t)]);
@@ -1107,6 +1390,7 @@ body { margin: 0; }
     });
   }
   function pickFields(doc) {
+    if (isTpl(doc)) return clone(S.tpl[doc]);
     var out = {}, pre = doc === 'contract' ? 'c_' : 'm_';
     Object.keys(S.f).forEach(function (k) { if (k.indexOf(pre) === 0) out[k] = S.f[k]; });
     if (doc === 'contract' && REQ.p && REQ.p.x) out.special = REQ.p.x;
@@ -1116,21 +1400,27 @@ body { margin: 0; }
     var stage = document.createElement('div'); stage.className = 'pdfstage'; document.body.appendChild(stage);
     try {
       if (!window.html2canvas || !window.jspdf) throw new Error('lib');
-      var root = $(doc === 'contract' ? '#docContract' : '#docCms'), clone = root.cloneNode(true);
-      clone.removeAttribute('hidden'); clone.removeAttribute('id'); clone.classList.add('pdfmode'); stage.appendChild(clone);
-      staticize(clone);
-      var sigs = {}; (doc === 'contract' ? ['c_gap', 'c_eul'] : ['m_app', 'm_holder']).forEach(function (id) { if (S.sig[id]) sigs[id] = S.sig[id].img; });
+      var root = docEl(doc), cl;
+      if (isTpl(doc)) {
+        cl = document.createElement('article'); cl.className = root.className.replace(/\bediting\b/, '');
+        cl.innerHTML = renderTpl(doc, 'pdf');
+        [doc + '_gap', doc + '_eul'].forEach(function (id) { var sl = cl.querySelector('.sigslot[data-slot="' + id + '"]'); if (sl && S.sig[id]) sl.innerHTML = '<img class="sigimg" alt="" src="' + S.sig[id].img + '">'; });
+      } else cl = root.cloneNode(true);
+      cl.removeAttribute('hidden'); cl.removeAttribute('id'); cl.classList.add('pdfmode'); stage.appendChild(cl);
+      staticize(cl);
+      var sigs = {}; (isTpl(doc) ? [doc + '_gap', doc + '_eul'] : doc === 'contract' ? ['c_gap', 'c_eul'] : ['m_app', 'm_holder']).forEach(function (id) { if (S.sig[id]) sigs[id] = S.sig[id].img; });
       var hash = await sha256hex(JSON.stringify({ doc: doc, f: pickFields(doc), sig: sigs }));
       var audit = null;
-      clone.appendChild(auditFoot(doc, hash));
+      cl.appendChild(auditFoot(doc, hash));
       if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
       await new Promise(function (r) { setTimeout(r, 350); });
       var pdf = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', compress: true }), state = { used: false };
-      await addNode(pdf, clone, doc !== 'cms', state, doc === 'cms' ? true : 'auto');
+      await addNode(pdf, cl, doc !== 'cms', state, doc === 'cms' ? true : 'auto');
       var blob = pdf.output('blob');
-      var co = doc === 'contract' ? S.f.c_company : (S.f.c_company || S.f.m_holder);
+      var tg = isTpl(doc) ? ((S.tpl[doc].gap[0] || {}).v || '') : '';
+      var co = isTpl(doc) ? tg : doc === 'contract' ? S.f.c_company : (S.f.c_company || S.f.m_holder);
       var name = (DOCNAME[doc] + '_' + (co || '무명') + '_' + TODAY.replace(/-/g, '') + '.pdf').replace(/[\\\/:*?"<>|]/g, '').replace(/\s+/g, '');
-      return { blob: blob, name: name, hash: hash, company: co || '', who: (doc === 'contract' ? S.f.c_rep : (S.f.m_applicant || S.f.m_holder)) || '' };
+      return { blob: blob, name: name, hash: hash, company: co || '', who: (isTpl(doc) ? tg : doc === 'contract' ? S.f.c_rep : (S.f.m_applicant || S.f.m_holder)) || '' };
     } finally { stage.remove(); }
   }
   async function makePdf(doc) {
@@ -1198,15 +1488,20 @@ body { margin: 0; }
     if (!recv) return;
     var p = REQ.p;
     $('#recvMeta').textContent = '요청 번호 ' + p.i + (p.e ? ' · ' + p.e + '까지 작성해 주세요.' : '') + (/KAKAOTALK/i.test(navigator.userAgent || '') ? ' · 카카오톡 안에서는 PDF 저장이 막힐 수 있습니다. 그럴 때는 오른쪽 아래 메뉴에서 다른 브라우저로 열어 주세요.' : '');
-    $('#tabC').hidden = p.d.indexOf('contract') < 0; $('#tabM').hidden = p.d.indexOf('cms') < 0;
+    ALLDOCS.forEach(function (x) { var tb = document.getElementById(DOCS[x].tab); if (tb) tb.hidden = p.d.indexOf(x) < 0; });
     $('.docs').hidden = p.d.length < 2;
     if (REQ.expired) {
       $('#expiredBox').hidden = false; $('.docs').hidden = true; $('.bar').hidden = true;
-      $('#docContract').remove(); $('#docCms').remove(); $$('.pdfbar').forEach(function (x) { x.remove(); });
+      ALLDOCS.forEach(function (x) { var el = docEl(x); if (el) el.remove(); }); $$('.pdfbar').forEach(function (x) { x.remove(); });
+      var tbar = $('#tplBar'); if (tbar) tbar.remove();
     }
   }
 
-  function start(r) { applyRequest(r); initFields(); paintAll(); showDoc(REQ.mode === 'recv' ? REQ.p.d[0] : 'contract'); setupMode(); }
+  function start(r) {
+    applyRequest(r);
+    if (REQ.mode === 'recv') REQ.p.d = REQ.p.d.filter(function (d) { return !!DOCS[d]; });
+    initFields(); paintAll(); showDoc(REQ.mode === 'recv' && REQ.p.d.length ? REQ.p.d[0] : 'contract'); setupMode();
+  }
   var h0 = rawHash();
   if (/^s\.[0-9a-f]{12}$/.test(h0) && API) {
     var app = $('.app'); app.classList.add('loading');
