@@ -114,7 +114,7 @@ var S={lists:[],clients:[],people:[],cur:null,rows:{},own:"전체",stf:"전체",
 var G={a:null,f:null,drag:false,moved:false};
 var KIND={vat:"부가세",corp:"법인세",inc:"종합소득세",tax:"소득세/법인세 예측",biz:"사업장 현황신고",cal:"달력 발송대장"};
 var DEF_COLS=[["done","완료","check"],["prio","우선순위","sel"],["type","구분","auto"],["name","상호","auto"],["owner","담당자","auto"],["diff","난도","sel"],["work","작업일","date"],["file","신고일","date"],["appr","결재완료","date"],["deliv","전달일","date"],["note","특이사항","text"],["mail","메일발송","date"],["fee","수수료","num"],["paid","입금여부","date"],["tinv","세금계산서","date"]].map(function(c){return {k:c[0],l:c[1],t:c[2]}});
-var TAX_COLS=[["prio","중요도","sel"],["name","업체명","auto"],["owner","담당자","auto"],["work","추정완료","date"],["c1","상담완료","date"],["ntx","세금없음","check"],["rem","비고","text"]].map(function(c){return {k:c[0],l:c[1],t:c[2]}});
+var TAX_COLS=[["prio","중요도","sel"],["name","업체명","auto"],["owner","담당자","auto"],["work","추정완료","date"],["c1","상담완료","date"],["ntx","상담불필요","check"],["rem","비고","text"]].map(function(c){return {k:c[0],l:c[1],t:c[2]}});
 var TAX_NOTES=["정확하지 않아도 됨","1~8월 매출액 기준, 단 판매대행 있는 경우 1~9월 기준으로 예측","인건비는 전표입력, 매출과 매출원가, 감가상각비는 전표입력 안 해도 됨. 예측 자료에는 반영","매출/매입 확인해서 세금 많이 나올 곳을 우선 작업"];
 function isTax(){var l=curList();return !!l&&l.kind==="tax"}
 function isCal(){var l=curList();return !!l&&l.kind==="cal"}
@@ -122,11 +122,12 @@ var CAL_COLS=[["name","상호","auto"],["cnt","개수","num"],["owner","담당�
 var VAT_COLS=DEF_COLS.concat([{k:"rem",l:"비고",t:"text"}]);
 function isVat(){var l=curList();return !!l&&l.kind==="vat"}
 function defCols(){return isTax()?TAX_COLS:isCal()?CAL_COLS:isVat()?VAT_COLS:DEF_COLS}
-/* 새로 생긴 기본 열(세금없음·비고)은 예전에 저장된 열 구성에도 자동으로 끼워 넣는다 */
+/* 새로 생긴 기본 열(상담불필요·비고)은 예전에 저장된 열 구성에도 자동으로 끼워 넣는다 */
 function addNewCols(r){
-  var l=curList(),add=l&&({tax:[{k:"ntx",l:"세금없음",t:"check",after:"상담완료"},{k:"rem",l:"비고",t:"text",after:"세금없음"}],cal:[{k:"rem",l:"비고",t:"text",after:"배송완료"}],vat:[{k:"rem",l:"비고",t:"text"}]})[l.kind];
+  var l=curList(),add=l&&({tax:[{k:"ntx",l:"상담불필요",t:"check",after:"상담완료"},{k:"rem",l:"비고",t:"text",after:"상담불필요"}],cal:[{k:"rem",l:"비고",t:"text",after:"배송완료"}],vat:[{k:"rem",l:"비고",t:"text"}]})[l.kind];
   if(!add)return r;
-  var out=r.slice();
+  /* 예전 이름 '세금없음'으로 저장된 열은 '상담불필요'로 보이게 한다 */
+  var out=r.map(function(c){return c.k==="ntx"&&c.l==="세금없음"?Object.assign({},c,{l:"상담불필요"}):c});
   add.forEach(function(a){
     if(out.some(function(c){return c.k===a.k}))return;
     var i=-1;if(a.after)out.forEach(function(c,j){if(c.l===a.after)i=j});
@@ -310,14 +311,14 @@ function summaryTax(rows){
   var cc=cols().filter(function(c){return c.l==="상담완료"})[0],ck=cc?cc.k:"c1",wl=(cols().filter(function(c){return c.k==="work"})[0]||{l:"추정완료"}).l;
   var ps=S.people.slice(),extra={};rows.forEach(function(r){var o=r.c.owner||"(미지정)";if(S.people.indexOf(o)<0)extra[o]=1});
   ps=ps.concat(Object.keys(extra));
-  var tot={n:0,w:0,c:0},h='<table class="sm"><tr><th>담당자</th><th>개수</th><th>'+esc(wl)+'</th><th>진행률</th><th>상담완료</th><th>잔여</th></tr>';
+  var tot={n:0,w:0,c:0,left:0},h='<table class="sm"><tr><th>담당자</th><th>개수</th><th>'+esc(wl)+'</th><th>진행률</th><th>상담완료</th><th>잔여</th></tr>';
   ps.forEach(function(p){
     var rs=rows.filter(function(r){return (r.c.owner||"(미지정)")===p});if(!rs.length)return;
-    var w=rs.filter(function(r){return r.d.work}).length,c=rs.filter(function(r){return r.d[ck]}).length;
-    tot.n+=rs.length;tot.w+=w;tot.c+=c;
-    h+='<tr><td class="l">'+esc(p)+'</td><td>'+rs.length+'</td><td>'+w+'</td><td class="pb">'+pct(w,rs.length)+'</td><td>'+c+'</td><td>'+(rs.length-w)+'</td></tr>';
+    var w=rs.filter(function(r){return r.d.work}).length,c=rs.filter(function(r){return r.d[ck]}).length,left=rs.filter(function(r){return !r.d.work&&!r.d.ntx}).length;
+    tot.n+=rs.length;tot.w+=w;tot.c+=c;tot.left+=left;
+    h+='<tr><td class="l">'+esc(p)+'</td><td>'+rs.length+'</td><td>'+w+'</td><td class="pb">'+pct(w,rs.length)+'</td><td>'+c+'</td><td>'+left+'</td></tr>';
   });
-  h+='<tr><th>합계</th><th>'+tot.n+'</th><th>'+tot.w+'</th><th>'+pct(tot.w,tot.n)+'</th><th>'+tot.c+'</th><th>'+(tot.n-tot.w)+'</th></tr></table>';
+  h+='<tr><th>합계</th><th>'+tot.n+'</th><th>'+tot.w+'</th><th>'+pct(tot.w,tot.n)+'</th><th>'+tot.c+'</th><th>'+tot.left+'</th></tr></table>';
   return h;
 }
 /* 안내 문구: 신고리스트 위에 보이는 메모. 직원이 줄을 더하거나 지우거나 고칠 수 있다. 소득세/법인세 예측은 처음에 기본 문구가 들어 있다 */
