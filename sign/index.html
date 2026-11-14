@@ -295,8 +295,44 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .xbtn:disabled { opacity: .35; cursor: default; }
 .tpldoc .addart { margin-top: 8px; font-size: .85rem; }
 .tpldoc .party .linkbtn { align-self: flex-start; }
+.tpldoc .tinfo, .tpldoc .tco, .tpldoc .tblock { margin-top: 12px; }
+.tpldoc .tbh { margin: 0 0 2px; }
+.tpldoc p.tb { white-space: pre-wrap; margin: 0; }
+.tpldoc .corow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 6px 0; border-bottom: 1px dashed var(--paper-line); }
+.tpldoc .tcs { margin-top: 28px; padding-top: 18px; border-top: 2px solid var(--paper-line); }
+.tpldoc .tcsh { text-align: center; font-size: 1.1rem; margin: 0 0 10px; }
+.tpldoc .tcs .line .k { min-width: 7.5em; }
+.tpldoc .tchk { margin-top: 6px; }
+.tpldoc .tchk .chk { white-space: normal; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 2px 6px; }
+.tpldoc .tcssign { margin-top: 12px; justify-content: flex-end; }
 .tplbar select { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; max-width: 100%; }
 .pdfmode.tpldoc mark.blank { background: none; }
+.contractdoc .cx { white-space: pre-wrap; }
+.contractdoc [data-cx][contenteditable] { outline: 1px dashed var(--accent); outline-offset: 1px; background: var(--paper-tint); border-radius: 2px; }
+.cxbar { margin-top: 6px; flex-wrap: wrap; }
+.tpldoc .tcks { margin-top: 10px; }
+.tpldoc .tchk { display: flex; align-items: center; gap: 4px; }
+.tpldoc .tax { margin-top: 30px; padding-top: 16px; border-top: 2px solid var(--paper-line); }
+.tpldoc .tax.off { opacity: .6; }
+.tpldoc .taxh { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 8px; font-size: 1.02rem; }
+.tpldoc .taxh .axon { font-size: .85rem; font-weight: 400; white-space: nowrap; }
+.tpldoc .tblwrap { overflow-x: auto; margin: 6px 0 4px; }
+.tpldoc table.ttbl { border-collapse: collapse; width: 100%; font-size: .85rem; }
+.tpldoc .ttbl th, .tpldoc .ttbl td { border: 1px solid var(--paper-line); padding: 3px 4px; vertical-align: top; height: 1.9em; }
+.tpldoc .ttbl th { background: var(--paper-tint); font-weight: 600; text-align: center; }
+.tpldoc .ttbl .in { width: 100%; min-width: 5.5em; box-sizing: border-box; }
+.tpldoc .ttbl .tx { width: 2em; border: 0; }
+.tpldoc .tkv { border: 1px solid var(--paper-line); margin: 6px 0 4px; }
+.tpldoc .kvr { display: grid; grid-template-columns: minmax(8em, 36%) minmax(0, 1fr); border-bottom: 1px solid var(--paper-line); }
+.tpldoc .kvr:last-child { border-bottom: 0; }
+.tpldoc .kvr .kl { background: var(--paper-tint); padding: 4px 6px; font-weight: 600; font-size: .9rem; }
+.tpldoc .kvr .kvv { padding: 4px 6px; min-height: 1.9em; display: flex; gap: 4px; align-items: flex-start; }
+.tpldoc .kvr .kvv .tta { flex: 1 1 auto; }
+.tpldoc .tsignl { margin-top: 12px; justify-content: flex-end; flex-wrap: wrap; }
+.tpldoc .bl, .pdfmode .bl { display: inline-block; min-width: 4.5em; height: 1.1em; border-bottom: 1px solid #AEB6C0; vertical-align: baseline; }
+.sigph { color: #8A94A0; font-size: .82em; white-space: nowrap; }
+.pdfmode .tblwrap { overflow: visible; }
+@media (max-width: 560px) { .tpldoc .kvr { grid-template-columns: 1fr; } }
 .pdfmode.tpldoc .line .fixedv:empty { display: inline-block; min-width: 14em; height: 1.3em; border-bottom: 1px solid #AEB6C0; }
 @media (max-width: 640px) {
   .g { grid-template-columns: 7em minmax(0, 1fr); }
@@ -369,25 +405,25 @@ body { margin: 0; }
   <!-- ===== 세무대리계약서 ===== -->
   <p class="legend" id="legend"><i></i><i class="l2"></i> 노란색 칸이 작성하실 곳입니다.</p>
   <article class="paper contractdoc" id="docContract" aria-label="세무대리계약서">
-    <h2 class="dt">세 무 대 리 계 약 서</h2>
+    <h2 class="dt"><span class="cx" data-cx="title">세 무 대 리 계 약 서</span></h2>
     <div class="line pre">
       <span><b>위임인(갑)</b> :</span>
       <input class="in w10" type="text" data-k="c_company" aria-label="위임인 상호" placeholder="상호">
     </div>
     <div class="line pre"><span><b>수임인(을)</b> : 동감 세무회계</span></div>
-    <p class="pre">위 당사자는 세무대리업무에 관한 위임계약을 다음과 같이 체결한다.</p>
+    <p class="pre"><span class="cx" data-cx="intro">위 당사자는 세무대리업무에 관한 위임계약을 다음과 같이 체결한다.</span></p>
     <ol class="art">
-      <li><b class="h">제1조 [업무]</b> 갑은 을을 대리인으로 하여 세무대리업무(
+      <li><b class="h"><span class="cx" data-cx="a1h">제1조 [업무]</span></b> <span class="cx" data-cx="a1a">갑은 을을 대리인으로 하여 세무대리업무(</span>
         <span class="grp" id="grpKind"><label class="chk"><input type="checkbox" data-k="c_kindA"> 기장대리</label> <label class="chk"><input type="checkbox" data-k="c_kindB"> 세무고문</label></span>
-        )를 위임하고, 을은 이를 수임한다.</li>
-      <li><b class="h">제2조 [보수]</b> ① 본 계약에 따른 기장대리 보수는
+        <span class="cx" data-cx="a1b">)를 위임하고, 을은 이를 수임한다.</span></li>
+      <li><b class="h"><span class="cx" data-cx="a2h">제2조 [보수]</span></b> <span class="cx" data-cx="a2a">① 본 계약에 따른 기장대리 보수는</span>
         <input class="in w4" type="text" data-k="c_year" data-fmt="year" inputmode="numeric" aria-label="보수 시작 연도">년
         <input class="in w2" type="text" data-k="c_month" data-fmt="num2" inputmode="numeric" aria-label="보수 시작 월" placeholder="월">월부터 월정액
-        <input class="in w4" type="text" data-k="c_fee" data-fmt="money" inputmode="numeric" aria-label="월정액(만원)" placeholder="금액">만원 으로 한다.(부가가치세 별도)
-        <span class="sub">② 본 계약 이외의 결산서 및 세무조정계산서 작성, 신고대리, 조세신고서류 확인업무 등에 따른 보수는 제1항의 보수와는 별도로 갑이 부담한다.</span>
-        <span class="sub">③ 기장에 필요한 장부 및 사무용 소모품비, 교통비, 출장비 등의 실비상당액은 갑이 부담한다.</span></li>
-      <li><b class="h">제3조 [보수의 지급방법]</b> 보수지급은 아래의 지급방식을 선택하여 매월
-        <input class="in w2" type="text" data-k="c_payday" data-fmt="num2" inputmode="numeric" aria-label="매월 지급일" placeholder="일">일 까지 지급한다.
+        <input class="in w4" type="text" data-k="c_fee" data-fmt="money" inputmode="numeric" aria-label="월정액(만원)" placeholder="금액"><span class="cx" data-cx="a2b">만원 으로 한다.(부가가치세 별도)</span>
+        <span class="sub cx" data-cx="a2c">② 본 계약 이외의 결산서 및 세무조정계산서 작성, 신고대리, 조세신고서류 확인업무 등에 따른 보수는 제1항의 보수와는 별도로 갑이 부담한다.</span>
+        <span class="sub cx" data-cx="a2d">③ 기장에 필요한 장부 및 사무용 소모품비, 교통비, 출장비 등의 실비상당액은 갑이 부담한다.</span></li>
+      <li><b class="h"><span class="cx" data-cx="a3h">제3조 [보수의 지급방법]</span></b> <span class="cx" data-cx="a3a">보수지급은 아래의 지급방식을 선택하여 매월</span>
+        <input class="in w2" type="text" data-k="c_payday" data-fmt="num2" inputmode="numeric" aria-label="매월 지급일" placeholder="일"><span class="cx" data-cx="a3b">일 까지 지급한다.</span>
         <span class="opt grp" id="grpPay">
           <label class="rad"><input type="radio" name="c_pay" value="계좌이체" data-k="c_pay"> 계좌이체</label>
           <label class="rad"><input type="radio" name="c_pay" value="자동이체" data-k="c_pay"> 자동이체</label>
@@ -395,16 +431,16 @@ body { margin: 0; }
         <span class="opt">– 예금주: <input class="in w6" type="text" data-k="c_holder" aria-label="예금주" data-auto="1">
           금융기관: <input class="in w6" type="text" data-k="c_bank" aria-label="금융기관" data-auto="1">
           계좌번호: <input class="in w10" type="text" data-k="c_acct" data-fmt="acct" inputmode="numeric" aria-label="계좌번호" data-auto="1"></span></li>
-      <li><b class="h">제4조 [보수지급의 지체]</b> ① 갑이 본 계약에 정한 비용 또는 보수의 지급을 3개월 이상 지체한 때에는, 을은 위임사무에 착수하지 않거나 그 위임사무의 처리를 중단하거나 사임할 수 있다. ② 전항의 경우 을은 신속하게 갑에게 그 취지를 통보하여야 한다.</li>
-      <li><b class="h">제5조 [의무]</b> ① 갑은 본 계약의무 수행에 필요한 증빙자료 및 제반서류를 신속·정확하게 을에게 제공하여야 하며, 을은 갑이 제공한 자료에 의해 합리적이고 타당한 회계기준에 따라 성실하게 업무를 수행하여야 한다.</li>
-      <li><b class="h">제6조 [비밀엄수]</b> 을은 계약업무 수행 과정에서 지득한 갑의 비밀을 누설하지 아니한다.</li>
-      <li><b class="h">제7조 [업무수행불능 및 책임]</b> ① 갑이 제공한 자료의 불비 및 사실과 다른 자료의 제시 등의 사유로 본 계약업무 수행이 불가능할 경우에 발생하는 문제에 대하여 을은 그 책임을 지지 아니한다. 이러한 경우에도 월정액을 지불하여야 한다. ② 을은 갑이 제공한 자료에 대하여 신뢰성이 있는 것으로 간주하여 회계처리 하는 것이므로 갑이 제공한 자료에 허위사항이 있거나 요구 자료의 지연제시 또는 미제출로 인해서 장래 갑에게 불이익한 행정처분 등이 발생할 경우 갑은 을에게 그 책임을 묻지 아니한다. ③ 천재지변 기타 이에 준하는 사유로 본 계약을 수행할 수 없을 때는 본 계약 불이행의 책임은 갑·을 쌍방에게 없는 것으로 한다.</li>
-      <li><b class="h">제8조 [계약해지]</b> ① 갑의 사정에 의해 본 계약이 해지될 경우 해약 이후에 야기되는 세무처리에 대하여 을은 그 책임을 지지 아니한다. ② 갑이 본 계약에 정한 의무를 이행하지 아니하거나 위임사무의 내용에 관하여 제공한 자료가 불비 및 허위인 때에는, 고의가 아닌 경우라도 을은 이 계약을 해지하고 사임할 수 있다. ③ 을의 사정에 의해 본 계약업무를 수행하지 못할 경우 을은 그 시점까지 모든 업무를 정리하고 갑과 을은 상호 협의하여 본 계약업무를 종결시키기로 한다.</li>
-      <li><b class="h">제9조 [분쟁의 해결]</b> 본 계약에서 발생한 분쟁은 합의에 의하여 해결함을 원칙으로 하고, 당사자 사이에 해결되지 않은 분쟁은 중재법에 의한 중재기관의 중재에 의하여 최종 해결한다.</li>
-      <li><b class="h">제10조 [기타]</b> 본 계약에 명시되지 아니한 사항은 일반 상관례에 따라 상호협의하여 결정한다.</li>
+      <li><b class="h"><span class="cx" data-cx="a4h">제4조 [보수지급의 지체]</span></b> <span class="cx" data-cx="a4">① 갑이 본 계약에 정한 비용 또는 보수의 지급을 3개월 이상 지체한 때에는, 을은 위임사무에 착수하지 않거나 그 위임사무의 처리를 중단하거나 사임할 수 있다. ② 전항의 경우 을은 신속하게 갑에게 그 취지를 통보하여야 한다.</span></li>
+      <li><b class="h"><span class="cx" data-cx="a5h">제5조 [의무]</span></b> <span class="cx" data-cx="a5">① 갑은 본 계약의무 수행에 필요한 증빙자료 및 제반서류를 신속·정확하게 을에게 제공하여야 하며, 을은 갑이 제공한 자료에 의해 합리적이고 타당한 회계기준에 따라 성실하게 업무를 수행하여야 한다.</span></li>
+      <li><b class="h"><span class="cx" data-cx="a6h">제6조 [비밀엄수]</span></b> <span class="cx" data-cx="a6">을은 계약업무 수행 과정에서 지득한 갑의 비밀을 누설하지 아니한다.</span></li>
+      <li><b class="h"><span class="cx" data-cx="a7h">제7조 [업무수행불능 및 책임]</span></b> <span class="cx" data-cx="a7">① 갑이 제공한 자료의 불비 및 사실과 다른 자료의 제시 등의 사유로 본 계약업무 수행이 불가능할 경우에 발생하는 문제에 대하여 을은 그 책임을 지지 아니한다. 이러한 경우에도 월정액을 지불하여야 한다. ② 을은 갑이 제공한 자료에 대하여 신뢰성이 있는 것으로 간주하여 회계처리 하는 것이므로 갑이 제공한 자료에 허위사항이 있거나 요구 자료의 지연제시 또는 미제출로 인해서 장래 갑에게 불이익한 행정처분 등이 발생할 경우 갑은 을에게 그 책임을 묻지 아니한다. ③ 천재지변 기타 이에 준하는 사유로 본 계약을 수행할 수 없을 때는 본 계약 불이행의 책임은 갑·을 쌍방에게 없는 것으로 한다.</span></li>
+      <li><b class="h"><span class="cx" data-cx="a8h">제8조 [계약해지]</span></b> <span class="cx" data-cx="a8">① 갑의 사정에 의해 본 계약이 해지될 경우 해약 이후에 야기되는 세무처리에 대하여 을은 그 책임을 지지 아니한다. ② 갑이 본 계약에 정한 의무를 이행하지 아니하거나 위임사무의 내용에 관하여 제공한 자료가 불비 및 허위인 때에는, 고의가 아닌 경우라도 을은 이 계약을 해지하고 사임할 수 있다. ③ 을의 사정에 의해 본 계약업무를 수행하지 못할 경우 을은 그 시점까지 모든 업무를 정리하고 갑과 을은 상호 협의하여 본 계약업무를 종결시키기로 한다.</span></li>
+      <li><b class="h"><span class="cx" data-cx="a9h">제9조 [분쟁의 해결]</span></b> <span class="cx" data-cx="a9">본 계약에서 발생한 분쟁은 합의에 의하여 해결함을 원칙으로 하고, 당사자 사이에 해결되지 않은 분쟁은 중재법에 의한 중재기관의 중재에 의하여 최종 해결한다.</span></li>
+      <li><b class="h"><span class="cx" data-cx="a10h">제10조 [기타]</span></b> <span class="cx" data-cx="a10">본 계약에 명시되지 아니한 사항은 일반 상관례에 따라 상호협의하여 결정한다.</span></li>
     </ol>
     <div class="special" id="specialBox" hidden><b class="h">특약사항</b><div id="specialText"></div></div>
-    <p class="closing">이 계약의 성립을 증명하기 위하여 계약서 2통을 작성하여 갑과 을이 각각 서명·날인 한 후 1통씩 보관한다.</p>
+    <p class="closing"><span class="cx" data-cx="closing">이 계약의 성립을 증명하기 위하여 계약서 2통을 작성하여 갑과 을이 각각 서명·날인 한 후 1통씩 보관한다.</span></p>
     <div class="date">
       <input class="in w4" type="text" data-k="c_y" data-fmt="year" inputmode="numeric" aria-label="계약 연도">년
       <input class="in w2" type="text" data-k="c_m" data-fmt="num2" inputmode="numeric" aria-label="계약 월">월
@@ -420,13 +456,14 @@ body { margin: 0; }
       </div>
       <div class="party">
         <span class="who">(을) 수임인</span>
-        <div class="line"><span class="k">상 호</span><span class="fixedv">동감 세무회계</span></div>
-        <div class="line"><span class="k">사업자등록번호</span><span>438-27-01588</span></div>
-        <div class="line"><span class="k">소재지</span><span class="fixedv">경기도 고양시 향동로 217, DMC플렉스데시앙 KB 824호 동감 세무회계</span></div>
-        <div class="repline"><span class="k mut">대표자</span><span>이 동 희</span><span class="sigslot" data-slot="c_eul"></span></div>
+        <div class="line"><span class="k">상 호</span><span class="fixedv cx" data-cx="eulName">동감 세무회계</span></div>
+        <div class="line"><span class="k">사업자등록번호</span><span class="cx" data-cx="eulBiz">438-27-01588</span></div>
+        <div class="line"><span class="k">소재지</span><span class="fixedv cx" data-cx="eulAddr">경기도 고양시 향동로 217, DMC플렉스데시앙 KB 824호 동감 세무회계</span></div>
+        <div class="repline"><span class="k mut">대표자</span><span class="cx" data-cx="eulRep">이 동 희</span><span class="sigslot" data-slot="c_eul"></span></div>
       </div>
     </div>
   </article>
+  <div class="bar cxbar" id="cxBar"><button type="button" class="btn" id="cxEdit" aria-pressed="false">조항 문구 고치기</button><button type="button" class="btn" id="cxSave" hidden>지금 문구를 내 기본으로 저장</button><button type="button" class="btn" id="cxReset" hidden>원래 문구로 되돌리기</button><span class="hint" id="cxHint"></span></div>
   <div class="bar pdfbar" data-pdfwrap="contract"><button type="button" class="btn primary" data-pdf="contract" disabled>계약서 PDF로 저장</button><span class="hint" data-pdfhint="contract"></span></div>
 
   <!-- ===== 자동이체 신청서 ===== -->
@@ -642,6 +679,79 @@ body { margin: 0; }
       ]
     }
   };
+
+  /* 상속세 계약서 (2026-11-14 받은 '세무대리상속세 계약서' 기준). 상속 개요 표, 특약·설명 확인, 공동상속인 서명, 개인정보 동의서를 포함합니다. */
+  TPL.inherit = {
+    name: '상속세 계약서', file: '상속세세무대리계약서', hint: '상속세 신고 대리 계약. 공동상속인 확인 서명과 개인정보 수집·이용 동의서가 함께 들어 있습니다',
+    presets: [{ id: 'inherit', label: '상속세 신고 대리 (11/14 계약서 기준)', data: {
+      title: '세무대리(상속세) 계약서', sub: '',
+      gapWho: '위임자(갑, 상속인 대표)',
+      gap: [{ l: '성명', v: '' }, { l: '주민등록번호', v: '' }, { l: '주소', v: '' }, { l: '연락처', v: '' }, { l: '피상속인과의 관계', v: '' }, { l: '대표하는 상속인', v: '갑 외 ○○인 (공동상속인 명단은 서명란에 기재)' }],
+      eulWho: '수임자(을)',
+      eul: [{ l: '상호', v: '동감 세무회계' }, { l: '사업자등록번호', v: '438-27-01588' }, { l: '사업장', v: '경기 고양시 덕양구 향동로 217, KB 824호' }, { l: '세무사', v: '이동희' }],
+      infoTitle: '상속 개요',
+      info: [{ l: '피상속인 성명', v: '' }, { l: '상속개시일(사망일)', v: '20○○년 ○○월 ○○일' }, { l: '상속세 신고기한', v: '20○○년 ○○월 ○○일 (상속개시일이 속하는 달의 말일부터 6개월)' }],
+      intro: '갑과 을은 피상속인의 상속세 신고 대리에 관하여 다음과 같이 계약을 체결한다.',
+      arts: [
+        { h: '목적', b: '본 계약은 갑이 을에게 피상속인의 상속세 신고에 관한 세무대리(세무사법 제2조)를 위임하고, 그 업무의 범위와 보수 및 당사자의 권리·의무를 정함을 목적으로 한다.' },
+        { h: '위임업무의 범위', b: '① 을이 수행하는 업무(이하 "위임업무")는 다음 각 호와 같다.\n  1. 상속재산·채무·공과금·장례비용의 파악 및 「상속세 및 증여세법」에 따른 재산 평가\n  2. 사전증여재산 및 추정상속재산 해당 여부 검토\n  3. 상속공제 및 세액공제 적용 검토\n  4. 상속세 과세표준신고서 및 부속서류의 작성·제출\n  5. 연부연납 등 납부방법에 관한 신청(필요한 경우)\n  6. 신고 내용에 관한 상담 및 예상세액 안내\n② 다음 각 호의 업무는 위임업무에 포함되지 아니하며, 필요한 경우 별도 계약에 따른다.\n  1. 신고 이후 과세관청의 해명·소명 요구 및 상속세 조사(서면확인 포함) 대응\n  2. 수정신고·경정청구 및 이의신청·심사청구·심판청구 등 불복\n  3. 상속재산의 처분·임대 등에 따른 양도소득세 등 다른 세목의 신고\n  4. 상속등기 및 이에 수반하는 취득세 신고, 감정평가, 상속재산분할협의서 작성 등 다른 전문자격사의 업무' },
+        { h: '보수', b: '① 위임업무의 보수(이하 "기본보수")는 제2항의 산정기준금액에 ○○%를 곱한 금액으로 하되, 금 ○○○원을 최저보수로 한다. 부가가치세는 ○○(포함 또는 별도)로 한다.\n② 산정기준금액은 을이 작성하여 제출한 상속세 과세표준신고서상 총상속재산가액(본래의 상속재산, 간주상속재산 및 추정상속재산의 합계로서 채무 등을 차감하기 전의 금액)으로 하며, 사전증여재산가액은 ○○(포함 또는 제외)한다.\n③ 보수는 다음과 같이 지급한다.\n  1. 착수금: 계약 체결일까지 금 ○○○원\n  2. 잔금: 상속세 신고서 제출 전까지 기본보수에서 착수금을 차감한 금액\n④ 착수금은 기본보수에 충당한다. 을이 업무에 착수한 이후에는 반환하지 아니하되, 을의 귀책사유로 계약이 해지된 경우에는 제10조 제4항에 따라 정산한다.\n⑤ 갑의 자료 추가·변경으로 신고서를 다시 작성하거나, 상속인 간 이견 등으로 업무량이 현저히 늘어난 경우 갑과 을은 보수를 협의하여 조정할 수 있다.\n⑥ 서류 발급비, 인지대, 감정평가수수료, 출장비 등 업무 수행에 드는 실비는 갑이 부담한다. 을은 금 10만 원을 넘는 실비가 예상되면 미리 갑의 동의를 받는다.\n⑦ 제2조 제2항의 업무(상속세 조사 대응 등)의 보수는 해당 업무가 발생한 때에 업무량과 난이도를 반영하여 별도로 계약한다.' },
+        { h: '보수의 지급방법 및 증빙', b: '① 보수는 을의 계좌(케이뱅크 0010-8278-1382, 예금주 동감 세무회계)로 지급한다.\n② 을은 보수를 받은 때에 갑이 사업자인 경우 세금계산서를, 그 밖의 경우 현금영수증을 관계 법령에 따라 발급한다. 현금영수증 발급을 위하여 갑은 휴대전화번호 등 발급수단을 을에게 알려준다.' },
+        { h: '보수지급의 지체', b: '① 갑이 본 계약에서 정한 보수 또는 실비의 지급을 지체한 때에는, 을은 위임업무에 착수하지 않거나 그 처리를 중단하거나 계약을 해지할 수 있다.\n② 제1항의 경우 을은 지체 없이 그 뜻을 갑에게 서면(전자우편·문자메시지 포함)으로 통지하여야 하며, 업무 중단으로 신고기한을 지키지 못하여 발생하는 가산세 등은 갑이 부담한다.' },
+        { h: '갑의 의무', b: '① 갑은 위임업무에 필요한 자료를 사실대로 빠짐없이 제공하여야 하며, 상속세 신고기한 ○○일 전까지 을이 요청한 자료를 제공하여야 한다.\n② 갑은 다른 공동상속인으로부터 본 계약 체결에 관한 권한을 위임받았음을 보증하며, 공동상속인의 자료 제공과 확인을 책임지고 취합한다.\n③ 갑은 을이 작성한 신고서의 내용을 제출 전에 확인하고 서명한다.\n④ 상속세의 납부는 갑과 공동상속인이 한다.' },
+        { h: '을의 의무', b: '① 을은 세무사로서 선량한 관리자의 주의로 위임업무를 성실하게 수행하며, 세법에 따라 사실대로 신고서를 작성한다.\n② 을은 신고서 제출 전에 예상세액, 주요 공제 적용 내용 및 신고 후 과세관청의 검토·조사 가능성을 갑에게 설명한다.\n③ 을은 신고를 마친 후 신고서 사본과 접수증을 갑에게 교부하고, 갑이 제공한 원본 자료는 반환한다.' },
+        { h: '책임 및 면책', b: '① 갑이 자료를 제공하지 않거나 늦게 제공한 경우, 또는 사실과 다른 자료나 진술을 제공한 경우 이로 인하여 발생한 추가 세액·가산세 등에 대하여 을은 책임을 지지 아니한다.\n② 을은 갑이 제공한 자료가 사실인 것을 전제로 업무를 수행하며, 갑이 제공하지 않은 재산·채무·거래가 신고 후 확인되어 발생한 불이익에 대하여 책임을 지지 아니한다.\n③ 천재지변, 국세청 전산설비의 장애 등 당사자에게 책임 없는 사유로 계약을 이행할 수 없는 때에는 갑과 을 모두 불이행의 책임을 지지 아니한다.' },
+        { h: '손해배상', b: '① 을의 채무불이행 또는 불법행위로 갑에게 손해가 발생한 경우 을은 관계 법령에 따라 배상한다.\n② 을의 경과실로 인한 손해배상액은 을이 본 계약에 따라 수령한 보수액을 한도로 한다. 다만, 을의 고의 또는 중대한 과실로 인한 손해는 그러하지 아니하다.\n③ 갑의 신고·납부 의무에 따라 본래 납부하여야 할 세액(본세)은 손해에 포함되지 아니한다.' },
+        { h: '계약기간 및 해지', b: '① 본 계약의 기간은 계약체결일부터 상속세 신고서 제출 및 보수 정산이 끝난 날까지로 한다.\n② 갑과 을은 서면(전자우편·문자메시지 포함)으로 통지하여 본 계약을 해지할 수 있다. 다만, 상대방에게 불리한 시기에 부득이한 사유 없이 해지한 경우 그 손해를 배상한다.\n③ 갑이 제6조의 의무를 이행하지 아니하거나 사실과 다른 신고를 요구하는 경우 을은 즉시 계약을 해지할 수 있다.\n④ 계약이 해지된 경우 보수는 해지 시점까지 수행한 업무의 정도에 따라 정산한다. 다만, 갑의 사유로 해지된 경우 이미 받은 착수금은 반환하지 아니한다.\n⑤ 갑의 사유로 계약이 해지된 경우 해지 이후의 신고·납부에 대하여 을은 책임을 지지 아니한다.' },
+        { h: '비밀유지 및 개인정보 보호', b: '① 을은 세무사법에 따라 업무상 알게 된 갑과 공동상속인의 비밀을 엄수한다. 계약 종료 후에도 같다.\n② 개인정보는 붙임 「개인정보 수집·이용 동의서」에서 정한 범위에서만 처리한다.' },
+        { h: '분쟁의 해결', b: '본 계약에 관한 분쟁은 갑과 을이 협의하여 해결하되, 협의가 이루어지지 아니한 분쟁은 「민사소송법」에 따른 관할법원에서 해결한다.' },
+        { h: '기타', b: '본 계약에서 정하지 아니한 사항은 「민법」의 위임에 관한 규정과 일반 관례에 따르며, 특약사항이 일반조항과 다르면 특약사항이 우선한다.' }
+      ],
+      notes: [{ h: '특약사항 및 설명 확인', b: '갑은 을로부터 다음 사항을 설명받고 이해하였음을 확인한다.\n  1. 상속세는 신고 후 과세관청이 결정하는 세목이며, 결정 과정에서 금융재산 조회, 사전증여재산 및 추정상속재산 검토 등 조사가 진행될 수 있다.\n  2. 상속개시일 전 1년 이내 2억원 이상, 2년 이내 5억원 이상 인출·처분한 재산 또는 부담한 채무는 그 용도가 입증되지 않으면 상속재산으로 추정되어 과세될 수 있다.\n  3. 추정상속재산 등 판단이 필요한 사항은 갑이 제공한 자료와 소명에 근거하여 신고하며, 조사 과정에서 소명이 인정되지 아니하면 추가 세액과 가산세가 부과될 수 있다.\n  4. 갑이 제공하지 않은 재산·채무·거래로 인한 추가 세액과 가산세는 갑이 부담한다.\n  5. 공동상속인은 상속세에 대하여 각자가 받았거나 받을 재산을 한도로 연대하여 납부할 의무가 있다.\n  6. 기타 특약: 없음' }],
+      closing: '세무사 이동희는 본 계약서의 내용을 충분히 설명하였고, 갑은 그 내용을 모두 확인하여 이해하고 동의하였다. 이를 증명하기 위하여 계약서 2부를 작성하여 간인하고 갑과 을이 각 1부씩 보관한다.',
+      signGap: '갑(위임자)', signEul: '을(수임자)  동감 세무회계  세무사 이동희',
+      coTitle: '공동상속인 확인',
+      coIntro: '아래 공동상속인은 갑에게 본 계약의 체결을 위임하고, 본 계약의 내용(특약사항 포함)을 확인하였다.',
+      co: [{ id: 'c1', n: '', rel: '', tel: '' }],
+      after: [{ h: '붙임서류', b: '1. 세무대리 위임장(공동상속인 전원)\n2. 개인정보 수집·이용 동의서\n3. 피상속인 기본증명서·가족관계증명서(상세)' }],
+      cs: {
+        title: '[붙임] 개인정보 수집·이용 동의서',
+        intro: '동감 세무회계는 상속세 신고 대리를 위하여 아래와 같이 개인정보를 처리합니다.',
+        rows: [
+          { l: '수집 목적', v: '상속세 신고서 작성·제출, 세무대리 수임 등록, 보수 청구 및 증빙 발급' },
+          { l: '수집 항목', v: '성명, 주소, 연락처, 가족관계, 재산·채무·금융거래 자료' },
+          { l: '고유식별정보', v: '주민등록번호(세법상 신고서 작성에 필요한 경우에 한함)' },
+          { l: '보유 기간', v: '위임업무 종료 후 관계 법령에서 정한 보존기간까지, 그 후 지체 없이 파기' },
+          { l: '제3자 제공', v: '국세청 등 관계 법령에 따른 제출처 외에는 제공하지 않음' },
+          { l: '동의 거부권', v: '동의를 거부할 수 있으나, 거부 시 상속세 신고 대리가 불가능함' }
+        ],
+        checks: [{ t: '개인정보 수집·이용에 동의합니다.', ok: false }, { t: '고유식별정보(주민등록번호) 처리에 동의합니다.', ok: false }],
+        who: '동의인'
+      }
+    } }]
+  };
+
+  /* 양도세 계약서 (2026-11-14 사용자가 올린 '양도소득세 계약서' 기준).
+     편집형 양식은 별첨(ax: 문단 p, 체크 chk, 표 tbl, 항목표 kv, 서명 sign)과 확인 체크(cks)도 지원합니다. 필요하면 견본 data 에 넣으면 됩니다.
+     by:'eul' 인 항목은 사무소만 고칠 수 있고, 그 서명칸에는 사무소 도장이 미리 찍힙니다. */
+  var OFFICE_SIG = { c_eul: 1 };   /* 사무소가 찍는 서명칸 (전자서명 기록 판단용) */
+  TPL.transfer = {
+    name: '양도세 계약서', file: '양도소득세세무대리계약서', hint: '양도소득세 신고 대리 계약 (사무소 양도소득세 계약서 기준)',
+    presets: [
+      { id: 'orig', label: '양도소득세 신고 (11/14 계약서 기준)', data: svcBase({
+        title: '세무대리 계약서', sub: '( 양도소득세 신고 )',
+        intro: '위 당사자들은 양도소득세 신고 업무에 관한 계약을 다음과 같이 체결한다.',
+        gap: [{ l: '성명', v: '' }, { l: '주소', v: '' }, { l: '생년월일', v: '' }],
+        arts: [
+          { h: '업무', b: '갑은 을에게 “○○” 양도소득세 신고 업무를 의뢰하고, 을은 이를 수임하며 을은 양도소득세를 신고한다.' },
+          { h: '보수', b: '① 본 계약에 따른 보수는 ○○원 (부가가치세 포함)은 계약일에 지급하기로 한다.(입금계좌: 케이뱅크 0010-8278-1382 이동희)\n② 상기 용역수수료 외에 추후 용역제공이 증가하는 부분에 대하여는 갑과 을의 쌍방 합의에 따라 추가 수수료 약정을 체결하기로 한다.' },
+          COMMON_ARTS[0], COMMON_ARTS[1],
+          { h: '업무수행불능 및 책임', b: '① 갑이 제공한 자료의 불비 및 사실과 다른 자료의 제시 등의 사유로 본 계약업무 수행이 불가능할 경우 발생하는 문제에 대하여 을은 그 책임을 지지 아니한다.\n② 을은 갑이 제공한 자료에 대하여 신뢰성이 있는 것으로 간주하여 회계처리 하는 것이므로 갑이 제공한 자료에 허위사항이 있거나 요구자료의 지연제시 또는 미제출로 인해서 장래 갑에게 불이익한 행정처분 등이 발생한 경우 갑은 을에게 그 책임을 묻지 않기로 한다.\n③ 특례규정을 적용하여 신고서를 작성하는 경우 이는 갑의 책임과 위험에 속하는 사항으로 한다.\n④ 을이 갑의 판단에 따라 갑이 요청한 특례규정(1세대 1주택 해당여부 등 포함)을 반영하여 신고서 작성을 대행하는 경우 신고서 작성 및 제출 이후 발생하는 과세관청의 소명요구 또는 세무조사에 따른 소명 및 그 결과 부과되는 양도소득세 본세 및 가산세에 대해 을은 일체의 책임을 지지 않는다.' },
+          COMMON_ARTS[3], COMMON_ARTS[4], COMMON_ARTS[5]
+        ]
+      }) }
+    ]
+  };
   var TPL_KEYS = Object.keys(TPL);
   var DOCS = {
     contract: { el: 'docContract', tab: 'tabC', pill: 'pillC', chk: 'lkC' },
@@ -663,24 +773,71 @@ body { margin: 0; }
     S.tpl[k].dy = Y; S.tpl[k].dm = M; S.tpl[k].dd = D;
     S.sig[k + '_gap'] = null;
     S.sig[k + '_eul'] = { img: SEAL, how: '계약인', at: new Date() };
+    ensureEul(k);
   });
   /* 주민번호·계좌 같은 값은 링크에 담지 않고 고객이 직접 적습니다. */
   var SENS_LABEL = /주민|생년|계좌|휴대|연락처|전화/;
   function tplForLink(k) {
     var t = clone(S.tpl[k]);
     t.gap.forEach(function (r) { if (SENS_LABEL.test(r.l)) r.v = ''; });
+    (t.co || []).forEach(function (r) { r.tel = ''; });
+    if (t.cs) t.cs.checks.forEach(function (c) { c.ok = false; });
+    clearCustomer(t, false);
     return t;
   }
+  function getPath(o, path) {
+    return path.split('.').reduce(function (x, q) { return x == null ? x : x[/^\d+$/.test(q) ? Number(q) : q]; }, o);
+  }
+  function axOn(t) { return (t.ax || []).filter(function (a) { return a.on; }); }
+  function axSigs(k) {
+    var out = [];
+    axOn(S.tpl[k]).forEach(function (a) { a.items.forEach(function (it, j) { if (it.t === 'sign') out.push({ id: k + '_ax_' + a.id + '_' + j, eul: it.by === 'eul' }); }); });
+    return out;
+  }
+  function tplSigIds(k) {
+    var t = S.tpl[k], ids = [k + '_gap', k + '_eul'];
+    (t.co || []).forEach(function (r) { ids.push(k + '_co_' + r.id); });
+    if (t.cs) ids.push(k + '_cs');
+    axSigs(k).forEach(function (x) { ids.push(x.id); });
+    return ids;
+  }
+  /* 사무소(을) 서명칸에는 사무소 도장이 미리 찍힙니다. */
+  function ensureEul(k) {
+    OFFICE_SIG[k + '_eul'] = 1;
+    axSigs(k).forEach(function (x) { if (!x.eul) return; OFFICE_SIG[x.id] = 1; if (S.sig[x.id] === undefined) S.sig[x.id] = { img: SEAL, how: '계약인', at: new Date() }; });
+  }
+  /* 고객이 체크해야 하는 항목(필수)과 그 경로 */
+  function reqChecks(t) {
+    var out = [];
+    (t.cks || []).forEach(function (c, i) { if (c.req) out.push('cks.' + i + '.ok'); });
+    (t.ax || []).forEach(function (a, ai) { if (!a.on) return; a.items.forEach(function (it, j) { if (it.t === 'chk' && it.req) it.list.forEach(function (c, m) { out.push('ax.' + ai + '.items.' + j + '.list.' + m + '.ok'); }); }); });
+    return out;
+  }
+  function clearCustomer(t, all) {
+    reqChecks(t).forEach(function (pth) { setPath(t, pth, false); });
+    (t.ax || []).forEach(function (a) { a.items.forEach(function (it) {
+      if (it.t === 'tbl') it.rows.forEach(function (r) { it.cols.forEach(function (c, ci) { if (all || SENS_LABEL.test(c)) r[ci] = ''; }); });
+      if (all && it.t === 'kv' && it.by !== 'eul') it.rows.forEach(function (r) { r.v = ''; });
+      if (all && it.t === 'chk' && it.by !== 'eul') it.list.forEach(function (c) { c.ok = false; });
+    }); });
+  }
   function tplBlanks(k) {
-    var t = S.tpl[k], txt = [t.title, t.sub, t.intro, t.closing, t.signEul].concat(t.arts.map(function (a) { return a.h + a.b; }), t.eul.map(function (r) { return r.v; })).join('\n');
+    var t = S.tpl[k], rv = function (a) { return (a || []).map(function (r) { return r.l + ' ' + r.v; }); }, hb = function (a) { return (a || []).map(function (x) { return x.h + x.b; }); };
+    var axt = []; (t.cks || []).forEach(function (c) { axt.push(c.t); });
+    axOn(t).forEach(function (a) { axt.push(a.title); a.items.forEach(function (it) { if (it.t === 'p') axt.push(it.b); if (it.t === 'kv') axt = axt.concat(rv(it.rows)); if (it.t === 'chk') axt = axt.concat([it.h || ''], it.list.map(function (c) { return c.t; })); }); });
+    var txt = axt.concat([t.title, t.sub, t.intro, t.closing, t.signEul, t.coIntro]).concat(hb(t.arts), hb(t.notes), hb(t.after), rv(t.eul), rv(t.gap), rv(t.info), t.cs ? [t.cs.intro].concat(rv(t.cs.rows)) : []).join('\n');
     return (txt.match(/○○/g) || []).length;
   }
   function tplStatus(k) {
     var t = S.tpl[k], need = [], sigs = [];
     t.gap.forEach(function (r, i) { if (!String(r.v || '').trim()) need.push('gap.' + i + '.v'); });
+    (t.co || []).forEach(function (r, i) { ['n', 'rel'].forEach(function (f) { if (!String(r[f] || '').trim()) need.push('co.' + i + '.' + f); }); });
+    if (t.cs) t.cs.checks.forEach(function (c, i) { if (!c.ok) need.push('chk:cs.checks.' + i + '.ok'); });
+    reqChecks(t).forEach(function (pth) { if (!getPath(t, pth)) need.push('chk:' + pth); });
     if (!t.dy || !t.dm || !t.dd) need.push('date');
-    [k + '_gap', k + '_eul'].forEach(function (s) { if (!S.sig[s]) sigs.push(s); });
-    return { need: need, sigs: sigs, done: !need.length && !sigs.length, total: 2 };
+    var ids = tplSigIds(k);
+    ids.forEach(function (s) { if (!S.sig[s]) sigs.push(s); });
+    return { need: need, sigs: sigs, done: !need.length && !sigs.length, total: ids.length };
   }
 
   /* DOM: 탭, 링크 체크박스, 서식 영역을 TPL 수만큼 만듭니다. */
@@ -716,6 +873,7 @@ body { margin: 0; }
   })();
 
   function tplMode(k) { return REQ.mode === 'recv' || S.tplView ? 'view' : 'edit'; }
+  function pe(s) { return esc(s).replace(/○○+/g, '<span class="bl"></span>'); }
   function hl(s) { return esc(s).replace(/○○+/g, function (m) { return '<mark class="blank">' + m + '</mark>'; }); }
   function tIn(path, val, cls, extra) {
     return '<input class="in ' + (cls || '') + '" type="text" data-tp="' + path + '" value="' + esc(val) + '"' + (extra || '') + '>';
@@ -724,30 +882,106 @@ body { margin: 0; }
     return '<textarea class="tta" data-tp="' + path + '" rows="' + (rows || 2) + '">' + esc(val) + '</textarea>';
   }
   function rowsHtml(t, arr, mode, pdf) {
-    return t[arr].map(function (r, i) {
-      var label = mode === 'edit' && arr === 'gap' || mode === 'edit' && arr === 'eul' ? tIn(arr + '.' + i + '.l', r.l, 'w6 lab', ' aria-label="항목 이름"') : '<span class="k">' + esc(r.l) + '</span>';
+    var rows = getPath(t, arr) || [], ed = mode === 'edit' && !pdf, fill = arr === 'gap' || arr === 'info';
+    return rows.map(function (r, i) {
+      var path = arr + '.' + i;
+      var label = ed ? tIn(path + '.l', r.l, 'w6 lab', ' aria-label="항목 이름"') : '<span class="k">' + esc(r.l) + '</span>';
       var val;
-      if (pdf) val = '<span class="fixedv">' + esc(r.v) + '</span>';
-      else if (arr === 'gap') val = tIn('gap.' + i + '.v', r.v, 'w10 grow', ' aria-label="' + esc(r.l) + '"' + (SENS_LABEL.test(r.l) ? ' autocomplete="off"' : ''));
-      else if (mode === 'edit') val = tIn('eul.' + i + '.v', r.v, 'w10 grow', ' aria-label="' + esc(r.l) + '"');
+      if (pdf) val = '<span class="fixedv">' + pe(r.v) + '</span>';
+      else if (fill || ed) val = tIn(path + '.v', r.v, 'w10 grow', ' aria-label="' + esc(r.l) + '"' + (arr === 'gap' && SENS_LABEL.test(r.l) ? ' autocomplete="off"' : ''));
       else val = '<span class="fixedv">' + hl(r.v) + '</span>';
-      var del = mode === 'edit' && !pdf ? '<button type="button" class="xbtn" data-op="delrow" data-arr="' + arr + '" data-i="' + i + '" aria-label="이 항목 지우기">✕</button>' : '';
+      var del = ed ? '<button type="button" class="xbtn" data-op="delrow" data-arr="' + arr + '" data-i="' + i + '" aria-label="이 항목 지우기">✕</button>' : '';
       return '<div class="line">' + label + '<span class="colon">:</span>' + val + del + '</div>';
-    }).join('') + (mode === 'edit' && !pdf ? '<button type="button" class="linkbtn" data-op="addrow" data-arr="' + arr + '">+ 항목 추가</button>' : '');
+    }).join('') + (ed ? '<button type="button" class="linkbtn" data-op="addrow" data-arr="' + arr + '">+ 항목 추가</button>' : '');
+  }
+  /* 조항 번호 없는 제목+본문 묶음 (특약사항, 붙임서류 등) */
+  function blocksHtml(t, arr, mode) {
+    var ed = mode === 'edit', pdf = mode === 'pdf', list = t[arr] || [], h = '';
+    list.forEach(function (x, i) {
+      if (ed) h += '<div class="tblock"><div class="tah"><b class="h">' + tIn(arr + '.' + i + '.h', x.h, 'w10', ' aria-label="제목"') + '</b><span class="tops"><button type="button" class="xbtn" data-op="delx" data-arr="' + arr + '" data-i="' + i + '" aria-label="이 묶음 삭제">✕</button></span></div>' + tTa(arr + '.' + i + '.b', x.b, 1) + '</div>';
+      else h += '<div class="tblock"><p class="tbh"><b class="h">' + esc(x.h) + '</b></p><p class="tb">' + (pdf ? pe(x.b) : hl(x.b)) + '</p></div>';
+    });
+    if (ed) h += '<button type="button" class="linkbtn addart" data-op="addx" data-arr="' + arr + '">+ ' + (arr === 'notes' ? '특약·설명 묶음 추가' : '붙임 묶음 추가') + '</button>';
+    return h;
+  }
+  /* 체크 목록. office=true 면 고객 화면에서는 고칠 수 없습니다. */
+  function chkHtml(head, headPath, list, listPath, mode, office) {
+    var ed = mode === 'edit', pdf = mode === 'pdf', lock = office && !ed, h = '';
+    if (head != null) h += '<p class="tbh"><b class="h">' + (ed ? tIn(headPath, head, 'w10', ' aria-label="체크 묶음 제목"') : esc(head)) + '</b></p>';
+    list.forEach(function (x, i) {
+      var box = pdf || lock ? '<span class="pg">' + (x.ok ? '■' : '□') + '</span>' : '<input type="checkbox" data-tpc="' + listPath + '.' + i + '.ok"' + (x.ok ? ' checked' : '') + '>';
+      h += '<div class="tchk"><label class="chk grp">' + box + ' ' + (ed ? tIn(listPath + '.' + i + '.t', x.t, 'wfill', ' aria-label="체크 문구"') : '<span>' + (pdf ? pe(x.t) : hl(x.t)) + '</span>') + '</label>' +
+        (ed ? '<button type="button" class="xbtn" data-op="delrow" data-arr="' + listPath + '" data-i="' + i + '" aria-label="이 체크 항목 지우기">✕</button>' : '') + '</div>';
+    });
+    if (ed) h += '<button type="button" class="linkbtn" data-op="addck" data-arr="' + listPath + '">+ 체크 항목 추가</button>';
+    return h;
+  }
+  function tblHtml(it, p, mode) {
+    var ed = mode === 'edit', pdf = mode === 'pdf', h = '<div class="tblwrap"><table class="ttbl"><thead><tr>';
+    it.cols.forEach(function (c, ci) { h += '<th>' + (ed ? tIn(p + '.cols.' + ci, c, '', ' aria-label="열 제목"') : esc(c)) + '</th>'; });
+    if (ed) h += '<th class="tx"></th>';
+    h += '</tr></thead><tbody>';
+    it.rows.forEach(function (r, ri) {
+      h += '<tr>';
+      it.cols.forEach(function (c, ci) { h += '<td>' + (pdf ? esc(r[ci] || '') : tIn(p + '.rows.' + ri + '.' + ci, r[ci] || '', '', ' aria-label="' + esc(c) + ' ' + (ri + 1) + '번째"' + (SENS_LABEL.test(c) ? ' autocomplete="off"' : ''))) + '</td>'; });
+      if (ed) h += '<td class="tx"><button type="button" class="xbtn" data-op="delrow" data-arr="' + p + '.rows" data-i="' + ri + '" aria-label="' + (ri + 1) + '번째 줄 지우기">✕</button></td>';
+      h += '</tr>';
+    });
+    h += '</tbody></table></div>';
+    if (!pdf) h += '<button type="button" class="linkbtn" data-op="addtr" data-arr="' + p + '">+ 줄 추가</button>';
+    return h;
+  }
+  function kvHtml(it, p, mode) {
+    var ed = mode === 'edit', pdf = mode === 'pdf', fill = ed || (it.by !== 'eul' && !pdf), h = '<div class="tkv">';
+    it.rows.forEach(function (r, i) {
+      var vp = p + '.rows.' + i + '.v';
+      h += '<div class="kvr"><div class="kl">' + (ed ? tIn(p + '.rows.' + i + '.l', r.l, 'wfill', ' aria-label="항목 이름"') : esc(r.l)) + '</div><div class="kvv">' +
+        (fill ? '<textarea class="tta" data-tp="' + vp + '" rows="1" aria-label="' + esc(r.l) + '">' + esc(r.v) + '</textarea>' : '<span class="tv">' + (pdf ? pe(r.v) : hl(r.v)) + '</span>') +
+        (ed ? '<button type="button" class="xbtn" data-op="delrow" data-arr="' + p + '.rows" data-i="' + i + '" aria-label="이 항목 지우기">✕</button>' : '') + '</div></div>';
+    });
+    h += '</div>';
+    if (ed) h += '<button type="button" class="linkbtn" data-op="addrow" data-arr="' + p + '.rows">+ 항목 추가</button>';
+    return h;
+  }
+  function axHtml(k, t, mode) {
+    var ed = mode === 'edit', pdf = mode === 'pdf', h = '', gapName = (t.gap[0] && t.gap[0].v) || '';
+    t.ax.forEach(function (a, ai) {
+      if (!a.on && !ed) return;
+      var base = 'ax.' + ai;
+      h += '<section class="tax' + (a.on ? '' : ' off') + '">';
+      h += '<h3 class="taxh">' + (ed ? '<label class="chk axon"><input type="checkbox" data-tpc="' + base + '.on"' + (a.on ? ' checked' : '') + '> 붙이기</label>' + tIn(base + '.title', a.title, 'wfill', ' aria-label="별첨 제목"') : esc(a.title)) + '</h3>';
+      if (!a.on) { h += '<p class="hint">지금은 계약서에 붙지 않습니다. 붙이려면 왼쪽을 체크하세요.</p></section>'; return; }
+      a.items.forEach(function (it, j) {
+        var p = base + '.items.' + j;
+        if (it.t === 'p') h += '<p class="tb">' + (ed ? tTa(p + '.b', it.b, 1) : (pdf ? pe(it.b) : hl(it.b))) + '</p>';
+        else if (it.t === 'chk') h += '<div class="tcks">' + chkHtml(it.h == null ? null : it.h, p + '.h', it.list, p + '.list', mode, it.by === 'eul') + '</div>';
+        else if (it.t === 'tbl') h += tblHtml(it, p, mode);
+        else if (it.t === 'kv') h += kvHtml(it, p, mode);
+        else if (it.t === 'sign') {
+          var id = k + '_ax_' + a.id + '_' + j;
+          SLOT_LABEL[id] = a.title.replace(/\s*\(.*$/, '') + ' ' + it.who.replace(/\s*:\s*$/, '');
+          h += '<div class="repline tsignl"><span class="tv">' + esc(t.dy + '. ' + t.dm + '. ' + t.dd + '.') + '</span><span>' + (ed ? tIn(p + '.who', it.who, 'w8', ' aria-label="서명란 표시"') : esc(it.who)) + '</span>' +
+            (it.by === 'eul' ? '' : '<span class="tv gapnm">' + esc(gapName) + '</span>') + '<span class="sigslot" data-slot="' + id + '"></span></div>';
+        }
+      });
+      h += '</section>';
+    });
+    return h;
   }
   function renderTpl(k, mode) {
     var t = S.tpl[k], pdf = mode === 'pdf', ed = mode === 'edit';
     var txt = function (path, val, cls, rows) {
       if (ed) return rows ? tTa(path, val, 1) : tIn(path, val, cls);
-      return '<span class="tv">' + (pdf ? esc(val) : hl(val)) + '</span>';
+      return '<span class="tv">' + (pdf ? pe(val) : hl(val)) + '</span>';
     };
     var h = '';
     h += '<h2 class="dt">' + (ed ? tIn('title', t.title, 'wfill tcen', ' aria-label="계약서 제목"') : esc(t.title)) + '</h2>';
-    if (ed || t.sub) h += '<p class="tsub">' + (ed ? tIn('sub', t.sub, 'wfill tcen', ' aria-label="부제목" placeholder="부제목 (비워도 됩니다)"') : (pdf ? esc(t.sub) : hl(t.sub))) + '</p>';
+    if (ed || t.sub) h += '<p class="tsub">' + (ed ? tIn('sub', t.sub, 'wfill tcen', ' aria-label="부제목" placeholder="부제목 (비워도 됩니다)"') : (pdf ? pe(t.sub) : hl(t.sub))) + '</p>';
     h += '<div class="parties tparties">';
     h += '<div class="party"><span class="who">' + (ed ? tIn('gapWho', t.gapWho, 'w8', ' aria-label="갑 명칭"') : esc(t.gapWho)) + '</span>' + rowsHtml(t, 'gap', mode, pdf) + '</div>';
     h += '<div class="party"><span class="who">' + (ed ? tIn('eulWho', t.eulWho, 'w8', ' aria-label="을 명칭"') : esc(t.eulWho)) + '</span>' + rowsHtml(t, 'eul', mode, pdf) + '</div>';
     h += '</div>';
+    if (t.info) h += '<div class="tinfo"><p class="tbh"><b class="h">' + (ed ? tIn('infoTitle', t.infoTitle, 'w8', ' aria-label="표 제목"') : esc(t.infoTitle || '')) + '</b></p>' + rowsHtml(t, 'info', mode, pdf) + '</div>';
     h += '<p class="pre tintro">' + txt('intro', t.intro, '', 2) + '</p>';
     h += '<ol class="art">';
     t.arts.forEach(function (a, i) {
@@ -759,12 +993,14 @@ body { margin: 0; }
           '<button type="button" class="xbtn" data-op="delart" data-i="' + i + '" aria-label="제' + (i + 1) + '조 삭제">✕</button></span></div>';
         h += '<li class="tart">' + head + tTa('arts.' + i + '.b', a.b, 1) + '</li>';
       } else {
-        h += '<li class="tart">' + head + ' <span class="tb">' + (pdf ? esc(a.b) : hl(a.b)) + '</span></li>';
+        h += '<li class="tart">' + head + ' <span class="tb">' + (pdf ? pe(a.b) : hl(a.b)) + '</span></li>';
       }
     });
     h += '</ol>';
     if (ed) h += '<button type="button" class="linkbtn addart" data-op="addart">+ 조항 추가</button>';
-    h += '<p class="closing">' + txt('closing', t.closing, '', 2) + '</p>';
+    if (t.notes) h += blocksHtml(t, 'notes', mode);
+    if (t.cks) h += '<div class="tcks">' + chkHtml(null, '', t.cks, 'cks', mode, false) + '</div>';
+    if (ed || t.closing) h += '<p class="closing">' + txt('closing', t.closing, '', 2) + '</p>';
     var dpart = function (key, cls) { return !pdf && (REQ.mode !== 'recv' || !t[key]) ? tIn(key, t[key], cls + ' tdate', ' inputmode="numeric" data-fmt2="' + (key === 'dy' ? 'year' : 'num2') + '"') : '<span class="tv">' + esc(t[key]) + '</span>'; };
     h += '<div class="date">' + dpart('dy', 'w4') + '.' + dpart('dm', 'w2') + '.' + dpart('dd', 'w2') + '.</div>';
     var gapName = (t.gap[0] && t.gap[0].v) || '';
@@ -772,6 +1008,30 @@ body { margin: 0; }
     h += '<div class="party"><div class="repline">' + (ed ? tIn('signGap', t.signGap, 'w4', ' aria-label="갑 서명란 표시"') : '<span>' + esc(t.signGap) + '</span>') + '<span class="tv">' + esc(gapName) + '</span><span class="sigslot" data-slot="' + k + '_gap"></span></div></div>';
     h += '<div class="party"><div class="repline">' + (ed ? tIn('signEul', t.signEul, 'wsign', ' aria-label="을 서명란 표시"') : '<span class="tv">' + esc(t.signEul) + '</span>') + '<span class="sigslot" data-slot="' + k + '_eul"></span></div></div>';
     h += '</div>';
+    if (t.co) {
+      h += '<div class="tco"><p class="tbh"><b class="h">' + (ed ? tIn('coTitle', t.coTitle, 'w8', ' aria-label="공동상속인 제목"') : esc(t.coTitle || '')) + '</b></p>';
+      h += '<p class="tb">' + txt('coIntro', t.coIntro, '', 2) + '</p>';
+      t.co.forEach(function (r, i) {
+        var id = k + '_co_' + r.id; SLOT_LABEL[id] = '공동상속인 ' + (r.n || (i + 1));
+        var f = function (key, ph, cls) { return pdf ? '<span class="fixedv">' + esc(r[key]) + '</span>' : tIn('co.' + i + '.' + key, r[key], cls, ' placeholder="' + ph + '" aria-label="공동상속인 ' + (i + 1) + ' ' + ph + '"' + (key === 'tel' ? ' inputmode="tel" autocomplete="off"' : '')); };
+        h += '<div class="corow"><span class="mut">' + (i + 1) + '</span>' + f('n', '성명', 'w6') + f('rel', '피상속인과의 관계', 'w8') + f('tel', '연락처', 'w8') +
+          '<span class="sigslot" data-slot="' + id + '"></span>' + (pdf ? '' : '<button type="button" class="xbtn" data-op="delco" data-i="' + i + '" aria-label="공동상속인 ' + (i + 1) + ' 지우기">✕</button>') + '</div>';
+      });
+      if (!pdf) h += '<button type="button" class="linkbtn" data-op="addco">+ 공동상속인 추가</button>';
+      h += '</div>';
+    }
+    if (t.after) h += blocksHtml(t, 'after', mode);
+    if (t.ax) h += axHtml(k, t, mode);
+    if (t.cs) {
+      var c = t.cs; SLOT_LABEL[k + '_cs'] = '개인정보 동의인';
+      h += '<div class="tcs"><h3 class="tcsh">' + (ed ? tIn('cs.title', c.title, 'wfill tcen', ' aria-label="동의서 제목"') : esc(c.title)) + '</h3>';
+      h += '<p class="tb">' + txt('cs.intro', c.intro, '', 2) + '</p>' + rowsHtml(t, 'cs.rows', mode, pdf);
+      c.checks.forEach(function (x, i) {
+        var box = pdf ? '<span class="pg">' + (x.ok ? '■' : '□') + '</span>' : '<input type="checkbox" data-tpc="cs.checks.' + i + '.ok"' + (x.ok ? ' checked' : '') + '>';
+        h += '<div class="tchk"><label class="chk grp">' + box + ' ' + (ed ? tIn('cs.checks.' + i + '.t', x.t, 'wfill', ' aria-label="동의 문구"') : '<span>' + esc(x.t) + '</span>') + '</label></div>';
+      });
+      h += '<div class="repline tcssign"><span class="tv">' + esc(t.dy + '. ' + t.dm + '. ' + t.dd + '.') + '</span><span>' + esc(c.who || '동의인') + '</span><span class="tv">' + esc((t.gap[0] && t.gap[0].v) || '') + '</span><span class="sigslot" data-slot="' + k + '_cs"></span></div></div>';
+    }
     return h;
   }
   function growAll(root) { $$('textarea.tta', root).forEach(grow); }
@@ -780,8 +1040,9 @@ body { margin: 0; }
     var el = docEl(k); if (!el) return;
     var mode = tplMode(k);
     el.classList.toggle('editing', mode === 'edit');
+    ensureEul(k);
     el.innerHTML = renderTpl(k, mode);
-    [k + '_gap', k + '_eul'].forEach(function (id) { if (typeof paintSlot === 'function') paintSlot(id); });
+    tplSigIds(k).forEach(function (id) { if (typeof paintSlot === 'function') paintSlot(id); });
     if (!el.hidden) requestAnimationFrame(function () { growAll(el); });
     paintTplBar();
   }
@@ -811,7 +1072,9 @@ body { margin: 0; }
     if (el.dataset.fmt2 && FMT[el.dataset.fmt2]) el.value = FMT[el.dataset.fmt2](el.value);
     setPath(S.tpl[k], path, el.value);
     if (el.tagName === 'TEXTAREA') grow(el);
-    if (path === 'gap.0.v') { var nm = docEl(k).querySelector('.tsign .party .tv'); if (nm) nm.textContent = el.value; }
+    if (path === 'gap.0.v') $$('.tsign .party .tv, .tcssign .tv:nth-of-type(3)', docEl(k)).forEach(function (nm, ix) { if (ix === 0 || nm.closest('.tcssign')) nm.textContent = el.value; });
+    if (path === 'gap.0.v') $$('.gapnm', docEl(k)).forEach(function (nm) { nm.textContent = el.value; });
+    if (/^co\.\d+\.n$/.test(path)) { var ci = Number(path.split('.')[1]), r = S.tpl[k].co[ci]; if (r) SLOT_LABEL[k + '_co_' + r.id] = '공동상속인 ' + (el.value || ci + 1); }
     delete $('#mkLink').dataset.ok;
     if (/^(gap\.\d+\.l)$/.test(path)) { /* 이름이 바뀌면 다른 칸의 aria-label만 갱신 */ var v = docEl(k).querySelector('[data-tp="' + path.replace(/l$/, 'v') + '"]'); if (v) v.setAttribute('aria-label', el.value); }
     paintTplBar(); refresh();
@@ -820,8 +1083,14 @@ body { margin: 0; }
     var b = e.target.closest('[data-op]'); if (!b) return;
     var k = tplOf(b); if (!k) return;
     var t = S.tpl[k], i = Number(b.dataset.i), op = b.dataset.op;
-    if (op === 'addrow') t[b.dataset.arr].push({ l: '항목', v: '' });
-    else if (op === 'delrow') t[b.dataset.arr].splice(i, 1);
+    if (op === 'addrow') getPath(t, b.dataset.arr).push({ l: '항목', v: '' });
+    else if (op === 'delrow') getPath(t, b.dataset.arr).splice(i, 1);
+    else if (op === 'addx') t[b.dataset.arr].push({ h: '제목', b: '' });
+    else if (op === 'delx') { if (!confirm('"' + t[b.dataset.arr][i].h + '" 묶음을 지울까요?')) return; t[b.dataset.arr].splice(i, 1); }
+    else if (op === 'addck') getPath(t, b.dataset.arr).push({ t: '항목', ok: false });
+    else if (op === 'addtr') { var tb = getPath(t, b.dataset.arr); tb.rows.push(tb.cols.map(function () { return ''; })); }
+    else if (op === 'addco') t.co.push({ id: rid(), n: '', rel: '', tel: '' });
+    else if (op === 'delco') { delete S.sig[k + '_co_' + t.co[i].id]; t.co.splice(i, 1); }
     else if (op === 'addart') t.arts.push({ h: '조항 제목', b: '' });
     else if (op === 'delart') { if (!confirm('제' + (i + 1) + '조【' + t.arts[i].h + '】를 지울까요?')) return; t.arts.splice(i, 1); }
     else if (op === 'up' && i > 0) t.arts.splice(i - 1, 0, t.arts.splice(i, 1)[0]);
@@ -830,6 +1099,14 @@ body { margin: 0; }
     delete $('#mkLink').dataset.ok;
     paintTpl(k); refresh();
     if (op === 'addart') { var last = $$('[data-tp="arts.' + (t.arts.length - 1) + '.h"]', docEl(k))[0]; if (last) { last.focus(); last.select(); } }
+  });
+  document.addEventListener('change', function (e) {
+    var el = e.target, path = el.dataset && el.dataset.tpc;
+    if (!path) return;
+    var k = tplOf(el); if (!k) return;
+    setPath(S.tpl[k], path, el.checked);
+    if (/^ax\.\d+\.on$/.test(path)) { delete $('#mkLink').dataset.ok; paintTpl(k); }
+    refresh();
   });
   $('#tplLoad').onclick = function () {
     var k = S.doc; if (!isTpl(k)) return;
@@ -842,7 +1119,7 @@ body { margin: 0; }
   };
   $('#tplSaveMine').onclick = function () {
     var k = S.doc; if (!isTpl(k)) return;
-    var t = clone(S.tpl[k]); t.gap.forEach(function (r) { r.v = ''; }); delete t.dy; delete t.dm; delete t.dd;
+    var t = clone(S.tpl[k]); t.gap.forEach(function (r) { r.v = ''; }); (t.co || []).forEach(function (r) { r.n = r.rel = r.tel = ''; }); if (t.cs) t.cs.checks.forEach(function (c) { c.ok = false; }); clearCustomer(t, true); delete t.dy; delete t.dm; delete t.dd;
     try { localStorage.setItem(MINE + k, JSON.stringify(t)); $('#tplHint').textContent = '이 브라우저에 내 기본 양식으로 저장했습니다. 다음부터 이 내용으로 시작합니다. (갑의 인적사항은 저장하지 않습니다)'; }
     catch (err) { $('#tplHint').textContent = '이 브라우저에서는 저장할 수 없습니다.'; return; }
     setTimeout(paintTplBar, 2500);
@@ -887,6 +1164,57 @@ body { margin: 0; }
     return null;
   }
   function rawHash() { try { return String(location.hash || '').replace(/^#/, ''); } catch (e) { return ''; } }
+  /* ---------- 세무대리계약서 문구 편집 ----------
+     data-cx 가 붙은 문구(제목, 조항, 맺음말, 을 정보)는 사무소 화면에서 고칠 수 있습니다.
+     바꾼 문구만 S.cx 에 담아 링크로 보내고, 고객 화면은 그대로 보여 줍니다. */
+  var CX_KEY = 'dg_sign_cx_mine', CX_DEF = {};
+  S.cx = {};
+  $$('[data-cx]', $('#docContract')).forEach(function (el) { CX_DEF[el.dataset.cx] = el.textContent; });
+  function cxApply(src) {
+    S.cx = {};
+    Object.keys(CX_DEF).forEach(function (k) {
+      var v = src && typeof src[k] === 'string' ? src[k].slice(0, 5000) : null;
+      if (v != null && v !== CX_DEF[k]) S.cx[k] = v;
+      var el = $('[data-cx="' + k + '"]', $('#docContract')); if (el) el.textContent = v != null ? v : CX_DEF[k];
+    });
+    cxPaint();
+  }
+  function cxMine() { try { var o = JSON.parse(localStorage.getItem(CX_KEY) || 'null'); return o && typeof o === 'object' ? o : null; } catch (e) { return null; } }
+  function cxPaint() {
+    var on = $('#cxEdit').getAttribute('aria-pressed') === 'true', n = Object.keys(S.cx).length;
+    $('#cxSave').hidden = $('#cxReset').hidden = !on;
+    $('#cxHint').textContent = on ? '점선 칸의 문구를 바로 고치면 됩니다. 고친 문구는 링크와 PDF에 그대로 들어갑니다.' + (n ? ' (원래와 다른 곳 ' + n + '군데)' : '')
+      : (n ? '원래 계약서와 다른 문구가 ' + n + '군데 있습니다.' : '');
+  }
+  function cxSetEdit(on) {
+    $('#cxEdit').setAttribute('aria-pressed', on); $('#cxEdit').textContent = on ? '문구 고치기 끝내기' : '조항 문구 고치기';
+    $$('[data-cx]', $('#docContract')).forEach(function (el) {
+      if (on) { el.setAttribute('contenteditable', 'plaintext-only'); if (el.contentEditable !== 'plaintext-only') el.setAttribute('contenteditable', 'true'); el.setAttribute('spellcheck', 'false'); }
+      else el.removeAttribute('contenteditable');
+    });
+    cxPaint();
+  }
+  $('#docContract').addEventListener('input', function (e) {
+    var el = e.target.closest && e.target.closest('[data-cx]'); if (!el) return;
+    var k = el.dataset.cx, v = el.innerText.replace(/\n$/, '');
+    if (v === CX_DEF[k]) delete S.cx[k]; else S.cx[k] = v;
+    delete $('#mkLink').dataset.ok; cxPaint();
+  });
+  $('#docContract').addEventListener('paste', function (e) {
+    var el = e.target.closest && e.target.closest('[data-cx]'); if (!el || el.contentEditable === 'plaintext-only') return;
+    e.preventDefault(); var t = (e.clipboardData || window.clipboardData).getData('text'); document.execCommand('insertText', false, t);
+  });
+  $('#cxEdit').onclick = function () { cxSetEdit($('#cxEdit').getAttribute('aria-pressed') !== 'true'); };
+  $('#cxSave').onclick = function () {
+    try { localStorage.setItem(CX_KEY, JSON.stringify(S.cx)); $('#cxHint').textContent = '이 브라우저에 내 기본 문구로 저장했습니다. 다음부터 이 문구로 시작합니다.'; } catch (e) { $('#cxHint').textContent = '이 브라우저에서는 저장할 수 없습니다.'; }
+  };
+  $('#cxReset').onclick = function () {
+    if (!confirm('세무대리계약서 문구를 원래대로 되돌릴까요? (저장해 둔 내 기본 문구도 지웁니다)')) return;
+    try { localStorage.removeItem(CX_KEY); } catch (e) {}
+    cxApply({}); delete $('#mkLink').dataset.ok;
+  };
+  cxApply(cxMine() || {});
+
   function applyRequest(r) {
     if (!r) return;
     var p = r.p;
@@ -895,6 +1223,7 @@ body { margin: 0; }
     if (p.t) { var t = new Date(p.t); if (!isNaN(t)) S.sig.c_eul.at = t; }
     REQ.expired = !!(p.e && TODAY > p.e);
     showSpecial(typeof p.x === 'string' ? p.x : '');
+    cxApply(p.cx && typeof p.cx === 'object' ? p.cx : {});
     if (p.tp && typeof p.tp === 'object') TPL_KEYS.forEach(function (k) {
       var t = p.tp[k];
       if (t && Array.isArray(t.arts) && Array.isArray(t.gap) && Array.isArray(t.eul)) S.tpl[k] = Object.assign(clone(TPL[k].presets[0].data), t);
@@ -922,6 +1251,7 @@ body { margin: 0; }
     var p = { d: docs, f: f, e: e, i: rid(), t: new Date().toISOString() };
     var sp = $('#lkSpecial').value.trim().slice(0, 1500);
     if (sp && docs.indexOf('contract') >= 0) p.x = sp;
+    if (docs.indexOf('contract') >= 0 && Object.keys(S.cx).length) p.cx = S.cx;
     docs.forEach(function (d) { if (isTpl(d)) { p.tp = p.tp || {}; p.tp[d] = tplForLink(d); } });
     return { url: ART_URL + '#v1.' + b64u(JSON.stringify(p)), p: p, n: n };
   }
@@ -1004,8 +1334,8 @@ body { margin: 0; }
     var el = $('[data-k="' + key + '"]');
     return el ? validVal(el) : true;
   }
-  /* 사무소 화면의 편집형 계약서는 빈 칸·서명이 남아도 초안 PDF로 받을 수 있습니다. 고객 화면은 다 채워야 합니다. */
-  function canPdf(doc, st) { return st.done || (isTpl(doc) && REQ.mode !== 'recv'); }
+  /* 사무소 화면에서는 모든 서류를 빈 칸·서명이 남은 그대로 PDF로 받을 수 있습니다(출력해서 직접 서명받는 용도). 고객 화면은 다 채워야 합니다. */
+  function canPdf(doc, st) { return st.done || REQ.mode !== 'recv'; }
   function status(doc) {
     if (isTpl(doc)) return tplStatus(doc);
     var need = [], sigs = [];
@@ -1046,6 +1376,7 @@ body { margin: 0; }
       var st = status(doc);
       if (isTpl(doc)) {
         st.need.forEach(function (k) {
+          if (k.indexOf('chk:') === 0) { $$('[data-tpc="' + k.slice(4) + '"]', docEl(doc)).forEach(function (el) { var g = el.closest('.grp'); if (g) g.classList.add('need'); }); return; }
           var sel = k === 'date' ? '.tdate' : '[data-tp="' + k + '"]';
           $$(sel, docEl(doc)).forEach(function (el) { if (!el.value) el.classList.add('need'); });
         });
@@ -1072,7 +1403,7 @@ body { margin: 0; }
       var st = status(doc), b = $('[data-pdf="' + doc + '"]'), h = $('[data-pdfhint="' + doc + '"]');
       if (!b || b.dataset.busy) return;
       b.disabled = !canPdf(doc, st);
-      h.textContent = st.done ? '' : '빈 칸 ' + st.need.length + '개, 서명 ' + st.sigs.length + '개가 남아 있습니다.' + (b.disabled ? '' : ' 빈 칸 그대로도 저장할 수 있습니다.');
+      h.textContent = st.done ? '' : '빈 칸 ' + st.need.length + '개, 서명 ' + st.sigs.length + '개가 남아 있습니다.' + (b.disabled ? '' : ' 빈 칸 그대로 출력해서 직접 서명을 받을 수도 있습니다.');
     });
     var sb = $('#submitBtn');
     if (sb && !sb.dataset.busy && !sb.dataset.done) {
@@ -1230,6 +1561,7 @@ body { margin: 0; }
     $('#legend').hidden = isTpl(d) && REQ.mode !== 'recv' && !S.tplView;
     if (isTpl(d)) paintTpl(d); else paintTplBar();
     $('#pullBtn').hidden = d !== 'cms' || (REQ.mode === 'recv' && REQ.p.d.length < 2);
+    $('#cxBar').hidden = d !== 'contract' || REQ.mode === 'recv';
     refresh();
   }
   ALLDOCS.forEach(function (x) { var tb = document.getElementById(DOCS[x].tab); if (tb) tb.onclick = function () { showDoc(x); }; });
@@ -1325,10 +1657,10 @@ body { margin: 0; }
       }
       el.replaceWith(sp);
     });
-    $$('.sigslot', c).forEach(function (sl) { var img = sl.querySelector('img'); sl.innerHTML = ''; if (img) { img.className = 'sigimg'; sl.appendChild(img); } });
+    $$('.sigslot', c).forEach(function (sl) { var img = sl.querySelector('img'); sl.innerHTML = ''; if (img) { img.className = 'sigimg'; sl.appendChild(img); } else sl.innerHTML = '<span class="sigph">(서명 또는 인)</span>'; });
   }
   function auditRows(doc, hash) {
-    var f = S.f, rows = [], sigIds = isTpl(doc) ? [doc + '_gap', doc + '_eul'] : doc === 'contract' ? ['c_gap', 'c_eul'] : (sameMode() ? ['m_app'] : ['m_app', 'm_holder']);
+    var f = S.f, rows = [], sigIds = isTpl(doc) ? tplSigIds(doc) : doc === 'contract' ? ['c_gap', 'c_eul'] : (sameMode() ? ['m_app'] : ['m_app', 'm_holder']);
     var who = isTpl(doc) ? (S.tpl[doc].gap[0] || {}).v : doc === 'contract' ? f.c_rep : (f.m_applicant || f.m_holder);
     rows.push(['서식', DOCNAME[doc]]);
     rows.push(['요청 번호', REQ.p ? REQ.p.i : '링크 없이 직접 작성']);
@@ -1397,6 +1729,7 @@ body { margin: 0; }
     var out = {}, pre = doc === 'contract' ? 'c_' : 'm_';
     Object.keys(S.f).forEach(function (k) { if (k.indexOf(pre) === 0) out[k] = S.f[k]; });
     if (doc === 'contract' && REQ.p && REQ.p.x) out.special = REQ.p.x;
+    if (doc === 'contract' && Object.keys(S.cx).length) out.cx = S.cx;
     return out;
   }
   async function buildPdf(doc) {
@@ -1407,14 +1740,17 @@ body { margin: 0; }
       if (isTpl(doc)) {
         cl = document.createElement('article'); cl.className = root.className.replace(/\bediting\b/, '');
         cl.innerHTML = renderTpl(doc, 'pdf');
-        [doc + '_gap', doc + '_eul'].forEach(function (id) { var sl = cl.querySelector('.sigslot[data-slot="' + id + '"]'); if (!sl) return; sl.innerHTML = S.sig[id] ? '<img class="sigimg" alt="" src="' + S.sig[id].img + '">' : '<span class="tv">(서명 또는 인)</span>'; });
+        tplSigIds(doc).forEach(function (id) { var sl = cl.querySelector('.sigslot[data-slot="' + id + '"]'); if (!sl) return; sl.innerHTML = S.sig[id] ? '<img class="sigimg" alt="" src="' + S.sig[id].img + '">' : '<span class="tv">(서명 또는 인)</span>'; });
       } else cl = root.cloneNode(true);
+      $$('[contenteditable]', cl).forEach(function (e) { e.removeAttribute('contenteditable'); });
       cl.removeAttribute('hidden'); cl.removeAttribute('id'); cl.classList.add('pdfmode'); stage.appendChild(cl);
       staticize(cl);
-      var sigs = {}; (isTpl(doc) ? [doc + '_gap', doc + '_eul'] : doc === 'contract' ? ['c_gap', 'c_eul'] : ['m_app', 'm_holder']).forEach(function (id) { if (S.sig[id]) sigs[id] = S.sig[id].img; });
+      var sigs = {}; (isTpl(doc) ? tplSigIds(doc) : doc === 'contract' ? ['c_gap', 'c_eul'] : ['m_app', 'm_holder']).forEach(function (id) { if (S.sig[id]) sigs[id] = S.sig[id].img; });
       var hash = await sha256hex(JSON.stringify({ doc: doc, f: pickFields(doc), sig: sigs }));
       var audit = null;
-      cl.appendChild(auditFoot(doc, hash));
+      /* 고객 서명이 하나도 없으면(손으로 서명받을 빈 양식) 전자서명 기록은 붙이지 않습니다. */
+      var custSig = Object.keys(sigs).some(function (id) { return !OFFICE_SIG[id]; });
+      if (custSig) cl.appendChild(auditFoot(doc, hash));
       if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
       await new Promise(function (r) { setTimeout(r, 350); });
       var pdf = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', compress: true }), state = { used: false };
