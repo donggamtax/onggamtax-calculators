@@ -118,7 +118,7 @@ var TAX_COLS=[["prio","중요도","sel"],["name","업체명","auto"],["owner","�
 var TAX_NOTES=["정확하지 않아도 됨","1~8월 매출액 기준, 단 판매대행 있는 경우 1~9월 기준으로 예측","인건비는 전표입력, 매출과 매출원가, 감가상각비는 전표입력 안 해도 됨. 예측 자료에는 반영","매출/매입 확인해서 세금 많이 나올 곳을 우선 작업"];
 function isTax(){var l=curList();return !!l&&l.kind==="tax"}
 function isCal(){var l=curList();return !!l&&l.kind==="cal"}
-var CAL_COLS=[["name","상호","auto"],["cnt","개수","num"],["owner","담당자","auto"],["zip","우편번호","text"],["addr","주소","text"],["pack","포장여부","mark"],["ship","배송완료","date"],["rem","비고","text"]].map(function(c){return {k:c[0],l:c[1],t:c[2]}});
+var CAL_COLS=[["name","상호","auto"],["cnt","개수","num"],["owner","담당자","auto"],["zip","우편번호","text"],["addr","주소","text"],["ship","배송완료","date"],["rem","비고","text"]].map(function(c){return {k:c[0],l:c[1],t:c[2]}});
 var VAT_COLS=DEF_COLS.concat([{k:"rem",l:"비고",t:"text"}]);
 function isVat(){var l=curList();return !!l&&l.kind==="vat"}
 function defCols(){return isTax()?TAX_COLS:isCal()?CAL_COLS:isVat()?VAT_COLS:DEF_COLS}
@@ -140,7 +140,8 @@ function okA(d){return !!d.appr&&d.appr!=="반려"}
 function isDone(d){return isTax()?!!d.work:isCal()?!!d.ship:!!(d.deliv||d.done)}
 var PRIV={fee:1,paid:1,tinv:1};
 function isAdmin(){return !!S.canDelete}
-function rawCols(){var l=curList();return (l&&l.cols&&l.cols.length)?addNewCols(l.cols):defCols()}
+/* 달력 발송대장은 포장여부를 쓰지 않는다(예전에 저장된 열 구성에 남아 있어도 숨김) */
+function rawCols(){var l=curList(),r=(l&&l.cols&&l.cols.length)?addNewCols(l.cols):defCols();return isCal()?r.filter(function(c){return c.k!=="pack"}):r}
 function cols(){var r=rawCols();return isAdmin()?r:r.filter(function(c){return !PRIV[c.k]})}
 /* 수수료 등을 못 보는 사람이 열을 고쳐도 숨은 열은 그대로 유지한다 */
 function keepPriv(next){
@@ -295,16 +296,16 @@ function summaryCal(rows){
   var ps=S.people.slice(),extra={};rows.forEach(function(r){var o=r.c.owner||"(미지정)";if(S.people.indexOf(o)<0)extra[o]=1});
   ps=ps.concat(Object.keys(extra));
   var q=function(r){return Number(r.d.cnt)||0};
-  var tot={n:0,q:0,pk:0,sh:0},h='';
+  var tot={n:0,q:0,sh:0},h='';
   var body='';
   ps.forEach(function(p){
     var rs=rows.filter(function(r){return (r.c.owner||"(미지정)")===p});if(!rs.length)return;
-    var qq=0,pk=0,sh=0;rs.forEach(function(r){var x=q(r);qq+=x;if(r.d.pack)pk+=x;if(r.d.ship)sh+=x});
-    tot.n+=rs.length;tot.q+=qq;tot.pk+=pk;tot.sh+=sh;
-    body+='<tr><td class="l">'+esc(p)+'</td><td>'+rs.length+'</td><td>'+qq+'</td><td>'+pk+'</td><td>'+sh+'</td><td>'+(qq-sh)+'</td></tr>';
+    var qq=0,sh=0;rs.forEach(function(r){var x=q(r);qq+=x;if(r.d.ship)sh+=x});
+    tot.n+=rs.length;tot.q+=qq;tot.sh+=sh;
+    body+='<tr><td class="l">'+esc(p)+'</td><td>'+rs.length+'</td><td>'+qq+'</td><td>'+sh+'</td><td>'+(qq-sh)+'</td></tr>';
   });
-  h='<table class="sm"><caption>발송할 총 개수 <b>'+tot.q+'</b>개 <span>· 포장 '+tot.pk+'개 · 배송완료 '+tot.sh+'개 · 남은 '+(tot.q-tot.sh)+'개 (거래처 '+tot.n+'곳)</span></caption><tr><th>담당자</th><th>거래처</th><th>발송 개수</th><th>포장</th><th>배송완료</th><th>남은 개수</th></tr>'+body;
-  h+='<tr><th>합계</th><th>'+tot.n+'</th><th>'+tot.q+'</th><th>'+tot.pk+'</th><th>'+tot.sh+'</th><th>'+(tot.q-tot.sh)+'</th></tr></table>';
+  h='<table class="sm"><caption>발송할 총 개수 <b>'+tot.q+'</b>개 <span>· 배송완료 '+tot.sh+'개 · 남은 '+(tot.q-tot.sh)+'개 (거래처 '+tot.n+'곳)</span></caption><tr><th>담당자</th><th>거래처</th><th>발송 개수</th><th>배송완료</th><th>남은 개수</th></tr>'+body;
+  h+='<tr><th>합계</th><th>'+tot.n+'</th><th>'+tot.q+'</th><th>'+tot.sh+'</th><th>'+(tot.q-tot.sh)+'</th></tr></table>';
   return h;
 }
 function summaryTax(rows){
