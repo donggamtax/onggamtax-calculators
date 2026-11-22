@@ -191,6 +191,7 @@ body:has(.app[data-wide="1"]) .wrap{max-width:1700px}
 .side{display:flex;flex-direction:column;gap:10px;font-size:12px}
 .sbox{border:1px solid var(--line);border-radius:8px;padding:8px}
 .sbox .sh{font-weight:700;font-size:12px;margin-bottom:6px}
+.dflags{display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px;margin-top:2px;font-size:11px;font-weight:400}.dflags select{font-size:11px;padding:0 2px;width:auto;min-width:0;height:auto}.dflags input[type=checkbox]{width:13px;height:13px;margin:0;flex:none}.dfl{display:inline-flex;align-items:center;gap:2px;white-space:nowrap}.dflags .dq{color:#c77700}.tx.mt th{text-align:left;font-weight:400}.tx.mt td{text-align:right;padding-right:8px}.tx.mt tr.cut td{color:#d62d2d;font-weight:700}.mtw{margin-top:6px;padding:6px 8px;border-radius:6px;background:#fff4e0;color:#8a4b00;font-size:11.5px;line-height:1.45}
 .sm th,.sm td{font-size:11.5px;padding:2px 3px}
 .sm input{font-size:11.5px;padding:2px 3px;min-width:0;width:100%}
 .sm td.nm{min-width:96px;width:36%}.sm textarea.wn{min-height:0;height:auto;resize:none;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.3;field-sizing:content}.sm td.x{width:22px;text-align:center}
@@ -251,6 +252,7 @@ textarea::placeholder{color:transparent!important}
 }
 </style>
 <script src="config.js"></script>
+<script src="tax-engine.js"></script>
 <script>if(/[?&]embed=1/.test(location.search))document.documentElement.dataset.embed="1"</script>
 </head>
 <body>
@@ -626,6 +628,26 @@ function calcTax(base,tbl){if(!(base>0))return 0;for(var i=0;i<tbl.length;i++){i
 function nvk(P,k){var x=val(P+k);if(x===""||x==null)return null;if(String(x).trim()==="-")return 0;var n=Number(String(x).replace(/,/g,""));return isNaN(n)?null:n}
 function fmtI(n){return (Math.round(n)||0).toLocaleString("en-US")}
 function yearOf(name){var m=String(name).match(/\d{4}/);return m?+m[0]:2026}
+/* 세액공제·감면 한 줄의 성격: 직접 바꾼 값(dk 종류, dm 최저한세 대상, dg 농특세 대상)이 없으면 항목명으로 정한 기본값 */
+function dedItem(P,i,isSME){
+  var nm=val(P+"dn"+i,DED_NAMES[i]||""),df=TaxEngine.defaults(nm,isSME),f=function(s,def){var v=val(P+s+i);return v===""?def:v==="1"};
+  return {i:i,name:nm,kind:val(P+"dk"+i)||df.kind,min:f("dm",df.min),nong:f("dg",df.nong),known:df.known,law:df.law,note:df.note};
+}
+var SME_OPT=[["sme","중소기업 (7%)"],["g1","중소기업 졸업 후 3년 이내 (8%)"],["g2","졸업 후 4~5년차 (9%)"],["gen","일반기업 (10~17%)"]];
+function mtBox(res,isCorp){ /* 예측 열 기준 최저한세·농특세 계산 내역 */
+  var e=res.I.eng,f=fmtI,row=function(a,b,c){return '<tr'+(c?' class="'+c+'"':'')+'><th>'+a+'</th><td class="c cc">'+b+'</td></tr>'};
+  return '<table class="ht tx sm mt">'+
+   row(isCorp?"산출세액":"사업소득분 산출세액"+(e.share<1?' <span class="sub">('+(e.share*100).toFixed(1)+'%)</span>':''),f(e.bizTax))+
+   row("최저한세액"+(isCorp?' <span class="sub">(과세표준×'+({sme:"7%",g1:"8%",g2:"9%",gen:"10~17%"})[res.sme]+')</span>':' <span class="sub">(3천만원 이하 35%·초과 45%)</span>'),f(e.minTax))+
+   row("최저한세 대상 공제·감면",f(e.subjSum))+
+   row("최저한세로 못 받는 금액",f(e.minCut),e.minCut>0?"cut":"")+
+   (e.shortCut>0?row("세액이 모자라 못 받는 금액",f(e.shortCut),"cut"):'')+
+   (e.carry>0?row('<span class="sub">└ 이월공제 가능(§144, 10년)</span>',f(e.carry)):'')+
+   row("실제 적용 공제·감면",f(e.allowed),"keyr")+
+   row("농특세 과세대상 감면액",f(e.nongBase))+
+   row("농어촌특별세 (×20%)",f(e.nong),"keyr")+'</table>'+
+   res.warn.map(function(w){return '<div class="mtw">⚠ '+esc(w)+'</div>'}).join("");
+}
 function taxCompute(P,yr,isCorp){
   var R=function(k){var n=nvk(P,k);return n===null?0:n},O=function(k,def){var n=nvk(P,k);return n===null?def:n};
   var months=Math.max(1,Math.min(12,nvk(P,"months")||9));
@@ -634,6 +656,7 @@ function taxCompute(P,yr,isCorp){
   var hid={};(val(P+"hid")||"").split(",").forEach(function(h){if(h)hid[h]=1});
   OPT_ROWS.forEach(function(o){if((val(P+"opt")||"").split(",").indexOf(o)<0)hid[o]=1});
   var xl=(val(P+"xl")||"").split(",").filter(Boolean),z=function(id,v){return hid[id]?0:v};
+  var sme=isCorp?(val(P+"sme")||"sme"):"sme",items=dl.map(function(i){return dedItem(P,i,sme==="sme")});
   var B={ids:bz,rev:0,cogs:0,sga:0,inc:0};
   bz.forEach(function(i){var r=R("b"+i+"|rev"),g=R("b"+i+"|cogs"),a=R("b"+i+"|sga"),n=O("b"+i+"|inc",r-g-a);B["inc"+i]=n;B.rev+=r;B.cogs+=g;B.sga+=a;B.inc+=n});
   function build(c,y,rawMain,mp,dp){
@@ -655,18 +678,23 @@ function taxCompute(P,yr,isCorp){
     x.tax=O(k("tax"),calcTax(x.base,tbl(y)));
     x.dsum=0;
     dl.forEach(function(i){var v=dp?O(k("d"+i),dp["d"+i]||0):R(k("d"+i));x["d"+i]=v;x.dsum+=v});
-    x.credit=z("credit",O(k("credit"),x.dsum));
-    x.min=dp?O(k("min"),dp.min):R(k("min"));
-    x.dec=O(k("dec"),Math.max(x.tax-x.credit,x.min,0));
+    /* 최저한세·농특세: 세액공제·감면 항목별 성격(최저한세 대상/농특세 대상)을 보고 tax-engine.js가 계산한다 */
+    var bizI=Math.max(0,x.income+x.adj-x.loss),othI=Math.max(0,x.other-x.oexp);
+    x.eng=TaxEngine.compute({isCorp:isCorp,tax:x.tax,base:x.base,sme:sme,bizShare:bizI+othI>0?bizI/(bizI+othI):1,minOverride:nvk(P,k("min")),
+      items:items.map(function(it){return {name:it.name,kind:it.kind,min:it.min,nong:it.nong,amt:x["d"+it.i]}})});
+    x.min=x.eng.minTax;
+    var crOv=nvk(P,k("credit"));
+    x.credit=z("credit",crOv!==null?crOv:x.eng.allowed);
+    x.dec=O(k("dec"),hid.credit?x.tax:crOv!==null?Math.max(x.tax-crOv,0):x.eng.dec);
     x.local=z("local",O(k("local"),x.dec*0.1));
-    x.nong=z("nong",rawMain?R(k("nong")):O(k("nong"),mp.nong));
+    x.nong=z("nong",O(k("nong"),x.eng.nong));
     x.paid=z("paid",rawMain?R(k("paid")):O(k("paid"),mp.paid));
     x.pay=O(k("pay"),x.dec+x.local+x.nong-x.paid);
     x.ratio=x.rev?x.income/x.rev:0;
     return x;
   }
   var K=build("K",yr-1,true,null,null),J=build("J",yr,true,null,K),I=build("I",yr,false,J,K);
-  return {K:K,J:J,I:I,months:months,B:B,dl:dl,hid:hid,xl:xl};
+  return {K:K,J:J,I:I,months:months,B:B,dl:dl,hid:hid,xl:xl,items:items,sme:sme,warn:TaxEngine.warnings(items.map(function(it){return {name:it.name,amt:I["d"+it.i]}}))};
 }
 function taxCell(P,res,c,id,raw,isPct){
   var key=P+c+"|"+id,ov=val(key),shown;
@@ -682,9 +710,9 @@ function paperTax(id){
   var D=d(state.sel),c=CLIENTS.filter(function(x){return x.id===state.sel})[0],P="tax|"+id+"|",name=D.tps.filter(function(x){return x.id===id})[0].name;
   var isCorp=c.type==="법인",yr=yearOf(name),res=taxCompute(P,yr,isCorp),yy=function(n){return String(n).slice(2)+"년"};
   var rows=isCorp?
-   [["ratio","소득률"],["rev","수입금액"],["cogs","매출원가"],["sga","판매관리비 등"],["extra","추가경비"],["income","당기순이익"],["adj","세무조정"],["loss","이월결손금"],["dona","이월기부금"],["base","과세표준"],["tax","산출세액"],["credit","세액공제 및 감면"],["dec","결정세액"],["local","지방소득세"],["paid","기납부세액"],["nong","농특세(고용증대)"],["pay","납부할세액"]]:
-   [["ratio","소득률"],["rev","수입금액"],["cogs","매출원가"],["sga","판매관리비 등"],["extra","추가경비"],["income","사업소득금액"],["adj","세무조정"],["other","타소득금액"],["oexp","타소득경비"],["loss","이월결손금"],["dona","이월기부금"],["ded","종합소득공제"],["base","과세표준"],["tax","산출세액"],["credit","세액공제 및 감면"],["dec","결정세액"],["local","지방소득세"],["paid","기납부세액"],["nong","농특세(고용증대)"],["pay","납부할세액"]];
-  var RAWIDS={oexp:1,dona:1,rev:1,cogs:1,sga:1,extra:1,adj:1,other:1,loss:1,ded:1,paid:1,nong:1};
+   [["ratio","소득률"],["rev","수입금액"],["cogs","매출원가"],["sga","판매관리비 등"],["extra","추가경비"],["income","당기순이익"],["adj","세무조정"],["loss","이월결손금"],["dona","이월기부금"],["base","과세표준"],["tax","산출세액"],["credit","세액공제 및 감면"],["dec","결정세액"],["local","지방소득세"],["paid","기납부세액"],["nong","농어촌특별세"],["pay","납부할세액"]]:
+   [["ratio","소득률"],["rev","수입금액"],["cogs","매출원가"],["sga","판매관리비 등"],["extra","추가경비"],["income","사업소득금액"],["adj","세무조정"],["other","타소득금액"],["oexp","타소득경비"],["loss","이월결손금"],["dona","이월기부금"],["ded","종합소득공제"],["base","과세표준"],["tax","산출세액"],["credit","세액공제 및 감면"],["dec","결정세액"],["local","지방소득세"],["paid","기납부세액"],["nong","농어촌특별세"],["pay","납부할세액"]];
+  var RAWIDS={oexp:1,dona:1,rev:1,cogs:1,sga:1,extra:1,adj:1,other:1,loss:1,ded:1,paid:1};
   var hasB=res.B.ids.length>0;
   var DELOK={oexp:1,dona:1,ratio:1,cogs:1,sga:1,extra:1,adj:1,other:1,loss:1,ded:1,credit:1,local:1,paid:1,nong:1};
   var hiddenRows=rows.filter(function(r){return res.hid[r[0]]}),mainRows=rows.filter(function(r){return !res.hid[r[0]]});
@@ -709,10 +737,15 @@ function paperTax(id){
    '<div class="rowtools"><button type="button" class="mini add" data-txadd="x">+ 줄 추가(경비 항목)</button>'+(hiddenRows.length?'<span class="sub">뺀 줄 다시 넣기:</span>'+hiddenRows.map(function(r){return '<button type="button" class="mini add" data-txshow="'+r[0]+'">+ '+r[1]+'</button>'}).join(""):'')+'</div>'+
    '<div class="sub" style="margin-top:4px">빨간 테두리가 '+yr+'년 예측입니다. 칸에 숫자를 직접 적으면 그 값이 쓰이고(노란색), 지우면 다시 자동 계산됩니다. 예측의 수입금액·매출원가·판관비는 가결산 ÷ 개월수 × 12 입니다. 줄 끝 "−"로 뺀 줄은 계산에서도 0으로 빠집니다.</div></div>'+
    '<div class="side"><div class="sbox"><div class="sh">세액공제·감면 입력</div><table class="ht tx sm dd"><tr><th style="width:38%">항목</th><th>예측</th><th>전년도</th><th class="x"></th></tr>'+
-   res.dl.map(function(i){return ny('<tr><td class="nm">'+wn(P+"dn"+i,"항목",DED_NAMES[i]||"")+'</td>'+taxCell(P,res,"I","d"+i,false)+taxCell(P,res,"K","d"+i,true)+'<td class="x"><button type="button" class="mini" data-txdel="d:'+i+'" title="이 줄 빼기">−</button></td></tr>')}).join("")+
+   res.items.map(function(it){var i=it.i,fk=function(s,on,lb,tt){return '<label class="dfl" title="'+esc(tt)+'"><input type="checkbox" data-txf="'+esc(P+s+i)+'"'+(on?' checked':'')+'>'+lb+'</label>'};
+     return ny('<tr><td class="nm">'+wn(P+"dn"+i,"항목",DED_NAMES[i]||"")+'<div class="dflags"><select data-k="'+esc(P+"dk"+i)+'" aria-label="감면/공제">'+["공제","감면"].map(function(o){return '<option'+(it.kind===o?' selected':'')+'>'+o+'</option>'}).join("")+'</select>'+
+       fk("dm",it.min,"최저","최저한세 적용 대상 (조특법 §132)"+(it.note?" · "+it.note:""))+fk("dg",it.nong,"농특","농어촌특별세 과세 대상 (농특세법 §5①1, 비과세 §4)")+
+       (it.law?'<span class="sub" title="항목명으로 자동 분류">'+esc(it.law)+'</span>':'<span class="sub dq">분류 확인</span>')+'</div></td>'+taxCell(P,res,"I","d"+i,false)+taxCell(P,res,"K","d"+i,true)+'<td class="x"><button type="button" class="mini" data-txdel="d:'+i+'" title="이 줄 빼기">−</button></td></tr>')}).join("")+
    '<tr class="keyr"><th>합계</th>'+["I","K"].map(function(cc){return '<td class="c cc" data-dsum="'+cc+'">'+fmtI(res[cc].dsum)+'</td>'}).join("")+'<td class="x"></td></tr>'+
-   ny('<tr><th>최저한세</th>'+taxCell(P,res,"I","min",false)+taxCell(P,res,"K","min",true)+'<td class="x"></td></tr>')+'</table>'+
-   '<button type="button" class="mini add" data-txadd="d">+ 항목 넣기</button><div class="sub">합계가 "세액공제 및 감면"에 들어갑니다. 예측은 전년도 금액을 따라갑니다.</div></div>'+
+   ny('<tr><th>최저한세</th>'+taxCell(P,res,"I","min",false)+taxCell(P,res,"K","min",false)+'<td class="x"></td></tr>')+'</table>'+
+   '<button type="button" class="mini add" data-txadd="d">+ 항목 넣기</button><div class="sub">항목마다 "최저"(최저한세 대상)·"농특"(농특세 대상)이 이름으로 자동 체크됩니다. 최저한세에 걸리는 만큼 빼고 남은 금액이 "세액공제 및 감면"에, 농특세 대상 금액의 20%가 "농어촌특별세"에 들어갑니다. 창업감면을 100% 받는 해는 "최저"를 풀어 주세요.</div></div>'+
+   '<div class="sbox"><div class="sh">최저한세·농특세 계산 ('+yr+'년 예측)</div>'+(isCorp?'<label class="inl" style="display:block;margin-bottom:4px">기업 구분 <select data-k="'+esc(P+"sme")+'">'+SME_OPT.map(function(o){return '<option value="'+o[0]+'"'+(res.sme===o[0]?' selected':'')+'>'+o[1]+'</option>'}).join("")+'</select></label>':'')+
+   '<div data-mtbox>'+mtBox(res,isCorp)+'</div><div class="sub">근거: 조특법 §132·§144, 조특령 §126⑤(공제 먼저, 다음 감면 순으로 배제), 농특세법 §4·§5, 국세청 소득세과-716(사업소득분 산출세액 안분)</div></div>'+
    (isCorp?'':'<div class="sbox"><div class="sh">사업자별 가결산 (사업자가 여러 개일 때)</div>'+
     (hasB?'<div class="bw"><table class="ht tx bz" style="min-width:'+(res.B.ids.length*96+150)+'px"><tr><th>구분</th>'+res.B.ids.map(function(i){var q="b"+i+"|";return '<th class="bh">'+wn(P+q+"nm","사업자")+'<button type="button" class="mini" data-txdel="b:'+i+'" title="이 사업자 빼기">−</button></th>'}).join("")+'<th>합계</th></tr>'+
      [["rev","매출"],["cogs","매출원가"],["sga","판관비"],["inc","사업소득"]].map(function(r){var f=r[0];
@@ -821,6 +854,7 @@ function refreshTax(){
       el.value=fmtI(res[pr[0]][pr[1]]);fitTaxIn(el);
     });
     p.querySelectorAll("[data-dsum]").forEach(function(td){td.textContent=fmtI(res[td.dataset.dsum].dsum)});
+    p.querySelectorAll("[data-mtbox]").forEach(function(b){b.innerHTML=mtBox(res,isCorp)});
     p.querySelectorAll('input[data-k$="|extra"]').forEach(function(el){var td=el.closest("td");if(td)td.classList.toggle("exr",(Number(String(el.value).replace(/,/g,""))||0)!==0)});
     p.querySelectorAll("[data-bsum]").forEach(function(td){td.textContent=fmtI(res.B[td.dataset.bsum])});
     p.querySelectorAll("td[data-krev]").forEach(function(td){td.textContent=fmtI(res.I.rev+res.I.other)});
@@ -953,12 +987,13 @@ document.addEventListener("change",function(e){
   if(t.dataset.cl==="tf"){var c4=clientById(state.sel);c4.tf=t.checked?1:0;drawList();drawDetail();return}
   if(t.dataset.cl==="type"||t.dataset.cl==="status"||t.dataset.cl==="svc"||t.dataset.cl==="owner"){var c3=CLIENTS.filter(function(x){return x.id===state.sel})[0];c3[t.dataset.cl]=t.value;state.setOpen=true;drawList();drawDetail();return}
   if(t.dataset.cmp){state.cmp[t.dataset.cmp]=t.value||null;drawDetail();return}
+  if(state.sel&&t.dataset.txf){setBatch(d(state.sel),[{k:t.dataset.txf,v:t.checked?"1":"0"}]);redrawAfter();return} /* 세액공제·감면 줄의 최저/농특 체크 */
   if(t.dataset.pname==="vp"){drawDetail();return} /* 회차 이름을 바꾸면 앞 기수 값이 이월되도록 서식을 다시 그린다 */
   if(state.sel&&t.dataset.ck&&t.checked&&/\|s2$/.test(t.dataset.ck)&&!APPROVER){t.checked=false;var sn=t.closest(".paper")&&t.closest(".paper").querySelector("[data-signnote]");if(sn)sn.textContent="대표세무사만 체크할 수 있습니다.";return}
   if(state.sel&&t.dataset.ck){d(state.sel).v[t.dataset.ck]=t.checked?"1":"";refreshProg();syncProgress(t.dataset.ck,t.checked)}
   else if(state.sel&&t.tagName==="SELECT"&&t.dataset.k){d(state.sel).v[t.dataset.k]=t.value;
     if(t.classList.contains("ox")){t.classList.toggle("ox-o",t.value==="O");t.classList.toggle("ox-x",t.value==="X")}
-    if(/^vat\|[^|]+\|kind$/.test(t.dataset.k))drawDetail();else refreshVat()}
+    if(/^vat\|[^|]+\|kind$/.test(t.dataset.k))drawDetail();else if(t.closest(".paper[data-taxp]")){refreshTax();touch()}else refreshVat()}
 });
 document.addEventListener("keydown",function(e){
   var t=e.target,k=e.key;
@@ -983,6 +1018,7 @@ document.addEventListener("focusout",function(e){
 document.addEventListener("focusout",function(e){if(e.target.closest&&e.target.closest(".paper[data-vp]"))setTimeout(refreshVat,0)});
 document.addEventListener("focusin",function(e){var t=e.target;if(t&&t.tagName==="INPUT"&&t.classList.contains("num")&&t.closest(".paper[data-taxp],.paper[data-vp]"))setTimeout(function(){if(document.activeElement===t)t.select()},0)});
 document.addEventListener("focusout",function(e){if(e.target.closest&&e.target.closest(".paper[data-taxp]"))setTimeout(refreshTax,0)});
+document.addEventListener("change",function(e){var t=e.target;if(t&&t.classList&&t.classList.contains("wn")&&/\|dn\d+$/.test(t.dataset.k||"")&&t.closest(".paper[data-taxp]"))setTimeout(drawDetail,0)}); /* 항목명이 바뀌면 최저/농특 기본 체크를 다시 그린다 */
 
 var selCells=[];
 function clearSel(){selCells.forEach(function(c){c.classList.remove("selc")});selCells=[]}
@@ -1559,7 +1595,7 @@ function exportBook(){
   })})});
   sheets.push(["법인세",[ch].concat(crows)]);
   // 6. 세금예측
-  var TR=[["rev","수입금액"],["cogs","매출원가"],["sga","판매관리비 등"],["extra","추가경비"],["income","사업소득금액(법인은 당기순이익)"],["adj","세무조정"],["other","타소득금액"],["oexp","타소득경비"],["loss","이월결손금"],["dona","이월기부금"],["ded","종합소득공제"],["base","과세표준"],["tax","산출세액"],["credit","세액공제 및 감면"],["dec","결정세액"],["local","지방소득세"],["paid","기납부세액"],["nong","농특세(고용증대)"],["pay","납부할세액"]];
+  var TR=[["rev","수입금액"],["cogs","매출원가"],["sga","판매관리비 등"],["extra","추가경비"],["income","사업소득금액(법인은 당기순이익)"],["adj","세무조정"],["other","타소득금액"],["oexp","타소득경비"],["loss","이월결손금"],["dona","이월기부금"],["ded","종합소득공제"],["base","과세표준"],["tax","산출세액"],["credit","세액공제 및 감면"],["dec","결정세액"],["local","지방소득세"],["paid","기납부세액"],["nong","농어촌특별세"],["pay","납부할세액"]];
   var th=BH.concat(["연도","가결산 개월수"]);
   TR.forEach(function(r){th.push(r[1]+" 예측",r[1]+" 가결산",r[1]+" 전년도")});
   th.push("공제·감면 입력 (항목: 예측/가결산/전년도)","추가한 경비 줄 (항목: 예측/가결산/전년도)","사업자별 가결산 (사업자: 매출/매출원가/판관비/사업소득)","뺀 줄","상담 메모");
