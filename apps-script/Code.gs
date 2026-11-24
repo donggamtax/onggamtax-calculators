@@ -85,6 +85,14 @@ function route(req) {
     case "progress.remove": return progressRemove(req);
     case "progress.import": return progressImport(req, who);
     case "progress.sync": return progressSync(req, who);
+    case "wh.months": return whMonths(who);
+    case "wh.get": return whGet(req);
+    case "wh.create": return whCreate(req);
+    case "wh.bulk": return whBulk(req, who);
+    case "wh.remove": return whRemove(req);
+    case "wh.cols": return whCols(req);
+    case "wh.notes": return whNotes(req);
+    case "wh.delete": return whDelete(req, who);
     case "leave.status": return leaveStatus(p);
     case "clients.load": return clientsLoad(req, who);
     case "template.save": return templateSave(req, who);
@@ -406,6 +414,168 @@ function progressSync(req, who) {
     }
     const d = {}; d[field] = req.on ? todayKst() : "";
     return { matched: true, list: l.title, data: prHide(prUpsert(l.id, cid, d), who) };
+  });
+}
+
+// ── 원천세: 월별 원천세 신고 체크리스트(예: 2026년 10월) ──────────
+// 시트 '원천세월' = 달 정의(열 구성·안내 문구), 시트 '원천세' = (달ID, 행ID, 순서, 기록 JSON). 업체 이름도 기록 안에 둔다(업체별 기장 명단과 따로 관리).
+// 다음 달을 만들면 전달 행을 복사한다. 열마다 복사 규칙(cp)이 있다: all=값 그대로, mark=해당없음 표시('-', '=')만, none=복사 안 함.
+const WM_SHEET = "원천세월", WR_SHEET = "원천세";
+const WH_TYPES = { text: 1, ox: 1, chk: 1, sel: 1, owner: 1 };
+const WH_CP = { all: 1, mark: 1, none: 1 };
+const WH_DEF_COLS = [
+  ["name", "업체명", "text", "", "all"], ["owner", "담당자", "owner", "", "all"], ["kind", "종류", "sel", "", "all"], ["cyc", "간격", "text", "", "all"], ["pay", "급여일", "text", "", "all"],
+  ["g1", "근로", "ox", "소득 구분", "all"], ["g2", "사업", "ox", "소득 구분", "all"], ["g3", "일용", "ox", "소득 구분", "all"], ["g4", "기타등", "ox", "소득 구분", "all"],
+  ["r1", "근로", "chk", "자료받은것", "mark"], ["r2", "사업", "chk", "자료받은것", "mark"], ["r3", "일용", "chk", "자료받은것", "mark"], ["r4", "기타등", "chk", "자료받은것", "mark"],
+  ["slip", "급여명세", "chk", "신고·납부", "mark"], ["file", "신고", "chk", "신고·납부", "mark"], ["local", "지방세", "chk", "신고·납부", "mark"], ["bill", "납부서전달", "chk", "신고·납부", "mark"],
+  ["s1", "사업", "chk", "간이지급명세", "mark"], ["s2", "일용", "chk", "간이지급명세", "mark"], ["s3", "기타", "chk", "간이지급명세", "mark"],
+  ["conf", "확인신고", "chk", "", "mark"], ["fin", "최종완료", "chk", "", "none"], ["memo", "비고", "text", "", "all"],
+].map(c => ({ k: c[0], l: c[1], t: c[2], g: c[3], cp: c[4] }));
+function wmSheet() { return progSheet(WM_SHEET, ["id", "제목", "열설정", "안내문구", "생성일시"]); }
+function wrSheet() { return progSheet(WR_SHEET, ["달ID", "행ID", "순서", "기록", "수정일시", "수정자"]); }
+function whTitle(id) { const m = String(id).match(/^(\d{4})-(\d{2})$/); return m ? m[1] + "년 " + Number(m[2]) + "월 원천세" : String(id); }
+function wmRows() {
+  const sh = wmSheet(), last = sh.getLastRow();
+  if (last < 2) return [];
+  return sh.getRange(2, 1, last - 1, 4).getValues().filter(r => r[0]).map((r, i) => {
+    let cols = null; try { const j = JSON.parse(String(r[2] || "")); if (Array.isArray(j) && j.length) cols = j; } catch (e) {}
+    let notes = []; try { const j = JSON.parse(String(r[3] || "")); if (Array.isArray(j)) notes = j.map(x => String(x)); } catch (e) {}
+    return { id: String(r[0]), title: whTitle(r[0]), cols: cols || WH_DEF_COLS, notes: notes, row: i + 2 };
+  });
+}
+function wmFind(id) { const m = wmRows().filter(x => x.id === id)[0]; if (!m) throw fail("없는 달입니다. 새로고침해 주세요.", 404); return m; }
+function whParse(v) { try { const d = JSON.parse(String(v || "{}")); return d && typeof d === "object" ? d : {}; } catch (e) { return {}; } }
+// 달 하나의 행 전체: [{ id, o, data, row(시트 행 번호) }]
+function wrAll(monthId) {
+  const sh = wrSheet(), last = sh.getLastRow(), out = [];
+  if (last < 2) return out;
+  sh.getRange(2, 1, last - 1, 4).getValues().forEach((r, i) => {
+    if (String(r[0]) === monthId && r[1]) out.push({ id: String(r[1]), o: Number(r[2]) || 0, data: whParse(r[3]), row: i + 2 });
+  });
+  return out;
+}
+function whMonths(who) {
+  const ms = wmRows(), sh = wrSheet(), last = sh.getLastRow(), cnt = {};
+  if (last >= 2) sh.getRange(2, 1, last - 1, 4).getValues().forEach(r => {
+    const id = String(r[0]); if (!id || !r[1]) return;
+    const c = cnt[id] || (cnt[id] = { n: 0, fin: 0 });
+    c.n++; if (String(whParse(r[3]).fin || "").trim()) c.fin++;
+  });
+  return { months: ms.map(m => ({ id: m.id, title: m.title, n: (cnt[m.id] || {}).n || 0, fin: (cnt[m.id] || {}).fin || 0 })), canDelete: progressAdmin(who), skins: runnerSkins() };
+}
+function whGet(req) {
+  const id = String(req.month || ""), m = wmFind(id);
+  return { month: { id: m.id, title: m.title, cols: m.cols, notes: m.notes }, rows: wrAll(id).map(r => ({ id: r.id, o: r.o, data: r.data })) };
+}
+function whKeyOk(k) { return /^[a-z][a-z0-9]{0,11}$/.test(k); }
+function whClean(patch) {
+  const out = {};
+  Object.keys(patch || {}).slice(0, 80).forEach(k => {
+    if (!whKeyOk(k)) return;
+    let v = String(patch[k] == null ? "" : patch[k]).slice(0, 500);
+    if (k === "name" || k === "owner") v = v.replace(/\s+/g, " ").trim().slice(0, 60);
+    out[k] = v; // JSON 문자열 안에 저장되므로(셀이 { 로 시작) 수식으로 해석되지 않는다
+  });
+  return out;
+}
+function whMerge(d, patch) { Object.keys(patch).forEach(k => { if (patch[k] === "") delete d[k]; else d[k] = patch[k]; }); return d; }
+function whNewId() { return "w" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+// 새 달 만들기. copyFrom이 있으면 그 달의 업체·열·안내 문구를 복사 규칙대로 가져온다.
+function whCreate(req) {
+  const y = Math.round(Number(req.year)), mo = Math.round(Number(req.month));
+  if (!(y >= 2000 && y <= 2100 && mo >= 1 && mo <= 12)) throw fail("연도와 월을 확인하세요.");
+  const id = y + "-" + ("0" + mo).slice(-2), from = String(req.copyFrom || "");
+  return withLock(() => {
+    const ms = wmRows();
+    if (ms.some(m => m.id === id)) throw fail("이미 있는 달입니다: " + whTitle(id));
+    let cols = WH_DEF_COLS, notes = [], rows = [];
+    if (from) {
+      const src = ms.filter(m => m.id === from)[0];
+      if (!src) throw fail("복사할 달이 없습니다. 새로고침해 주세요.", 404);
+      cols = src.cols; notes = src.notes;
+      const cp = {}; cols.forEach(c => { cp[c.k] = c.cp || "none"; });
+      rows = wrAll(from).sort((a, b) => a.o - b.o).map((r, i) => {
+        const d = {};
+        Object.keys(r.data).forEach(k => {
+          const v = String(r.data[k]), rule = k === "name" ? "all" : cp[k];
+          if (rule === "all" || (rule === "mark" && /^[-=]$/.test(v.trim()))) d[k] = v;
+        });
+        return [id, whNewId() + i, i + 1, JSON.stringify(d), new Date().toISOString(), ""];
+      });
+    }
+    wmSheet().appendRow([id, whTitle(id), JSON.stringify(cols), JSON.stringify(notes), new Date().toISOString()]);
+    if (rows.length) { const sh = wrSheet(); sh.getRange(sh.getLastRow() + 1, 1, rows.length, 6).setValues(rows); }
+    return { id: id, title: whTitle(id), copied: rows.length };
+  });
+}
+// 행 여러 개를 한 번에 고치거나 추가한다(한 칸 저장, 엑셀 가져오기, 범위 붙여넣기 모두 이것을 쓴다).
+// items: [{ id?, data }] — id가 없으면 새 행(업체명 필요). replace=true이면 기록을 통째로 바꾼다(엑셀 가져오기).
+function whBulk(req, who) {
+  const id = String(req.month || ""), items = (Array.isArray(req.items) ? req.items : []).slice(0, 800), replace = !!req.replace;
+  return withLock(() => {
+    wmFind(id);
+    const sh = wrSheet(), have = {}, now = new Date().toISOString(), saved = [];
+    let maxO = 0;
+    wrAll(id).forEach(r => { have[r.id] = r; if (r.o > maxO) maxO = r.o; });
+    const add = [];
+    items.forEach(it => {
+      const patch = whClean(it && it.data), rid = String(it && it.id || "");
+      if (rid && have[rid]) {
+        const r = have[rid], d = whMerge(replace ? {} : r.data, patch);
+        if (replace && !d.name && r.data.name) d.name = r.data.name;
+        r.data = d; sh.getRange(r.row, 4, 1, 3).setValues([[JSON.stringify(d), now, who || ""]]);
+        saved.push({ id: rid, o: r.o, data: d });
+      } else if (!rid) {
+        const d = whMerge({}, patch); if (!d.name) return;
+        const nid = whNewId() + add.length; maxO++;
+        add.push([id, nid, maxO, JSON.stringify(d), now, who || ""]); saved.push({ id: nid, o: maxO, data: d });
+      }
+    });
+    if (add.length) sh.getRange(sh.getLastRow() + 1, 1, add.length, 6).setValues(add);
+    return { rows: saved };
+  });
+}
+function whRemove(req) {
+  const id = String(req.month || ""), ids = {}; (Array.isArray(req.ids) ? req.ids : []).forEach(x => { ids[String(x)] = 1; });
+  return withLock(() => {
+    const sh = wrSheet(), rows = wrAll(id).filter(r => ids[r.id]).map(r => r.row).sort((a, b) => b - a);
+    rows.forEach(r => sh.deleteRow(r));
+    return { removed: rows.length };
+  });
+}
+function whCols(req) {
+  const id = String(req.month || ""), src = Array.isArray(req.cols) ? req.cols : null;
+  if (!src || !src.length || src.length > 60) throw fail("열 구성이 올바르지 않습니다.");
+  const seen = {}, cols = [];
+  src.forEach(c => {
+    const k = String(c && c.k || ""), l = String(c && c.l || "").trim().slice(0, 20), t = String(c && c.t || "chk"), g = String(c && c.g || "").trim().slice(0, 20), cp = String(c && c.cp || "none");
+    if (!whKeyOk(k) || seen[k]) return;
+    if (!l || !WH_TYPES[t] || !WH_CP[cp]) throw fail("열 이름과 종류를 확인하세요.");
+    seen[k] = 1; cols.push({ k: k, l: l, t: t, g: g, cp: k === "name" ? "all" : cp });
+  });
+  if (!seen.name) throw fail("업체명 열은 지울 수 없습니다.");
+  return withLock(() => { const m = wmFind(id); wmSheet().getRange(m.row, 3, 1, 1).setValues([[JSON.stringify(cols)]]); return { cols: cols }; });
+}
+function whNotes(req) {
+  const id = String(req.month || ""), src = Array.isArray(req.notes) ? req.notes : null;
+  if (!src || src.length > 30) throw fail("안내 문구가 올바르지 않습니다.");
+  const notes = src.map(x => String(x == null ? "" : x).trim().slice(0, 300)).filter(Boolean);
+  return withLock(() => { const m = wmFind(id); wmSheet().getRange(m.row, 4, 1, 1).setValues([[JSON.stringify(notes)]]); return { notes: notes }; });
+}
+// 달 삭제: 진도체크와 같이 스크립트 속성 PROGRESS_ADMINS에 적힌 사람만.
+function whDelete(req, who) {
+  if (!progressAdmin(who)) throw fail("달 삭제는 지정된 담당자만 할 수 있습니다.", 403);
+  const id = String(req.month || "");
+  return withLock(() => {
+    const m = wmRows().filter(x => x.id === id)[0];
+    const sh = wrSheet(), rows = wrAll(id).map(r => r.row).sort((a, b) => b - a);
+    let i = 0;
+    while (i < rows.length) { // 이어진 행은 한 번에 지운다 (아래쪽부터)
+      let j = i; while (j + 1 < rows.length && rows[j + 1] === rows[j] - 1) j++;
+      sh.deleteRows(rows[j], i === j ? 1 : rows[i] - rows[j] + 1); i = j + 1;
+    }
+    if (m) wmSheet().deleteRow(m.row);
+    return { ok: true };
   });
 }
 
