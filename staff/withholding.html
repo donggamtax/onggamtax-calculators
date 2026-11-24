@@ -88,8 +88,11 @@ table.tb button.rm{border:0;background:none;color:var(--muted);cursor:pointer;fo
 @keyframes cheer{0%,100%{transform:scale(1)}50%{transform:scale(1.25) rotate(8deg)}}
 @media (prefers-reduced-motion:reduce){.lane .rn{transition:none}.lane.run .rn .ch,.lane.fin .rn .ch,.lane .ch *{animation:none!important}}
 button.srt{border:0;background:none;color:inherit;font:inherit;cursor:pointer;padding:0;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}button.srt:hover{text-decoration:underline}
-table.tb td.ac{white-space:nowrap}table.tb button.mv{border:0;background:none;color:var(--muted);cursor:pointer;font-size:10px;padding:4px 3px}table.tb button.mv:hover{color:var(--accent)}
+table.tb td.ac{white-space:nowrap}table.sm button.mv{border:0;background:none;color:var(--muted);cursor:pointer;font-size:9px;padding:0 1px}table.sm button.mv:hover{color:var(--accent)}
+table.tb button.mv{border:0;background:none;color:var(--muted);cursor:pointer;font-size:10px;padding:4px 3px}table.tb button.mv:hover{color:var(--accent)}
 .sp{flex:1}
+table.tb .grip{cursor:grab;display:block;padding:4px 0;user-select:none}table.tb .grip:active{cursor:grabbing}
+table.tb tr.drag td{opacity:.45}table.tb tr.dropb td{box-shadow:inset 0 2px 0 var(--accent)}table.tb tr.dropa td{box-shadow:inset 0 -2px 0 var(--accent)}
 kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px;font-size:11.5px;background:var(--panel)}
 </style>
 <script src="config.js"></script>
@@ -153,12 +156,17 @@ function loadPeople(){return api("config").then(r=>{S.people=r.people||[]}).catc
 function loadMonth(id){return api("wh.get",{month:id}).then(r=>{S.month=r.month;S.rows=(r.rows||[]).map(x=>({id:x.id,o:x.o,d:x.data||{}}))})}
 function cols(){return (S.month&&S.month.cols)||[]}
 function rowById(id){return S.rows.find(r=>r.id===id)}
-function owners(){const o=S.people.slice();S.rows.forEach(r=>{const w=r.d.owner||"";if(w&&o.indexOf(w)<0)o.push(w)});return o}
+/* 담당자 순서: 표에 보이는 묶음 순서, 업체가 없는 직원은 뒤에 */
+function owners(){const o=[];ordered().filter(r=>!isPin(r)).forEach(r=>{const w=r.d.owner||"";if(w&&o.indexOf(w)<0)o.push(w)});S.people.forEach(w=>{if(o.indexOf(w)<0)o.push(w)});return o}
 /* 담당자별로 모으고(엑셀처럼), 같은 담당자 안에서는 넣은 순서대로 */
+/* 순서: 동감 세무회계(사무소 자체)는 항상 맨 위, 그다음 담당자별로 모아서(담당자 묶음은 그 담당자의 첫 업체 순서대로), 같은 담당자 안에서는 정해 둔 순서 */
+const PIN="동감세무회계";
+const isPin=r=>String(r.d.name||"").replace(/\s+/g,"")===PIN;
+/* 담당자별 표의 ▲▼로 묶음 순서를 바꾸면 순서 번호를 다시 매긴다(직원 이름은 소스에 두지 않는다) */
 function ordered(){
-  const first={};S.rows.slice().sort((a,b)=>a.o-b.o).forEach(r=>{const w=r.d.owner||"~";if(!(w in first))first[w]=r.o});
-  const pi=w=>{const i=S.people.indexOf(w);return i<0?1e6+(first[w]||0):i};
-  return S.rows.slice().sort((a,b)=>{const wa=a.d.owner||"~",wb=b.d.owner||"~";return wa===wb?a.o-b.o:(pi(wa)-pi(wb))||(wa<wb?-1:1)});
+  const first={};S.rows.forEach(r=>{if(isPin(r))return;const w=r.d.owner||"~";if(!(w in first)||r.o<first[w])first[w]=r.o});
+  const pi=w=>w==="~"?1e9:(w in first?first[w]:1e8);
+  return S.rows.slice().sort((a,b)=>{if(isPin(a)!==isPin(b))return isPin(a)?-1:1;const wa=a.d.owner||"~",wb=b.d.owner||"~";return wa===wb?a.o-b.o:(pi(wa)-pi(wb))||(wa<wb?-1:1)});
 }
 /* 머리글을 누르면 오름차순 → 내림차순 → 원래 순서. 빈 칸은 항상 맨 아래 */
 function sortKey(r,k){const v=String(r.d[k]==null?"":r.d[k]).trim();return v}
@@ -213,7 +221,7 @@ function runnerSvg(i){ /* 땀 흘리며 헐레벌떡 뛰는 사람 (달리는 �
     '</svg>';
 }
 function trackLanes(rows){
-  var ps=S.people.slice(),extra={};rows.forEach(function(r){var o=r.d.owner||"(미지정)";if(S.people.indexOf(o)<0)extra[o]=1});
+  var ps=owners().filter(function(x){return S.people.indexOf(x)>=0}),extra={};rows.forEach(function(r){var o=r.d.owner||"(미지정)";if(S.people.indexOf(o)<0)extra[o]=1});
   ps=ps.concat(Object.keys(extra));var out=[],best=0;
   ps.forEach(function(p,i){
     var rs=rows.filter(function(r){return (r.d.owner||"(미지정)")===p});if(!rs.length)return;
@@ -251,7 +259,7 @@ function summary(){
   const tot={n:0,f:0,b:0,d:0};
   const real=v=>!blank(v)&&!isNa(v)&&!/^x$/i.test(String(v).trim());
   const line=(p,rs)=>{const f=rs.filter(r=>real(r.d.file)).length,b=rs.filter(r=>real(r.d.bill)).length,d=rs.filter(r=>isDone(r.d)).length;tot.n+=rs.length;tot.f+=f;tot.b+=b;tot.d+=d;
-    return '<tr><td class="l">'+esc(p)+'</td><td>'+rs.length+'</td><td>'+f+'</td><td>'+b+'</td><td>'+d+'</td><td>'+(rs.length-d)+'</td><td class="pb">'+pct(d,rs.length)+'</td></tr>'};
+    return '<tr><td class="l">'+(p==="(미지정)"?'':'<button type="button" class="mv" data-mvo="'+esc(p)+'" data-d="-1" title="담당자 순서 위로" aria-label="'+esc(p)+' 위로">▲</button><button type="button" class="mv" data-mvo="'+esc(p)+'" data-d="1" title="담당자 순서 아래로" aria-label="'+esc(p)+' 아래로">▼</button> ')+esc(p)+'</td><td>'+rs.length+'</td><td>'+f+'</td><td>'+b+'</td><td>'+d+'</td><td>'+(rs.length-d)+'</td><td class="pb">'+pct(d,rs.length)+'</td></tr>'};
   ps.forEach(p=>{const rs=rows.filter(r=>r.d.owner===p);if(rs.length)h+=line(p,rs)});
   const none=rows.filter(r=>!r.d.owner);if(none.length)h+=line("(미지정)",none);
   return h+'<tr><th>합계</th><th>'+tot.n+'</th><th>'+tot.f+'</th><th>'+tot.b+'</th><th>'+tot.d+'</th><th>'+(tot.n-tot.d)+'</th><th>'+pct(tot.d,tot.n)+'</th></tr></table>';
@@ -290,11 +298,11 @@ function drawMonth(){
   h+='<div class="scroll"><table class="tb" style="width:'+W+'px"><colgroup><col style="width:36px">'+cs.map(c=>'<col style="width:'+cw(c)+'px">').join("")+'<col style="width:104px"></colgroup><thead><tr class="g"><th class="stk0"></th>'+
     groups(cs).map(g=>'<th colspan="'+g.n+'"'+(g.g?' class="gp"':'')+'>'+esc(g.g)+'</th>').join("")+'<th></th></tr><tr class="h"><th class="stk0">#</th>'+
     cs.map(c=>{const on=S.sort&&S.sort.k===c.k;return '<th'+(c.k==="name"?' class="stk"':'')+' title="'+esc((c.g?c.g+" · ":"")+c.l)+' (누르면 정렬)"><button type="button" class="srt" data-sort="'+esc(c.k)+'">'+esc(c.l)+(on?(S.sort.dir>0?" ▲":" ▼"):"")+'</button></th>'}).join("")+'<th>'+(S.sort?'<button type="button" class="srt" data-sort="">원래대로</button>':'순서')+'</th></tr></thead><tbody>'+
-    (rs.length?rs.map((r,i)=>'<tr data-row="'+esc(r.id)+'"'+(isDone(r.d)?' class="done"':'')+'><td class="num stk0">'+(i+1)+'</td>'+cs.map(c=>cell(r,c)).join("")+
-      '<td class="ac">'+(S.sort?'':'<button type="button" class="mv" data-mv="'+esc(r.id)+'" data-d="-1" title="위로" aria-label="위로">▲</button><button type="button" class="mv" data-mv="'+esc(r.id)+'" data-d="1" title="아래로" aria-label="아래로">▼</button>')+'<button type="button" class="rm'+(S.rmAsk===r.id?" cf":"")+'" data-rm="'+esc(r.id)+'" title="이 달에서 업체 빼기">'+(S.rmAsk===r.id?"빼기 확인":"빼기")+'</button></td></tr>').join("")
+    (rs.length?rs.map((r,i)=>'<tr data-row="'+esc(r.id)+'"'+(isDone(r.d)?' class="done"':'')+'><td class="num stk0">'+(S.sort||isPin(r)?(i+1):'<span class="grip" draggable="true" data-grip="'+esc(r.id)+'" title="끌어서 순서 옮기기">≡ '+(i+1)+'</span>')+'</td>'+cs.map(c=>cell(r,c)).join("")+
+      '<td class="ac">'+(S.sort||isPin(r)?'':'<button type="button" class="mv" data-mv="'+esc(r.id)+'" data-d="-1" title="위로" aria-label="위로">▲</button><button type="button" class="mv" data-mv="'+esc(r.id)+'" data-d="1" title="아래로" aria-label="아래로">▼</button>')+'<button type="button" class="rm'+(S.rmAsk===r.id?" cf":"")+'" data-rm="'+esc(r.id)+'" title="이 달에서 업체 빼기">'+(S.rmAsk===r.id?"빼기 확인":"빼기")+'</button></td></tr>').join("")
     :'<tr><td colspan="'+(cs.length+2)+'" class="sub" style="padding:16px;text-align:left">'+(S.rows.length?'조건에 맞는 업체가 없습니다.':'아직 업체가 없습니다. 아래 "엑셀 파일에서 가져오기"로 엑셀 시트를 그대로 넣거나, 업체를 한 곳씩 추가하세요.')+'</td></tr>')+
     '</tbody></table></div>';
-  h+='<p class="sub legend"><span>체크 칸: <b>11/5</b>처럼 날짜를 적거나 <kbd>.</kbd> 또는 더블클릭하면 오늘 날짜</span><span><b>-</b> 해당없음(회색)</span><span><b>=</b> 전월과 같음</span><span><b>x</b> 빨간색</span><span>최종완료 칸이 채워지면 초록색 줄</span><span>소득 구분 칸은 더블클릭하면 ㅇ ↔ -</span><span>머리글을 누르면 정렬(▲ 오름 ▼ 내림), 오른쪽 ▲▼로 업체 순서 바꾸기</span></p>';
+  h+='<p class="sub legend"><span>체크 칸: <b>11/5</b>처럼 날짜를 적거나 <kbd>.</kbd> 또는 더블클릭하면 오늘 날짜</span><span><b>-</b> 해당없음(회색)</span><span><b>=</b> 전월과 같음</span><span><b>x</b> 빨간색</span><span>최종완료 칸이 채워지면 초록색 줄</span><span>소득 구분 칸은 더블클릭하면 ㅇ ↔ -</span><span>머리글을 누르면 정렬(▲ 오름 ▼ 내림), 왼쪽 번호(≡)를 끌거나 오른쪽 ▲▼로 업체 순서 바꾸기</span></p>';
   h+='<div class="row"><button class="btn ghost sm" id="imp">엑셀 파일에서 가져오기</button><button class="btn ghost sm" id="exp">엑셀로 내려받기</button><button class="btn ghost sm" id="cedit">열 편집 (지급명세서 등 추가)</button>'+
     (!S.canDelete?'':S.delAsk?'<span class="err">이 달의 체크 기록이 모두 사라집니다.</span><button class="btn danger sm" id="delyes">삭제 확인</button><button class="btn ghost sm" id="delno">취소</button>':'<button class="btn ghost sm" id="del">이 달 삭제…</button>')+'</div>';
   h+='</div>';
@@ -335,8 +343,23 @@ function saveCell(el,raw){
 }
 
 /* 업체 순서 바꾸기: 같은 담당자 안에서 바로 위·아래 업체와 자리를 바꾼다 */
+/* 담당자 묶음 순서 바꾸기: 표·담당자별 표·달리기 트랙이 모두 이 순서를 따른다. 다음 달에도 이어진다 */
+function moveOwner(w,d){
+  const os=owners().filter(x=>S.rows.some(r=>r.d.owner===x)),i=os.indexOf(w),j=i+d;
+  if(i<0||j<0||j>=os.length)return say(d<0?"이미 맨 위입니다.":"이미 맨 아래입니다.");
+  os.splice(i,1);os.splice(j,0,w);
+  const all=ordered(),seq=all.filter(isPin);
+  os.forEach(x=>all.forEach(r=>{if(!isPin(r)&&r.d.owner===x)seq.push(r)}));
+  all.forEach(r=>{if(seq.indexOf(r)<0)seq.push(r)});
+  const items=[];seq.forEach((r,k)=>{if(r.o!==k+1){r.o=k+1;items.push({id:r.id,o:r.o,data:{}})}});
+  draw();if(!items.length)return;say("저장 중…");
+  let chain=Promise.resolve();
+  for(let k=0;k<items.length;k+=200){const part=items.slice(k,k+200);chain=chain.then(()=>api("wh.bulk",{month:S.cur,items:part}))}
+  chain.then(()=>say(w+" 담당 순서를 옮겼습니다."),e=>{say(e.message,true);loadMonth(S.cur).then(draw)});
+}
 function moveRow(id,d){
-  const all=ordered(),r=rowById(id),w=r.d.owner||"",same=all.filter(x=>(x.d.owner||"")===w),i=same.indexOf(r),o=same[i+d];
+  const all=ordered(),r=rowById(id),w=r.d.owner||"",same=all.filter(x=>(x.d.owner||"")===w&&!isPin(x)),i=same.indexOf(r),o=same[i+d];
+  if(isPin(r))return say("동감 세무회계는 항상 맨 위에 있습니다.");
   if(!o)return say(d<0?"이미 맨 위입니다.":"이미 맨 아래입니다.");
   /* 순서 번호가 겹치면 이 담당자 업체에 번호를 다시 매긴다 */
   let items;
@@ -346,6 +369,22 @@ function moveRow(id,d){
   say("저장 중…");
   api("wh.bulk",{month:S.cur,items}).then(()=>say("순서를 바꿨습니다."),e=>{say(e.message,true);loadMonth(S.cur).then(draw)});
 }
+/* 끌어서 옮기기: 왼쪽 번호 칸(⠿)을 잡고 같은 담당자 업체 사이로 끌어 놓는다 */
+function dropRow(id,targetId,after){
+  const all=ordered(),r=rowById(id),t=rowById(targetId);if(!r||!t||r===t)return;
+  if(isPin(r)||isPin(t))return say("동감 세무회계는 항상 맨 위에 있습니다.");
+  const w=r.d.owner||"";if((t.d.owner||"")!==w)return say("같은 담당자 업체 사이에서만 옮길 수 있습니다. 담당자를 바꾸려면 담당자 칸을 고치세요.",true);
+  const same=all.filter(x=>(x.d.owner||"")===w&&!isPin(x)),base=Math.min.apply(null,same.map(x=>x.o));
+  same.splice(same.indexOf(r),1);same.splice(same.indexOf(t)+(after?1:0),0,r);
+  const items=[];same.forEach((x,j)=>{if(x.o!==base+j){x.o=base+j;items.push({id:x.id,o:x.o,data:{}})}});
+  draw();if(!items.length)return;say("저장 중…");
+  api("wh.bulk",{month:S.cur,items}).then(()=>say((r.d.name||"업체")+" 순서를 옮겼습니다."),e=>{say(e.message,true);loadMonth(S.cur).then(draw)});
+}
+let DRAG=null;
+document.addEventListener("dragstart",e=>{const g=e.target.closest&&e.target.closest("[data-grip]");if(!g)return;DRAG=g.dataset.grip;e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain",DRAG)}catch(x){}const tr=g.closest("tr");if(tr){tr.classList.add("drag");try{e.dataTransfer.setDragImage(tr,20,14)}catch(x){}}});
+document.addEventListener("dragover",e=>{if(!DRAG)return;const tr=e.target.closest&&e.target.closest("tr[data-row]");document.querySelectorAll("tr.dropb,tr.dropa").forEach(x=>{if(x!==tr)x.classList.remove("dropb","dropa")});if(!tr||tr.dataset.row===DRAG)return;e.preventDefault();const b=tr.getBoundingClientRect(),after=e.clientY>b.top+b.height/2;tr.classList.toggle("dropa",after);tr.classList.toggle("dropb",!after)});
+document.addEventListener("drop",e=>{if(!DRAG)return;const tr=e.target.closest&&e.target.closest("tr[data-row]");e.preventDefault();const id=DRAG;DRAG=null;if(tr)dropRow(id,tr.dataset.row,tr.classList.contains("dropa"))});
+document.addEventListener("dragend",()=>{DRAG=null;document.querySelectorAll("tr.drag,tr.dropb,tr.dropa").forEach(x=>x.classList.remove("drag","dropb","dropa"))});
 /* ── 열 편집 ── */
 function colEditor(){
   const cs=cols();
@@ -475,6 +514,7 @@ document.addEventListener("click",e=>{
   if(t.id==="reload"){say("불러오는 중…");return loadMonth(S.cur).then(()=>{S.msg="최신 내용을 불러왔습니다.";draw()},x=>say(x.message,true))}
   if(t.dataset&&t.dataset.sort!=null){const k=t.dataset.sort;S.sort=!k?null:(!S.sort||S.sort.k!==k)?{k,dir:1}:S.sort.dir>0?{k,dir:-1}:null;return draw()}
   if(t.dataset&&t.dataset.mv)return moveRow(t.dataset.mv,+t.dataset.d);
+  if(t.dataset&&t.dataset.mvo)return moveOwner(t.dataset.mvo,+t.dataset.d);
   if(t.dataset&&t.dataset.own){S.own=t.dataset.own;store.set("wh.own",S.own);return draw()}
   if(t.dataset&&t.dataset.stf){S.stf=t.dataset.stf;return draw()}
   if(t.dataset&&t.dataset.rm){
