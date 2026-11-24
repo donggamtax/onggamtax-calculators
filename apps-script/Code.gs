@@ -424,7 +424,7 @@ const WM_SHEET = "원천세월", WR_SHEET = "원천세";
 const WH_TYPES = { text: 1, ox: 1, chk: 1, sel: 1, owner: 1 };
 const WH_CP = { all: 1, mark: 1, none: 1 };
 const WH_DEF_COLS = [
-  ["name", "업체명", "text", "", "all"], ["owner", "담당자", "owner", "", "all"], ["kind", "종류", "sel", "", "all"], ["cyc", "간격", "text", "", "all"], ["pay", "급여일", "text", "", "all"],
+  ["name", "업체명", "text", "", "all"], ["owner", "담당자", "owner", "", "all"], ["kind", "종류", "sel", "", "all"], ["cyc", "간격", "sel", "", "all"], ["pay", "급여일", "text", "", "all"],
   ["g1", "근로", "ox", "소득 구분", "all"], ["g2", "사업", "ox", "소득 구분", "all"], ["g3", "일용", "ox", "소득 구분", "all"], ["g4", "기타등", "ox", "소득 구분", "all"],
   ["r1", "근로", "chk", "자료받은것", "mark"], ["r2", "사업", "chk", "자료받은것", "mark"], ["r3", "일용", "chk", "자료받은것", "mark"], ["r4", "기타등", "chk", "자료받은것", "mark"],
   ["slip", "급여명세", "chk", "신고·납부", "mark"], ["file", "신고", "chk", "신고·납부", "mark"], ["local", "지방세", "chk", "신고·납부", "mark"], ["bill", "납부서전달", "chk", "신고·납부", "mark"],
@@ -521,9 +521,10 @@ function whBulk(req, who) {
     items.forEach(it => {
       const patch = whClean(it && it.data), rid = String(it && it.id || "");
       if (rid && have[rid]) {
-        const r = have[rid], d = whMerge(replace ? {} : r.data, patch);
+        const r = have[rid], d = whMerge(replace ? {} : r.data, patch), o = Number(it.o);
         if (replace && !d.name && r.data.name) d.name = r.data.name;
-        r.data = d; sh.getRange(r.row, 4, 1, 3).setValues([[JSON.stringify(d), now, who || ""]]);
+        if (it.o != null && o === o && Math.abs(o) < 1e7) r.o = Math.round(o); // 업체 순서 바꾸기
+        r.data = d; sh.getRange(r.row, 3, 1, 4).setValues([[r.o, JSON.stringify(d), now, who || ""]]);
         saved.push({ id: rid, o: r.o, data: d });
       } else if (!rid) {
         const d = whMerge({}, patch); if (!d.name) return;

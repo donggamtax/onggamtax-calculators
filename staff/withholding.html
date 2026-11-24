@@ -87,6 +87,9 @@ table.tb button.rm{border:0;background:none;color:var(--muted);cursor:pointer;fo
 @keyframes hop{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-6px) rotate(4deg)}}
 @keyframes cheer{0%,100%{transform:scale(1)}50%{transform:scale(1.25) rotate(8deg)}}
 @media (prefers-reduced-motion:reduce){.lane .rn{transition:none}.lane.run .rn .ch,.lane.fin .rn .ch,.lane .ch *{animation:none!important}}
+button.srt{border:0;background:none;color:inherit;font:inherit;cursor:pointer;padding:0;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}button.srt:hover{text-decoration:underline}
+table.tb td.ac{white-space:nowrap}table.tb button.mv{border:0;background:none;color:var(--muted);cursor:pointer;font-size:10px;padding:4px 3px}table.tb button.mv:hover{color:var(--accent)}
+.sp{flex:1}
 kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px;font-size:11.5px;background:var(--panel)}
 </style>
 <script src="config.js"></script>
@@ -118,7 +121,8 @@ const WHO=store.get("staff.who")||"";
 const S={months:[],canDelete:false,people:[],cur:null,month:null,rows:[],own:store.get("wh.own")||"전체",stf:"전체",q:"",msg:"",err:"",adding:false,edit:false,nedit:false,delAsk:false,rmAsk:null};
 const TYPE_L={chk:"체크(날짜·표시)",ox:"ㅇ / - 구분",text:"글",sel:"종류 선택",owner:"담당자"};
 const CP_L={all:"그대로 복사",mark:"'-', '='만 복사",none:"복사 안 함"};
-const KINDS=["개인","법인","간이","면세"];
+const KINDS=["개인","법인","간이","면세"],CYCS=["매월","매월(익월)","반기","반기(익월)","일시","-"];
+function optsOf(c){return c.k==="kind"?KINDS:c.k==="cyc"?CYCS:c.t==="sel"?KINDS:null}
 
 /* 날짜: 저장은 2026-11-05, 화면은 11/5 */
 function todayIso(){const d=new Date();return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
@@ -156,9 +160,15 @@ function ordered(){
   const pi=w=>{const i=S.people.indexOf(w);return i<0?1e6+(first[w]||0):i};
   return S.rows.slice().sort((a,b)=>{const wa=a.d.owner||"~",wb=b.d.owner||"~";return wa===wb?a.o-b.o:(pi(wa)-pi(wb))||(wa<wb?-1:1)});
 }
+/* 머리글을 누르면 오름차순 → 내림차순 → 원래 순서. 빈 칸은 항상 맨 아래 */
+function sortKey(r,k){const v=String(r.d[k]==null?"":r.d[k]).trim();return v}
+function sorted(list){
+  if(!S.sort)return list;const k=S.sort.k,dir=S.sort.dir;
+  return list.map((r,i)=>({r,i})).sort((a,b)=>{const x=sortKey(a.r,k),y=sortKey(b.r,k);if(!x!==!y)return x?-1:1;const c=x.localeCompare(y,"ko",{numeric:true});return (c*dir)||(a.i-b.i)}).map(x=>x.r);
+}
 function shown(){
   const q=S.q.replace(/\s+/g,"").toLowerCase();
-  return ordered().filter(r=>(S.own==="전체"||(r.d.owner||"(미지정)")===S.own)&&(S.stf==="전체"||(S.stf==="완료")===isDone(r.d))&&(!q||String(r.d.name||"").replace(/\s+/g,"").toLowerCase().indexOf(q)>=0||String(r.d.memo||"").toLowerCase().indexOf(q)>=0));
+  return sorted(ordered()).filter(r=>(S.own==="전체"||(r.d.owner||"(미지정)")===S.own)&&(S.stf==="전체"||(S.stf==="완료")===isDone(r.d))&&(!q||String(r.d.name||"").replace(/\s+/g,"").toLowerCase().indexOf(q)>=0||String(r.d.memo||"").toLowerCase().indexOf(q)>=0));
 }
 
 /* ── 달 목록 ── */
@@ -256,12 +266,12 @@ function notesBox(){
   if(!ns.length)return '<div class="row"><button class="btn ghost sm" id="nedit">안내 문구 추가</button></div>';
   return '<div class="panel"><div class="row"><b>안내</b><button class="btn ghost sm" id="nedit">안내 문구 편집</button></div><ol class="nts">'+ns.map(t=>'<li>'+esc(t)+'</li>').join("")+'</ol></div>';
 }
-function cw(c){if(c.k==="name")return 170;if(c.k==="memo")return 280;if(c.t==="owner")return 78;if(c.t==="sel")return 62;if(c.t==="ox")return 46;if(c.t==="chk")return 60;if(c.k==="cyc"||c.k==="pay")return 84;return 120}
+function cw(c){if(c.k==="name")return 170;if(c.k==="memo")return 280;if(c.k==="cyc")return 96;if(c.t==="owner")return 78;if(c.t==="sel")return 62;if(c.t==="ox")return 46;if(c.t==="chk")return 60;if(c.k==="cyc"||c.k==="pay")return 84;return 120}
 function cell(r,c){
   const v=r.d[c.k]==null?"":String(r.d[c.k]),al=esc(c.l),at=' data-id="'+esc(r.id)+'" data-k="'+esc(c.k)+'" aria-label="'+al+'"';
   if(c.k==="name")return '<td class="nmc stk"><input type="text"'+at+' value="'+esc(v)+'" title="'+esc(v)+'"></td>';
   if(c.t==="owner"){const op=[""].concat(S.people);if(v&&op.indexOf(v)<0)op.push(v);return '<td><select'+at+'>'+op.map(x=>'<option'+(x===v?" selected":"")+'>'+esc(x)+'</option>').join("")+'</select></td>'}
-  if(c.t==="sel"){const op=[""].concat(KINDS);if(v&&op.indexOf(v)<0)op.push(v);return '<td><select'+at+'>'+op.map(x=>'<option'+(x===v?" selected":"")+'>'+esc(x)+'</option>').join("")+'</select></td>'}
+  if(optsOf(c)){const op=[""].concat(optsOf(c));if(v&&op.indexOf(v)<0)op.push(v);return '<td><select'+at+'>'+op.map(x=>'<option'+(x===v?" selected":"")+'>'+esc(x)+'</option>').join("")+'</select></td>'}
   const t=v.trim(),cls=(c.t==="chk"||c.t==="ox")?(isNa(t)?"na":/^x$/i.test(t)?"xx":isIso(t)?"dt":""):"tx";
   return '<td class="'+cls+'"><input type="text" autocomplete="off"'+at+' value="'+esc(c.t==="chk"?fmt(v):v)+'"'+(isIso(t)?' title="'+esc(t)+'"':(c.t==="text"&&v.length>12?' title="'+esc(v)+'"':''))+'></td>';
 }
@@ -274,18 +284,18 @@ function drawMonth(){
   if(S.edit)h+=colEditor();
   h+='<div class="panel"><div class="row">'+["전체"].concat(os).concat(S.rows.some(r=>!r.d.owner)?["(미지정)"]:[]).map(o=>'<button class="chip" data-own="'+esc(o)+'" aria-pressed="'+(S.own===o)+'">'+esc(o)+'</button>').join("")+
     '<span class="sub">|</span>'+["전체","미완료","완료"].map(o=>'<button class="chip" data-stf="'+o+'" aria-pressed="'+(S.stf===o)+'">'+o+'</button>').join("")+
-    '<input type="search" id="q" placeholder="업체명·비고 검색" value="'+esc(S.q)+'" style="width:160px"><span class="sub">'+rs.length+'곳</span></div>';
-  const W=cs.reduce((a,c)=>a+cw(c),36+54);
-  h+='<div class="scroll"><table class="tb" style="width:'+W+'px"><colgroup><col style="width:36px">'+cs.map(c=>'<col style="width:'+cw(c)+'px">').join("")+'<col style="width:54px"></colgroup><thead><tr class="g"><th class="stk0"></th>'+
+    '<input type="search" id="q" placeholder="업체명·비고 검색" value="'+esc(S.q)+'" style="width:160px"><span class="sub">'+rs.length+'곳</span>'+
+    '<span class="sp"></span><input type="text" id="addn" placeholder="새 업체명" maxlength="60" style="width:170px"><select id="addo" aria-label="담당자">'+[""].concat(S.people).map(x=>'<option'+(x===(S.own!=="전체"?S.own:WHO)?" selected":"")+'>'+esc(x)+'</option>').join("")+'</select><button class="btn sm" id="addb">+ 업체 추가</button></div>';
+  const W=cs.reduce((a,c)=>a+cw(c),36+104);
+  h+='<div class="scroll"><table class="tb" style="width:'+W+'px"><colgroup><col style="width:36px">'+cs.map(c=>'<col style="width:'+cw(c)+'px">').join("")+'<col style="width:104px"></colgroup><thead><tr class="g"><th class="stk0"></th>'+
     groups(cs).map(g=>'<th colspan="'+g.n+'"'+(g.g?' class="gp"':'')+'>'+esc(g.g)+'</th>').join("")+'<th></th></tr><tr class="h"><th class="stk0">#</th>'+
-    cs.map(c=>'<th'+(c.k==="name"?' class="stk"':'')+' title="'+esc((c.g?c.g+" · ":"")+c.l)+'">'+esc(c.l)+'</th>').join("")+'<th></th></tr></thead><tbody>'+
+    cs.map(c=>{const on=S.sort&&S.sort.k===c.k;return '<th'+(c.k==="name"?' class="stk"':'')+' title="'+esc((c.g?c.g+" · ":"")+c.l)+' (누르면 정렬)"><button type="button" class="srt" data-sort="'+esc(c.k)+'">'+esc(c.l)+(on?(S.sort.dir>0?" ▲":" ▼"):"")+'</button></th>'}).join("")+'<th>'+(S.sort?'<button type="button" class="srt" data-sort="">원래대로</button>':'순서')+'</th></tr></thead><tbody>'+
     (rs.length?rs.map((r,i)=>'<tr data-row="'+esc(r.id)+'"'+(isDone(r.d)?' class="done"':'')+'><td class="num stk0">'+(i+1)+'</td>'+cs.map(c=>cell(r,c)).join("")+
-      '<td><button type="button" class="rm'+(S.rmAsk===r.id?" cf":"")+'" data-rm="'+esc(r.id)+'" title="이 달에서 업체 빼기">'+(S.rmAsk===r.id?"빼기 확인":"빼기")+'</button></td></tr>').join("")
+      '<td class="ac">'+(S.sort?'':'<button type="button" class="mv" data-mv="'+esc(r.id)+'" data-d="-1" title="위로" aria-label="위로">▲</button><button type="button" class="mv" data-mv="'+esc(r.id)+'" data-d="1" title="아래로" aria-label="아래로">▼</button>')+'<button type="button" class="rm'+(S.rmAsk===r.id?" cf":"")+'" data-rm="'+esc(r.id)+'" title="이 달에서 업체 빼기">'+(S.rmAsk===r.id?"빼기 확인":"빼기")+'</button></td></tr>').join("")
     :'<tr><td colspan="'+(cs.length+2)+'" class="sub" style="padding:16px;text-align:left">'+(S.rows.length?'조건에 맞는 업체가 없습니다.':'아직 업체가 없습니다. 아래 "엑셀 파일에서 가져오기"로 엑셀 시트를 그대로 넣거나, 업체를 한 곳씩 추가하세요.')+'</td></tr>')+
     '</tbody></table></div>';
-  h+='<p class="sub legend"><span>체크 칸: <b>11/5</b>처럼 날짜를 적거나 <kbd>.</kbd> 또는 더블클릭하면 오늘 날짜</span><span><b>-</b> 해당없음(회색)</span><span><b>=</b> 전월과 같음</span><span><b>x</b> 빨간색</span><span>최종완료 칸이 채워지면 초록색 줄</span><span>소득 구분 칸은 더블클릭하면 ㅇ ↔ -</span></p>';
-  h+='<div class="row"><input type="text" id="addn" placeholder="새 업체명" maxlength="60" style="width:200px"><select id="addo">'+[""].concat(S.people).map(x=>'<option'+(x===(S.own!=="전체"?S.own:WHO)?" selected":"")+'>'+esc(x)+'</option>').join("")+'</select><button class="btn sm" id="addb">업체 추가</button>'+
-    '<span class="sub">|</span><button class="btn ghost sm" id="imp">엑셀 파일에서 가져오기</button><button class="btn ghost sm" id="exp">엑셀로 내려받기</button><button class="btn ghost sm" id="cedit">열 편집 (지급명세서 등 추가)</button>'+
+  h+='<p class="sub legend"><span>체크 칸: <b>11/5</b>처럼 날짜를 적거나 <kbd>.</kbd> 또는 더블클릭하면 오늘 날짜</span><span><b>-</b> 해당없음(회색)</span><span><b>=</b> 전월과 같음</span><span><b>x</b> 빨간색</span><span>최종완료 칸이 채워지면 초록색 줄</span><span>소득 구분 칸은 더블클릭하면 ㅇ ↔ -</span><span>머리글을 누르면 정렬(▲ 오름 ▼ 내림), 오른쪽 ▲▼로 업체 순서 바꾸기</span></p>';
+  h+='<div class="row"><button class="btn ghost sm" id="imp">엑셀 파일에서 가져오기</button><button class="btn ghost sm" id="exp">엑셀로 내려받기</button><button class="btn ghost sm" id="cedit">열 편집 (지급명세서 등 추가)</button>'+
     (!S.canDelete?'':S.delAsk?'<span class="err">이 달의 체크 기록이 모두 사라집니다.</span><button class="btn danger sm" id="delyes">삭제 확인</button><button class="btn ghost sm" id="delno">취소</button>':'<button class="btn ghost sm" id="del">이 달 삭제…</button>')+'</div>';
   h+='</div>';
   if(S.err)h+='<p class="err">'+esc(S.err)+'</p>';
@@ -324,6 +334,18 @@ function saveCell(el,raw){
   saveMany([{id,data:p}]).then(()=>{if(k==="owner"&&S.own!=="전체")draw()});
 }
 
+/* 업체 순서 바꾸기: 같은 담당자 안에서 바로 위·아래 업체와 자리를 바꾼다 */
+function moveRow(id,d){
+  const all=ordered(),r=rowById(id),w=r.d.owner||"",same=all.filter(x=>(x.d.owner||"")===w),i=same.indexOf(r),o=same[i+d];
+  if(!o)return say(d<0?"이미 맨 위입니다.":"이미 맨 아래입니다.");
+  /* 순서 번호가 겹치면 이 담당자 업체에 번호를 다시 매긴다 */
+  let items;
+  if(r.o===o.o||same.some((x,j)=>j&&x.o===same[j-1].o)){same.splice(i,1);same.splice(i+d,0,r);const base=Math.min.apply(null,same.map(x=>x.o));items=same.map((x,j)=>{x.o=base+j;return {id:x.id,o:x.o,data:{}}})}
+  else{const t=r.o;r.o=o.o;o.o=t;items=[{id:r.id,o:r.o,data:{}},{id:o.id,o:o.o,data:{}}]}
+  draw();const b=document.querySelector('[data-mv="'+CSS.escape(id)+'"][data-d="'+d+'"]');if(b)b.focus();
+  say("저장 중…");
+  api("wh.bulk",{month:S.cur,items}).then(()=>say("순서를 바꿨습니다."),e=>{say(e.message,true);loadMonth(S.cur).then(draw)});
+}
 /* ── 열 편집 ── */
 function colEditor(){
   const cs=cols();
@@ -451,6 +473,8 @@ document.addEventListener("click",e=>{
   if(t.dataset&&t.dataset.open)return openMonth(t.dataset.open);
   if(t.id==="back")return backToList();
   if(t.id==="reload"){say("불러오는 중…");return loadMonth(S.cur).then(()=>{S.msg="최신 내용을 불러왔습니다.";draw()},x=>say(x.message,true))}
+  if(t.dataset&&t.dataset.sort!=null){const k=t.dataset.sort;S.sort=!k?null:(!S.sort||S.sort.k!==k)?{k,dir:1}:S.sort.dir>0?{k,dir:-1}:null;return draw()}
+  if(t.dataset&&t.dataset.mv)return moveRow(t.dataset.mv,+t.dataset.d);
   if(t.dataset&&t.dataset.own){S.own=t.dataset.own;store.set("wh.own",S.own);return draw()}
   if(t.dataset&&t.dataset.stf){S.stf=t.dataset.stf;return draw()}
   if(t.dataset&&t.dataset.rm){
