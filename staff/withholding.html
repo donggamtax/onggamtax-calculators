@@ -11,15 +11,9 @@
   --bg:#f5f7f8; --panel:#ffffff; --ink:#1d2a30; --muted:#5f7078; --line:#dbe3e6;
   --accent:#2f5d6e; --accent-ink:#ffffff; --soft:#e6eff2; --ok:#1d7a4d; --ok-bg:#e2f4ea; --bad:#d62d2d; --na:#eef1f2; --na-ink:#97a5ab;
   --font:"Noto Sans KR","Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
-  --ga:#fffaeb; --ga-h:#fbecc0; --ga-i:#8a5a00; --gb:#f1f6fe; --gb-h:#d6e6fb; --gb-i:#24589c;
-  --gc:#f7f3ff; --gc-h:#e4dbfa; --gc-i:#5a3d9e; --gd:#fff4ee; --gd-h:#fadccb; --gd-i:#a2481a;
-  --ge:#eef9f6; --ge-h:#cdece4; --ge-i:#1f6f5c; --gl:#b9c6cc;
   --eq:#dbe8ff; --eq-i:#1747b5; --eq-l:#8fb0ee; --lk:#d5dcdf; --sel:#a9cbff;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --ga:#2a2518; --ga-h:#4a3d18; --ga-i:#f2c75c; --gb:#1b2534; --gb-h:#22395a; --gb-i:#8cbcf5;
-  --gc:#251f33; --gc-h:#3a2d5c; --gc-i:#c3aef5; --gd:#2e2019; --gd-h:#55301d; --gd-i:#f5a77c;
-  --ge:#172a26; --ge-h:#1d4a40; --ge-i:#7fd8c0; --gl:#4a5a61;
   --eq:#1d2f52; --eq-i:#9cc0ff; --eq-l:#3f63a8; --lk:#33414a; --sel:#24456b}}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#12191c; --panel:#1b2428; --ink:#e7eef0; --muted:#9db0b8; --line:#2f3d43;
@@ -58,11 +52,6 @@ table.tb td.nmc{text-align:left}
 table.tb input,table.tb select{border:0;border-radius:0;background:transparent;padding:4px 4px;width:100%;font-size:13px;text-align:center}
 table.tb td.nmc input,table.tb td.tx input{text-align:left}
 table.tb input:focus,table.tb select:focus{outline:2px solid var(--accent);outline-offset:-2px;background:var(--bg)}
-/* 묶음별 색: 소득 구분(노랑) · 자료받은것(파랑) · 신고·납부(보라) · 지급명세(주황) · 그 밖(청록) */
-table.tb td.ga{background:var(--ga)}table.tb td.gb{background:var(--gb)}table.tb td.gc{background:var(--gc)}table.tb td.gd{background:var(--gd)}table.tb td.ge{background:var(--ge)}
-table.tb thead th.ga{background:var(--ga-h);color:var(--ga-i)}table.tb thead th.gb{background:var(--gb-h);color:var(--gb-i)}table.tb thead th.gc{background:var(--gc-h);color:var(--gc-i)}table.tb thead th.gd{background:var(--gd-h);color:var(--gd-i)}table.tb thead th.ge{background:var(--ge-h);color:var(--ge-i)}
-table.tb thead tr.g th.gp.ga{border-bottom-color:var(--ga-i);color:var(--ga-i)}table.tb thead tr.g th.gp.gb{border-bottom-color:var(--gb-i);color:var(--gb-i)}table.tb thead tr.g th.gp.gc{border-bottom-color:var(--gc-i);color:var(--gc-i)}table.tb thead tr.g th.gp.gd{border-bottom-color:var(--gd-i);color:var(--gd-i)}table.tb thead tr.g th.gp.ge{border-bottom-color:var(--ge-i);color:var(--ge-i)}
-table.tb .gs{border-left:2px solid var(--gl)}
 table.tb td.na,table.tb td.na input{background:var(--na);color:var(--na-ink)}
 /* '=' 전월과 같음: 파란 굵은 글씨 + 테두리로 '-'와 구분 */
 table.tb td.eq,table.tb td.eq input{background:var(--eq);color:var(--eq-i);font-weight:700}
@@ -300,8 +289,6 @@ function notesBox(){
   return '<div class="panel"><div class="row"><b>안내</b><button class="btn ghost sm" id="nedit">안내 문구 편집</button></div><ol class="nts">'+ns.map(t=>'<li>'+esc(t)+'</li>').join("")+'</ol></div>';
 }
 function cw(c){if(c.k==="name")return 170;if(c.k==="memo")return 280;if(c.k==="cyc")return 96;if(c.t==="owner")return 78;if(c.t==="sel")return 62;if(c.t==="ox")return 46;if(c.t==="chk")return 60;if(c.k==="cyc"||c.k==="pay")return 84;return 120}
-/* 묶음 이름 → 색 */
-function gcls(g){const n=norm(g);if(!n)return "";return /소득/.test(n)?"ga":/자료/.test(n)?"gb":/지급명세/.test(n)?"gd":/신고|납부/.test(n)?"gc":"ge"}
 /* 지급명세 칸은 같은 이름의 소득 구분이 ㅇ일 때만 연다 (근로·사업·일용·기타, 연말정산은 근로) */
 const INC_L=["근로","사업","일용","기타"];
 function gateKey(c,cs){
@@ -310,7 +297,7 @@ function gateKey(c,cs){
   const src=cs.find(x=>x.t==="ox"&&/소득/.test(norm(x.g))&&norm(x.l).indexOf(lab)>=0);return src?src.k:null;
 }
 let LAYc=null,LAY={};
-function lay(){const cs=cols();if(LAYc!==cs){LAYc=cs;LAY={};cs.forEach((c,i)=>{const p=cs[i-1],g=c.g||"",pg=p?(p.g||""):"";LAY[c.k]={cls:gcls(g),gs:!!p&&g!==pg&&!!(g||pg),gate:gateKey(c,cs),src:null}});cs.forEach(c=>{const L=LAY[c.k];if(L.gate)L.src=(cs.find(x=>x.k===L.gate)||{}).l})}return LAY}
+function lay(){const cs=cols();if(LAYc!==cs){LAYc=cs;LAY={};cs.forEach((c,i)=>{const p=cs[i-1],g=c.g||"",pg=p?(p.g||""):"";LAY[c.k]={cls:"",gs:false,gate:gateKey(c,cs),src:null}});cs.forEach(c=>{const L=LAY[c.k];if(L.gate)L.src=(cs.find(x=>x.k===L.gate)||{}).l})}return LAY}
 function hasInc(v){const t=String(v==null?"":v).trim();return !!t&&!/^[-x]$/i.test(t)}
 function locked(d,c){const L=lay()[c.k];return !!(L&&L.gate)&&!hasInc(d[L.gate])}
 function cell(r,c){
@@ -336,7 +323,7 @@ function drawMonth(){
     '<span class="sp"></span><input type="text" id="addn" placeholder="새 업체명" maxlength="60" style="width:170px"><select id="addo" aria-label="담당자">'+[""].concat(S.people).map(x=>'<option'+(x===(S.own!=="전체"?S.own:WHO)?" selected":"")+'>'+esc(x)+'</option>').join("")+'</select><button class="btn sm" id="addb">+ 업체 추가</button></div>';
   const W=cs.reduce((a,c)=>a+cw(c),36+104);
   h+='<div class="scroll" tabindex="-1"><table class="tb" style="width:'+W+'px"><colgroup><col style="width:36px">'+cs.map(c=>'<col style="width:'+cw(c)+'px">').join("")+'<col style="width:104px"></colgroup><thead><tr class="g"><th class="stk0"></th>'+
-    groups(cs).map((g,i,a)=>{const x=(g.g?"gp "+gcls(g.g):"")+(i&&(g.g||a[i-1].g)?" gs":"");return '<th colspan="'+g.n+'"'+(x.trim()?' class="'+x.trim()+'"':'')+'>'+esc(g.g)+'</th>'}).join("")+'<th></th></tr><tr class="h"><th class="stk0">#</th>'+
+    groups(cs).map(g=>'<th colspan="'+g.n+'"'+(g.g?' class="gp"':'')+'>'+esc(g.g)+'</th>').join("")+'<th></th></tr><tr class="h"><th class="stk0">#</th>'+
     cs.map(c=>{const on=S.sort&&S.sort.k===c.k,L=lay()[c.k]||{},x=((c.k==="name"?"stk ":"")+L.cls+(L.gs?" gs":"")).trim();return '<th'+(x?' class="'+x+'"':'')+' title="'+esc((c.g?c.g+" · ":"")+c.l)+' (누르면 정렬)"><button type="button" class="srt" data-sort="'+esc(c.k)+'">'+esc(c.l)+(on?(S.sort.dir>0?" ▲":" ▼"):"")+'</button></th>'}).join("")+'<th>'+(S.sort?'<button type="button" class="srt" data-sort="">원래대로</button>':'순서')+'</th></tr></thead><tbody>'+
     (rs.length?rs.map((r,i)=>'<tr data-row="'+esc(r.id)+'"'+(isDone(r.d)?' class="done"':'')+'><td class="num stk0">'+(S.sort||isPin(r)?(i+1):'<span class="grip" draggable="true" data-grip="'+esc(r.id)+'" title="끌어서 순서 옮기기">≡ '+(i+1)+'</span>')+'</td>'+cs.map(c=>cell(r,c)).join("")+
       '<td class="ac">'+(S.sort||isPin(r)?'':'<button type="button" class="mv" data-mv="'+esc(r.id)+'" data-d="-1" title="위로" aria-label="위로">▲</button><button type="button" class="mv" data-mv="'+esc(r.id)+'" data-d="1" title="아래로" aria-label="아래로">▼</button>')+'<button type="button" class="rm'+(S.rmAsk===r.id?" cf":"")+'" data-rm="'+esc(r.id)+'" title="이 달에서 업체 빼기">'+(S.rmAsk===r.id?"빼기 확인":"빼기")+'</button></td></tr>').join("")
