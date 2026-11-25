@@ -11,7 +11,10 @@
   --bg:#f5f7f8; --panel:#ffffff; --ink:#1d2a30; --muted:#5f7078; --line:#dbe3e6;
   --accent:#2f5d6e; --accent-ink:#ffffff; --soft:#e6eff2; --ok:#1d7a4d; --ok-bg:#e2f4ea; --bad:#d62d2d; --na:#eef1f2; --na-ink:#97a5ab;
   --font:"Noto Sans KR","Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --eq:#dbe8ff; --eq-i:#1747b5; --eq-l:#8fb0ee; --lk:#d5dcdf; --sel:#a9cbff;
 }
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --eq:#1d2f52; --eq-i:#9cc0ff; --eq-l:#3f63a8; --lk:#33414a; --sel:#24456b}}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#12191c; --panel:#1b2428; --ink:#e7eef0; --muted:#9db0b8; --line:#2f3d43;
   --accent:#7db7cc; --accent-ink:#0f1d23; --soft:#243239; --ok:#6fcf9b; --ok-bg:#16322a; --na:#20292d; --na-ink:#6c7f87; color-scheme:dark}}
@@ -50,6 +53,17 @@ table.tb input,table.tb select{border:0;border-radius:0;background:transparent;p
 table.tb td.nmc input,table.tb td.tx input{text-align:left}
 table.tb input:focus,table.tb select:focus{outline:2px solid var(--accent);outline-offset:-2px;background:var(--bg)}
 table.tb td.na,table.tb td.na input{background:var(--na);color:var(--na-ink)}
+/* '=' 전월과 같음: 파란 굵은 글씨 + 테두리로 '-'와 구분 */
+table.tb td.eq,table.tb td.eq input{background:var(--eq);color:var(--eq-i);font-weight:700}
+table.tb td.eq{box-shadow:inset 0 0 0 1.5px var(--eq-l)}
+/* 소득 구분이 ㅇ이 아니어서 닫힌 지급명세 칸 */
+table.tb td.lk,table.tb td.lk input{background:repeating-linear-gradient(-45deg,var(--lk) 0 3px,var(--panel) 3px 7px);color:var(--na-ink);cursor:not-allowed}
+table.tb td.lk input:focus{outline-color:var(--line)}
+/* 드래그로 고른 칸 */
+table.tb td.sel,table.tb td.sel input{background:var(--sel)!important}
+table.tb td.sel{box-shadow:inset 0 0 0 1px #2f6fd6}
+table.tb.selecting,table.tb.selecting input{user-select:none;-webkit-user-select:none}
+.scroll:focus{outline:none}
 table.tb td.xx input{color:var(--bad);font-weight:700}
 table.tb td.dt input{color:var(--ok);font-weight:500}
 table.tb tr.done td,table.tb tr.done td input,table.tb tr.done td select{background:var(--ok-bg)}
@@ -275,13 +289,26 @@ function notesBox(){
   return '<div class="panel"><div class="row"><b>안내</b><button class="btn ghost sm" id="nedit">안내 문구 편집</button></div><ol class="nts">'+ns.map(t=>'<li>'+esc(t)+'</li>').join("")+'</ol></div>';
 }
 function cw(c){if(c.k==="name")return 170;if(c.k==="memo")return 280;if(c.k==="cyc")return 96;if(c.t==="owner")return 78;if(c.t==="sel")return 62;if(c.t==="ox")return 46;if(c.t==="chk")return 60;if(c.k==="cyc"||c.k==="pay")return 84;return 120}
+/* 지급명세 칸은 같은 이름의 소득 구분이 ㅇ일 때만 연다 (근로·사업·일용·기타, 연말정산은 근로) */
+const INC_L=["근로","사업","일용","기타"];
+function gateKey(c,cs){
+  if(c.t!=="chk"||!/지급명세/.test(norm(c.g)))return null;
+  const l=norm(c.l).replace("연말정산","근로"),lab=INC_L.find(x=>l.indexOf(x)>=0);if(!lab)return null;
+  const src=cs.find(x=>x.t==="ox"&&/소득/.test(norm(x.g))&&norm(x.l).indexOf(lab)>=0);return src?src.k:null;
+}
+let LAYc=null,LAY={};
+function lay(){const cs=cols();if(LAYc!==cs){LAYc=cs;LAY={};cs.forEach((c,i)=>{const p=cs[i-1],g=c.g||"",pg=p?(p.g||""):"";LAY[c.k]={cls:"",gs:false,gate:gateKey(c,cs),src:null}});cs.forEach(c=>{const L=LAY[c.k];if(L.gate)L.src=(cs.find(x=>x.k===L.gate)||{}).l})}return LAY}
+function hasInc(v){const t=String(v==null?"":v).trim();return !!t&&!/^[-x]$/i.test(t)}
+function locked(d,c){const L=lay()[c.k];return !!(L&&L.gate)&&!hasInc(d[L.gate])}
 function cell(r,c){
   const v=r.d[c.k]==null?"":String(r.d[c.k]),al=esc(c.l),at=' data-id="'+esc(r.id)+'" data-k="'+esc(c.k)+'" aria-label="'+al+'"';
-  if(c.k==="name")return '<td class="nmc stk"><input type="text"'+at+' value="'+esc(v)+'" title="'+esc(v)+'"></td>';
-  if(c.t==="owner"){const op=[""].concat(S.people);if(v&&op.indexOf(v)<0)op.push(v);return '<td><select'+at+'>'+op.map(x=>'<option'+(x===v?" selected":"")+'>'+esc(x)+'</option>').join("")+'</select></td>'}
-  if(optsOf(c)){const op=[""].concat(optsOf(c));if(v&&op.indexOf(v)<0)op.push(v);return '<td><select'+at+'>'+op.map(x=>'<option'+(x===v?" selected":"")+'>'+esc(x)+'</option>').join("")+'</select></td>'}
-  const t=v.trim(),cls=(c.t==="chk"||c.t==="ox")?(isNa(t)?"na":/^x$/i.test(t)?"xx":isIso(t)?"dt":""):"tx";
-  return '<td class="'+cls+'"><input type="text" autocomplete="off"'+at+' value="'+esc(c.t==="chk"?fmt(v):v)+'"'+(isIso(t)?' title="'+esc(t)+'"':(c.t==="text"&&v.length>12?' title="'+esc(v)+'"':''))+'></td>';
+  const L=lay()[c.k]||{},gx=(L.cls?" "+L.cls:"")+(L.gs?" gs":"");
+  if(c.k==="name")return '<td class="nmc stk'+gx+'"><input type="text"'+at+' value="'+esc(v)+'" title="'+esc(v)+'"></td>';
+  if(c.t==="owner"){const op=[""].concat(S.people);if(v&&op.indexOf(v)<0)op.push(v);return '<td class="'+gx.trim()+'"><select'+at+'>'+op.map(x=>'<option'+(x===v?" selected":"")+'>'+esc(x)+'</option>').join("")+'</select></td>'}
+  if(optsOf(c)){const op=[""].concat(optsOf(c));if(v&&op.indexOf(v)<0)op.push(v);return '<td class="'+gx.trim()+'"><select'+at+'>'+op.map(x=>'<option'+(x===v?" selected":"")+'>'+esc(x)+'</option>').join("")+'</select></td>'}
+  const t=v.trim(),cls=(c.t==="chk"||c.t==="ox")?(t==="="?"eq":isNa(t)?"na":/^x$/i.test(t)?"xx":isIso(t)?"dt":""):"tx";
+  if(locked(r.d,c))return '<td class="lk'+gx+'"><input type="text" readonly tabindex="-1"'+at+' value="'+esc(fmt(v))+'" title="소득 구분 \''+esc(L.src||"")+'\'에 ㅇ이 있어야 적을 수 있습니다"></td>';
+  return '<td class="'+cls+gx+'"><input type="text" autocomplete="off"'+at+' value="'+esc(c.t==="chk"?fmt(v):v)+'"'+(t==="="?' title="전월과 같음"':isIso(t)?' title="'+esc(t)+'"':(c.t==="text"&&v.length>12?' title="'+esc(v)+'"':''))+'></td>';
 }
 function groups(cs){const out=[];cs.forEach(c=>{const g=c.g||"",l=out[out.length-1];if(l&&g&&l.g===g)l.n++;else out.push({g,n:1})});return out}
 function drawMonth(){
@@ -295,14 +322,14 @@ function drawMonth(){
     '<input type="search" id="q" placeholder="업체명·비고 검색" value="'+esc(S.q)+'" style="width:160px"><span class="sub">'+rs.length+'곳</span>'+
     '<span class="sp"></span><input type="text" id="addn" placeholder="새 업체명" maxlength="60" style="width:170px"><select id="addo" aria-label="담당자">'+[""].concat(S.people).map(x=>'<option'+(x===(S.own!=="전체"?S.own:WHO)?" selected":"")+'>'+esc(x)+'</option>').join("")+'</select><button class="btn sm" id="addb">+ 업체 추가</button></div>';
   const W=cs.reduce((a,c)=>a+cw(c),36+104);
-  h+='<div class="scroll"><table class="tb" style="width:'+W+'px"><colgroup><col style="width:36px">'+cs.map(c=>'<col style="width:'+cw(c)+'px">').join("")+'<col style="width:104px"></colgroup><thead><tr class="g"><th class="stk0"></th>'+
+  h+='<div class="scroll" tabindex="-1"><table class="tb" style="width:'+W+'px"><colgroup><col style="width:36px">'+cs.map(c=>'<col style="width:'+cw(c)+'px">').join("")+'<col style="width:104px"></colgroup><thead><tr class="g"><th class="stk0"></th>'+
     groups(cs).map(g=>'<th colspan="'+g.n+'"'+(g.g?' class="gp"':'')+'>'+esc(g.g)+'</th>').join("")+'<th></th></tr><tr class="h"><th class="stk0">#</th>'+
-    cs.map(c=>{const on=S.sort&&S.sort.k===c.k;return '<th'+(c.k==="name"?' class="stk"':'')+' title="'+esc((c.g?c.g+" · ":"")+c.l)+' (누르면 정렬)"><button type="button" class="srt" data-sort="'+esc(c.k)+'">'+esc(c.l)+(on?(S.sort.dir>0?" ▲":" ▼"):"")+'</button></th>'}).join("")+'<th>'+(S.sort?'<button type="button" class="srt" data-sort="">원래대로</button>':'순서')+'</th></tr></thead><tbody>'+
+    cs.map(c=>{const on=S.sort&&S.sort.k===c.k,L=lay()[c.k]||{},x=((c.k==="name"?"stk ":"")+L.cls+(L.gs?" gs":"")).trim();return '<th'+(x?' class="'+x+'"':'')+' title="'+esc((c.g?c.g+" · ":"")+c.l)+' (누르면 정렬)"><button type="button" class="srt" data-sort="'+esc(c.k)+'">'+esc(c.l)+(on?(S.sort.dir>0?" ▲":" ▼"):"")+'</button></th>'}).join("")+'<th>'+(S.sort?'<button type="button" class="srt" data-sort="">원래대로</button>':'순서')+'</th></tr></thead><tbody>'+
     (rs.length?rs.map((r,i)=>'<tr data-row="'+esc(r.id)+'"'+(isDone(r.d)?' class="done"':'')+'><td class="num stk0">'+(S.sort||isPin(r)?(i+1):'<span class="grip" draggable="true" data-grip="'+esc(r.id)+'" title="끌어서 순서 옮기기">≡ '+(i+1)+'</span>')+'</td>'+cs.map(c=>cell(r,c)).join("")+
       '<td class="ac">'+(S.sort||isPin(r)?'':'<button type="button" class="mv" data-mv="'+esc(r.id)+'" data-d="-1" title="위로" aria-label="위로">▲</button><button type="button" class="mv" data-mv="'+esc(r.id)+'" data-d="1" title="아래로" aria-label="아래로">▼</button>')+'<button type="button" class="rm'+(S.rmAsk===r.id?" cf":"")+'" data-rm="'+esc(r.id)+'" title="이 달에서 업체 빼기">'+(S.rmAsk===r.id?"빼기 확인":"빼기")+'</button></td></tr>').join("")
     :'<tr><td colspan="'+(cs.length+2)+'" class="sub" style="padding:16px;text-align:left">'+(S.rows.length?'조건에 맞는 업체가 없습니다.':'아직 업체가 없습니다. 아래 "엑셀 파일에서 가져오기"로 엑셀 시트를 그대로 넣거나, 업체를 한 곳씩 추가하세요.')+'</td></tr>')+
     '</tbody></table></div>';
-  h+='<p class="sub legend"><span>체크 칸: <b>11/5</b>처럼 날짜를 적거나 <kbd>.</kbd> 또는 더블클릭하면 오늘 날짜</span><span><b>-</b> 해당없음(회색)</span><span><b>=</b> 전월과 같음</span><span><b>x</b> 빨간색</span><span>최종완료 칸이 채워지면 초록색 줄</span><span>소득 구분 칸은 더블클릭하면 ㅇ ↔ -</span><span>머리글을 누르면 정렬(▲ 오름 ▼ 내림), 왼쪽 번호(≡)를 끌거나 오른쪽 ▲▼로 업체 순서 바꾸기</span></p>';
+  h+='<p class="sub legend"><span>체크 칸: <b>11/5</b>처럼 날짜를 적거나 <kbd>.</kbd> 또는 더블클릭하면 오늘 날짜</span><span><b>-</b> 해당없음(회색)</span><span><b style="color:var(--eq-i)">=</b> 전월과 같음(파란 칸)</span><span>빗금 칸: 소득 구분에 ㅇ이 없어 닫힌 지급명세</span><span><b>x</b> 빨간색</span><span>최종완료 칸이 채워지면 초록색 줄</span><span>소득 구분 칸은 더블클릭하면 ㅇ ↔ -</span><span>칸을 끌거나 <kbd>Shift</kbd>+클릭으로 여러 칸 고르기 → <kbd>Ctrl</kbd>+<kbd>C</kbd> 복사, <kbd>Ctrl</kbd>+<kbd>V</kbd> 붙여넣기, <kbd>Delete</kbd> 지우기</span><span><kbd>Ctrl</kbd>+<kbd>Z</kbd> 되돌리기, <kbd>Ctrl</kbd>+<kbd>Y</kbd> 다시 하기</span><span>머리글을 누르면 정렬(▲ 오름 ▼ 내림), 왼쪽 번호(≡)를 끌거나 오른쪽 ▲▼로 업체 순서 바꾸기</span></p>';
   h+='<div class="row"><button class="btn ghost sm" id="imp">엑셀 파일에서 가져오기</button><button class="btn ghost sm" id="exp">엑셀로 내려받기</button><button class="btn ghost sm" id="cedit">열 편집 (지급명세서 등 추가)</button>'+
     (!S.canDelete?'':S.delAsk?'<span class="err">이 달의 체크 기록이 모두 사라집니다.</span><button class="btn danger sm" id="delyes">삭제 확인</button><button class="btn ghost sm" id="delno">취소</button>':'<button class="btn ghost sm" id="del">이 달 삭제…</button>')+'</div>';
   h+='</div>';
@@ -312,6 +339,7 @@ function drawMonth(){
   const sc2=$(".scroll");if(sc2){sc2.scrollTop=top;sc2.scrollLeft=left}
   if(key){const el=document.querySelector('[data-id="'+CSS.escape(key.split("|")[0])+'"][data-k="'+CSS.escape(key.split("|")[1])+'"]');if(el)el.focus()}
   if(qf){const q=$("#q");q.focus();q.setSelectionRange(q.value.length,q.value.length)}
+  paint();
   if(!qf&&!key)trackGo();else document.querySelectorAll(".trk .rn").forEach(r=>{r.style.transition="none";r.style.left="calc((100% - 56px) * "+r.dataset.f+")"});
 }
 function draw(){S.cur?drawMonth():drawMonths()}
@@ -321,21 +349,29 @@ function say(t,bad){S.msg=t;const e=$("#st");if(e){e.textContent=t;e.className="
 function redrawRow(id){
   const r=rowById(id),tr=document.querySelector('tr[data-row="'+CSS.escape(id)+'"]');if(!r||!tr)return;
   tr.classList.toggle("done",isDone(r.d));
-  cols().forEach(c=>{const el=tr.querySelector('[data-k="'+CSS.escape(c.k)+'"]');if(!el)return;const tmp=document.createElement("tr");tmp.innerHTML=cell(r,c);if(el===document.activeElement)el.closest("td").className=tmp.firstChild.className;else el.closest("td").replaceWith(tmp.firstChild)});
+  cols().forEach(c=>{const el=tr.querySelector('[data-k="'+CSS.escape(c.k)+'"]');if(!el)return;const tmp=document.createElement("tr");tmp.innerHTML=cell(r,c);if(el===document.activeElement){const nt=tmp.firstChild,ni=nt.querySelector("[data-k]");el.closest("td").className=nt.className;if(el.tagName==="INPUT"&&ni){el.value=ni.value;el.readOnly=ni.readOnly}}else el.closest("td").replaceWith(tmp.firstChild)});
 }
 function refreshSummary(){const p=document.querySelector("table.sm");if(p)p.outerHTML=summary();trackRefresh(S.rows)}
 /* 여러 칸 저장: items = [{id, data}] */
-function saveMany(items,label){
-  if(!items.length)return Promise.resolve();
+/* 되돌리기 기록: 저장한 칸마다 바꾸기 전·후 값 */
+const HIST=[],REDO=[];
+function saveMany(items,label,opt){
+  if(!items.length)return Promise.resolve(true);
+  let rec=null;
+  if(!(opt&&opt.noHist)){
+    rec=items.map(it=>{const r=rowById(it.id),b={};if(!r)return null;Object.keys(it.data).forEach(k=>{b[k]=r.d[k]==null?"":String(r.d[k])});return {id:it.id,b,a:Object.assign({},it.data)}}).filter(x=>x&&Object.keys(x.a).some(k=>x.a[k]!==x.b[k]));
+    if(rec.length){HIST.push(rec);if(HIST.length>200)HIST.shift();REDO.length=0}else rec=null;
+  }
   const olds=items.map(it=>{const r=rowById(it.id);const o=Object.assign({},r.d);Object.keys(it.data).forEach(k=>{if(it.data[k]==="")delete r.d[k];else r.d[k]=it.data[k]});return {r,o}});
-  items.forEach(it=>redrawRow(it.id));refreshSummary();say("저장 중…");
+  items.forEach(it=>redrawRow(it.id));refreshSummary();paint();say("저장 중…");
   let chain=Promise.resolve();
   for(let i=0;i<items.length;i+=300){const part=items.slice(i,i+300);chain=chain.then(()=>api("wh.bulk",{month:S.cur,items:part}))}
-  return chain.then(()=>say(label||"저장했습니다."),e=>{olds.forEach(x=>{x.r.d=x.o});draw();say(e.message,true)});
+  return chain.then(()=>{say(label||"저장했습니다.");return true},e=>{olds.forEach(x=>{x.r.d=x.o});if(rec){const i=HIST.indexOf(rec);if(i>=0)HIST.splice(i,1)}draw();say(e.message,true);return false});
 }
 function saveCell(el,raw){
   const id=el.dataset.id,k=el.dataset.k,c=cols().find(x=>x.k===k)||{t:"text"},r=rowById(id);if(!r)return;
   let v=c.t==="chk"?parseCell(raw):String(raw||"").replace(/　/g," ").trim();
+  if(locked(r.d,c)){el.value=fmt(r.d[k]||"");return say("소득 구분 '"+(lay()[k].src||"")+"'에 ㅇ이 있어야 적을 수 있습니다.",true)}
   if(k==="name"&&!v){el.value=r.d.name||"";return say("업체명은 비울 수 없습니다. 업체를 빼려면 오른쪽 '빼기'를 누르세요.",true)}
   if((r.d[k]||"")===v){if(c.t==="chk")el.value=fmt(v);return}
   const p={};p[k]=v;
@@ -492,7 +528,7 @@ function exportXlsx(){
 
 /* ── 열기 ── */
 function openMonth(id){
-  S.cur=id;S.month=null;S.rows=[];S.edit=false;S.nedit=false;S.delAsk=false;S.rmAsk=null;S.err="";S.msg="";S.stf="전체";S.q="";
+  S.cur=id;S.month=null;S.rows=[];HIST.length=0;REDO.length=0;SEL=null;S.edit=false;S.nedit=false;S.delAsk=false;S.rmAsk=null;S.err="";S.msg="";S.stf="전체";S.q="";
   store.set("wh.cur",id);
   $("#view").innerHTML='<p class="sub">불러오는 중입니다…</p>';
   loadMonth(id).then(draw,e=>{S.err=e.message;S.cur=null;draw()});
@@ -511,7 +547,7 @@ document.addEventListener("click",e=>{
   }
   if(t.dataset&&t.dataset.open)return openMonth(t.dataset.open);
   if(t.id==="back")return backToList();
-  if(t.id==="reload"){say("불러오는 중…");return loadMonth(S.cur).then(()=>{S.msg="최신 내용을 불러왔습니다.";draw()},x=>say(x.message,true))}
+  if(t.id==="reload"){say("불러오는 중…");return loadMonth(S.cur).then(()=>{HIST.length=0;REDO.length=0;S.msg="최신 내용을 불러왔습니다.";draw()},x=>say(x.message,true))}
   if(t.dataset&&t.dataset.sort!=null){const k=t.dataset.sort;S.sort=!k?null:(!S.sort||S.sort.k!==k)?{k,dir:1}:S.sort.dir>0?{k,dir:-1}:null;return draw()}
   if(t.dataset&&t.dataset.mv)return moveRow(t.dataset.mv,+t.dataset.d);
   if(t.dataset&&t.dataset.mvo)return moveOwner(t.dataset.mvo,+t.dataset.d);
@@ -561,31 +597,143 @@ document.addEventListener("change",e=>{
 document.addEventListener("input",e=>{if(e.target.id==="q"){S.q=e.target.value;draw()}});
 document.addEventListener("dblclick",e=>{
   const t=e.target;if(!(t.dataset&&t.dataset.id&&t.dataset.k))return;
-  const c=cols().find(x=>x.k===t.dataset.k);if(!c)return;
+  const c=cols().find(x=>x.k===t.dataset.k),r=rowById(t.dataset.id);if(!c||!r)return;
+  if(locked(r.d,c))return say("소득 구분 '"+(lay()[c.k].src||"")+"'에 ㅇ이 있어야 적을 수 있습니다.",true);
   if(c.t==="chk"&&blank(t.value)){t.value=fmt(todayIso());saveCell(t,todayIso())}
   else if(c.t==="ox"){const v=t.value.trim()==="ㅇ"?"-":"ㅇ";t.value=v;saveCell(t,v)}
 });
+/* ── 여러 칸 고르기(엑셀처럼): 끌기·Shift+클릭·Shift+화살표 → 복사·잘라내기·붙여넣기·지우기 ── */
+let SEL=null,MD=false; /* SEL={a:{id,k}, b:{id,k}} a=시작 칸, b=끝 칸 */
+const cellEl=t=>t&&t.closest&&t.closest("table.tb tbody [data-id][data-k]");
+const posOf=el=>({id:el.dataset.id,k:el.dataset.k});
+function trsNow(){return Array.from(document.querySelectorAll("table.tb tbody tr[data-row]"))}
+function rect(){
+  if(!SEL)return null;const ids=trsNow().map(x=>x.dataset.row),ks=cols().map(c=>c.k);
+  const ra=ids.indexOf(SEL.a.id),rb=ids.indexOf(SEL.b.id),ca=ks.indexOf(SEL.a.k),cb=ks.indexOf(SEL.b.k);
+  if(ra<0||rb<0||ca<0||cb<0)return null;
+  return {r0:Math.min(ra,rb),r1:Math.max(ra,rb),c0:Math.min(ca,cb),c1:Math.max(ca,cb)};
+}
+function multi(){const R=rect();return !!R&&(R.r1>R.r0||R.c1>R.c0)}
+function paint(tell){
+  document.querySelectorAll("table.tb td.sel").forEach(x=>x.classList.remove("sel"));
+  const R=rect();if(!R||!(R.r1>R.r0||R.c1>R.c0))return;
+  const trs=trsNow(),cs=cols();
+  for(let i=R.r0;i<=R.r1;i++)for(let j=R.c0;j<=R.c1;j++){const el=trs[i].querySelector('[data-k="'+CSS.escape(cs[j].k)+'"]');if(el)el.closest("td").classList.add("sel")}
+  if(tell)say(((R.r1-R.r0+1)*(R.c1-R.c0+1))+"칸 선택 · Ctrl+C 복사, Ctrl+V 붙여넣기, Delete 지우기");
+}
+/* 여러 칸을 고르면 입력 중이던 칸은 저장하고, 키보드는 표가 받는다 */
+function focusGrid(){const a=document.activeElement;if(a&&a.dataset&&a.dataset.id)a.blur();const sc=$(".scroll");if(sc)sc.focus({preventScroll:true});try{window.getSelection().removeAllRanges()}catch(x){}}
+function clearSel(){if(!SEL)return;const was=multi();SEL=null;if(was){paint();say("")}}
+document.addEventListener("mousedown",e=>{
+  if(e.button!==0)return;const el=cellEl(e.target);
+  if(!el){if(!(e.target.closest&&e.target.closest(".scroll")))clearSel();return}
+  if(e.shiftKey&&SEL){e.preventDefault();SEL.b=posOf(el);focusGrid();paint(1);return}
+  const was=multi();SEL={a:posOf(el),b:posOf(el)};MD=true;if(was){paint();say("")}
+});
+document.addEventListener("mouseover",e=>{
+  if(!MD||!SEL)return;const el=cellEl(e.target);if(!el)return;const p=posOf(el);
+  if(p.id===SEL.b.id&&p.k===SEL.b.k)return;
+  SEL.b=p;const tb=$("table.tb");if(tb)tb.classList.add("selecting");focusGrid();paint(1);
+});
+document.addEventListener("mouseup",()=>{MD=false;const tb=$("table.tb");if(tb)tb.classList.remove("selecting")});
+
+function cellText(r,c){const v=r.d[c.k]==null?"":String(r.d[c.k]);return c.t==="chk"?fmt(v):v}
+function selTsv(){
+  const R=rect();if(!R)return "";const trs=trsNow(),cs=cols(),out=[];
+  for(let i=R.r0;i<=R.r1;i++){const r=rowById(trs[i].dataset.row),line=[];for(let j=R.c0;j<=R.c1;j++)line.push(cellText(r,cs[j]).replace(/[\t\n]/g," "));out.push(line.join("\t"))}
+  return out.join("\n");
+}
+/* 고른 칸을 값으로 채운다: fill(i,j) → 넣을 글자 또는 undefined(건너뜀). 업체명·닫힌 칸은 건너뛴다 */
+function fillRect(R,fill,label){
+  const trs=trsNow(),cs=cols(),items=[];let skip=0;
+  for(let i=R.r0;i<=R.r1&&i<trs.length;i++){
+    const r=rowById(trs[i].dataset.row);if(!r)continue;const d={};
+    for(let j=R.c0;j<=R.c1&&j<cs.length;j++){
+      const c=cs[j],raw=fill(i-R.r0,j-R.c0);if(raw===undefined||c.k==="name")continue;
+      d[c.k]=c.t==="chk"?parseCell(raw):String(raw).replace(/　/g," ").trim();
+    }
+    const nd=Object.assign({},r.d,d);
+    Object.keys(d).forEach(k=>{const c=cs.find(x=>x.k===k);if(locked(nd,c)&&d[k]!==""){delete d[k];skip++}else if((r.d[k]==null?"":String(r.d[k]))===d[k])delete d[k]});
+    if(Object.keys(d).length)items.push({id:r.id,data:d});
+  }
+  const n=items.reduce((a,x)=>a+Object.keys(x.data).length,0);
+  if(!n)return say(skip?"닫힌 칸(소득 구분에 ㅇ 없음)이라 넣지 않았습니다.":"바뀐 칸이 없습니다.",!!skip);
+  const own=items.some(x=>"owner" in x.data);
+  saveMany(items,label(n)+(skip?" (닫힌 칸 "+skip+"개는 건너뜀)":"")).then(()=>{if(own)draw()});
+}
+document.addEventListener("copy",e=>{
+  if(!S.month)return;const t=e.target,inCell=t.dataset&&t.dataset.id;
+  if(multi()){e.preventDefault();e.clipboardData.setData("text/plain",selTsv());const R=rect();say(((R.r1-R.r0+1)*(R.c1-R.c0+1))+"칸 복사했습니다.");return}
+  if(inCell&&t.tagName==="INPUT"&&t.selectionStart===t.selectionEnd){e.preventDefault();e.clipboardData.setData("text/plain",t.value)}
+});
+document.addEventListener("cut",e=>{
+  if(!S.month||!multi())return;e.preventDefault();e.clipboardData.setData("text/plain",selTsv());fillRect(rect(),()=>"",n=>n+"칸 잘라냈습니다.");
+});
+document.addEventListener("paste",e=>{
+  if(!S.month)return;const t=e.target,inCell=t.dataset&&t.dataset.id&&t.dataset.k,M=multi();
+  if(!inCell&&!M)return;
+  const txt=(e.clipboardData||window.clipboardData).getData("text")||"";
+  const grid=txt.replace(/\r/g,"").replace(/\n$/,"").split("\n").map(l=>l.split("\t")),one=grid.length===1&&grid[0].length===1;
+  if(!M&&one)return; /* 한 칸에 글자 하나: 보통 붙여넣기 */
+  e.preventDefault();
+  const trs=trsNow(),cs=cols();let R;
+  if(M){const Q=rect();R=one?Q:{r0:Q.r0,c0:Q.c0,r1:Q.r0+grid.length-1,c1:Q.c0+Math.max.apply(null,grid.map(l=>l.length))-1}}
+  else{const r0=trs.indexOf(t.closest("tr")),c0=cs.findIndex(c=>c.k===t.dataset.k);R={r0,c0,r1:r0+grid.length-1,c1:c0+Math.max.apply(null,grid.map(l=>l.length))-1}}
+  R.r1=Math.min(R.r1,trs.length-1);R.c1=Math.min(R.c1,cs.length-1);
+  if(document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.id)document.activeElement.blur();
+  SEL={a:{id:trs[R.r0].dataset.row,k:cs[R.c0].k},b:{id:trs[R.r1].dataset.row,k:cs[R.c1].k}};
+  fillRect(R,one?()=>grid[0][0]:(i,j)=>(grid[i]||[])[j],n=>n+"칸 붙여넣었습니다.");
+  focusGrid();paint();
+});
+
+/* 되돌리기·다시 하기 */
+function undoRedo(back){
+  const from=back?HIST:REDO,to=back?REDO:HIST,rec=from.pop();
+  if(!rec)return say(back?"되돌릴 내용이 없습니다.":"다시 할 내용이 없습니다.");
+  const items=rec.filter(x=>rowById(x.id)).map(x=>({id:x.id,data:back?x.b:x.a}));
+  if(!items.length)return say("그 업체가 이 달에 없어 되돌릴 수 없습니다.",true);
+  const n=items.reduce((a,x)=>a+Object.keys(x.data).length,0);
+  to.push(rec);
+  saveMany(items,(back?"되돌렸습니다":"다시 했습니다")+" ("+n+"칸) · "+(back?"Ctrl+Y로 다시 하기":"Ctrl+Z로 되돌리기"),{noHist:1}).then(ok=>{if(!ok){to.pop();from.push(rec)}else if(items.some(x=>"owner" in x.data))draw()});
+}
+
 /* 엔터·위아래 화살표로 위아래 칸 이동 (엑셀처럼) */
 function moveV(el,d){
   const tr=el.closest("tr"),k=el.dataset.k;let x=tr;
   do{x=d>0?x.nextElementSibling:x.previousElementSibling}while(x&&!x.dataset.row);
-  const n=x&&x.querySelector('[data-k="'+CSS.escape(k)+'"]');if(n){n.focus();if(n.select)n.select()}
+  const n=x&&x.querySelector('[data-k="'+CSS.escape(k)+'"]');if(n){n.focus();if(n.select)n.select();SEL={a:posOf(n),b:posOf(n)}}
 }
+function focusCell(p){const el=document.querySelector('table.tb tbody [data-id="'+CSS.escape(p.id)+'"][data-k="'+CSS.escape(p.k)+'"]');if(el){el.focus();if(el.select)el.select()}}
 document.addEventListener("keydown",e=>{
-  const t=e.target;if(!(t.dataset&&t.dataset.id&&t.dataset.k))return;
+  if(!S.month)return;
+  const t=e.target,inCell=!!(t.dataset&&t.dataset.id&&t.dataset.k),onGrid=t.classList&&t.classList.contains("scroll"),mod=e.ctrlKey||e.metaKey;
+  /* Ctrl+Z / Ctrl+Y: 글을 쓰는 중인 칸(아직 저장 전)은 브라우저 기본 되돌리기 */
+  if(mod&&!e.altKey&&(e.code==="KeyZ"||e.code==="KeyY")){
+    const typing=inCell&&t.tagName==="INPUT"&&!t.readOnly&&t.value!==cellText(rowById(t.dataset.id)||{d:{}},cols().find(c=>c.k===t.dataset.k)||{k:t.dataset.k,t:"text"});
+    if((inCell&&!typing)||onGrid||t===document.body){e.preventDefault();undoRedo(e.code==="KeyZ"&&!e.shiftKey)}
+    return;
+  }
+  if(!inCell&&!onGrid)return;
+  const arrows={ArrowUp:[-1,0],ArrowDown:[1,0],ArrowLeft:[0,-1],ArrowRight:[0,1]};
+  /* Shift+화살표: 고른 칸 넓히기 (입력 칸 안에서는 위·아래만) */
+  if(e.shiftKey&&arrows[e.key]&&(onGrid||e.key==="ArrowUp"||e.key==="ArrowDown"||multi())){
+    if(!SEL&&inCell)SEL={a:posOf(t),b:posOf(t)};const R=rect();if(!R)return;
+    e.preventDefault();const trs=trsNow(),cs=cols(),ids=trs.map(x=>x.dataset.row),ks=cs.map(c=>c.k);
+    const i=Math.max(0,Math.min(trs.length-1,ids.indexOf(SEL.b.id)+arrows[e.key][0])),j=Math.max(0,Math.min(cs.length-1,ks.indexOf(SEL.b.k)+arrows[e.key][1]));
+    SEL.b={id:ids[i],k:ks[j]};focusGrid();paint(1);
+    const el=trs[i].querySelector('[data-k="'+CSS.escape(ks[j])+'"]');if(el)el.closest("td").scrollIntoView({block:"nearest",inline:"nearest"});
+    return;
+  }
+  if(multi()&&(onGrid||inCell)){
+    if(e.key==="Delete"||e.key==="Backspace"){e.preventDefault();return fillRect(rect(),()=>"",n=>n+"칸 지웠습니다.")}
+    if(e.key==="Escape"){e.preventDefault();const b=SEL.b;clearSel();return focusCell(b)}
+    if(arrows[e.key]||e.key==="Enter"){e.preventDefault();const b=SEL.b;SEL={a:b,b:b};paint();say("");return focusCell(b)}
+    if(onGrid)return;
+  }
+  if(!inCell)return;
   if(e.key==="Enter"||e.key==="ArrowDown"){if(t.tagName==="SELECT"&&e.key==="ArrowDown")return;e.preventDefault();if(t.tagName==="INPUT")saveCell(t,t.value);moveV(t,1)}
   else if(e.key==="ArrowUp"&&t.tagName!=="SELECT"){e.preventDefault();saveCell(t,t.value);moveV(t,-1)}
   else if(e.key==="Escape"&&t.tagName==="INPUT"){const r=rowById(t.dataset.id),c=cols().find(x=>x.k===t.dataset.k);t.value=c&&c.t==="chk"?fmt(r.d[t.dataset.k]):(r.d[t.dataset.k]||"");t.blur()}
-});
-/* 엑셀에서 여러 칸을 복사해 한 칸에 붙여넣으면 그 칸부터 오른쪽·아래로 채운다 */
-document.addEventListener("paste",e=>{
-  const t=e.target;if(!(t.dataset&&t.dataset.id&&t.dataset.k))return;
-  const txt=(e.clipboardData||window.clipboardData).getData("text")||"";if(!/[\t\n]/.test(txt.replace(/\r?\n$/,"")))return;
-  e.preventDefault();
-  const grid=txt.replace(/\r/g,"").replace(/\n$/,"").split("\n").map(l=>l.split("\t"));
-  const trs=Array.from(document.querySelectorAll("tbody tr[data-row]")),r0=trs.indexOf(t.closest("tr")),cs=cols(),c0=cs.findIndex(c=>c.k===t.dataset.k),items=[];
-  grid.forEach((line,i)=>{const tr=trs[r0+i];if(!tr)return;const d={};line.forEach((v,j)=>{const c=cs[c0+j];if(!c||c.k==="name")return;d[c.k]=c.t==="chk"?parseCell(v):v.replace(/　/g," ").trim()});if(Object.keys(d).length)items.push({id:tr.dataset.row,data:d})});
-  saveMany(items,items.length+"줄에 붙여넣었습니다.").then(()=>draw());
 });
 
 /* 시작: 지난번에 보던 달이 있으면 바로 연다 */
